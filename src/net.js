@@ -28,25 +28,40 @@ async function act(fn,args){
   catch(e){toast(ERR[e.code]||ERR.network); return null;}
   finally{NET.busy=false;}
 }
-async function netInit(){
-  try{
-    if(!window.supabase||!SUPABASE_URL||!SUPABASE_KEY)throw new Error('no client');
-    NET.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storage:SafeStore,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    let {data}=await withTimeout(NET.sb.auth.getSession(),8000);
-    let user=data&&data.session&&data.session.user;
-    if(!user){const r=await withTimeout(NET.sb.auth.signInAnonymously(),8000);if(r.error)throw r.error;user=r.data.user;}
-    NET.user=user; NET.mode='online';
-    const st=await api('game_state'); applyState(st); return true;
-  }catch(e){
-    console.warn('offline mode:',e&&e.message);
-    NET.mode='offline'; applyState(LOCAL.call('game_state',{})); return false;
-  }
+// เตรียมตัวเชื่อม + อ่านบัญชีที่ล็อกอินค้างไว้ (ไม่สร้างบัญชีใหม่) คืน user หรือ null
+async function authInit(){
+  if(!window.supabase||!SUPABASE_URL||!SUPABASE_KEY)throw new Error('no client');
+  if(!NET.sb)NET.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storage:SafeStore,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  const {data,error}=await withTimeout(NET.sb.auth.getSession(),8000); if(error)throw error;
+  NET.user=(data&&data.session&&data.session.user)||null;
+  return NET.user;
 }
+const redirectTo=()=>location.origin+location.pathname;
+async function signInGoogle(){
+  // ผู้เยี่ยมชมที่ล็อกอินค้างอยู่: ผูก Google เข้ากับบัญชีเดิม เซฟจะติดไปด้วย
+  if(NET.user&&NET.user.is_anonymous){
+    const {error}=await NET.sb.auth.linkIdentity({provider:'google',options:{redirectTo:redirectTo()}});
+    if(!error)return; }
+  const {error}=await NET.sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirectTo(),queryParams:{prompt:'select_account'}}});
+  if(error)throw error;
+}
+async function switchToGoogle(){ // บัญชี Google นี้มีเซฟอยู่แล้ว: ออกจากผู้เยี่ยมชมแล้วเข้าบัญชี Google
+  try{await NET.sb.auth.signOut({scope:'local'});}catch(e){}
+  NET.user=null; await signInGoogle();
+}
+async function signInGuest(){
+  const r=await withTimeout(NET.sb.auth.signInAnonymously(),8000); if(r.error)throw r.error; NET.user=r.data.user; return NET.user;
+}
+async function signOutAll(){ try{await NET.sb.auth.signOut({scope:'local'});}catch(e){} NET.user=null; }
+// เข้าเกม: โหลดเซฟจากเซิร์ฟเวอร์ (หรือในเครื่องถ้าออฟไลน์)
+async function enterOnline(){ NET.mode='online'; applyState(await api('game_state')); }
+function enterOffline(){ NET.mode='offline'; applyState(LOCAL.call('game_state',{})); }
 async function linkGoogle(){
   if(NET.mode!=='online')return toast('ต้องเชื่อมต่อเซิร์ฟเวอร์ก่อน');
-  const {error}=await NET.sb.auth.linkIdentity({provider:'google',options:{redirectTo:location.origin+location.pathname}});
-  if(error)toast('ผูกบัญชีไม่สำเร็จ: '+error.message);
+  try{await signInGoogle();}catch(e){toast('ผูกบัญชีไม่สำเร็จ: '+e.message);}
 }
+const userLabel=u=>!u?'':u.is_anonymous?'ผู้เยี่ยมชม (เล่นได้เฉพาะเครื่องนี้)':((u.user_metadata&&(u.user_metadata.full_name||u.user_metadata.name))||u.email||'บัญชี Google');
+const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{

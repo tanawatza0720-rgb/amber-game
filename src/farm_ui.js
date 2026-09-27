@@ -179,13 +179,13 @@ function openAccount(){
   const d=el('div');
   d.append(rows([['สถานะ',NET.mode==='online'?'ออนไลน์ · เซฟบนเซิร์ฟเวอร์':'ออฟไลน์ · เซฟในเครื่องนี้',NET.mode==='online'?'#5fe0c0':'#ffb347'],
     ['รหัสผู้เล่น',S.uid||'-'],
-    ['บัญชี',NET.mode!=='online'?'-':(NET.user&&NET.user.is_anonymous?'ผู้เยี่ยมชม (ยังไม่ผูกบัญชี)':((NET.user&&NET.user.email)||'ผูกแล้ว'))]]));
+    ['บัญชี',NET.mode!=='online'?'-':userLabel(NET.user)]]));
   if(NET.mode!=='online')d.append(para('ตอนนี้เชื่อมเซิร์ฟเวอร์ไม่ได้ ความคืบหน้าจะเก็บไว้ในเครื่องนี้ก่อน'));
   else if(NET.user&&NET.user.is_anonymous)d.append(para('บัญชีผู้เยี่ยมชมผูกกับเบราว์เซอร์นี้ ถ้าล้างข้อมูลเว็บจะหาย ผูกกับ Google เพื่อเล่นต่อได้ทุกเครื่อง'));
   const f=el('div','nameRow'); const inp=el('input'); inp.value=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp);
   const sv=el('button','sbtn small','บันทึกชื่อ'); sv.onclick=async()=>{if(await act('set_name',{new_name:inp.value})){toast('เปลี่ยนชื่อแล้ว');closeSheet();}}; f.append(sv); d.append(f);
   const acts=[]; if(NET.mode==='online'&&NET.user&&NET.user.is_anonymous)acts.push(['ผูกบัญชี Google',linkGoogle]);
-  if(NET.mode!=='online')acts.push(['ลองเชื่อมต่ออีกครั้ง',async()=>{closeSheet();if(await netInit()){syncAgents();toast('เชื่อมต่อเซิร์ฟเวอร์แล้ว');}else toast(ERR.network);},'ghost']);
+  acts.push([NET.mode==='online'?'ออกจากระบบ':'กลับหน้าเข้าสู่ระบบ',async()=>{closeSheet();if(NET.mode==='online')await signOutAll();location.replace(redirectTo());},'ghost']);
   openSheet('บัญชีผู้เล่น',S.name+' · Lv '+S.lv,d,acts);
 }
 $('.profile').onclick=openAccount;
@@ -194,14 +194,65 @@ setInterval(async()=>{if(NET.mode==='online'&&!NET.busy&&!document.hidden){try{a
 // ครั้งแรกที่เข้าเกม: ให้ตั้งชื่อตัวเอง
 function openWelcome(){
   const d=el('div'); d.append(para('ยินดีต้อนรับสู่ป่าอัมพร! นี่คือฟาร์มของคุณเอง ตั้งชื่อนักฝึกมอนสเตอร์ก่อนเริ่มเล่น'));
-  const f=el('div','nameRow'); const inp=el('input'); inp.value=''; inp.placeholder=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp); d.append(f);
+  const f=el('div','nameRow'); const inp=el('input'); inp.value=(NET.user&&!NET.user.is_anonymous&&NET.user.user_metadata&&(NET.user.user_metadata.full_name||'').slice(0,24))||''; inp.placeholder=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp); d.append(f);
   openSheet('ตั้งชื่อนักฝึก','รหัสผู้เล่น '+(S.uid||'-'),d,[['เริ่มเล่น',async()=>{const n=inp.value.trim()||S.name;if(await act('set_name',{new_name:n})){closeSheet();toast('สวัสดี '+S.name+'! มังกรอามาเทรุรออยู่ในฟาร์มแล้ว');}}]]);
   setTimeout(()=>inp.focus(),50);
 }
-function startFarm(){renderHUD(); layout(); loop();
-$('#loadMsg').hidden=false; $('#loadMsg').textContent='กำลังเชื่อมต่อเซิร์ฟเวอร์…';
-netInit().then(online=>{ if(!online)toast('เชื่อมเซิร์ฟเวอร์ไม่ได้ เล่นแบบออฟไลน์ (เซฟในเครื่องนี้)');
-  $('#loadMsg').textContent='กำลังโหลดมอนสเตอร์…';
-  return Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon()]);
-}).then(()=>{$('#loadMsg').hidden=true;
-  for(const k in THUMB)delete THUMB[k]; syncAgents(); if(!S.named)openWelcome();});}
+/* ---------- หน้าเข้าสู่ระบบ (ขึ้นทุกครั้งก่อนเข้าเกม) ---------- */
+let modelsReady=false, entered=false;
+function lgBtn(label,cls,fn){const b=el('button','lgBtn '+(cls||''),label);b.onclick=async()=>{if(b.disabled)return;document.querySelectorAll('.lgBtn').forEach(x=>x.disabled=true);try{await fn();}catch(e){lgNote('ไม่สำเร็จ: '+((e&&e.message)||'ลองใหม่อีกครั้ง'));}finally{document.querySelectorAll('.lgBtn').forEach(x=>x.disabled=false);}};return b;}
+function lgNote(t,warn){const n=$('#lgNote');n.textContent=t||'';n.classList.toggle('warn',!!warn);}
+function lgShow(state,extra){
+  const B=$('#lgBody'); B.innerHTML='';
+  if(state==='checking'){B.append(el('div','lgWait','กำลังตรวจสอบบัญชี…'));return;}
+  if(state==='go'){B.append(el('div','lgWait',extra||'กำลังไปหน้า Google…'));return;}
+  if(state==='offline'){
+    B.append(el('p','lgMsg','เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'));
+    B.append(lgBtn('ลองใหม่','main',()=>lgStart()));
+    B.append(lgBtn('เล่นแบบออฟไลน์ (เซฟในเครื่องนี้)','ghost',async()=>{enterOffline();enterGame();}));
+    return;}
+  const u=NET.user;
+  if(u){
+    const card=el('div','lgUser'); const av=el('div','lgAv',(userLabel(u)||'?').slice(0,1)); card.append(av);
+    const t=el('div'); t.append(el('b',null,userLabel(u))); if(userSub(u))t.append(el('span',null,userSub(u))); card.append(t); B.append(card);
+    B.append(lgBtn('เข้าเกม','main',async()=>{await enterOnline();enterGame();}));
+    if(u.is_anonymous){B.append(lgBtn('ผูกกับ Google เพื่อเล่นได้ทุกเครื่อง','google',async()=>{lgShow('go');await signInGoogle();}));}
+    B.append(lgBtn('เปลี่ยนบัญชี','link',async()=>{
+      if(u.is_anonymous)lgNote('ถ้าออกจากบัญชีผู้เยี่ยมชมโดยยังไม่ผูก Google เซฟนี้จะหายไป','warn');
+      await signOutAll(); lgShow('out');}));
+    return;}
+  B.append(lgBtn('เข้าสู่ระบบด้วย Google','google',async()=>{lgShow('go');await signInGoogle();}));
+  B.append(el('p','lgOr','หรือ'));
+  B.append(lgBtn('เล่นแบบผู้เยี่ยมชม','ghost',async()=>{await signInGuest();await enterOnline();enterGame();}));
+  B.append(el('p','lgSmall','ผู้เยี่ยมชมเล่นได้เฉพาะเครื่องนี้ ผูก Google ทีหลังได้โดยเซฟไม่หาย'));
+}
+async function lgStart(){
+  lgShow('checking');
+  // ผลตอบกลับจากหน้า Google
+  const q=new URLSearchParams(location.search+'&'+location.hash.slice(1));
+  const errCode=q.get('error_code')||'', errDesc=q.get('error_description')||'';
+  if(location.hash.includes('access_token')||q.get('code')||errCode)history.replaceState(null,'',redirectTo());
+  try{await authInit();}catch(e){console.warn(e);lgShow('offline');return;}
+  if(errCode==='identity_already_exists'||/already/i.test(errDesc)){
+    lgShow('out');
+    lgNote('บัญชี Google นี้มีเซฟอยู่แล้ว กดปุ่มด้านล่างเพื่อสลับไปใช้บัญชีนั้น (เซฟผู้เยี่ยมชมในเครื่องนี้จะไม่ย้ายไปด้วย)','warn');
+    $('#lgBody').prepend(lgBtn('สลับไปบัญชี Google นั้น','google',async()=>{lgShow('go');await switchToGoogle();}));
+    return;}
+  if(errCode||errDesc)lgNote('เข้าสู่ระบบไม่สำเร็จ: '+(errDesc||errCode).replace(/\+/g,' '),'warn');
+  lgShow(NET.user?'in':'out');
+}
+function enterGame(){
+  if(entered)return; entered=true;
+  document.body.classList.remove('preLogin'); $('#login').classList.add('bye'); setTimeout(()=>$('#login').hidden=true,450);
+  renderHUD(); distTo=33;
+  if(modelsReady){syncAgents(); if(!S.named&&NET.mode==='online')openWelcome();}
+  else {$('#loadMsg').hidden=false;}
+  if(NET.mode!=='online')toast('เล่นแบบออฟไลน์ ความคืบหน้าเก็บในเครื่องนี้');
+}
+function startFarm(){renderHUD(); layout(); loop(); distTo=40;
+  lgStart();
+  Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon()]).then(()=>{
+    modelsReady=true; for(const k in THUMB)delete THUMB[k];
+    if(entered){$('#loadMsg').hidden=true; syncAgents(); if(!S.named&&NET.mode==='online')openWelcome();}
+  });
+}
