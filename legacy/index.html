@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0f1420">
+<title>ตำนานป่าอัมพร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Bai+Jamjuree:wght@400;600&display=swap">
+<style>
+:root{
+  --night:#0f1420; --panel:rgba(15,20,32,.9); --card:#182032; --line:#2a3347;
+  --bone:#efe6d2; --muted:#97a0b3; --ember:#ff8a3d; --teal:#5fd3c4;
+  --hp:#e2524f; --mp:#4f8cff; --heal:#74e08f; --gold:#e8c15a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--night);color:var(--bone);font-family:'Bai Jamjuree',system-ui,-apple-system,sans-serif;font-size:14px;overflow:hidden;-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+#game{position:fixed;inset:0;overflow:hidden}
+#stage{position:absolute;inset:0}
+#stage canvas{display:block}
+#labels{position:absolute;inset:0;pointer-events:none}
+
+#top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;white-space:nowrap;color:var(--bone);font-family:inherit;max-width:60vw;overflow:hidden;text-overflow:ellipsis}
+.chip b{font-family:'Chakra Petch',sans-serif;color:var(--ember);font-weight:700}
+button.chip{cursor:pointer}
+#msg{position:absolute;top:calc(54px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);text-align:center;font-family:'Chakra Petch',sans-serif;font-size:15px;background:rgba(15,20,32,.75);border:1px solid var(--line);border-radius:8px;padding:6px 14px;pointer-events:none}
+#toast{position:absolute;top:calc(96px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);font-size:13px;background:#3a1d1d;border:1px solid #6b2f2f;border-radius:8px;padding:6px 12px;z-index:5}
+
+#panel{position:absolute;left:0;right:0;bottom:0;margin-inline:auto;max-width:860px;display:flex;flex-direction:column;gap:10px;padding:28px 16px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,rgba(15,20,32,.97) 72%,rgba(15,20,32,0))}
+#party{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:5px;transition:border-color .2s,box-shadow .2s,opacity .3s;min-width:0}
+.card.active{border-color:var(--ember);box-shadow:0 0 0 1px var(--ember),0 0 18px rgba(255,138,61,.25)}
+.card.dead{opacity:.4}
+.card .row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.card .nm{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px}
+.card .num{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.card .tag{font-size:10px;color:var(--teal)}
+.bar{height:6px;background:#0a0e17;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;transition:width .35s ease}
+.bar.hp i{background:var(--hp)}
+.bar.mp i{background:var(--mp)}
+#prompt{font-size:13px;color:var(--muted);min-height:18px}
+#actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;min-height:58px}
+.act{font:inherit;color:var(--bone);background:#1b2437;border:1px solid var(--line);border-radius:10px;padding:9px 12px;text-align:left;display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:border-color .15s,transform .1s}
+.act:hover{border-color:var(--ember)}
+.act:active{transform:scale(.97)}
+.act:focus-visible,.auth:focus-visible,.chip:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.act:disabled{opacity:.4;cursor:not-allowed;border-color:var(--line)}
+.act .l{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:16px}
+.act .s{font-size:12px;color:var(--muted)}
+.act.skill{border-color:#34506a;background:#18283a}
+.act.skill .l{color:var(--teal)}
+.act.tgt .l{color:#ff9e8c}
+.act.ghost{background:transparent}
+
+.elabel{position:absolute;transform:translate(-50%,-100%);text-align:center;font-family:'Chakra Petch',sans-serif;font-size:12px;text-shadow:0 1px 3px #000;white-space:nowrap}
+.elabel .bar{width:64px;height:5px;margin:3px auto 0}
+.elabel.boss{color:var(--gold)}
+.pop{position:absolute;transform:translate(-50%,-50%);font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:22px;pointer-events:none;animation:rise 1s ease-out forwards;text-shadow:0 2px 0 #000,0 0 8px rgba(0,0,0,.6);white-space:nowrap}
+.pop.dmg{color:#fff}.pop.crit{color:var(--ember);font-size:28px}.pop.heal{color:var(--heal)}.pop.info{color:var(--teal);font-size:15px}
+@keyframes rise{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}15%{opacity:1;transform:translate(-50%,-60%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+
+.overlay{position:absolute;inset:0;display:flex;overflow-y:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:radial-gradient(ellipse at 50% 40%,rgba(15,20,32,.35),rgba(15,20,32,.85))}
+.box{margin:auto;width:100%;max-width:380px;background:rgba(15,20,32,.88);border:1px solid var(--line);border-radius:16px;padding:26px 22px;display:flex;flex-direction:column;gap:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--ember)}
+.box h1{margin:0;font-family:'Chakra Petch',sans-serif;font-size:36px;line-height:1.1}
+.box h2{margin:0;font-family:'Chakra Petch',sans-serif;font-size:28px}
+.box p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+.auth{font:inherit;font-weight:600;font-size:15px;min-height:48px;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:transform .1s,filter .15s;width:100%}
+.auth:active{transform:scale(.98)}
+.auth:hover{filter:brightness(1.08)}
+.auth:disabled{opacity:.5;cursor:wait}
+.auth.g{background:#fff;color:#1f1f1f}
+.auth.f{background:#1877f2;color:#fff}
+.auth.guest,.auth.line{background:transparent;border-color:var(--ember);color:var(--ember)}
+.auth.main{background:var(--ember);color:#1a1008}
+.auth.quiet{background:transparent;border-color:var(--line);color:var(--muted);min-height:40px;font-size:13px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.sep{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+#note{font-size:13px;line-height:1.55;background:#1b2437;border:1px solid #34506a;border-radius:10px;padding:10px 12px}
+.hello{font-family:'Chakra Petch',sans-serif;font-size:17px}
+.hello span{color:var(--gold)}
+.best{font-size:12px;color:var(--muted);text-align:center}
+#board{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px}
+#board li{display:grid;grid-template-columns:24px 1fr auto;gap:8px;padding:5px 8px;border-radius:6px;background:#141b2a}
+#board li.me{background:#2a2217;color:var(--gold)}
+#board .rk{color:var(--muted);font-variant-numeric:tabular-nums}
+#board .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#board .wv{font-variant-numeric:tabular-nums;font-family:'Chakra Petch',sans-serif}
+
+@media (max-width:480px){
+  .card{padding:7px 8px}.card .nm{font-size:13px}.card .num{font-size:10px}
+  .act .l{font-size:15px}.act{padding:8px 10px}#msg{font-size:14px}.chip{font-size:12px;padding:4px 10px}
+}
+@media (prefers-reduced-motion:reduce){.pop{animation-duration:.01s}}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="stage"></div>
+  <div id="labels"></div>
+
+  <div id="top">
+    <span class="chip">ด่าน <b id="waveNo">1</b></span>
+    <button class="chip" id="menuBtn" hidden>เมนู</button>
+  </div>
+  <div id="msg" hidden></div>
+  <div id="toast" hidden></div>
+
+  <div id="panel" hidden>
+    <div id="party"></div>
+    <div id="prompt"></div>
+    <div id="actions"></div>
+  </div>
+
+  <!-- หน้าแรก / ล็อกอิน -->
+  <div class="overlay" id="login">
+    <div class="box">
+      <div class="eyebrow">RPG เทิร์นเบส 3D</div>
+      <h1>ตำนานป่าอัมพร</h1>
+      <p>นำทีมอัศวิน จอมเวท และนักบวช ฝ่าฝูงมอนสเตอร์ในป่ายามค่ำ เลือกคำสั่งทีละตัว แล้วรอดให้ได้หลายด่านที่สุด</p>
+
+      <div class="stack" id="authOut">
+        <button class="auth g" id="btnG">เข้าสู่ระบบด้วย Google</button>
+        <button class="auth f" id="btnF">เข้าสู่ระบบด้วย Facebook</button>
+        <div class="sep">หรือ</div>
+        <button class="auth guest" id="btnGuest">เล่นแบบผู้เยี่ยมชม</button>
+      </div>
+
+      <div class="stack" id="authIn" hidden>
+        <div class="hello">สวัสดี <span id="helloName"></span></div>
+        <button class="auth main" id="btnContinue"></button>
+        <button class="auth line" id="btnNew">เริ่มใหม่ตั้งแต่ด่าน 1</button>
+        <button class="auth quiet" id="btnLogout">ออกจากระบบ</button>
+      </div>
+
+      <div id="note" hidden></div>
+      <div class="best" id="bestLine"></div>
+
+      <div class="stack" id="boardWrap" hidden>
+        <div class="sep">อันดับผู้เล่น</div>
+        <ol id="board"></ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- ผลการต่อสู้ -->
+  <div class="overlay" id="result" hidden>
+    <div class="box">
+      <div class="eyebrow" id="resEyebrow"></div>
+      <h2 id="resTitle"></h2>
+      <p id="resText"></p>
+      <button class="auth main" id="resBtn"></button>
+    </div>
+  </div>
+
+  <!-- เมนูกลับหน้าแรก -->
+  <div class="overlay" id="menu" hidden>
+    <div class="box">
+      <h2>พักเกม</h2>
+      <p>ความคืบหน้าจะถูกบันทึกทุกครั้งที่ผ่านด่าน ถ้ากลับหน้าแรกตอนนี้ การต่อสู้ในด่านปัจจุบันจะหายไป</p>
+      <button class="auth main" id="menuResume">เล่นต่อ</button>
+      <button class="auth line" id="menuHome">กลับหน้าแรก</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =====================================================================
+   ตั้งค่า Supabase  (ดูคู่มือ ขั้นตอนที่ 1)
+   เอาค่าจาก Supabase > Project Settings > API Keys / Data API
+   - SUPABASE_URL  เช่น https://abcdefghijk.supabase.co
+   - SUPABASE_KEY  ใช้ Publishable key (sb_publishable_...) หรือ anon key
+     ห้ามใช้ Secret key / service_role เด็ดขาด
+   ===================================================================== */
+const SUPABASE_URL = 'https://spkzkwksjweszytkgokx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_FsTybeBpKC_v3gHQ4gnUHA_xhYmbBIt';
+
+(function(){
+const $=s=>document.querySelector(s);
+const stage=$('#stage'), labels=$('#labels'), panel=$('#panel'), partyEl=$('#party'), promptEl=$('#prompt'), actionsEl=$('#actions'), msgEl=$('#msg');
+
+/* ---------- บัญชีผู้เล่น & เซฟ ---------- */
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const sb=(SUPABASE_URL&&SUPABASE_KEY&&window.supabase)?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+let user=null, playerName='ผู้เยี่ยมชม', prog={best:0,last:1};
+
+function note(t){const n=$('#note');n.hidden=!t;n.textContent=t||'';}
+let toastTimer;
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,4000);}
+
+function loadLocal(){prog={best:store.get('amber_best',0),last:store.get('amber_last',1)};}
+async function loadCloud(){
+  const {data,error}=await sb.from('player_saves').select('best_wave,last_wave').eq('user_id',user.id).maybeSingle();
+  if(error){ note('โหลดเซฟไม่สำเร็จ: '+error.message+' (ตรวจว่ารันไฟล์ setup.sql แล้วหรือยัง)'); prog={best:0,last:1}; return; }
+  if(data){ prog={best:data.best_wave,last:data.last_wave}; }
+  else { prog={best:0,last:1}; await persist(); }
+}
+async function persist(){
+  if(user&&sb){
+    const {error}=await sb.from('player_saves').upsert({user_id:user.id,display_name:playerName.slice(0,40),best_wave:prog.best,last_wave:prog.last,updated_at:new Date().toISOString()});
+    if(error) toast('บันทึกเซฟไม่สำเร็จ: '+error.message);
+  } else { store.set('amber_best',prog.best); store.set('amber_last',prog.last); }
+}
+async function loadBoard(){
+  if(!sb) return;
+  const {data,error}=await sb.from('player_saves').select('user_id,display_name,best_wave').gt('best_wave',0).order('best_wave',{ascending:false}).order('updated_at',{ascending:true}).limit(10);
+  const wrap=$('#boardWrap'), ol=$('#board');
+  if(error||!data||!data.length){ wrap.hidden=true; return; }
+  ol.innerHTML='';
+  data.forEach((r,i)=>{
+    const li=document.createElement('li'); if(user&&r.user_id===user.id) li.className='me';
+    const a=document.createElement('span');a.className='rk';a.textContent=i+1;
+    const b=document.createElement('span');b.className='nm';b.textContent=r.display_name;
+    const c=document.createElement('span');c.className='wv';c.textContent=r.best_wave+' ด่าน';
+    li.append(a,b,c); ol.appendChild(li);
+  });
+  wrap.hidden=false;
+}
+function renderTitle(){
+  $('#authOut').hidden=!!user; $('#authIn').hidden=!user;
+  if(user){
+    $('#helloName').textContent=playerName;
+    const c=$('#btnContinue');
+    c.textContent=prog.last>1?`เล่นต่อ · ด่าน ${prog.last}`:'เริ่มผจญภัย';
+    $('#btnNew').hidden=prog.last<=1;
+  }
+  $('#bestLine').textContent=prog.best>0?`สถิติสูงสุด${user?'ของบัญชีนี้':'ในเครื่องนี้'}: ผ่าน ${prog.best} ด่าน`:'';
+  loadBoard();
+}
+async function onSession(session){
+  if(session&&session.user){
+    user=session.user;
+    const m=user.user_metadata||{};
+    playerName=(m.full_name||m.name||(user.email||'ผู้เล่น').split('@')[0]).trim();
+    note('');
+    await loadCloud();
+  } else {
+    user=null; playerName='ผู้เยี่ยมชม'; loadLocal();
+  }
+  renderTitle();
+}
+async function signIn(provider){
+  if(!sb){ note('ยังไม่ได้ใส่ SUPABASE_URL และ SUPABASE_KEY ในไฟล์ index.html ตอนนี้เล่นแบบผู้เยี่ยมชมได้ก่อน'); return; }
+  if(location.protocol==='file:'){ note('ล็อกอินต้องเปิดเกมผ่านเว็บ (เช่นลิงก์ Netlify) ไม่ใช่เปิดไฟล์จากเครื่องตรง ๆ'); return; }
+  document.querySelectorAll('#authOut .auth').forEach(b=>b.disabled=true);
+  const {error}=await sb.auth.signInWithOAuth({provider,options:{redirectTo:location.origin+location.pathname}});
+  if(error){ note('ล็อกอินไม่สำเร็จ: '+error.message); document.querySelectorAll('#authOut .auth').forEach(b=>b.disabled=false); }
+}
+$('#btnG').onclick=()=>signIn('google');
+$('#btnF').onclick=()=>signIn('facebook');
+$('#btnLogout').onclick=async()=>{ if(sb) await sb.auth.signOut(); };
+$('#btnGuest').onclick=()=>enterGame(1);
+$('#btnContinue').onclick=()=>enterGame(prog.last);
+$('#btnNew').onclick=()=>enterGame(1);
+$('#menuBtn').onclick=()=>{ $('#menu').hidden=false; };
+$('#menuResume').onclick=()=>{ $('#menu').hidden=true; };
+$('#menuHome').onclick=()=>{ location.reload(); };
+
+loadLocal();
+if(sb){ sb.auth.onAuthStateChange((ev,session)=>{ if(ev==='INITIAL_SESSION'||ev==='SIGNED_IN'||ev==='SIGNED_OUT') setTimeout(()=>onSession(session),0); }); }
+else { renderTitle(); }
+
+function enterGame(wave){
+  $('#login').hidden=true; panel.hidden=false; $('#menuBtn').hidden=false;
+  startGame(wave); requestAnimationFrame(layout);
+}
+
+/* ---------- three.js ---------- */
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;
+stage.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0f1420);
+scene.fog=new THREE.Fog(0x0f1420,16,34);
+const camera=new THREE.PerspectiveCamera(50,1,.1,120);
+const lookAt=new THREE.Vector3(0,.7,0);
+const camDir=new THREE.Vector3(0,.55,.84).normalize();
+let camDist=11, shakeAmt=0;
+
+scene.add(new THREE.HemisphereLight(0x8fb3ff,0x2a3a22,.55));
+const sun=new THREE.DirectionalLight(0xffe0b8,.85);
+sun.position.set(5,11,6); sun.castShadow=true; sun.shadow.mapSize.set(1024,1024);
+Object.assign(sun.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:1,far:30});
+scene.add(sun);
+
+const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.75,flatShading:true},o));
+function mk(geo,mat,x=0,y=0,z=0){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;return m;}
+
+const ground=new THREE.Mesh(new THREE.CircleGeometry(30,48),M(0x223224,{flatShading:false,roughness:1}));
+ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+const arena=new THREE.Mesh(new THREE.CircleGeometry(6.4,40),M(0x3a4631,{flatShading:false,roughness:1}));
+arena.rotation.x=-Math.PI/2; arena.position.y=.01; arena.receiveShadow=true; scene.add(arena);
+for(let i=0;i<18;i++){const a=i/18*Math.PI*2,s=mk(new THREE.DodecahedronGeometry(.28+Math.random()*.15,0),M(0x5d6470),Math.cos(a)*6.5,.12,Math.sin(a)*6.5);s.rotation.set(Math.random(),Math.random(),0);s.receiveShadow=true;scene.add(s);}
+for(let i=0;i<30;i++){
+  const a=i/30*Math.PI*2+Math.random()*.2,r=9+Math.random()*7,t=new THREE.Group(),h=1.6+Math.random()*1.4;
+  t.add(mk(new THREE.CylinderGeometry(.14,.2,h*.5,6),M(0x4a3526),0,h*.25,0));
+  t.add(mk(new THREE.ConeGeometry(h*.42,h*.8,7),M(0x1d3a2b),0,h*.75,0));
+  t.add(mk(new THREE.ConeGeometry(h*.3,h*.6,7),M(0x24483a),0,h*1.1,0));
+  t.position.set(Math.cos(a)*r,0,Math.sin(a)*r); t.rotation.y=Math.random()*6; scene.add(t);
+}
+const fire=new THREE.Group(); fire.position.set(-5.6,0,.4); scene.add(fire);
+for(let i=0;i<4;i++){const l=mk(new THREE.CylinderGeometry(.06,.06,.8,6),M(0x5a3b24),0,.1,0);l.rotation.z=Math.PI/2;l.rotation.y=i*Math.PI/4;fire.add(l);}
+const flame=new THREE.Mesh(new THREE.ConeGeometry(.22,.6,8),new THREE.MeshBasicMaterial({color:0xff9a3d}));flame.position.y=.4;fire.add(flame);
+const fireLight=new THREE.PointLight(0xff7a2a,1.6,12); fireLight.position.y=.8; fire.add(fireLight);
+const ffGeo=new THREE.BufferGeometry(),ffN=70,ffPos=new Float32Array(ffN*3),ffSeed=[];
+for(let i=0;i<ffN;i++){const a=Math.random()*6.28,r=4+Math.random()*10;ffPos[i*3]=Math.cos(a)*r;ffPos[i*3+1]=.5+Math.random()*3;ffPos[i*3+2]=Math.sin(a)*r;ffSeed.push(Math.random()*6.28);}
+ffGeo.setAttribute('position',new THREE.BufferAttribute(ffPos,3));
+scene.add(new THREE.Points(ffGeo,new THREE.PointsMaterial({color:0xffd27a,size:.09,transparent:true,opacity:.85})));
+
+/* ---------- ตัวละคร ---------- */
+function buildKnight(){
+  const g=new THREE.Group();
+  g.add(mk(new THREE.BoxGeometry(.16,.4,.18),M(0x4e5a6b),-.14,.2,0));
+  g.add(mk(new THREE.BoxGeometry(.16,.4,.18),M(0x4e5a6b),.14,.2,0));
+  g.add(mk(new THREE.CylinderGeometry(.34,.42,.85,8),M(0x8fa3b8,{metalness:.6,roughness:.4}),0,.8,0));
+  g.add(mk(new THREE.SphereGeometry(.27,12,10),M(0xb8c6d4,{metalness:.7,roughness:.3}),0,1.46,0));
+  g.add(mk(new THREE.BoxGeometry(.3,.06,.05),M(0x141922),0,1.46,-.25));
+  g.add(mk(new THREE.ConeGeometry(.08,.38,6),M(0xd9453b),0,1.82,.05));
+  const sword=new THREE.Group();
+  sword.add(mk(new THREE.BoxGeometry(.07,.95,.03),M(0xe8eef5,{metalness:.9,roughness:.2}),0,.5,0));
+  sword.add(mk(new THREE.BoxGeometry(.28,.05,.07),M(0xc9a24a,{metalness:.6}),0,.02,0));
+  sword.position.set(.5,.75,-.1); sword.rotation.x=-.45; g.add(sword);
+  const sh=mk(new THREE.CylinderGeometry(.3,.3,.06,16),M(0xa8322d,{metalness:.3}),-.48,.85,-.05); sh.rotation.z=Math.PI/2; g.add(sh);
+  g.add(mk(new THREE.SphereGeometry(.07,8,6),M(0xe8c15a,{metalness:.8}),-.52,.85,-.05));
+  g.userData.idle=t=>{g.position.y=Math.sin(t*2)*.03;};
+  return g;
+}
+function buildMage(){
+  const g=new THREE.Group();
+  g.add(mk(new THREE.ConeGeometry(.5,1.3,10),M(0x3d4fa8),0,.65,0));
+  g.add(mk(new THREE.SphereGeometry(.24,12,10),M(0xe9c4a0,{flatShading:false}),0,1.45,0));
+  g.add(mk(new THREE.CylinderGeometry(.46,.46,.04,18),M(0x27316f),0,1.6,0));
+  const hat=mk(new THREE.ConeGeometry(.3,.75,10),M(0x27316f),0,2,0); hat.rotation.z=.15; g.add(hat);
+  g.add(mk(new THREE.CylinderGeometry(.035,.035,1.7,6),M(0x6b4a2e),.48,.85,-.05));
+  const orb=mk(new THREE.SphereGeometry(.12,12,10),new THREE.MeshStandardMaterial({color:0x5fd3c4,emissive:0x2fb3a4,emissiveIntensity:1}),.48,1.75,-.05); g.add(orb);
+  g.userData.idle=t=>{g.position.y=Math.sin(t*2+1)*.03; orb.position.y=1.75+Math.sin(t*3)*.04;};
+  return g;
+}
+function buildPriest(){
+  const g=new THREE.Group();
+  g.add(mk(new THREE.CylinderGeometry(.28,.5,1.2,10),M(0xe8e1cf),0,.6,0));
+  g.add(mk(new THREE.CylinderGeometry(.3,.33,.1,10),M(0xc9a24a,{metalness:.5}),0,.75,0));
+  g.add(mk(new THREE.SphereGeometry(.24,12,10),M(0xd9a982,{flatShading:false}),0,1.42,0));
+  g.add(mk(new THREE.ConeGeometry(.3,.45,10,1,true),M(0xd8d0bb,{side:THREE.DoubleSide}),0,1.6,.04));
+  const halo=new THREE.Mesh(new THREE.TorusGeometry(.2,.025,8,24),new THREE.MeshStandardMaterial({color:0xffe08a,emissive:0xe8c15a,emissiveIntensity:1}));
+  halo.rotation.x=Math.PI/2; halo.position.y=1.92; g.add(halo);
+  g.add(mk(new THREE.CylinderGeometry(.03,.03,1.4,6),M(0xe8c15a,{metalness:.6}),-.45,.75,-.05));
+  g.add(mk(new THREE.BoxGeometry(.24,.05,.05),M(0xe8c15a,{metalness:.6}),-.45,1.38,-.05));
+  g.userData.idle=t=>{g.position.y=Math.sin(t*2+2)*.03; halo.rotation.z=t;};
+  return g;
+}
+function buildSlime(){
+  const g=new THREE.Group();
+  const body=mk(new THREE.SphereGeometry(.6,18,14),new THREE.MeshStandardMaterial({color:0x5fd37a,roughness:.2,transparent:true,opacity:.88}),0,.45,0);
+  body.scale.y=.75; g.add(body);
+  const eyeM=M(0x111111,{flatShading:false});
+  g.add(mk(new THREE.SphereGeometry(.07,8,6),eyeM,-.18,.58,.5));
+  g.add(mk(new THREE.SphereGeometry(.07,8,6),eyeM,.18,.58,.5));
+  const ph=Math.random()*6;
+  g.userData.idle=t=>{const s=Math.sin(t*3+ph)*.07; g.scale.set(1-s*.6,1+s,1-s*.6);};
+  return g;
+}
+function buildBat(){
+  const g=new THREE.Group(), core=new THREE.Group(); core.position.y=1.5; g.add(core);
+  core.add(mk(new THREE.SphereGeometry(.3,12,10),M(0x4a2f5c)));
+  core.add(mk(new THREE.ConeGeometry(.08,.22,4),M(0x4a2f5c),-.14,.3,0));
+  core.add(mk(new THREE.ConeGeometry(.08,.22,4),M(0x4a2f5c),.14,.3,0));
+  const eyeM=new THREE.MeshStandardMaterial({color:0xff3b3b,emissive:0xff2020,emissiveIntensity:1});
+  core.add(mk(new THREE.SphereGeometry(.045,8,6),eyeM,-.1,.06,.27));
+  core.add(mk(new THREE.SphereGeometry(.045,8,6),eyeM,.1,.06,.27));
+  const wl=new THREE.Group(), wr=new THREE.Group();
+  wl.add(mk(new THREE.BoxGeometry(.75,.03,.4),M(0x35203f),-.4,0,0));
+  wr.add(mk(new THREE.BoxGeometry(.75,.03,.4),M(0x35203f),.4,0,0));
+  wl.position.x=-.2; wr.position.x=.2; core.add(wl,wr);
+  const blob=new THREE.Mesh(new THREE.CircleGeometry(.35,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.3}));
+  blob.rotation.x=-Math.PI/2; blob.position.y=.03; g.add(blob);
+  const ph=Math.random()*6;
+  g.userData.idle=t=>{const f=Math.sin(t*14+ph)*.6; wl.rotation.z=-f; wr.rotation.z=f; core.position.y=1.5+Math.sin(t*2+ph)*.15;};
+  return g;
+}
+function buildGolem(){
+  const g=new THREE.Group(), s=M(0x6b6f78), d=M(0x51545c);
+  g.add(mk(new THREE.BoxGeometry(.4,.7,.45),d,-.35,.35,0));
+  g.add(mk(new THREE.BoxGeometry(.4,.7,.45),d,.35,.35,0));
+  g.add(mk(new THREE.BoxGeometry(1.3,1.1,.85),s,0,1.25,0));
+  g.add(mk(new THREE.BoxGeometry(.6,.5,.55),s,0,2.05,.05));
+  const eyeM=new THREE.MeshStandardMaterial({color:0xffa24d,emissive:0xff7a2a,emissiveIntensity:1.2});
+  g.add(mk(new THREE.BoxGeometry(.12,.07,.05),eyeM,-.13,2.08,.33));
+  g.add(mk(new THREE.BoxGeometry(.12,.07,.05),eyeM,.13,2.08,.33));
+  g.add(mk(new THREE.BoxGeometry(.2,.2,.05),eyeM,0,1.35,.43));
+  const al=mk(new THREE.BoxGeometry(.38,1.1,.4),d,-.88,1.15,0), ar=mk(new THREE.BoxGeometry(.38,1.1,.4),d,.88,1.15,0);
+  g.add(al,ar);
+  for(let i=0;i<5;i++) g.add(mk(new THREE.DodecahedronGeometry(.12,0),M(0x3f7a4a),(Math.random()-.5),1.8,(Math.random()-.5)*.6));
+  g.userData.idle=t=>{g.rotation.y=Math.sin(t*.8)*.08; al.rotation.x=Math.sin(t*1.6)*.1; ar.rotation.x=-Math.sin(t*1.6)*.1;};
+  return g;
+}
+
+/* ---------- ข้อมูลเกม ---------- */
+const HERO_DEF=[
+  {key:'knight',name:'อัศวิน',hp:130,mp:24,atk:21,mag:6,def:9,build:buildKnight,h:2.1,skill:{name:'ฟันกวาด',cost:8,kind:'sweep',desc:'ฟันศัตรูทุกตัว'}},
+  {key:'mage',name:'จอมเวท',hp:82,mp:54,atk:10,mag:28,def:4,build:buildMage,h:2.4,skill:{name:'ลูกไฟ',cost:10,kind:'fire',desc:'เวทไฟแรง 1 ตัว'}},
+  {key:'priest',name:'นักบวช',hp:96,mp:44,atk:11,mag:19,def:6,build:buildPriest,h:2.2,skill:{name:'แสงฟื้นฟู',cost:12,kind:'heal',desc:'ฟื้น HP ทั้งทีม'}},
+];
+const ENEMY_DEF={
+  slime:{name:'สไลม์',hp:58,atk:14,def:2,build:buildSlime,h:1.3},
+  bat:{name:'ค้างคาวเงา',hp:46,atk:17,def:1,build:buildBat,h:2.3},
+  golem:{name:'โกเลมหิน',hp:200,atk:25,def:8,build:buildGolem,h:2.8,boss:true},
+};
+const WAVES=[['slime','slime'],['slime','bat','slime'],['bat','golem','bat']];
+function waveList(n){
+  if(n<=WAVES.length) return WAVES[n-1];
+  const list=['slime','bat','slime','bat'].sort(()=>Math.random()-.5).slice(0,2);
+  list.splice(1,0,Math.random()<.5?'golem':'bat');
+  return list;
+}
+
+let heroes=[], enemies=[];
+function makeUnit(def,x,z){
+  const obj=new THREE.Group(), model=def.build();
+  obj.add(model); obj.position.set(x,0,z); scene.add(obj);
+  const mats=[];
+  model.traverse(o=>{if(o.isMesh&&o.material.emissive){mats.push(o.material);o.material.userData.e=o.material.emissive.clone();}});
+  const u={name:def.name,key:def.key,obj,model,mats,h:def.h,home:new THREE.Vector3(x,0,z),alive:true,defending:false};
+  obj.userData.unit=u; return u;
+}
+function spawnHeroes(){
+  heroes.forEach(h=>scene.remove(h.obj));
+  const xs=[-2.4,0,2.4];
+  heroes=HERO_DEF.map((d,i)=>{const u=makeUnit(d,xs[i],2.6);
+    Object.assign(u,{side:'hero',maxHp:d.hp,hp:d.hp,maxMp:d.mp,mp:d.mp,atk:d.atk,mag:d.mag,def:d.def,skill:d.skill});return u;});
+  buildParty();
+}
+function spawnEnemies(n){
+  enemies.forEach(e=>{scene.remove(e.obj);e.label.remove();});
+  const keys=waveList(n), xs={1:[0],2:[-1.7,1.7],3:[-2.7,0,2.7]}[keys.length];
+  const sc=1+.2*(n-1), counts={}, seen={};
+  keys.forEach(k=>counts[k]=(counts[k]||0)+1);
+  enemies=keys.map((k,i)=>{
+    const d=Object.assign({key:k},ENEMY_DEF[k]);
+    let name=d.name; if(counts[k]>1){seen[k]=(seen[k]||0)+1;name+=' '+'กขค'[seen[k]-1];}
+    const u=makeUnit(Object.assign({},d,{name}),xs[i],-2.4);
+    Object.assign(u,{side:'enemy',maxHp:Math.round(d.hp*sc),hp:Math.round(d.hp*sc),atk:Math.round(d.atk*sc),def:d.def,boss:!!d.boss,turns:0});
+    const ring=new THREE.Mesh(new THREE.RingGeometry(.75,.9,36),new THREE.MeshBasicMaterial({color:0xff5a4a,transparent:true,opacity:.9,side:THREE.DoubleSide}));
+    ring.rotation.x=-Math.PI/2; ring.position.y=.04; ring.visible=false; u.obj.add(ring); u.ring=ring;
+    const lb=document.createElement('div'); lb.className='elabel'+(u.boss?' boss':'');
+    const nm=document.createElement('div'); nm.textContent=name; lb.appendChild(nm);
+    const bar=document.createElement('div'); bar.className='bar hp'; bar.innerHTML='<i style="width:100%"></i>'; lb.appendChild(bar);
+    labels.appendChild(lb); u.label=lb; u.labelBar=bar.firstChild;
+    u.obj.position.y=3; tween(.5+i*.12,k=>{u.obj.position.y=3*(1-k)},easeOutBounce);
+    return u;
+  });
+}
+const activeRing=new THREE.Mesh(new THREE.TorusGeometry(.75,.05,8,40),new THREE.MeshBasicMaterial({color:0xff8a3d}));
+activeRing.rotation.x=-Math.PI/2; activeRing.position.y=.05; activeRing.visible=false; scene.add(activeRing);
+
+/* ---------- แอนิเมชัน & เอฟเฟกต์ ---------- */
+const tweens=[];
+function tween(d,fn,ease=t=>t){return new Promise(r=>tweens.push({t:0,d,fn,ease,r}));}
+const easeIn=t=>t*t, easeOut=t=>1-(1-t)*(1-t);
+function easeOutBounce(x){const n=7.5625,d=2.75;if(x<1/d)return n*x*x;if(x<2/d)return n*(x-=1.5/d)*x+.75;if(x<2.5/d)return n*(x-=2.25/d)*x+.9375;return n*(x-=2.625/d)*x+.984375;}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function toScreen(v){const p=v.clone().project(camera);return{x:(p.x*.5+.5)*stage.clientWidth,y:(-p.y*.5+.5)*stage.clientHeight};}
+function pop(u,text,cls){
+  const p=toScreen(u.obj.position.clone().add(new THREE.Vector3((Math.random()-.5)*.4,u.h*.75,0)));
+  const el=document.createElement('div'); el.className='pop '+cls; el.textContent=text;
+  el.style.left=p.x+'px'; el.style.top=p.y+'px'; labels.appendChild(el);
+  setTimeout(()=>el.remove(),1050);
+}
+function flash(u,hex=0xff5533){u.mats.forEach(m=>m.emissive.setHex(hex));setTimeout(()=>u.mats.forEach(m=>m.emissive.copy(m.userData.e)),130);}
+function shake(u){const hx=u.home.x;tween(.3,k=>{u.obj.position.x=hx+Math.sin(k*40)*.12*(1-k)});}
+function disposeLater(m){scene.remove(m);m.geometry.dispose();m.material.dispose();}
+function burst(pos,color){
+  const m=new THREE.Mesh(new THREE.SphereGeometry(.3,14,10),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.85}));
+  m.position.copy(pos); scene.add(m);
+  return tween(.4,k=>{m.scale.setScalar(1+k*3);m.material.opacity=.85*(1-k)},easeOut).then(()=>disposeLater(m));
+}
+function ringFx(pos,color,r=1.2){
+  const m=new THREE.Mesh(new THREE.RingGeometry(.25,.4,40),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,side:THREE.DoubleSide}));
+  m.rotation.x=-Math.PI/2; m.position.set(pos.x,.06,pos.z); scene.add(m);
+  return tween(.6,k=>{m.scale.setScalar(1+k*r*4);m.material.opacity=.9*(1-k)},easeOut).then(()=>disposeLater(m));
+}
+function sparkles(u,color){
+  for(let i=0;i<8;i++){
+    const m=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),new THREE.MeshBasicMaterial({color,transparent:true}));
+    const a=Math.random()*6.28,r=.3+Math.random()*.4,d=.6+Math.random()*.5;
+    m.position.set(u.home.x+Math.cos(a)*r,.2,u.home.z+Math.sin(a)*r); scene.add(m);
+    tween(.9,k=>{m.position.y=.2+k*1.8*d;m.material.opacity=1-k},easeOut).then(()=>disposeLater(m));
+  }
+}
+async function lunge(u,tpos,onHit){
+  const from=u.home.clone(), to=from.clone().lerp(new THREE.Vector3(tpos.x,0,tpos.z),.6);
+  await tween(.22,k=>u.obj.position.lerpVectors(from,to,k),easeIn);
+  onHit();
+  await tween(.32,k=>u.obj.position.lerpVectors(to,from,k),easeOut);
+}
+async function fireball(from,to){
+  const ball=new THREE.Mesh(new THREE.SphereGeometry(.18,12,10),new THREE.MeshBasicMaterial({color:0xffa24d}));
+  ball.add(new THREE.PointLight(0xff7a2a,2.2,6)); scene.add(ball);
+  const a=from.clone().add(new THREE.Vector3(.48,1.75,-.05)), b=to.clone().add(new THREE.Vector3(0,.8,0));
+  await tween(.5,k=>{ball.position.lerpVectors(a,b,k);ball.position.y+=Math.sin(k*Math.PI)*1.3;});
+  disposeLater(ball); burst(b,0xff8a3d);
+}
+
+/* ---------- ระบบต่อสู้ ---------- */
+function calc(att,tgt,base,mult){
+  const crit=Math.random()<.1;
+  let d=base*mult*(.9+Math.random()*.2)-tgt.def*.6;
+  if(crit)d*=1.5; if(tgt.defending)d*=.5;
+  return {d:Math.max(1,Math.round(d)),crit};
+}
+function damage(tgt,r){
+  if(!tgt.alive)return;
+  tgt.hp=Math.max(0,tgt.hp-r.d);
+  pop(tgt,(r.crit?'คริติคอล ':'')+r.d,r.crit?'crit':'dmg');
+  flash(tgt); shake(tgt); if(r.crit) shakeAmt=.18;
+  if(tgt.hp<=0) kill(tgt);
+  refresh();
+}
+function heal(u,amt){ if(!u.alive)return; const a=Math.min(amt,u.maxHp-u.hp); u.hp+=a; pop(u,'+'+a,'heal'); refresh(); }
+function kill(u){
+  u.alive=false; if(u.label) u.label.hidden=true;
+  tween(.6,k=>{u.obj.scale.setScalar(1-.85*k);u.obj.position.y=-k*.35;},easeIn).then(()=>{u.obj.visible=false;});
+}
+
+/* ---------- UI ในเกม ---------- */
+function buildParty(){
+  partyEl.innerHTML='';
+  heroes.forEach(h=>{
+    const c=document.createElement('div'); c.className='card';
+    c.innerHTML=`<div class="row"><span class="nm">${h.name}</span><span class="tag"></span></div>
+      <div class="row"><span class="num">HP</span><span class="num hpn"></span></div><div class="bar hp"><i></i></div>
+      <div class="row"><span class="num">MP</span><span class="num mpn"></span></div><div class="bar mp"><i></i></div>`;
+    partyEl.appendChild(c); h.card=c;
+  });
+  refresh();
+}
+function refresh(){
+  heroes.forEach((h,i)=>{
+    const c=h.card; if(!c)return;
+    c.querySelector('.hpn').textContent=`${h.hp}/${h.maxHp}`;
+    c.querySelector('.mpn').textContent=`${h.mp}/${h.maxMp}`;
+    c.querySelector('.hp i').style.width=(h.hp/h.maxHp*100)+'%';
+    c.querySelector('.mp i').style.width=(h.mp/h.maxMp*100)+'%';
+    c.querySelector('.tag').textContent=h.alive?(h.defending?'ป้องกัน':''):'หมดสติ';
+    c.classList.toggle('dead',!h.alive);
+    c.classList.toggle('active',(state.phase==='player'||state.phase==='target')&&state.heroIdx===i&&h.alive);
+  });
+  enemies.forEach(e=>{ if(e.labelBar) e.labelBar.style.width=(e.hp/e.maxHp*100)+'%'; });
+}
+function setMsg(t){ msgEl.hidden=!t; msgEl.textContent=t||''; }
+function addBtn(label,sub,fn,disabled,cls){
+  const b=document.createElement('button'); b.className='act '+(cls||'');
+  const l=document.createElement('span');l.className='l';l.textContent=label;
+  const s=document.createElement('span');s.className='s';s.textContent=sub;
+  b.append(l,s); b.disabled=!!disabled; b.addEventListener('click',fn); actionsEl.appendChild(b); return b;
+}
+
+/* ---------- ลำดับเกม ---------- */
+const state={phase:'login',wave:1,heroIdx:-1,pending:null};
+
+function startGame(wave){ spawnHeroes(); startWave(wave||1); }
+async function startWave(n){
+  state.wave=n; $('#waveNo').textContent=n;
+  state.phase='busy'; actionsEl.innerHTML=''; promptEl.textContent='';
+  spawnEnemies(n);
+  setMsg(waveList(n).includes('golem')&&n===3?'บอสปรากฏตัว!':`ด่าน ${n}`);
+  await sleep(900);
+  beginRound();
+}
+function beginRound(){ state.heroIdx=-1; nextHero(); }
+function nextHero(){
+  let i=state.heroIdx+1;
+  while(i<heroes.length&&!heroes[i].alive) i++;
+  if(i>=heroes.length){ enemyPhase(); return; }
+  state.heroIdx=i; heroes[i].defending=false;
+  state.phase='player'; showActions();
+}
+function showActions(){
+  const h=heroes[state.heroIdx];
+  activeRing.visible=true; activeRing.position.set(h.home.x,.05,h.home.z);
+  enemies.forEach(e=>e.ring.visible=false);
+  setMsg(`ตาของ${h.name}`);
+  promptEl.textContent=`${h.name} จะทำอะไร?`;
+  actionsEl.innerHTML='';
+  addBtn('โจมตี','ศัตรู 1 ตัว',()=>askTarget('attack'));
+  const sk=h.skill;
+  addBtn(sk.name,`${sk.cost} MP · ${sk.desc}`,()=>{ sk.kind==='fire'?askTarget('fire'):act(sk.kind,null); },h.mp<sk.cost,'skill');
+  addBtn('ป้องกัน','รับดาเมจครึ่งเดียว',()=>act('defend',null));
+  refresh();
+}
+function askTarget(kind){
+  const alive=enemies.filter(e=>e.alive);
+  if(alive.length===1){ act(kind,alive[0]); return; }
+  state.phase='target'; state.pending=kind;
+  promptEl.textContent='แตะที่ศัตรูในฉาก หรือเลือกจากปุ่มด้านล่าง';
+  actionsEl.innerHTML='';
+  alive.forEach(e=>{ e.ring.visible=true; addBtn(e.name,`HP ${e.hp}/${e.maxHp}`,()=>act(kind,e),false,'tgt'); });
+  addBtn('ย้อนกลับ','เลือกคำสั่งใหม่',()=>{state.phase='player';showActions();},false,'ghost');
+}
+async function act(kind,target){
+  const h=heroes[state.heroIdx];
+  state.phase='busy'; actionsEl.innerHTML=''; promptEl.textContent='';
+  enemies.forEach(e=>e.ring.visible=false); activeRing.visible=false; refresh();
+  if(kind==='attack'){
+    setMsg(`${h.name}โจมตี ${target.name}`);
+    await lunge(h,target.obj.position,()=>damage(target,calc(h,target,h.atk,1)));
+  } else if(kind==='defend'){
+    h.defending=true; setMsg(`${h.name}ตั้งท่าป้องกัน`);
+    pop(h,'ป้องกัน','info'); flash(h,0x1f6b66); await ringFx(h.home,0x5fd3c4,.5);
+  } else {
+    h.mp-=h.skill.cost; refresh();
+    setMsg(`${h.name}ใช้ ${h.skill.name}!`);
+    if(kind==='sweep'){
+      const alive=enemies.filter(e=>e.alive), c=new THREE.Vector3();
+      alive.forEach(e=>c.add(e.obj.position)); c.divideScalar(alive.length);
+      await lunge(h,c,()=>{ ringFx(new THREE.Vector3(c.x,0,-2.4),0xff8a3d,1.3); alive.forEach(e=>damage(e,calc(h,e,h.atk,.85))); });
+    } else if(kind==='fire'){
+      h.obj.position.z=h.home.z-.2; await sleep(120);
+      await fireball(h.home,target.obj.position);
+      damage(target,calc(h,target,h.mag,1.6));
+      h.obj.position.z=h.home.z;
+    } else if(kind==='heal'){
+      flash(h,0x2a6b3a);
+      const amt=Math.round(h.mag*1.5+12);
+      heroes.filter(x=>x.alive).forEach(x=>{ sparkles(x,0x9af0a8); ringFx(x.home,0x74e08f,.6); heal(x,amt); });
+      await sleep(700);
+    }
+  }
+  refresh(); await sleep(300);
+  if(enemies.every(e=>!e.alive)){ victory(); return; }
+  nextHero();
+}
+async function enemyPhase(){
+  state.phase='busy'; activeRing.visible=false; refresh();
+  promptEl.textContent='ตาของฝ่ายศัตรู...';
+  for(const e of enemies){
+    if(!e.alive) continue;
+    const targets=heroes.filter(h=>h.alive);
+    if(!targets.length) break;
+    e.turns++;
+    if(e.key==='golem'&&e.turns%3===0){
+      setMsg(`${e.name}ใช้ ทุบแผ่นดิน!`);
+      await tween(.35,k=>{e.obj.position.y=Math.sin(k*Math.PI/2)},easeOut);
+      await tween(.15,k=>{e.obj.position.y=1-k},easeIn);
+      shakeAmt=.35; ringFx(e.home,0xffa24d,2.2);
+      targets.forEach(t=>damage(t,calc(e,t,e.atk,.7)));
+      await sleep(500);
+    } else {
+      const t=Math.random()<.4?targets.reduce((a,b)=>a.hp/a.maxHp<b.hp/b.maxHp?a:b):targets[Math.floor(Math.random()*targets.length)];
+      setMsg(`${e.name} โจมตี${t.name}`);
+      await lunge(e,t.obj.position,()=>{
+        const r=calc(e,t,e.atk,1); damage(t,r);
+        if(e.key==='bat'&&Math.random()<.4){ const hl=Math.round(r.d*.5); e.hp=Math.min(e.maxHp,e.hp+hl); setTimeout(()=>pop(e,'ดูดเลือด +'+hl,'heal'),250); refresh(); }
+      });
+      await sleep(250);
+    }
+  }
+  if(heroes.every(h=>!h.alive)){ defeat(); return; }
+  heroes.forEach(h=>{ if(h.alive) h.mp=Math.min(h.maxMp,h.mp+4); });
+  refresh(); beginRound();
+}
+function showResult(eyebrow,title,text,btn,fn){
+  $('#resEyebrow').textContent=eyebrow; $('#resTitle').textContent=title; $('#resText').textContent=text;
+  const b=$('#resBtn'); b.textContent=btn; b.onclick=()=>{ $('#result').hidden=true; fn(); };
+  $('#result').hidden=false; b.focus();
+}
+function victory(){
+  state.phase='result'; setMsg('');
+  const n=state.wave;
+  prog.best=Math.max(prog.best,n); prog.last=n+1; persist();
+  const where=user?'บันทึกลงบัญชีแล้ว':'บันทึกในเครื่องนี้แล้ว';
+  showResult('ชนะ',`ผ่านด่าน ${n} แล้ว`,`ทีมพักที่กองไฟ ฟื้น HP 30% และ MP ครึ่งหนึ่ง สมาชิกที่หมดสติจะกลับมาสู้ต่อ สถิติสูงสุด ${prog.best} ด่าน (${where})`,`ไปด่าน ${n+1}`,()=>{
+    heroes.forEach(h=>{
+      if(!h.alive){ h.alive=true; h.hp=0; h.obj.visible=true; h.obj.scale.setScalar(1); h.obj.position.copy(h.home); }
+      h.hp=Math.min(h.maxHp,h.hp+Math.round(h.maxHp*.3)); h.mp=Math.min(h.maxMp,h.mp+Math.round(h.maxMp*.5)); h.defending=false;
+      sparkles(h,0x9af0a8);
+    });
+    refresh(); startWave(n+1);
+  });
+}
+function defeat(){
+  state.phase='result'; setMsg('');
+  const n=state.wave; prog.last=n; persist();
+  showResult('พ่ายแพ้',`ทีมล้มที่ด่าน ${n}`,`สถิติสูงสุด ${prog.best} ด่าน ลองใช้ป้องกันตอนบอสเตรียมทุบแผ่นดิน และให้นักบวชฟื้นฟูก่อน HP ทีมจะต่ำ`,`ลองด่าน ${n} ใหม่`,()=>startGame(n));
+}
+
+/* ---------- แตะเลือกศัตรู ---------- */
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
+renderer.domElement.addEventListener('pointerdown',e=>{
+  if(state.phase!=='target')return;
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(ndc,camera);
+  const hits=ray.intersectObjects(enemies.filter(u=>u.alive).map(u=>u.obj),true);
+  if(!hits.length)return;
+  let o=hits[0].object; while(o&&!o.userData.unit)o=o.parent;
+  if(o) act(state.pending,o.userData.unit);
+});
+
+/* ---------- จัดกล้องตามขนาดจอ & วนลูป ---------- */
+function layout(){
+  const w=stage.clientWidth, h=stage.clientHeight;
+  renderer.setSize(w,h); camera.aspect=w/h; camera.fov=camera.aspect<1?60:50;
+  const panelH=panel.hidden?0:panel.offsetHeight, topH=90;
+  const hfovHalf=Math.atan(Math.tan(camera.fov*Math.PI/360)*camera.aspect);
+  const freeFrac=Math.max(.35,(h-panelH-topH)/h);
+  camDist=Math.max(3.5/Math.tan(hfovHalf),5.6/freeFrac/(2*Math.tan(camera.fov*Math.PI/360)),8);
+  scene.fog.near=camDist+4; scene.fog.far=camDist+24;
+  camera.setViewOffset(w,h,0,Math.round((panelH-topH*.6)/2),w,h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',layout);
+
+const clock=new THREE.Clock(); let T=0, orbit=0;
+function loop(){
+  requestAnimationFrame(loop);
+  const dt=Math.min(clock.getDelta(),.05); T+=dt;
+  for(let i=tweens.length-1;i>=0;i--){const tw=tweens[i];tw.t+=dt;const k=Math.min(1,tw.t/tw.d);tw.fn(tw.ease(k));if(k>=1){tweens.splice(i,1);tw.r();}}
+  [...heroes,...enemies].forEach(u=>{ if(u.alive&&u.model.userData.idle) u.model.userData.idle(T); });
+  enemies.forEach(e=>{ if(e.ring.visible) e.ring.scale.setScalar(1+Math.sin(T*6)*.06); });
+  activeRing.rotation.z+=dt; activeRing.scale.setScalar(1+Math.sin(T*4)*.04);
+  flame.scale.set(1+Math.sin(T*17)*.1,1+Math.sin(T*11)*.2,1); fireLight.intensity=1.5+Math.sin(T*13)*.25+Math.sin(T*7)*.15;
+  const p=ffGeo.attributes.position; for(let i=0;i<ffN;i++) p.array[i*3+1]+=Math.sin(T*1.5+ffSeed[i])*.004; p.needsUpdate=true;
+  const onTitle=!$('#login').hidden;
+  if(onTitle) orbit+=dt*.12; else orbit+=(0-orbit)*Math.min(1,dt*2);
+  const dir=camDir.clone().applyAxisAngle(new THREE.Vector3(0,1,0),Math.sin(orbit)*.9+(onTitle?0:Math.sin(T*.3)*.03));
+  camera.position.copy(lookAt).addScaledVector(dir,camDist);
+  if(shakeAmt>.001){camera.position.x+=(Math.random()-.5)*shakeAmt;camera.position.y+=(Math.random()-.5)*shakeAmt;shakeAmt*=.88;}
+  camera.lookAt(lookAt);
+  enemies.forEach(e=>{ if(!e.alive||!e.label)return; const s=toScreen(e.obj.position.clone().add(new THREE.Vector3(0,e.h,0))); e.label.style.left=s.x+'px'; e.label.style.top=s.y+'px'; });
+  renderer.render(scene,camera);
+}
+
+spawnHeroes(); spawnEnemies(1);
+layout(); loop();
+})();
+</script>
+</body>
+</html>

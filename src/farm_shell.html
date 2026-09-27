@@ -1,0 +1,267 @@
+<title>ฟาร์มป่าอัมพร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Bai+Jamjuree:wght@400;600&display=swap">
+<style>
+:root{--ink:#1c1510;--panel:rgba(28,22,16,.82);--panel2:#2a2119;--line:rgba(255,214,150,.22);--bone:#fbf1dc;--muted:#cdbb9b;--amber:#ffb347;--amberD:#d9822b;--mint:#5fe0c0;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:#9cc6ee;color:var(--bone);font-family:'Bai Jamjuree',system-ui,-apple-system,sans-serif;font-size:14px;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;cursor:pointer}
+#view{position:fixed;inset:0;touch-action:none}
+#view canvas{display:block;width:100%;height:100%}
+.disp{font-family:'Chakra Petch','Bai Jamjuree',sans-serif}
+/* แถบบน */
+#top{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 0;pointer-events:none}
+.profile{pointer-events:auto;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 14px 6px 6px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#ava{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#ffcf7a,#d9822b);display:grid;place-items:center;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:20px;color:#3a2210}
+#pname{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;line-height:1.1}
+.lvrow{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:12px}
+.lvrow b{font-family:'Chakra Petch',sans-serif;color:var(--amber)}
+.xp{width:84px;height:6px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden}
+.xp i{display:block;height:100%;background:linear-gradient(90deg,#8ff0c4,#5fe0c0)}
+.res{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.pill{pointer-events:auto;display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 12px 3px 4px;min-width:110px;justify-content:space-between;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.pill svg{width:24px;height:24px;flex:none}
+.pill small{font-family:'Bai Jamjuree',sans-serif;font-weight:400;font-size:10px;color:var(--muted);margin-left:4px}
+.bump{animation:bump .4s ease}
+@keyframes bump{40%{transform:scale(1.12)}}
+/* แถบซ้าย */
+#rail{position:fixed;left:12px;top:calc(76px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:10px}
+.rbtn{position:relative;width:58px;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:6px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.rbtn svg{width:28px;height:28px}
+.badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:#e8453c;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px;border:2px solid #fff3}
+/* เมนูล่าง */
+#dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:6px;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:6px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);max-width:calc(100% - 24px)}
+.nbtn{position:relative;border:0;background:linear-gradient(180deg,#3a2d20,#241b13);border-radius:12px;width:66px;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:12px;box-shadow:inset 0 1px 0 rgba(255,220,160,.18)}
+.nbtn svg{width:28px;height:28px}
+.nbtn.big{width:78px;padding:12px 2px 8px;background:linear-gradient(180deg,#ffc56a,#d9822b);color:#2a1606;margin-top:-18px;box-shadow:0 4px 14px rgba(217,130,43,.5),inset 0 1px 0 #fff6}
+.nbtn:active,.rbtn:active{transform:scale(.95)}
+.nbtn:focus-visible,.rbtn:focus-visible,.sbtn:focus-visible,.sitem:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+/* แผ่นข้อมูล */
+#sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 24px));max-height:min(62vh,520px);overflow:auto;background:rgba(30,23,17,.94);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 18px 50px rgba(0,0,0,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:up .22s ease}
+@keyframes up{from{opacity:0;transform:translate(-50%,12px)}}
+.shHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+#shTitle{margin:0;font-family:'Chakra Petch',sans-serif;font-size:22px;color:var(--amber)}
+#shSub{margin:2px 0 0;font-size:12px;color:var(--muted)}
+#shClose{border:0;background:rgba(255,255,255,.08);width:32px;height:32px;border-radius:10px;font-size:18px;line-height:1}
+.ptxt{margin:0 0 10px;color:#eadcc0;line-height:1.6}
+.rows{display:grid;gap:4px;margin:0 0 10px}
+.row{display:flex;justify-content:space-between;gap:10px;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 10px;font-size:13px}
+.row b{font-family:'Chakra Petch',sans-serif;font-variant-numeric:tabular-nums}
+#shActs{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:6px}
+.sbtn{border:0;border-radius:12px;padding:11px 10px;font-weight:700;background:linear-gradient(180deg,#ffc56a,#d9822b);color:#2a1606}
+.sbtn.gold{background:linear-gradient(180deg,#ffe28a,#e0a83a)}
+.sbtn.ghost{background:rgba(255,255,255,.08);color:var(--bone);border:1px solid var(--line)}
+.sbtn.small{padding:7px 10px;font-size:12px;min-width:84px}
+.sbtn:disabled{opacity:.45;cursor:not-allowed}
+.mons{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px;margin-bottom:6px}
+.mcard{background:rgba(255,255,255,.06);border-radius:10px;padding:8px 10px;display:grid;gap:2px}
+.mcard b{font-family:'Chakra Petch',sans-serif}.mcard span{font-size:12px;color:var(--amber)}
+.shop{display:grid;gap:6px}
+.sitem{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:10px;padding:10px 12px;text-align:left}
+.sitem b{font-family:'Chakra Petch',sans-serif;color:var(--amber)}
+.quests{display:grid;gap:8px}
+.quest{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:10px;padding:10px 12px}
+.quest>div{flex:1;display:grid;gap:3px}.quest span{font-size:12px;color:var(--muted)}
+.qbar{height:6px;border-radius:3px;background:rgba(0,0,0,.4);overflow:hidden}.qbar i{display:block;height:100%;background:var(--mint)}
+.days{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.day{background:rgba(255,255,255,.05);border:1px solid transparent;border-radius:10px;padding:8px 6px;text-align:center;display:grid;gap:2px}
+.day span{font-size:11px;color:var(--muted)}.day b{font-size:12px}
+.day.got{opacity:.45}.day.now{border-color:var(--amber);background:rgba(255,179,71,.14)}
+.mail{display:grid;gap:6px}.mitem{background:rgba(255,255,255,.05);border-radius:10px;padding:10px 12px;display:grid;gap:2px}.mitem span{font-size:12px;color:var(--muted)}
+/* ป้ายมอนสเตอร์ */
+#mtag{position:fixed;transform:translate(-50%,-100%);background:rgba(28,22,16,.9);border:1px solid var(--line);border-radius:10px;padding:5px 10px;text-align:center;pointer-events:none;white-space:nowrap}
+#mtName{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px}
+#mtInfo{font-size:11px;color:var(--amber)}
+#toast{z-index:9;position:fixed;top:calc(118px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);background:rgba(28,22,16,.92);border:1px solid var(--amber);border-radius:10px;padding:8px 14px;font-size:13px;text-align:center;z-index:5}
+#hint{position:fixed;right:12px;bottom:calc(96px + env(safe-area-inset-bottom,0px));font-size:11px;color:#1d2a3a;background:rgba(255,255,255,.55);border-radius:8px;padding:4px 8px;pointer-events:none}
+#stageMsg{display:none}
+[hidden]{display:none!important}
+@media (max-width:520px){
+  .nbtn{width:56px;font-size:11px}.nbtn.big{width:66px}.pill{min-width:92px;font-size:13px}.xp{width:60px}#hint{display:none}
+  #rail{top:calc(70px + env(safe-area-inset-top,0px))}.rbtn{width:52px}
+}
+
+/* สถานะเชื่อมต่อ + บัญชี */
+.profile{cursor:pointer}
+#ava{position:relative}
+#netDot{position:absolute;right:-3px;bottom:-3px;width:12px;height:12px;border-radius:50%;border:2px solid #241b13;background:#ffb347}
+#netDot.online{background:#5fe0c0}
+.nameRow{display:flex;gap:8px;margin-top:8px}
+.nameRow input{flex:1;min-width:0;height:40px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--bone);font:inherit;padding:0 12px;user-select:text;-webkit-user-select:text}
+/* ===== คลังมอนสเตอร์ (หน้าต่างไอคอน) ===== */
+body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.boxOpen #mtag,body.boxOpen #sheet{display:none!important}
+#box{position:fixed;inset:0;z-index:5;background:rgba(10,7,5,.55);display:flex;align-items:center;justify-content:center;padding:calc(8px + env(safe-area-inset-top,0px)) 8px calc(8px + env(safe-area-inset-bottom,0px))}
+#box[hidden]{display:none}
+#box.v3d{background:none;pointer-events:none}
+#box.v3d .bWin{display:none}
+.bWin{width:min(1060px,100%);height:min(640px,100%);display:flex;flex-direction:column;background:linear-gradient(180deg,#3b2c1f,#2a1f16);border:2px solid #7a5a34;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,220,160,.2);overflow:hidden;animation:up .2s ease}
+.bBar{flex:none;height:44px;display:flex;align-items:center;justify-content:center;position:relative;background:linear-gradient(180deg,#5a4128,#3d2c1c);border-bottom:2px solid #7a5a34}
+.bBar h2{margin:0;font-family:'Chakra Petch',sans-serif;font-size:19px;letter-spacing:.5px;text-shadow:0 2px 3px #000}
+.bBar h2 b{color:var(--amber)}
+#bClose{position:absolute;right:6px;top:4px;width:36px;height:36px;border-radius:8px;border:0;background:none;font-size:30px;line-height:1;color:var(--bone)}
+.bBody{flex:1;display:flex;gap:10px;padding:10px;min-height:0}
+.bLeft{flex:1;min-width:0;overflow:auto;overscroll-behavior:contain;padding:2px}
+#bList{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px}
+.ic{position:relative;aspect-ratio:1;border-radius:9px;padding:0;border:2px solid #8a93a6;background:#221a14;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
+.ic.r4{border-color:#b886ff}.ic.r5{border-color:#ffc94d}
+.ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ic .st{position:absolute;top:1px;left:0;right:0;text-align:center;color:#ffd24a;font-size:10px;letter-spacing:-1px;line-height:1;text-shadow:0 0 2px #000,0 1px 1px #000}
+.ic.r4 .st{color:#e3b6ff}.ic.r5 .st{color:#ffe07a}
+.ic .lv{position:absolute;right:3px;bottom:1px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;line-height:1.1;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
+.ic .lv.max{color:var(--amber)}
+.ic .tm{position:absolute;left:3px;bottom:3px;width:16px;height:16px;border-radius:4px;background:var(--amber);display:grid;place-items:center}
+.ic .tm svg{width:11px;height:11px}
+.ic .ev{position:absolute;left:3px;top:13px;width:14px;height:14px;border-radius:50%;background:#5fe0c0;color:#0e2a22;font-size:11px;font-weight:700;display:grid;place-items:center;animation:pulse 1.2s infinite}
+.ic.sel{outline:3px solid #fff3c4;outline-offset:1px;box-shadow:0 0 12px rgba(255,210,120,.8)}
+.ic.empty{border-color:rgba(255,214,150,.12);background:rgba(0,0,0,.28);display:grid;place-items:center;cursor:default}
+.ic.empty svg{width:46%;opacity:.13}
+@keyframes pulse{50%{opacity:.55}}
+.ic.pop{animation:pop .5s ease}
+@keyframes pop{30%{transform:scale(1.15);filter:brightness(1.8)}}
+.bRight{flex:none;width:370px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.bInfo{flex:1;min-height:0;display:flex;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.bTabs{flex:none;display:flex;flex-direction:column;gap:4px;padding:6px 0 6px 6px}
+.bTabs button{width:62px;height:40px;border-radius:8px 0 0 8px;border:1px solid var(--line);border-right:0;background:rgba(255,255,255,.04);font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:13px;color:var(--muted)}
+.bTabs button.on{background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808}
+.bPage{flex:1;min-width:0;display:flex;flex-direction:column;border-left:1px solid var(--line);background:rgba(20,14,10,.55)}
+.bPageIn{flex:1;overflow:auto;padding:10px 12px;overscroll-behavior:contain}
+.iHead{display:flex;align-items:center;gap:8px}
+.iEl{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#1a1210}
+.iHead b{font-family:'Chakra Petch',sans-serif;font-size:18px}
+.iHead .st{color:#ffd24a;font-size:13px;letter-spacing:-1px}
+.iSub{font-size:12px;color:var(--muted);margin:2px 0 8px}
+.iExp{display:flex;align-items:center;gap:8px;font-size:12px}
+.iExp span{font-family:'Chakra Petch',sans-serif;font-weight:700;color:var(--muted);width:30px}
+.iExp div{flex:1;height:14px;border-radius:7px;background:rgba(0,0,0,.5);overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.1)}
+.iExp i{display:block;height:100%;background:linear-gradient(90deg,#3aa88a,#8ff0c4);transition:width .3s}
+.iExp em{position:absolute;inset:0;text-align:center;font-style:normal;font-size:10px;font-weight:700;line-height:13px;color:#fff;text-shadow:0 1px 2px #000}
+.iTbl{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.iTbl td{padding:4px 2px}.iTbl td:last-child{text-align:right;font-family:'Chakra Petch',sans-serif;font-weight:700}
+.iTbl tr.sep td{border-top:1px solid var(--line);padding-top:7px}
+.iTbl .pw{color:var(--amber)}
+.skr{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);margin-bottom:6px}
+.skn{flex:none;width:24px;height:24px;border-radius:6px;background:rgba(255,179,71,.2);color:var(--amber);display:grid;place-items:center;font-weight:700;font-size:12px}
+.skr b{font-size:13px}.skr p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.iLore{font-size:13px;color:var(--muted);line-height:1.7;margin:4px 0}
+.bActs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;border-top:1px solid var(--line)}
+.bActs button{min-height:46px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;padding:2px}
+.bActs button small{font-family:'Bai Jamjuree',sans-serif;font-weight:400;font-size:10px;color:var(--muted)}
+.bActs .main{background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;border-color:#ffd9a0}.bActs .main small{color:#5a3410}
+#mdEvo{background:linear-gradient(180deg,#8ff0c4,#3aa88a);color:#0e2a22;border-color:#bff5e0}#mdEvo small{color:#1d4a3e}
+.bActs button:disabled{opacity:.4}
+.bTeamBox{flex:none;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.bTeamBox>div:first-child{font-size:12px;line-height:1.25}.bTeamBox>div:first-child b{font-family:'Chakra Petch',sans-serif;color:var(--amber);display:block}
+#bTeam{display:flex;gap:6px;margin-left:auto}
+#bTeam .ic{width:46px;border-width:2px}
+#bTeam .ic .lv{font-size:11px}#bTeam .ic .st{display:none}
+#bTeam .ic em{position:absolute;top:0;left:0;font-style:normal;font-size:9px;background:var(--amber);color:#2b1808;border-radius:0 0 4px 0;padding:0 3px;font-weight:700}
+.bSortRow{flex:none;display:flex;align-items:center;gap:6px}
+.bSortRow span{font-size:12px;color:var(--muted);white-space:nowrap}
+.bSortRow select{flex:1;height:34px;border-radius:8px;border:1px solid var(--line);background:#1f1711;color:var(--bone);font:inherit;padding:0 8px}
+/* มุมมอง 3D */
+#mdet{position:fixed;inset:0;pointer-events:none}
+.mdNav{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:12px;display:flex;gap:8px;align-items:center;pointer-events:auto}
+.mdNav b{font-family:'Chakra Petch',sans-serif;font-size:18px;text-shadow:0 2px 6px #000}
+.bBtn{height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font-family:'Chakra Petch',sans-serif;font-weight:700}
+.dragHint{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:12px;color:var(--muted);text-shadow:0 1px 2px #000;pointer-events:none}
+#loadMsg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;z-index:8}
+@media (max-width:760px) and (min-aspect-ratio:1/1){.bRight{width:300px}#bList{grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:5px}.bTabs button{width:50px;font-size:12px}}
+@media (max-height:430px){.bBar{height:36px}.bBody{padding:6px;gap:6px}.bActs button{min-height:38px}#bTeam .ic{width:38px}}
+@media (max-aspect-ratio:1/1){
+  .bWin{height:100%}
+  .bBody{flex-direction:column}
+  .bLeft{flex:none;height:32%}
+  #bList{grid-template-columns:repeat(5,1fr);gap:5px}
+  .bRight{width:auto;flex:1}
+}
+@media (prefers-reduced-motion:reduce){#sheet{animation:none}.bump{animation:none}}
+</style>
+
+<div id="view"></div>
+<div id="stageMsg" hidden></div>
+
+<div id="top">
+  <div class="profile" role="button" tabindex="0" aria-label="บัญชีผู้เล่น">
+    <div id="ava"><span id="avaT">ผ</span><i id="netDot" class="offline"></i></div>
+    <div><div id="pname"></div><div class="lvrow"><b id="plv"></b><span class="xp"><i id="pxp"></i></span></div></div>
+  </div>
+  <div class="res">
+    <div class="pill" id="pEnergy" title="พลังงาน"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2a2119"/><path d="M13 3 6 13h5l-1 8 7-10h-5z" fill="#ffd34d"/></svg><span><span id="rEnergy"></span><small id="rTimer"></small></span></div>
+    <div class="pill" id="pCoin" title="เหรียญ"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffc94d"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#b8862a" stroke-width="2"/><rect x="10.5" y="8" width="3" height="8" rx="1" fill="#b8862a"/></svg><span id="rCoin"></span></div>
+    <div class="pill" id="pAmber" title="อัมพร"><svg viewBox="0 0 24 24"><path d="M12 2 20 9l-8 13L4 9z" fill="#ff9a30"/><path d="M12 2 16 9l-4 4-4-4z" fill="#ffd9a0"/></svg><span id="rAmber"></span></div>
+  </div>
+</div>
+
+<div id="rail">
+  <button class="rbtn" id="rDaily"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#d9482b"/><rect x="2" y="6" width="20" height="4" rx="1" fill="#f07a2a"/><rect x="10.5" y="6" width="3" height="15" fill="#ffd34d"/><path d="M12 6C9 1 5 4 8 6M12 6c3-5 7-2 4 0" stroke="#ffd34d" stroke-width="2" fill="none"/></svg>รายวัน<span class="badge" id="bDaily">!</span></button>
+  <button class="rbtn" id="rMail"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" fill="#e9dcc0"/><path d="m2 6 10 7 10-7" stroke="#8a6a44" stroke-width="2" fill="none"/></svg>จดหมาย<span class="badge" id="bMail">2</span></button>
+  <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffc94d"/></svg>กิจกรรม</button>
+</div>
+
+<nav id="dock">
+  <button class="nbtn" id="nBattle"><svg viewBox="0 0 24 24"><path d="M4 3l9 9-2 2-9-9zM20 3l-9 9 2 2 9-9z" fill="#dfe5ee"/><path d="M5 17l2 2-3 3-2-2zM19 17l-2 2 3 3 2-2z" fill="#c9a24a"/></svg>ต่อสู้</button>
+  <button class="nbtn" id="nMons"><svg viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-8 8v9l3-2 2 2 3-2 3 2 2-2 3 2v-9a8 8 0 0 0-8-8z" fill="#3a3f4a"/><circle cx="9" cy="11" r="2" fill="#7fffe0"/><circle cx="15" cy="11" r="2" fill="#7fffe0"/></svg>มอนสเตอร์</button>
+  <button class="nbtn big" id="nHatch"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="7" ry="9" fill="#fff4d6"/><path d="M6 12l3 2 3-3 3 3 3-2" stroke="#d9822b" stroke-width="1.6" fill="none"/></svg>ฟักไข่</button>
+  <button class="nbtn" id="nQuest"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="#e9dcc0"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#8a6a44" stroke-width="2"/></svg>ภารกิจ<span class="badge" id="bQuest" hidden>1</span></button>
+  <button class="nbtn" id="nShop"><svg viewBox="0 0 24 24"><path d="M4 9h16l-1 12H5z" fill="#d9482b"/><path d="M8 9V7a4 4 0 0 1 8 0v2" stroke="#ffd34d" stroke-width="2" fill="none"/></svg>ร้านค้า</button>
+</nav>
+
+<section id="sheet" hidden>
+  <div class="shHead"><div><h2 id="shTitle"></h2><p id="shSub"></p></div><button id="shClose" aria-label="ปิด">×</button></div>
+  <div id="shBody"></div>
+  <div id="shActs"></div>
+</section>
+<div id="mtag" hidden><div id="mtName"></div><div id="mtInfo"></div></div>
+<div id="box" hidden>
+  <div class="bWin" role="dialog" aria-label="มอนสเตอร์">
+    <div class="bBar"><h2>มอนสเตอร์ <b id="bCount"></b></h2><button id="bClose" aria-label="ปิด">×</button></div>
+    <div class="bBody">
+      <div class="bLeft"><div id="bList"></div></div>
+      <div class="bRight">
+        <div class="bInfo">
+          <div class="bTabs"><button data-t="info" class="on">ข้อมูล</button><button data-t="skill">สกิล</button><button data-t="lore">ตำนาน</button></div>
+          <div class="bPage"><div class="bPageIn" id="bPage"></div>
+            <div class="bActs"><button id="mdUp" class="main"></button><button id="mdEvo"></button><button id="mdTeam"></button><button id="md3d">ดู 3D<small>หมุนดูตัว</small></button></div>
+          </div>
+        </div>
+        <div class="bTeamBox"><div><b>ทีมต่อสู้</b><span id="bTeamPow"></span></div><div id="bTeam"></div></div>
+        <div class="bSortRow"><span>เรียงตาม</span><select id="bSort"><option value="power">พลังสูงสุด</option><option value="rar">ดาวสูงสุด</option><option value="lv">เลเวลสูงสุด</option><option value="new">ได้มาล่าสุด</option></select></div>
+      </div>
+    </div>
+  </div>
+  <section id="mdet" hidden>
+    <div class="mdNav"><button class="bBtn" id="mdBack">‹ กลับ</button><b id="md3Name"></b></div>
+    <div class="dragHint">ลากเพื่อหมุนดูรอบตัว</div>
+  </section>
+</div>
+<div id="toast" hidden></div>
+<div id="loadMsg" hidden>กำลังโหลดมอนสเตอร์…</div>
+<div id="hint">ลากเพื่อเลื่อน · ล้อเมาส์/บีบนิ้วเพื่อซูม · แตะอาคารหรือมอนสเตอร์</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const view=$('#view'), stage=view;
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.0;
+view.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+let ENV=null; if(THREE.RoomEnvironment){const pm=new THREE.PMREMGenerator(renderer);ENV=pm.fromScene(new THREE.RoomEnvironment(),.04).texture;}
+const camera=new THREE.PerspectiveCamera(40,1,.5,400);
+const flashL=new THREE.PointLight(0xffffff,0,10); scene.add(flashL);
+/*__SHARED__*/
+/*__WORLD__*/
+/*__UI__*/
+/*__BOX__*/
+})();
+</script>
