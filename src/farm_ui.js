@@ -231,8 +231,10 @@ async function lgStart(){
   // ผลตอบกลับจากหน้า Google
   const q=new URLSearchParams(location.search+'&'+location.hash.slice(1));
   const errCode=q.get('error_code')||'', errDesc=q.get('error_description')||'';
+  // ให้ Supabase อ่าน token ที่ Google ส่งกลับมาใน URL ก่อน แล้วค่อยล้าง URL
+  let ok=true; try{await authInit();}catch(e){console.warn(e);ok=false;}
   if(location.hash.includes('access_token')||q.get('code')||errCode)history.replaceState(null,'',redirectTo());
-  try{await authInit();}catch(e){console.warn(e);lgShow('offline');return;}
+  if(!ok){lgShow('offline');return;}
   if(errCode==='identity_already_exists'||/already/i.test(errDesc)){
     lgShow('out');
     lgNote('บัญชี Google นี้มีเซฟอยู่แล้ว กดปุ่มด้านล่างเพื่อสลับไปใช้บัญชีนั้น (เซฟผู้เยี่ยมชมในเครื่องนี้จะไม่ย้ายไปด้วย)','warn');
