@@ -113,18 +113,18 @@ async function collectAmber(){
 }
 
 /* ---------- แตะ / ลาก / ซูม ---------- */
-const camT=new THREE.Vector3(0,0,.5), camTTo=camT.clone(); let dist=36, distTo=33;
+const camT=new THREE.Vector3(0,0,.5), camTTo=camT.clone(); let dist=44, distTo=40;
 const PITCH=.92;
 const ptrs=new Map(); let downAt=null, moved=0, pinch0=0;
 const cv=renderer.domElement;
 cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});downAt={x:e.clientX,y:e.clientY};moved=0;if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);}});
 cv.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;
-  if(ptrs.size===1){const dx=e.clientX-p.x,dy=e.clientY-p.y;moved+=Math.abs(dx)+Math.abs(dy);const k=dist*.0017;camTTo.x-=dx*k;camTTo.z-=dy*k/Math.cos(PITCH)*.7;const r=Math.hypot(camTTo.x,camTTo.z);if(r>10)camTTo.multiplyScalar(10/r);}
+  if(ptrs.size===1){const dx=e.clientX-p.x,dy=e.clientY-p.y;moved+=Math.abs(dx)+Math.abs(dy);const k=dist*.0017;camTTo.x-=dx*k;camTTo.z-=dy*k/Math.cos(PITCH)*.7;const r=Math.hypot(camTTo.x,camTTo.z);if(r>14)camTTo.multiplyScalar(14/r);}
   p.x=e.clientX;p.y=e.clientY;
-  if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0){distTo=Math.max(12,Math.min(46,distTo*pinch0/d));}pinch0=d;moved=99;}});
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0){distTo=Math.max(12,Math.min(58,distTo*pinch0/d));}pinch0=d;moved=99;}});
 const endPtr=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;if(ptrs.size===0&&downAt&&moved<8)tap(e.clientX,e.clientY);if(ptrs.size===0)downAt=null;};
 cv.addEventListener('pointerup',endPtr); cv.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);downAt=null;});
-cv.addEventListener('wheel',e=>{e.preventDefault();distTo=Math.max(12,Math.min(46,distTo*(1+e.deltaY*.0012)));},{passive:false});
+cv.addEventListener('wheel',e=>{e.preventDefault();distTo=Math.max(12,Math.min(58,distTo*(1+e.deltaY*.0012)));},{passive:false});
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
 let tagAgent=null;
 function tap(cx,cy){
@@ -155,7 +155,7 @@ function loop(){
   // น้ำ เมฆ สิ่งมีชีวิตเล็ก ๆ
   wfOff.y+=dt*1.2; pOff.x+=dt*.02; pOff.y+=dt*.015;
   if(Math.random()<dt*14)particles(v3.set(1.5+(Math.random()-.5)*1.2,.2,-8.9),0xffffff,1,.8,.08,1.2,.7);
-  clouds.forEach(c=>{c.position.x+=c.userData.v*dt;if(c.position.x>48)c.position.x=-48;});
+  worldTick(dt,T);
   butterflies.forEach(b=>{const [a,c,x,z]=b.userData.p;b.position.set(x+Math.sin(T*.4+a)*3,1+Math.sin(T*2+c)*.4+.5,z+Math.cos(T*.35+c)*3);});
   fallLeaves.forEach((l,i)=>{l.position.y-=dt*.35;l.position.x+=Math.sin(T+i)*dt*.3;l.rotation.x+=dt*(1.5+i%3);l.rotation.y+=dt;if(l.position.y<.05)l.position.set(4+Math.random()*4,4+Math.random()*2.5,-8+Math.random()*5);});
   scene.traverse&&0;
@@ -246,12 +246,12 @@ async function lgStart(){
 function enterGame(){
   if(entered)return; entered=true;
   document.body.classList.remove('preLogin'); $('#login').classList.add('bye'); setTimeout(()=>$('#login').hidden=true,450);
-  renderHUD(); distTo=33;
+  renderHUD(); distTo=40;
   if(modelsReady){syncAgents(); if(!S.named&&NET.mode==='online')openWelcome();}
   else {$('#loadMsg').hidden=false;}
   if(NET.mode!=='online')toast('เล่นแบบออฟไลน์ ความคืบหน้าเก็บในเครื่องนี้');
 }
-function startFarm(){renderHUD(); layout(); loop(); distTo=40;
+function startFarm(){renderHUD(); layout(); loop(); distTo=48;
   lgStart();
   Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon()]).then(()=>{
     modelsReady=true; for(const k in THUMB)delete THUMB[k];
