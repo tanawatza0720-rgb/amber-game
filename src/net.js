@@ -80,11 +80,11 @@ const LOCAL=(()=>{
   function state(){const now=Date.now();return{player:{name:D.name,lv:D.lv,xp:D.xp,coins:D.coins,amber:D.amber,energy:D.energy,energy_max:C.energy_max,
     energy_next:D.energy>=C.energy_max?0:Math.max(0,C.energy_sec-Math.floor((now-D.energy_at)/1000)),energy_sec:C.energy_sec,
     amber_in:Math.max(0,Math.ceil((D.amber_at-now)/1000)),daily_streak:D.daily_streak,daily_claimed:D.daily_last===today(),hatch_count:D.hatch_count,
-    pity:D.pity,pity_max:C.pity_max,quests:{...D.quests},team:[...D.team],slots:C.slots},monsters:D.mons.map(m=>({...m}))};}
+    pity:D.pity,pity_max:C.pity_max,quests:{...D.quests},team:[...D.team],slots:C.slots,named:!!D.named,uid:'ในเครื่องนี้'},monsters:D.mons.map(m=>({...m}))};}
   const mon=id=>D.mons.find(m=>m.id===id)||fail('no_monster');
   const F={
     game_state:()=>state(),
-    set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>24)fail('bad_name');D.name=n;return{};},
+    set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>24)fail('bad_name');D.name=n;D.named=true;return{};},
     hatch_egg:({kind})=>{if(D.mons.length>=C.slots)fail('box_full');let ch;
       if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=.02;}
       else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=.08;}else fail('bad_egg');

@@ -178,6 +178,7 @@ const fmtClock=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String
 function openAccount(){
   const d=el('div');
   d.append(rows([['สถานะ',NET.mode==='online'?'ออนไลน์ · เซฟบนเซิร์ฟเวอร์':'ออฟไลน์ · เซฟในเครื่องนี้',NET.mode==='online'?'#5fe0c0':'#ffb347'],
+    ['รหัสผู้เล่น',S.uid||'-'],
     ['บัญชี',NET.mode!=='online'?'-':(NET.user&&NET.user.is_anonymous?'ผู้เยี่ยมชม (ยังไม่ผูกบัญชี)':((NET.user&&NET.user.email)||'ผูกแล้ว'))]]));
   if(NET.mode!=='online')d.append(para('ตอนนี้เชื่อมเซิร์ฟเวอร์ไม่ได้ ความคืบหน้าจะเก็บไว้ในเครื่องนี้ก่อน'));
   else if(NET.user&&NET.user.is_anonymous)d.append(para('บัญชีผู้เยี่ยมชมผูกกับเบราว์เซอร์นี้ ถ้าล้างข้อมูลเว็บจะหาย ผูกกับ Google เพื่อเล่นต่อได้ทุกเครื่อง'));
@@ -190,10 +191,17 @@ function openAccount(){
 $('.profile').onclick=openAccount;
 // ดึงสถานะจากเซิร์ฟเวอร์ใหม่ทุก 2 นาที (พลังงาน/ต้นไม้ตรงกับเซิร์ฟเวอร์)
 setInterval(async()=>{if(NET.mode==='online'&&!NET.busy&&!document.hidden){try{applyState(await api('game_state'));}catch(e){}}},120000);
+// ครั้งแรกที่เข้าเกม: ให้ตั้งชื่อตัวเอง
+function openWelcome(){
+  const d=el('div'); d.append(para('ยินดีต้อนรับสู่ป่าอัมพร! นี่คือฟาร์มของคุณเอง ตั้งชื่อนักฝึกมอนสเตอร์ก่อนเริ่มเล่น'));
+  const f=el('div','nameRow'); const inp=el('input'); inp.value=''; inp.placeholder=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp); d.append(f);
+  openSheet('ตั้งชื่อนักฝึก','รหัสผู้เล่น '+(S.uid||'-'),d,[['เริ่มเล่น',async()=>{const n=inp.value.trim()||S.name;if(await act('set_name',{new_name:n})){closeSheet();toast('สวัสดี '+S.name+'! มังกรอามาเทรุรออยู่ในฟาร์มแล้ว');}}]]);
+  setTimeout(()=>inp.focus(),50);
+}
 function startFarm(){renderHUD(); layout(); loop();
 $('#loadMsg').hidden=false; $('#loadMsg').textContent='กำลังเชื่อมต่อเซิร์ฟเวอร์…';
 netInit().then(online=>{ if(!online)toast('เชื่อมเซิร์ฟเวอร์ไม่ได้ เล่นแบบออฟไลน์ (เซฟในเครื่องนี้)');
   $('#loadMsg').textContent='กำลังโหลดมอนสเตอร์…';
   return Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon()]);
 }).then(()=>{$('#loadMsg').hidden=true;
-  for(const k in THUMB)delete THUMB[k]; syncAgents();});}
+  for(const k in THUMB)delete THUMB[k]; syncAgents(); if(!S.named)openWelcome();});}

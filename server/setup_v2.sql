@@ -54,6 +54,9 @@ create table if not exists public.monsters (
   lv         int  not null default 1 check (lv between 1 and 100),
   created_at timestamptz not null default now()
 );
+-- ผู้เล่นตั้งชื่อเองแล้วหรือยัง (ใช้แสดงหน้าต้อนรับครั้งแรก)
+alter table public.players add column if not exists named boolean not null default false;
+
 create index if not exists monsters_user_idx on public.monsters (user_id);
 
 -- ---------- การต่อสู้ (ใบเริ่ม-จบด่าน กันส่งผลชนะปลอม) ----------
@@ -120,7 +123,7 @@ declare p public.players; n int; sec int := public._c('energy_sec');
 begin
   select * into p from public.players where user_id = u for update;
   if not found then
-    insert into public.players (user_id) values (u) returning * into p;
+    insert into public.players (user_id, name) values (u, 'นักฝึก#' || upper(substr(replace(u::text,'-',''),1,4))) returning * into p;
     -- มอนสเตอร์เริ่มต้น + มังกรของขวัญ
     insert into public.monsters (user_id, sp, lv) values
       (u,'kazekiri',18),(u,'kazemaru',4),(u,'kazemaru',7),(u,'kazemaru',1),(u,'amateru',10);
@@ -167,7 +170,8 @@ language sql stable security definer set search_path = '' as $$
       'amber_in', greatest(0, ceil(extract(epoch from p.amber_at - now()))::int),
       'daily_streak', p.daily_streak, 'daily_claimed', coalesce(p.daily_last = public._today(), false),
       'hatch_count', p.hatch_count, 'pity', p.pity, 'pity_max', public._c('pity_max'),
-      'quests', p.quests, 'team', to_jsonb(p.team), 'slots', public._c('slots')),
+      'quests', p.quests, 'team', to_jsonb(p.team), 'slots', public._c('slots'),
+      'named', p.named, 'uid', upper(substr(replace(p.user_id::text,'-',''),1,8))),
     'monsters', coalesce((select jsonb_agg(jsonb_build_object('id', m.id, 'sp', m.sp, 'lv', m.lv) order by m.id)
                           from public.monsters m where m.user_id = p.user_id), '[]'::jsonb))
   from public.players p where p.user_id = u
@@ -193,7 +197,7 @@ declare u uuid := public._uid(); n text := btrim(coalesce(new_name,''));
 begin
   if char_length(n) < 1 or char_length(n) > 24 then raise exception 'bad_name'; end if;
   perform public._player(u);
-  update public.players set name = n, updated_at = now() where user_id = u;
+  update public.players set name = n, named = true, updated_at = now() where user_id = u;
   return jsonb_build_object('state', public._state(u));
 end $$;
 
