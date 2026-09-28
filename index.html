@@ -929,7 +929,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
   const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
-  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:3,max:50},amateru:{rar:4,max:50}};
+  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:50},amateru:{rar:4,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
@@ -2432,7 +2432,7 @@ const SPEC={
   hakuneko:{name:'ฮาคุเนโกะ',title:'นักดาบแมวขาวแห่งตะวันทอง',rar:3,el:'แสง',elc:'#ffd36a',role:'จู่โจม',evo:1,rig:'hakuneko',maxLv:50,
     base:{hp:104,atk:43,def:12,spd:50},lore:'นักดาบเผ่าแมวขาวผู้ร่าเริง แบกดาบโค้งไว้บนบ่าเสมอ ว่ากันว่าเธอมีเก้าชีวิตและยังไม่เคยใช้หมดสักครั้ง',
     skills:[['ฟันตะวันทอง','ฟันศัตรู 1 ตัว 125%'],['กรงเล็บเก้าชีวิต','ฟัน 3 ครั้ง ครั้งละ 72% · คูลดาวน์ 3'],['ดาบจันทร์เสี้ยว','กระโดดฟันศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
-  morihime:{name:'โมริฮิเมะ',title:'ธิดาหอกแห่งพงไพร',rar:3,el:'ไม้',elc:'#7fd46a',role:'จู่โจม',evo:1,rig:'morihime',maxLv:50,
+  morihime:{name:'โมริฮิเมะ',title:'ธิดาหอกแห่งพงไพร',rar:2,el:'ไม้',elc:'#7fd46a',role:'จู่โจม',evo:1,rig:'morihime',maxLv:50,
     base:{hp:120,atk:38,def:16,spd:42},lore:'เอลฟ์ผู้พิทักษ์ป่าลึก ผ้าคลุมปักลายใบไม้พลิ้วตามสายลม หอกยาวของเธอแทงได้แม่นยำราวกับเงาใบไม้ที่ร่วงหล่น',
     skills:[['แทงหอกพงไพร','แทงศัตรู 1 ตัว 120%'],['หอกพายุใบไม้','แทง 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['หอกดิ่งฟ้า','กระโดดปักหอกใส่ศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
   amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:4,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
