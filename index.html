@@ -139,12 +139,13 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
 .bLeft{flex:1;min-width:0;overflow:auto;overscroll-behavior:contain;padding:2px}
 #bList{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px}
 .ic{position:relative;aspect-ratio:1;border-radius:9px;padding:0;border:2px solid #8a93a6;background:#221a14;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
-.ic.r1{border-color:#8a93a6}.ic.r2{border-color:#4fc46e}.ic.r3{border-color:#4f9dff}.ic.r4{border-color:#ffc94d;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 8px rgba(255,201,77,.55)}
+.ic.r1{border-color:#8a93a6}.ic.r2{border-color:#4f9dff}.ic.r3{border-color:#ffc94d;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 6px rgba(255,201,77,.45)}.ic.r4{border-color:#ff6ab0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 10px rgba(255,106,176,.7),0 0 18px rgba(176,108,255,.45);animation:divine 2.4s ease-in-out infinite}
+@keyframes divine{0%,100%{border-color:#ff6ab0}50%{border-color:#b06cff}}
 .ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ic .st{position:absolute;top:1px;left:0;right:0;text-align:center;color:#ffd24a;font-size:10px;letter-spacing:-1px;line-height:1;text-shadow:0 0 2px #000,0 1px 1px #000}
-.ic .st{font-family:inherit;font-weight:700;letter-spacing:0;font-size:9.5px;top:2px}.ic.r1 .st{color:#dfe5f0}.ic.r2 .st{color:#8ff0a6}.ic.r3 .st{color:#8cc8ff}.ic.r4 .st{color:#ffe07a}
+.ic .st{font-family:inherit;font-weight:700;letter-spacing:0;font-size:9.5px;top:2px}.ic.r1 .st{color:#dfe5f0}.ic.r2 .st{color:#8cc8ff}.ic.r3 .st{color:#ffe07a}.ic.r4 .st{color:#ffb0dc}
 .iTier,.tierTag{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700;line-height:1.5;color:#1a120a;vertical-align:middle}
-.iTier{margin-left:6px}.iTier.r1,.tierTag.r1{background:#c9d1dc}.iTier.r2,.tierTag.r2{background:#6fe08a}.iTier.r3,.tierTag.r3{background:#5fb3ff}.iTier.r4,.tierTag.r4{background:linear-gradient(90deg,#ffe07a,#ffb030);box-shadow:0 0 8px rgba(255,190,60,.6)}
+.iTier{margin-left:6px}.iTier.r1,.tierTag.r1{background:#c9d1dc}.iTier.r2,.tierTag.r2{background:#5fb3ff}.iTier.r3,.tierTag.r3{background:linear-gradient(90deg,#ffe07a,#ffb030);box-shadow:0 0 6px rgba(255,190,60,.5)}.iTier.r4,.tierTag.r4{background:linear-gradient(90deg,#ff8ac4,#b06cff);color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.4);box-shadow:0 0 10px rgba(255,106,176,.7)}
 .oddsT{width:100%;border-collapse:collapse;margin:6px 0 8px;font-size:13px}.oddsT th{font-weight:600;opacity:.7;text-align:right;padding:3px 4px}.oddsT th:first-child,.oddsT td:first-child{text-align:left}.oddsT td{text-align:right;padding:4px;border-top:1px solid rgba(255,255,255,.08)}
 .ic .lv{position:absolute;right:3px;bottom:1px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;line-height:1.1;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
 .ic .lv.max{color:var(--amber)}
@@ -2154,7 +2155,7 @@ const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
     const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th></tr>';
     [[4,'อามาเทรุ','1%','6%'],[3,'คุโรกะ','4%','16%'],[2,'คาเซะคิริ','13%','33%'],[1,'คาเซะมารุ','82%','45%']].forEach(([r,n,a,b])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t,' '+n);tr2.append(td);[a,b].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
-    d.append(T); d.append(rows([['การันตีระดับตำนาน (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
+    d.append(T); d.append(rows([['การันตีระดับเทพเจ้า (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ff8ac4']]));
     openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
@@ -2205,7 +2206,7 @@ function openDaily(){
   openSheet('รางวัลเข้าเกมรายวัน','เข้าเกมต่อเนื่อง '+S.daily+' วัน',d,[[S.dailyClaimed?'รับแล้ววันนี้':'รับรางวัลวันที่ '+(next+1),async()=>{const r=await act('claim_daily');if(r){bumpRes(r.kind);toast('ได้รับ '+r.amount+(r.kind==='coins'?' เหรียญ':' อัมพร'));closeSheet();}},'',S.dailyClaimed]]);
 }
 function openMail(){S.mailRead=true;save();renderHUD();
-  const d=el('div','mail');[['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับ: มังกรอามาเทรุ ระดับตำนาน อยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
+  const d=el('div','mail');[['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับ: มังกรอามาเทรุ ระดับเทพเจ้า อยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
   openSheet('กล่องจดหมาย','2 ฉบับ',d,[]);}
 
 $('#nBattle').onclick=()=>focusBuilding('dojo');
@@ -2409,8 +2410,8 @@ const SPEC={
     skills:[['กรงเล็บเพลิง','บินโฉบเข้าไปงับศัตรู 1 ตัว 115%'],['ลมหายใจอัมพร','พ่นไฟใส่ศัตรูทุกตัว 70% · คูลดาวน์ 3'],['ดิ่งฟ้าถล่ม','ดิ่งลงกระแทกศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
 };
 const spOf=d=>SPEC[d.sp]||SPEC.kazemaru;
-// ระดับมอนสเตอร์ 4 ขั้น: ทั่วไป < พิเศษ < หายาก < ตำนาน
-const TIER={1:{n:'ทั่วไป',c:'#c9d1dc',hx:0xc9d1dc},2:{n:'พิเศษ',c:'#6fe08a',hx:0x6fe08a},3:{n:'หายาก',c:'#5fb3ff',hx:0x5fb3ff},4:{n:'ตำนาน',c:'#ffc94d',hx:0xffc94d}};
+// ระดับมอนสเตอร์ 4 ขั้น: ทั่วไป < หายาก < ตำนาน < เทพเจ้า
+const TIER={1:{n:'ทั่วไป',c:'#c9d1dc',hx:0xc9d1dc},2:{n:'หายาก',c:'#5fb3ff',hx:0x5fb3ff},3:{n:'ตำนาน',c:'#ffc94d',hx:0xffc94d},4:{n:'เทพเจ้า',c:'#ff6ab0',hx:0xff6ab0}};
 const tierOf=r=>TIER[r]||TIER[1];
 const statOf=d=>{const s=spOf(d),f=1+.1*(d.lv-1);return{hp:Math.round(s.base.hp*f),atk:Math.round(s.base.atk*f),def:Math.round(s.base.def*f),spd:s.base.spd+d.lv};};
 const power=d=>{const s=statOf(d);return Math.round(s.hp*.6+s.atk*4+s.def*3+s.spd*2);};

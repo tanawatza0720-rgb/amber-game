@@ -39,7 +39,7 @@ create table if not exists public.players (
   daily_streak int  not null default 0,
   daily_last   date,
   hatch_count  int  not null default 0,
-  pity         int  not null default 0,                   -- นับไข่ทองคำที่ยังไม่ได้ระดับตำนาน
+  pity         int  not null default 0,                   -- นับไข่ทองคำที่ยังไม่ได้ระดับเทพเจ้า
   quest_day    date,
   quests       jsonb not null default '{}'::jsonb,
   team         bigint[] not null default '{}',
@@ -102,7 +102,7 @@ create or replace function public._c(k text) returns int language sql immutable 
     when 'slots'        then 30
     when 'wild_cost'    then 100   -- เหรียญ
     when 'gold_cost'    then 30    -- อัมพร
-    when 'pity_max'     then 30    -- ไข่ทองคำครบ 30 ใบ การันตีระดับตำนาน
+    when 'pity_max'     then 30    -- ไข่ทองคำครบ 30 ใบ การันตีระดับเทพเจ้า
     when 'energy_buy'   then 20    -- อัมพรต่อพลังงาน +30
   end $$;
 
@@ -415,7 +415,7 @@ create or replace function public._c(k text) returns int language sql immutable 
     when 'slots'        then 30
     when 'wild_cost'    then 100   -- เหรียญ
     when 'gold_cost'    then 30    -- อัมพร
-    when 'pity_max'     then 30    -- ไข่ทองคำครบ 30 ใบ การันตีระดับตำนาน
+    when 'pity_max'     then 30    -- ไข่ทองคำครบ 30 ใบ การันตีระดับเทพเจ้า
     when 'energy_buy'   then 20    -- อัมพรต่อพลังงาน +30
     when 'idle_max'     then 28800 -- สะสมรางวัลได้สูงสุด 8 ชั่วโมง
     when 'idle_xp'      then 1     -- ค่าประสบการณ์ผู้เล่นต่อนาที
@@ -596,19 +596,19 @@ update public.players p set team = p.team || coalesce((
 where cardinality(p.team) < 6;
 
 -- =====================================================================
--- ตำนานป่าอัมพร : ระดับมอนสเตอร์ใหม่ 4 ขั้น  ทั่วไป(1) < พิเศษ(2) < หายาก(3) < ตำนาน(4)
+-- ตำนานป่าอัมพร : ระดับมอนสเตอร์ใหม่ 4 ขั้น  ทั่วไป(1) < หายาก(2) < ตำนาน(3) < เทพเจ้า(4)
 -- วิธีใช้: Supabase > SQL Editor > New query > วางทั้งหมดนี้ > Run  (รันซ้ำได้ ไม่ลบข้อมูล)
 -- =====================================================================
 update public.species set rar = case sp
   when 'kazemaru' then 1   -- ทั่วไป
-  when 'kazekiri' then 2   -- พิเศษ
-  when 'kuroga'   then 3   -- หายาก
-  when 'amateru'  then 4   -- ตำนาน
+  when 'kazekiri' then 2   -- หายาก
+  when 'kuroga'   then 3   -- ตำนาน
+  when 'amateru'  then 4   -- เทพเจ้า
   else rar end;
 
 -- ฟักไข่: สุ่มระดับก่อน แล้วสุ่มสายพันธุ์ในระดับนั้น (เพิ่มสายพันธุ์ใหม่ในตาราง species ได้เลย ไม่ต้องแก้ฟังก์ชัน)
---   ไข่ป่า   : ทั่วไป 82% · พิเศษ 13% · หายาก 4%  · ตำนาน 1%
---   ไข่ทองคำ : ทั่วไป 45% · พิเศษ 33% · หายาก 16% · ตำนาน 6%  (ครบ 30 ใบยังไม่ได้ตำนาน การันตีตำนาน)
+--   ไข่ป่า   : ทั่วไป 82% · หายาก 13% · ตำนาน 4%  · เทพเจ้า 1%
+--   ไข่ทองคำ : ทั่วไป 45% · หายาก 33% · ตำนาน 16% · เทพเจ้า 6%  (ครบ 30 ใบยังไม่ได้เทพเจ้า การันตีเทพเจ้า)
 create or replace function public.hatch_egg(kind text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare u uuid := public._uid(); p public.players; r float8 := random(); v_sp text; mid bigint; t int; w float8[];

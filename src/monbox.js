@@ -14,8 +14,8 @@ const SPEC={
     skills:[['กรงเล็บเพลิง','บินโฉบเข้าไปงับศัตรู 1 ตัว 115%'],['ลมหายใจอัมพร','พ่นไฟใส่ศัตรูทุกตัว 70% · คูลดาวน์ 3'],['ดิ่งฟ้าถล่ม','ดิ่งลงกระแทกศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
 };
 const spOf=d=>SPEC[d.sp]||SPEC.kazemaru;
-// ระดับมอนสเตอร์ 4 ขั้น: ทั่วไป < พิเศษ < หายาก < ตำนาน
-const TIER={1:{n:'ทั่วไป',c:'#c9d1dc',hx:0xc9d1dc},2:{n:'พิเศษ',c:'#6fe08a',hx:0x6fe08a},3:{n:'หายาก',c:'#5fb3ff',hx:0x5fb3ff},4:{n:'ตำนาน',c:'#ffc94d',hx:0xffc94d}};
+// ระดับมอนสเตอร์ 4 ขั้น: ทั่วไป < หายาก < ตำนาน < เทพเจ้า
+const TIER={1:{n:'ทั่วไป',c:'#c9d1dc',hx:0xc9d1dc},2:{n:'หายาก',c:'#5fb3ff',hx:0x5fb3ff},3:{n:'ตำนาน',c:'#ffc94d',hx:0xffc94d},4:{n:'เทพเจ้า',c:'#ff6ab0',hx:0xff6ab0}};
 const tierOf=r=>TIER[r]||TIER[1];
 const statOf=d=>{const s=spOf(d),f=1+.1*(d.lv-1);return{hp:Math.round(s.base.hp*f),atk:Math.round(s.base.atk*f),def:Math.round(s.base.def*f),spd:s.base.spd+d.lv};};
 const power=d=>{const s=statOf(d);return Math.round(s.hp*.6+s.atk*4+s.def*3+s.spd*2);};
