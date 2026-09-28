@@ -10,17 +10,31 @@ const NET={mode:'offline',sb:null,user:null,busy:false};
 const ERR={not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–24 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
-  not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง'};
+  not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
 const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
 function errCode(e){const m=(e&&(e.message||e.msg||e.error_description))||'';const k=Object.keys(ERR).find(k=>m.includes(k));return k||'network';}
+const isAuthErr=e=>e&&(/jwt|token|expired|401|not_authenticated/i.test(String(e.message||''))||e.status===401||e.code==='PGRST301');
+async function rpcOnce(fn,args){
+  let r; try{r=await withTimeout(NET.sb.rpc(fn,args||{}),15000);}catch(e){return {net:true};}
+  return r;
+}
 async function api(fn,args){
   if(NET.mode==='online'){
-    let r; try{r=await withTimeout(NET.sb.rpc(fn,args||{}),12000);}catch(e){throw Object.assign(new Error('network'),{code:'network'});}
-    if(r.error){const c=errCode(r.error);throw Object.assign(new Error(c),{code:c});}
+    let r=await rpcOnce(fn,args);
+    // บัตรผ่าน (token) หมดอายุ เช่นเปิดเกมทิ้งไว้นานหรือเครื่องพักหน้าจอ: ขอบัตรใหม่แล้วลองอีกครั้ง
+    if(r.error&&isAuthErr(r.error)){try{await withTimeout(NET.sb.auth.refreshSession(),10000);}catch(e){} r=await rpcOnce(fn,args);}
+    // เน็ตสะดุด: รอแป๊บแล้วลองใหม่ 1 ครั้ง
+    if(r.net){await new Promise(z=>setTimeout(z,1500)); r=await rpcOnce(fn,args);}
+    if(r.net){const c=navigator.onLine===false?'offline_net':'network';throw Object.assign(new Error(c),{code:c});}
+    if(r.error){const c=isAuthErr(r.error)?'session':errCode(r.error);throw Object.assign(new Error(c),{code:c});}
     return r.data;
   }
   return LOCAL.call(fn,args||{});
 }
+// กลับมาที่แท็บเกม: ต่ออายุบัตรผ่านทันที
+document.addEventListener('visibilitychange',()=>{if(!NET.sb)return;
+  if(document.visibilityState==='visible'){try{NET.sb.auth.startAutoRefresh();}catch(e){} NET.sb.auth.getSession().catch(()=>{});}
+  else{try{NET.sb.auth.stopAutoRefresh();}catch(e){}}});
 // เรียก API แล้วอัปเดตสถานะ ถ้าพลาดขึ้นข้อความภาษาไทย คืนค่า null
 async function act(fn,args){
   if(NET.busy)return null; NET.busy=true;
@@ -32,7 +46,9 @@ async function act(fn,args){
 async function authInit(){
   if(!window.supabase||!SUPABASE_URL||!SUPABASE_KEY)throw new Error('no client');
   if(!NET.sb)NET.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storage:SafeStore,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-  const {data,error}=await withTimeout(NET.sb.auth.getSession(),8000); if(error)throw error;
+  const {data,error}=await withTimeout(NET.sb.auth.getSession(),15000);
+  // บัญชีที่จำไว้ใช้ไม่ได้แล้ว (เช่นบัตรต่ออายุหมด): ล้างออกแล้วให้ล็อกอินใหม่ แทนที่จะขึ้นว่าเชื่อมต่อไม่ได้
+  if(error){console.warn('session',error.message);try{await NET.sb.auth.signOut({scope:'local'});}catch(e){} NET.user=null; NET.sessionLost=true; return null;}
   NET.user=(data&&data.session&&data.session.user)||null;
   return NET.user;
 }

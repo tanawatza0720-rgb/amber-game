@@ -207,7 +207,7 @@ function lgShow(state,extra){
   if(state==='checking'){B.append(el('div','lgWait','กำลังตรวจสอบบัญชี…'));return;}
   if(state==='go'){B.append(el('div','lgWait',extra||'กำลังไปหน้า Google…'));return;}
   if(state==='offline'){
-    B.append(el('p','lgMsg','เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'));
+    B.append(el('p','lgMsg',navigator.onLine===false?'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่':'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ชั่วคราว ลองใหม่อีกครั้ง'));
     B.append(lgBtn('ลองใหม่','main',()=>lgStart()));
     B.append(lgBtn('เล่นแบบออฟไลน์ (เซฟในเครื่องนี้)','ghost',async()=>{enterOffline();enterGame();}));
     return;}
@@ -241,6 +241,7 @@ async function lgStart(){
     $('#lgBody').prepend(lgBtn('สลับไปบัญชี Google นั้น','google',async()=>{lgShow('go');await switchToGoogle();}));
     return;}
   if(errCode||errDesc)lgNote('เข้าสู่ระบบไม่สำเร็จ: '+(errDesc||errCode).replace(/\+/g,' '),'warn');
+  else if(NET.sessionLost)lgNote('การเข้าสู่ระบบครั้งก่อนหมดอายุแล้ว กรุณาเข้าสู่ระบบอีกครั้ง','warn');
   lgShow(NET.user?'in':'out');
 }
 function enterGame(){
