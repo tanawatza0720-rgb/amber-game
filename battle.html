@@ -253,9 +253,9 @@ function glow(parent,color,size,pos,op){const s=new THREE.Sprite(new THREE.Sprit
 
 
 /* ---------- ตัวช่วยสร้างรูปทรง ---------- */
-const S1=new THREE.SphereGeometry(1,32,24), C1=new THREE.ConeGeometry(1,1,20), Y1=new THREE.CylinderGeometry(1,1,1,20), B1=new THREE.BoxGeometry(1,1,1);
+const S1=new THREE.SphereGeometry(1,14,10), C1=new THREE.ConeGeometry(1,1,10), Y1=new THREE.CylinderGeometry(1,1,1,10), B1=new THREE.BoxGeometry(1,1,1);
 const ROPE=new THREE.TorusGeometry(1,.1,8,28);
-function lathe(pr,seg,ps,pl){return new THREE.LatheGeometry(pr.map(([r,y])=>new THREE.Vector2(Math.max(r,.0001),y)),seg||28,ps||0,pl||Math.PI*2);}
+function lathe(pr,seg,ps,pl){return new THREE.LatheGeometry(pr.map(([r,y])=>new THREE.Vector2(Math.max(r,.0001),y)),Math.min(seg||28,14),ps||0,pl||Math.PI*2);}
 function limbGeo(len,r0,r1,bulge){
   const pts=[];
   for(let i=0;i<=5;i++){const a=i/5*Math.PI/2;pts.push([r1*Math.sin(a),-len-r1*.55*Math.cos(a)]);}
@@ -607,7 +607,7 @@ function buildBaby(m){
     P(m,S1,eyeM,[x,y,z],[.068,.085,.03]);
     P(m,S1,hiM,[x-sx*.018-.012,y+.03,z+.02],[.018,.018,.01]);
     glow(m,0x7fffe0,.22,[x,y,z+.03],.55);}
-  const eyeL=new THREE.PointLight(0x7fffe0,.5,.7,2); eyeL.position.set(0,1.0,.3); m.add(eyeL);
+  
   // แขนสั้น ผ้าพัน ปลอกหนัง
   const arms=[-1,1].map(sx=>{
     const a=J(m,sx*.33,.56,.04);
@@ -720,6 +720,7 @@ const easeOut=t=>1-(1-t)*(1-t), easeIn=t=>t*t;
 function easeBack(t){const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);}
 const parts=[];
 function particles(pos,color,n,speed,size,grav,opa){
+  if(typeof FXK!=="undefined")n=Math.max(1,Math.round(n*FXK));
   for(let i=0;i<n;i++){
     const big=size>.15;
     const p=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color,transparent:true,opacity:opa||1,depthWrite:false,blending:big?THREE.NormalBlending:THREE.AdditiveBlending}));
@@ -1124,7 +1125,7 @@ function dragonDir(u){return new THREE.Vector3(Math.sin(u.w.rotation.y),0,Math.c
 const FIRE_COL=[0xffd88a,0xffb030,0xff7a1a,0xd8380e,0x4a2014];
 const FLAMETEX=canvasTex(64,(x,s)=>{const g=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,255,255,.85)');g.addColorStop(.7,'rgba(255,255,255,.3)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,s,s);});
 function fireSprite(pos,vel,life,size,opts){
-  opts=opts||{};
+  opts=opts||{}; if(typeof FXK!=='undefined'&&Math.random()>FXK*1.2)return Promise.resolve();
   const add=!opts.smoke&&Math.random()<.35;
   const m=new THREE.SpriteMaterial({map:FLAMETEX,color:0xffffff,transparent:true,opacity:1,blending:add?THREE.AdditiveBlending:THREE.NormalBlending,depthWrite:false,fog:false});
   const s=new THREE.Sprite(m); s.position.copy(pos); s.scale.setScalar(size*.4); scene.add(s);
@@ -1137,8 +1138,12 @@ function fireSprite(pos,vel,life,size,opts){
     m.color.copy(c);
   },t=>t).then(()=>{scene.remove(s);m.dispose();});
 }
-function fireLight(pos,intensity,dur){const l=new THREE.PointLight(0xff8a3a,0,9,2);l.position.copy(pos);scene.add(l);
-  return tween(dur,k=>{l.intensity=intensity*Math.sin(Math.min(1,k*1.4)*Math.PI*.5)*(1-k*k)*(.8+.2*Math.random());}).then(()=>scene.remove(l));}
+// ไฟแบบยืมจากคลัง: จำนวนดวงไฟในฉากคงที่เสมอ (เพิ่ม/ลบดวงไฟทำให้เครื่องต้องคอมไพล์ shader ใหม่ทั้งฉาก = กระตุก)
+const LPOOL=[0,1].map(()=>{const l=new THREE.PointLight(0xff8a3a,0,9,2);l.userData.busy=0;scene.add(l);return l;});
+function takeLight(col,dist){const l=LPOOL.find(x=>!x.userData.busy)||LPOOL.reduce((a,b)=>a.userData.busy<b.userData.busy?a:b);l.userData.busy=performance.now();l.color.set(col);l.distance=dist;return l;}
+function freeLight(l){l.intensity=0;l.userData.busy=0;}
+function fireLight(pos,intensity,dur){const l=takeLight(0xff8a3a,9);l.position.copy(pos);
+  return tween(dur,k=>{l.intensity=intensity*Math.sin(Math.min(1,k*1.4)*Math.PI*.5)*(1-k*k)*(.8+.2*Math.random());}).then(()=>freeLight(l));}
 function scorch(pos,r){const m=new THREE.Mesh(new THREE.CircleGeometry(r,32),new THREE.MeshBasicMaterial({map:BLOBTEX,color:0x1a0c06,transparent:true,opacity:0,depthWrite:false}));
   m.rotation.x=-Math.PI/2;m.position.copy(pos).setY(.03);scene.add(m);
   tween(.25,k=>m.material.opacity=.55*k).then(()=>tween(2.4,k=>m.material.opacity=.55*(1-k))).then(()=>{scene.remove(m);m.geometry.dispose();m.material.dispose();});}
@@ -1185,7 +1190,7 @@ async function dragonBreath(u,foes,onHit){
   const c=new THREE.Vector3();foes.forEach(f=>c.add(f.w.position));c.divideScalar(foes.length);
   // ชาร์จ: ยกตัว กางปีก ไฟในตัวสว่างขึ้น ประกายไฟถูกดูดเข้าปาก
   dragonSet(u,{rear:1,spread:1,rise:.2,breath:1,flapAmp:.35,flapSpd:.8,jaw:.6},.35);
-  const ml=new THREE.PointLight(0xff9a40,0,6,2); scene.add(ml);
+  const ml=takeLight(0xff9a40,6);
   const follow=()=>ml.position.copy(dragonMouth(u));
   await Promise.all([chargeIn(u,620),tween(.62,k=>{follow();ml.intensity=k*3;})]);
   // พ่น: หัวก้มลงกวาดจากซ้ายไปขวา
@@ -1204,7 +1209,7 @@ async function dragonBreath(u,foes,onHit){
   }
   foes.forEach(f=>embers(f.w.position.clone().setY(.2),8,1.4));
   dragonSet(u,{rear:0,lunge:0,headDown:0,breath:0,spread:0,rise:0,jaw:0,flapSpd:1,flapAmp:.55},.45);
-  tween(.4,k=>ml.intensity*=1-k).then(()=>scene.remove(ml));
+  tween(.4,k=>ml.intensity*=1-k).then(()=>freeLight(ml));
   await wait(420);
 }
 
@@ -1297,6 +1302,12 @@ const BT={
    ฝั่งเรา = ป้อมกำแพงหินทางซ้าย (x ติดลบ)  ฝั่งศัตรู = ค่ายนินจาชาดทางขวา (x บวก)
    สนามรบกลางหุบ มีแม่น้ำด้านหลัง ภูเขาหินล้อมรอบ */
 const BIG=true;
+// เครื่องสเปกต่ำ (มือถือ): ปิดเงาจริง ใช้เงาวงกลมแทน, ลดความละเอียดจอ, ลดจำนวนศัตรู
+const LOW=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||Math.min(screen.width,screen.height)<700||/[?&]low=1/.test(location.search);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,LOW?1:1.5));
+if(LOW){renderer.shadowMap.enabled=false;} else {renderer.shadowMap.type=THREE.PCFShadowMap;}
+const MAP0=scene.children.length;
+const FXK=LOW?.35:.65; // ลดจำนวนประกายไฟ/ฝุ่น
 const MAPK={road:14};
 scene.background=new THREE.Color(0x9cb8d6);
 const skyM=new THREE.Mesh(new THREE.SphereGeometry(420,32,16),new THREE.MeshBasicMaterial({side:THREE.BackSide,fog:false,
@@ -1305,7 +1316,7 @@ scene.add(skyM);
 scene.fog=new THREE.Fog(0xc8d4de,90,260);
 scene.add(new THREE.HemisphereLight(0xe4efff,0x4d5a3a,.95));
 const sun=new THREE.DirectionalLight(0xffe2b8,2.3); sun.position.set(40,60,25); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-34,right:34,top:34,bottom:-34,near:1,far:180}); sun.shadow.bias=-.0006; sun.shadow.normalBias=.04; scene.add(sun); scene.add(sun.target);
+sun.shadow.mapSize.set(LOW?512:1536,LOW?512:1536); Object.assign(sun.shadow.camera,{left:-34,right:34,top:34,bottom:-34,near:1,far:180}); sun.shadow.bias=-.0006; sun.shadow.normalBias=.04; scene.add(sun); scene.add(sun.target);
 const rimL=new THREE.DirectionalLight(0x9fb8ff,.5); rimL.position.set(-30,25,-40); scene.add(rimL);
 // แสงอาทิตย์ตามกล้อง (เงาคมเฉพาะบริเวณที่มองอยู่)
 function sunFollow(c){sun.position.set(c.x+40,60,c.z+25);sun.target.position.set(c.x,0,c.z);}
@@ -1356,7 +1367,7 @@ const falling=[], flies=[];
   for(let i=0;i<14;i++){const g=J(scene,EX+rnd(5,26),0,rnd(-20,20));const r=rnd(2.2,3.4);P(g,new THREE.ConeGeometry(r,r*1.5,6),i%2?tentM:tentM2,[0,r*.75,0],null,[0,rnd(0,3),0]);}
   MAPK.fires=[];
   [[EX+8,-8],[EX+10,7],[EX+18,0],[EX+20,-12],[EX+22,11]].forEach(([x,z])=>{const g=J(scene,x,0,z);for(let k=0;k<5;k++)P(g,Y1,logM,[0,.2,0],[.18,1.4,.18],[Math.PI/2.4,k*1.2,0]);
-    const pl=new THREE.PointLight(0xff7a2a,2.2,14,2);pl.position.set(0,1.2,0);g.add(pl);const gl=glow(g,0xffa040,2.2,[0,.9,0],.9);MAPK.fires.push({pl,gl});});
+    const gl=glow(g,0xffa040,2.6,[0,.9,0],.9);glow(g,0xff6a20,5,[0,.3,0],.35);MAPK.fires.push({gl});});
   // ป่าสน/ต้นไม้ (instanced)
   const trunkG=new THREE.CylinderGeometry(.18,.28,2,6), coneG=new THREE.ConeGeometry(1.5,4,7), blobG=new THREE.IcosahedronGeometry(1.5,1);
   const NT=320, trunk=new THREE.InstancedMesh(trunkG,SM(0x5e4027),NT), pine=new THREE.InstancedMesh(coneG,SM(0xffffff,{flatShading:true}),NT);
@@ -1377,8 +1388,28 @@ const falling=[], flies=[];
   for(let i=0;i<4000&&ng<NG;i++){const x=rnd(-70,70),z=rnd(-34,34);if(Math.abs(z)<MAPK.road-2&&Math.abs(x)<50)continue;if(Math.abs(z+40)<12)continue;q.setFromEuler(new THREE.Euler(rnd(-.3,.3),rnd(0,6),rnd(-.3,.3)));const s=rnd(.7,1.6);mm.compose(ps.set(x,.2*s,z),q,sc.set(s,s,s));tuft.setMatrixAt(ng++,mm);}
   tuft.count=ng; tuft.instanceMatrix.needsUpdate=true; scene.add(tuft);
 }
+// รวมฉากนิ่งทั้งหมดเป็นก้อนเดียวต่อวัสดุ (ลดการวาดจากหลายร้อยครั้งเหลือหลักสิบ)
+{
+  const groups=new Map(), kill=[];
+  scene.updateMatrixWorld(true);
+  scene.children.slice(MAP0).forEach(root=>root.traverse(o=>{
+    if(!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||o.isSprite||!o.geometry||!o.material||Array.isArray(o.material))return;
+    if(o.material.transparent||o===skyM||(MAPK.flags||[]).includes(o))return;
+    if(o.geometry.parameters&&o.geometry.parameters.width>=400)return; // พื้นใหญ่ไม่ต้องรวม
+    let g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone(); g.applyMatrix4(o.matrixWorld);
+    if(!g.attributes.uv)g.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count*2),2));
+    const key=o.material; if(!groups.has(key))groups.set(key,[]); groups.get(key).push(g); kill.push(o);}));
+  kill.forEach(o=>o.parent&&o.parent.remove(o));
+  groups.forEach((list,mat)=>{let n=0;list.forEach(g=>n+=g.attributes.position.count);
+    const P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2);let o=0;
+    list.forEach(g=>{P.set(g.attributes.position.array,o*3);N.set(g.attributes.normal.array,o*3);U.set(g.attributes.uv.array,o*2);o+=g.attributes.position.count;g.dispose();});
+    const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.BufferAttribute(P,3));G.setAttribute('normal',new THREE.BufferAttribute(N,3));G.setAttribute('uv',new THREE.BufferAttribute(U,2));G.computeBoundingSphere();
+    const m=new THREE.Mesh(G,mat);m.receiveShadow=!LOW;m.castShadow=false;scene.add(m);});
+  // ของประกอบฉากที่ยังเหลือ (ต้นไม้ หญ้า) ไม่ต้องทอดเงา
+  scene.children.slice(MAP0).forEach(r=>r.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh)o.castShadow=false;}));
+}
 // ขยับน้ำ ธง ไฟ
-function mapTick(T){if(MAPK.water)MAPK.water.offset.x=T*.02;(MAPK.flags||[]).forEach((f,i)=>{f.rotation.y=Math.sin(T*2+i)*.35;});(MAPK.fires||[]).forEach((f,i)=>{f.pl.intensity=1.8+Math.sin(T*9+i*3)*.4+Math.random()*.3;});}
+function mapTick(T){if(MAPK.water)MAPK.water.offset.x=T*.02;(MAPK.flags||[]).forEach((f,i)=>{f.rotation.y=Math.sin(T*2+i)*.35;});(MAPK.fires||[]).forEach((f,i)=>{f.gl.scale.setScalar(2.4+Math.sin(T*9+i*3)*.3+Math.random()*.2);});}
 
 /* ================= ข้อมูลมอนสเตอร์และด่าน ================= */
 const SPECIES={
@@ -1413,7 +1444,8 @@ function makeWave(defs,E){
 function idleStage(n,E){
   const M='kazemaru',K='kazekiri', mk=(nm,nk)=>{const a=Array(nm).fill(M);for(let i=0;i<nk;i++)a.splice(Math.floor((i+.5)*a.length/(nk+.001)),0,K);return a;};
   const pool=n<4?[mk(6,0),mk(7,1),mk(8,1)]:n<10?[mk(8,1),mk(9,2),mk(10,2)]:[mk(9,2),mk(10,3),mk(11,3)];
-  return {id:stLabel(n),name:'ป่าไผ่สนธยา',waves:pool.map(k=>makeWave(k.map(sp=>({sp,show:n})),E))};
+  const cap=typeof LOW!=='undefined'&&LOW?7:99;
+  return {id:stLabel(n),name:'ป่าไผ่สนธยา',waves:pool.map(k=>makeWave(k.slice(0,cap).map(sp=>({sp,show:n})),E))};
 }
 function bossStage(n){
   const R=REQ(n);
@@ -1426,11 +1458,27 @@ const FACE_P=Math.PI/2-.35, FACE_E=-Math.PI/2+.35;
 let UNITS=[], PICKU=[];
 function tintCrimson(w,boss){
   const red=new THREE.Color(boss?0x6a1010:0x5a1616);
+  const cache=new Map(), tint=(m,f)=>{if(!cache.has(m)){const n=m.clone();f(n);cache.set(m,n);}return cache.get(m);};
   w.traverse(o=>{
-    if(o.isMesh&&o.material&&!o.material.isMeshBasicMaterial&&o.material.color){o.material=o.material.clone();const c=o.material.color,l=(c.r+c.g+c.b)/3;if(l<.3&&!(o.material.metalness>.5))c.lerp(red,.6);}
-    else if(o.isMesh&&o.material&&o.material.isMeshBasicMaterial){o.material=o.material.clone();if(o.material.color.g>.8&&o.material.color.r<.95)o.material.color.set(0xff6a55);}
+    if(o.isMesh&&o.material&&!o.material.isMeshBasicMaterial&&o.material.color){o.material=tint(o.material,n=>{const c=n.color,l=(c.r+c.g+c.b)/3;if(l<.3&&!(n.metalness>.5))c.lerp(red,.6);});}
+    else if(o.isMesh&&o.material&&o.material.isMeshBasicMaterial){o.material=tint(o.material,n=>{if(n.color.g>.8&&n.color.r<.95)n.color.set(0xff6a55);});}
     if(o.isSprite){o.material=o.material.clone();o.material.color.set(0xff5040);}
     if(o.isPointLight)o.color.set(0xff5040);
+  });
+}
+// รวมชิ้นส่วนที่ขยับไปด้วยกัน (ลูกของข้อต่อเดียวกัน วัสดุเดียวกัน) เป็นชิ้นเดียว = วาดน้อยครั้งลง
+function mergeRigid(root){
+  const nodes=[];root.traverse(o=>{if(!o.isMesh&&o.children&&o.children.length>1)nodes.push(o);});
+  nodes.forEach(node=>{
+    const groups=new Map();
+    node.children.forEach(c=>{if(!c.isMesh||c.isSkinnedMesh||c.children.length||!c.geometry||Array.isArray(c.material)||c.material.transparent||!c.visible)return;
+      if(!groups.has(c.material))groups.set(c.material,[]);groups.get(c.material).push(c);});
+    groups.forEach((list,mat)=>{if(list.length<2)return;let n=0;const gs=list.map(c=>{c.updateMatrix();const g=(c.geometry.index?c.geometry.toNonIndexed():c.geometry.clone());g.applyMatrix4(c.matrix);n+=g.attributes.position.count;return g;});
+      if(!gs.every(g=>g.attributes.normal&&g.attributes.uv))return;
+      const P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2);let o=0;
+      gs.forEach(g=>{P.set(g.attributes.position.array,o*3);N.set(g.attributes.normal.array,o*3);U.set(g.attributes.uv.array,o*2);o+=g.attributes.position.count;});
+      const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.BufferAttribute(P,3));G.setAttribute('normal',new THREE.BufferAttribute(N,3));G.setAttribute('uv',new THREE.BufferAttribute(U,2));G.computeBoundingSphere();
+      const m=new THREE.Mesh(G,mat);m.castShadow=list[0].castShadow;m.receiveShadow=list[0].receiveShadow;m.userData.outline=list[0].userData.outline;node.add(m);list.forEach(c=>node.remove(c));});
   });
 }
 function makeUnit(side,def,slot){
@@ -1442,6 +1490,7 @@ function makeUnit(side,def,slot){
   if(side==='E'&&inner.userData.meshy)w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
   if(sp.evo&&!sp.dragon){(inner.userData.swords||[]).forEach(s=>s.visible=true);
     if(side==='E'&&!inner.userData.meshy){const em=new THREE.MeshBasicMaterial({color:0xff4a3a});[-1,1].forEach(sx=>{P(rig.head,B1,em,[sx*.042,.03,.1],[.045,.009,.01],[0,sx*-.25,sx*.35]);glow(rig.head,0xff4030,.08,[sx*.042,.03,.11],.8);});}}
+  if(!inner.userData.meshy&&!sp.dragon)mergeRigid(w);
   const [x,z]=(side==='P'?P_SLOTS:E_SLOTS)[slot];
   w.position.set(x+(def.boss?.6:0),0,z); w.rotation.y=side==='P'?FACE_P:FACE_E; scene.add(w);
   const u={id:UNITS.length,side,sp:def.sp,evo:sp.evo,boss:!!def.boss,lv:def.show||def.lv,
@@ -1656,7 +1705,7 @@ function stepToward(u,x,z,dist,dt,T){
   if(!u.moving){if(u.dragon)dragonSet(u,{flapSpd:1.9,flapAmp:.8,lunge:.45,legF:-.3,spread:.3},.15);else if(MC)A.play('run',{loop:true,fade:.15,speed:1.15});}
   u.moving=true;
   p.y=u.dragon?.25+Math.sin(T*6)*.08:MC?0:Math.abs(Math.sin(T*13))*(u.evo?.1:.14);
-  u.dust-=dt; if(u.dust<=0&&!u.dragon){u.dust=.22;particles(tmpV.copy(p).setY(.08),0xb8a888,3,.6,.18,-.1,.35);}
+  u.dust-=dt; if(u.dust<=0&&!u.dragon&&!LOW&&u.side==='P'){u.dust=.45;particles(tmpV.copy(p).setY(.08),0xb8a888,2,.6,.18,-.1,.35);}
 }
 const hasClip=(u,n)=>{const A=u.inner.userData;return !!(A.play&&A.clipInfo&&A.clipInfo(n));};
 function stopMove(u,keep){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon)dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0,legF:0,spread:0,bank:0},.3);else if(!keep&&hasClip(u,'run'))u.inner.userData.play('idle',{loop:true,fade:.15});}

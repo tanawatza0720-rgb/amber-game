@@ -12,6 +12,7 @@ helpers=helpers.replace(a,"  applyPose(base);\n  m.userData.rig={hips,torso,head
 b="  applyPose(base);\n  let blink=0;"
 assert helpers.count(b)==1
 helpers=helpers.replace(b,"  applyPose(base);\n  m.userData.rig={arms,R,L,base};\n  let blink=0;")
+helpers=helpers.replace("const eyeL=new THREE.PointLight(0x7fffe0,.5,.7,2); eyeL.position.set(0,1.0,.3); m.add(eyeL);","")
 a='(evo?buildEvo:buildBaby)(m);'
 assert helpers.count(a)==1
 helpers=helpers.replace(a,'(evo?(USE_MESHY&&MESHY?(mm=>buildMeshyEvo(mm,evo)):buildEvo):buildBaby)(m);')

@@ -687,7 +687,7 @@ function buildBaby(m){
     P(m,S1,eyeM,[x,y,z],[.068,.085,.03]);
     P(m,S1,hiM,[x-sx*.018-.012,y+.03,z+.02],[.018,.018,.01]);
     glow(m,0x7fffe0,.22,[x,y,z+.03],.55);}
-  const eyeL=new THREE.PointLight(0x7fffe0,.5,.7,2); eyeL.position.set(0,1.0,.3); m.add(eyeL);
+  
   // แขนสั้น ผ้าพัน ปลอกหนัง
   const arms=[-1,1].map(sx=>{
     const a=J(m,sx*.33,.56,.04);
@@ -1338,7 +1338,7 @@ function dragonDir(u){return new THREE.Vector3(Math.sin(u.w.rotation.y),0,Math.c
 const FIRE_COL=[0xffd88a,0xffb030,0xff7a1a,0xd8380e,0x4a2014];
 const FLAMETEX=canvasTex(64,(x,s)=>{const g=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,255,255,.85)');g.addColorStop(.7,'rgba(255,255,255,.3)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,s,s);});
 function fireSprite(pos,vel,life,size,opts){
-  opts=opts||{};
+  opts=opts||{}; if(typeof FXK!=='undefined'&&Math.random()>FXK*1.2)return Promise.resolve();
   const add=!opts.smoke&&Math.random()<.35;
   const m=new THREE.SpriteMaterial({map:FLAMETEX,color:0xffffff,transparent:true,opacity:1,blending:add?THREE.AdditiveBlending:THREE.NormalBlending,depthWrite:false,fog:false});
   const s=new THREE.Sprite(m); s.position.copy(pos); s.scale.setScalar(size*.4); scene.add(s);
@@ -1351,8 +1351,12 @@ function fireSprite(pos,vel,life,size,opts){
     m.color.copy(c);
   },t=>t).then(()=>{scene.remove(s);m.dispose();});
 }
-function fireLight(pos,intensity,dur){const l=new THREE.PointLight(0xff8a3a,0,9,2);l.position.copy(pos);scene.add(l);
-  return tween(dur,k=>{l.intensity=intensity*Math.sin(Math.min(1,k*1.4)*Math.PI*.5)*(1-k*k)*(.8+.2*Math.random());}).then(()=>scene.remove(l));}
+// ไฟแบบยืมจากคลัง: จำนวนดวงไฟในฉากคงที่เสมอ (เพิ่ม/ลบดวงไฟทำให้เครื่องต้องคอมไพล์ shader ใหม่ทั้งฉาก = กระตุก)
+const LPOOL=[0,1].map(()=>{const l=new THREE.PointLight(0xff8a3a,0,9,2);l.userData.busy=0;scene.add(l);return l;});
+function takeLight(col,dist){const l=LPOOL.find(x=>!x.userData.busy)||LPOOL.reduce((a,b)=>a.userData.busy<b.userData.busy?a:b);l.userData.busy=performance.now();l.color.set(col);l.distance=dist;return l;}
+function freeLight(l){l.intensity=0;l.userData.busy=0;}
+function fireLight(pos,intensity,dur){const l=takeLight(0xff8a3a,9);l.position.copy(pos);
+  return tween(dur,k=>{l.intensity=intensity*Math.sin(Math.min(1,k*1.4)*Math.PI*.5)*(1-k*k)*(.8+.2*Math.random());}).then(()=>freeLight(l));}
 function scorch(pos,r){const m=new THREE.Mesh(new THREE.CircleGeometry(r,32),new THREE.MeshBasicMaterial({map:BLOBTEX,color:0x1a0c06,transparent:true,opacity:0,depthWrite:false}));
   m.rotation.x=-Math.PI/2;m.position.copy(pos).setY(.03);scene.add(m);
   tween(.25,k=>m.material.opacity=.55*k).then(()=>tween(2.4,k=>m.material.opacity=.55*(1-k))).then(()=>{scene.remove(m);m.geometry.dispose();m.material.dispose();});}
@@ -1399,7 +1403,7 @@ async function dragonBreath(u,foes,onHit){
   const c=new THREE.Vector3();foes.forEach(f=>c.add(f.w.position));c.divideScalar(foes.length);
   // ชาร์จ: ยกตัว กางปีก ไฟในตัวสว่างขึ้น ประกายไฟถูกดูดเข้าปาก
   dragonSet(u,{rear:1,spread:1,rise:.2,breath:1,flapAmp:.35,flapSpd:.8,jaw:.6},.35);
-  const ml=new THREE.PointLight(0xff9a40,0,6,2); scene.add(ml);
+  const ml=takeLight(0xff9a40,6);
   const follow=()=>ml.position.copy(dragonMouth(u));
   await Promise.all([chargeIn(u,620),tween(.62,k=>{follow();ml.intensity=k*3;})]);
   // พ่น: หัวก้มลงกวาดจากซ้ายไปขวา
@@ -1418,7 +1422,7 @@ async function dragonBreath(u,foes,onHit){
   }
   foes.forEach(f=>embers(f.w.position.clone().setY(.2),8,1.4));
   dragonSet(u,{rear:0,lunge:0,headDown:0,breath:0,spread:0,rise:0,jaw:0,flapSpd:1,flapAmp:.55},.45);
-  tween(.4,k=>ml.intensity*=1-k).then(()=>scene.remove(ml));
+  tween(.4,k=>ml.intensity*=1-k).then(()=>freeLight(ml));
   await wait(420);
 }
 

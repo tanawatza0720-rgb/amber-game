@@ -27,7 +27,7 @@ function stepToward(u,x,z,dist,dt,T){
   if(!u.moving){if(u.dragon)dragonSet(u,{flapSpd:1.9,flapAmp:.8,lunge:.45,legF:-.3,spread:.3},.15);else if(MC)A.play('run',{loop:true,fade:.15,speed:1.15});}
   u.moving=true;
   p.y=u.dragon?.25+Math.sin(T*6)*.08:MC?0:Math.abs(Math.sin(T*13))*(u.evo?.1:.14);
-  u.dust-=dt; if(u.dust<=0&&!u.dragon){u.dust=.22;particles(tmpV.copy(p).setY(.08),0xb8a888,3,.6,.18,-.1,.35);}
+  u.dust-=dt; if(u.dust<=0&&!u.dragon&&!LOW&&u.side==='P'){u.dust=.45;particles(tmpV.copy(p).setY(.08),0xb8a888,2,.6,.18,-.1,.35);}
 }
 const hasClip=(u,n)=>{const A=u.inner.userData;return !!(A.play&&A.clipInfo&&A.clipInfo(n));};
 function stopMove(u,keep){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon)dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0,legF:0,spread:0,bank:0},.3);else if(!keep&&hasClip(u,'run'))u.inner.userData.play('idle',{loop:true,fade:.15});}

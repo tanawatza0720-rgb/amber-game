@@ -46,7 +46,8 @@ function makeWave(defs,E){
 function idleStage(n,E){
   const M='kazemaru',K='kazekiri', mk=(nm,nk)=>{const a=Array(nm).fill(M);for(let i=0;i<nk;i++)a.splice(Math.floor((i+.5)*a.length/(nk+.001)),0,K);return a;};
   const pool=n<4?[mk(6,0),mk(7,1),mk(8,1)]:n<10?[mk(8,1),mk(9,2),mk(10,2)]:[mk(9,2),mk(10,3),mk(11,3)];
-  return {id:stLabel(n),name:'ป่าไผ่สนธยา',waves:pool.map(k=>makeWave(k.map(sp=>({sp,show:n})),E))};
+  const cap=typeof LOW!=='undefined'&&LOW?7:99;
+  return {id:stLabel(n),name:'ป่าไผ่สนธยา',waves:pool.map(k=>makeWave(k.slice(0,cap).map(sp=>({sp,show:n})),E))};
 }
 function bossStage(n){
   const R=REQ(n);
@@ -59,11 +60,27 @@ const FACE_P=Math.PI/2-.35, FACE_E=-Math.PI/2+.35;
 let UNITS=[], PICKU=[];
 function tintCrimson(w,boss){
   const red=new THREE.Color(boss?0x6a1010:0x5a1616);
+  const cache=new Map(), tint=(m,f)=>{if(!cache.has(m)){const n=m.clone();f(n);cache.set(m,n);}return cache.get(m);};
   w.traverse(o=>{
-    if(o.isMesh&&o.material&&!o.material.isMeshBasicMaterial&&o.material.color){o.material=o.material.clone();const c=o.material.color,l=(c.r+c.g+c.b)/3;if(l<.3&&!(o.material.metalness>.5))c.lerp(red,.6);}
-    else if(o.isMesh&&o.material&&o.material.isMeshBasicMaterial){o.material=o.material.clone();if(o.material.color.g>.8&&o.material.color.r<.95)o.material.color.set(0xff6a55);}
+    if(o.isMesh&&o.material&&!o.material.isMeshBasicMaterial&&o.material.color){o.material=tint(o.material,n=>{const c=n.color,l=(c.r+c.g+c.b)/3;if(l<.3&&!(n.metalness>.5))c.lerp(red,.6);});}
+    else if(o.isMesh&&o.material&&o.material.isMeshBasicMaterial){o.material=tint(o.material,n=>{if(n.color.g>.8&&n.color.r<.95)n.color.set(0xff6a55);});}
     if(o.isSprite){o.material=o.material.clone();o.material.color.set(0xff5040);}
     if(o.isPointLight)o.color.set(0xff5040);
+  });
+}
+// รวมชิ้นส่วนที่ขยับไปด้วยกัน (ลูกของข้อต่อเดียวกัน วัสดุเดียวกัน) เป็นชิ้นเดียว = วาดน้อยครั้งลง
+function mergeRigid(root){
+  const nodes=[];root.traverse(o=>{if(!o.isMesh&&o.children&&o.children.length>1)nodes.push(o);});
+  nodes.forEach(node=>{
+    const groups=new Map();
+    node.children.forEach(c=>{if(!c.isMesh||c.isSkinnedMesh||c.children.length||!c.geometry||Array.isArray(c.material)||c.material.transparent||!c.visible)return;
+      if(!groups.has(c.material))groups.set(c.material,[]);groups.get(c.material).push(c);});
+    groups.forEach((list,mat)=>{if(list.length<2)return;let n=0;const gs=list.map(c=>{c.updateMatrix();const g=(c.geometry.index?c.geometry.toNonIndexed():c.geometry.clone());g.applyMatrix4(c.matrix);n+=g.attributes.position.count;return g;});
+      if(!gs.every(g=>g.attributes.normal&&g.attributes.uv))return;
+      const P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2);let o=0;
+      gs.forEach(g=>{P.set(g.attributes.position.array,o*3);N.set(g.attributes.normal.array,o*3);U.set(g.attributes.uv.array,o*2);o+=g.attributes.position.count;});
+      const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.BufferAttribute(P,3));G.setAttribute('normal',new THREE.BufferAttribute(N,3));G.setAttribute('uv',new THREE.BufferAttribute(U,2));G.computeBoundingSphere();
+      const m=new THREE.Mesh(G,mat);m.castShadow=list[0].castShadow;m.receiveShadow=list[0].receiveShadow;m.userData.outline=list[0].userData.outline;node.add(m);list.forEach(c=>node.remove(c));});
   });
 }
 function makeUnit(side,def,slot){
@@ -75,6 +92,7 @@ function makeUnit(side,def,slot){
   if(side==='E'&&inner.userData.meshy)w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
   if(sp.evo&&!sp.dragon){(inner.userData.swords||[]).forEach(s=>s.visible=true);
     if(side==='E'&&!inner.userData.meshy){const em=new THREE.MeshBasicMaterial({color:0xff4a3a});[-1,1].forEach(sx=>{P(rig.head,B1,em,[sx*.042,.03,.1],[.045,.009,.01],[0,sx*-.25,sx*.35]);glow(rig.head,0xff4030,.08,[sx*.042,.03,.11],.8);});}}
+  if(!inner.userData.meshy&&!sp.dragon)mergeRigid(w);
   const [x,z]=(side==='P'?P_SLOTS:E_SLOTS)[slot];
   w.position.set(x+(def.boss?.6:0),0,z); w.rotation.y=side==='P'?FACE_P:FACE_E; scene.add(w);
   const u={id:UNITS.length,side,sp:def.sp,evo:sp.evo,boss:!!def.boss,lv:def.show||def.lv,

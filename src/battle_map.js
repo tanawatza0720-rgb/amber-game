@@ -2,6 +2,12 @@
    ฝั่งเรา = ป้อมกำแพงหินทางซ้าย (x ติดลบ)  ฝั่งศัตรู = ค่ายนินจาชาดทางขวา (x บวก)
    สนามรบกลางหุบ มีแม่น้ำด้านหลัง ภูเขาหินล้อมรอบ */
 const BIG=true;
+// เครื่องสเปกต่ำ (มือถือ): ปิดเงาจริง ใช้เงาวงกลมแทน, ลดความละเอียดจอ, ลดจำนวนศัตรู
+const LOW=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||Math.min(screen.width,screen.height)<700||/[?&]low=1/.test(location.search);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,LOW?1:1.5));
+if(LOW){renderer.shadowMap.enabled=false;} else {renderer.shadowMap.type=THREE.PCFShadowMap;}
+const MAP0=scene.children.length;
+const FXK=LOW?.35:.65; // ลดจำนวนประกายไฟ/ฝุ่น
 const MAPK={road:14};
 scene.background=new THREE.Color(0x9cb8d6);
 const skyM=new THREE.Mesh(new THREE.SphereGeometry(420,32,16),new THREE.MeshBasicMaterial({side:THREE.BackSide,fog:false,
@@ -10,7 +16,7 @@ scene.add(skyM);
 scene.fog=new THREE.Fog(0xc8d4de,90,260);
 scene.add(new THREE.HemisphereLight(0xe4efff,0x4d5a3a,.95));
 const sun=new THREE.DirectionalLight(0xffe2b8,2.3); sun.position.set(40,60,25); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-34,right:34,top:34,bottom:-34,near:1,far:180}); sun.shadow.bias=-.0006; sun.shadow.normalBias=.04; scene.add(sun); scene.add(sun.target);
+sun.shadow.mapSize.set(LOW?512:1536,LOW?512:1536); Object.assign(sun.shadow.camera,{left:-34,right:34,top:34,bottom:-34,near:1,far:180}); sun.shadow.bias=-.0006; sun.shadow.normalBias=.04; scene.add(sun); scene.add(sun.target);
 const rimL=new THREE.DirectionalLight(0x9fb8ff,.5); rimL.position.set(-30,25,-40); scene.add(rimL);
 // แสงอาทิตย์ตามกล้อง (เงาคมเฉพาะบริเวณที่มองอยู่)
 function sunFollow(c){sun.position.set(c.x+40,60,c.z+25);sun.target.position.set(c.x,0,c.z);}
@@ -61,7 +67,7 @@ const falling=[], flies=[];
   for(let i=0;i<14;i++){const g=J(scene,EX+rnd(5,26),0,rnd(-20,20));const r=rnd(2.2,3.4);P(g,new THREE.ConeGeometry(r,r*1.5,6),i%2?tentM:tentM2,[0,r*.75,0],null,[0,rnd(0,3),0]);}
   MAPK.fires=[];
   [[EX+8,-8],[EX+10,7],[EX+18,0],[EX+20,-12],[EX+22,11]].forEach(([x,z])=>{const g=J(scene,x,0,z);for(let k=0;k<5;k++)P(g,Y1,logM,[0,.2,0],[.18,1.4,.18],[Math.PI/2.4,k*1.2,0]);
-    const pl=new THREE.PointLight(0xff7a2a,2.2,14,2);pl.position.set(0,1.2,0);g.add(pl);const gl=glow(g,0xffa040,2.2,[0,.9,0],.9);MAPK.fires.push({pl,gl});});
+    const gl=glow(g,0xffa040,2.6,[0,.9,0],.9);glow(g,0xff6a20,5,[0,.3,0],.35);MAPK.fires.push({gl});});
   // ป่าสน/ต้นไม้ (instanced)
   const trunkG=new THREE.CylinderGeometry(.18,.28,2,6), coneG=new THREE.ConeGeometry(1.5,4,7), blobG=new THREE.IcosahedronGeometry(1.5,1);
   const NT=320, trunk=new THREE.InstancedMesh(trunkG,SM(0x5e4027),NT), pine=new THREE.InstancedMesh(coneG,SM(0xffffff,{flatShading:true}),NT);
@@ -82,5 +88,25 @@ const falling=[], flies=[];
   for(let i=0;i<4000&&ng<NG;i++){const x=rnd(-70,70),z=rnd(-34,34);if(Math.abs(z)<MAPK.road-2&&Math.abs(x)<50)continue;if(Math.abs(z+40)<12)continue;q.setFromEuler(new THREE.Euler(rnd(-.3,.3),rnd(0,6),rnd(-.3,.3)));const s=rnd(.7,1.6);mm.compose(ps.set(x,.2*s,z),q,sc.set(s,s,s));tuft.setMatrixAt(ng++,mm);}
   tuft.count=ng; tuft.instanceMatrix.needsUpdate=true; scene.add(tuft);
 }
+// รวมฉากนิ่งทั้งหมดเป็นก้อนเดียวต่อวัสดุ (ลดการวาดจากหลายร้อยครั้งเหลือหลักสิบ)
+{
+  const groups=new Map(), kill=[];
+  scene.updateMatrixWorld(true);
+  scene.children.slice(MAP0).forEach(root=>root.traverse(o=>{
+    if(!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||o.isSprite||!o.geometry||!o.material||Array.isArray(o.material))return;
+    if(o.material.transparent||o===skyM||(MAPK.flags||[]).includes(o))return;
+    if(o.geometry.parameters&&o.geometry.parameters.width>=400)return; // พื้นใหญ่ไม่ต้องรวม
+    let g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone(); g.applyMatrix4(o.matrixWorld);
+    if(!g.attributes.uv)g.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count*2),2));
+    const key=o.material; if(!groups.has(key))groups.set(key,[]); groups.get(key).push(g); kill.push(o);}));
+  kill.forEach(o=>o.parent&&o.parent.remove(o));
+  groups.forEach((list,mat)=>{let n=0;list.forEach(g=>n+=g.attributes.position.count);
+    const P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2);let o=0;
+    list.forEach(g=>{P.set(g.attributes.position.array,o*3);N.set(g.attributes.normal.array,o*3);U.set(g.attributes.uv.array,o*2);o+=g.attributes.position.count;g.dispose();});
+    const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.BufferAttribute(P,3));G.setAttribute('normal',new THREE.BufferAttribute(N,3));G.setAttribute('uv',new THREE.BufferAttribute(U,2));G.computeBoundingSphere();
+    const m=new THREE.Mesh(G,mat);m.receiveShadow=!LOW;m.castShadow=false;scene.add(m);});
+  // ของประกอบฉากที่ยังเหลือ (ต้นไม้ หญ้า) ไม่ต้องทอดเงา
+  scene.children.slice(MAP0).forEach(r=>r.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh)o.castShadow=false;}));
+}
 // ขยับน้ำ ธง ไฟ
-function mapTick(T){if(MAPK.water)MAPK.water.offset.x=T*.02;(MAPK.flags||[]).forEach((f,i)=>{f.rotation.y=Math.sin(T*2+i)*.35;});(MAPK.fires||[]).forEach((f,i)=>{f.pl.intensity=1.8+Math.sin(T*9+i*3)*.4+Math.random()*.3;});}
+function mapTick(T){if(MAPK.water)MAPK.water.offset.x=T*.02;(MAPK.flags||[]).forEach((f,i)=>{f.rotation.y=Math.sin(T*2+i)*.35;});(MAPK.fires||[]).forEach((f,i)=>{f.gl.scale.setScalar(2.4+Math.sin(T*9+i*3)*.3+Math.random()*.2);});}

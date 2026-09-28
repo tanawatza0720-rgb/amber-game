@@ -14,6 +14,14 @@ assert helpers.count(b)==1
 helpers=helpers.replace(b,"  applyPose(base);\n  m.userData.rig={arms,R,L,base};\n  let blink=0;")
 from trail_patch import patch
 helpers=patch(helpers)
+# แผนที่ใหญ่มองจากไกล: ลดความละเอียดรูปทรงลง (ตัวเล็กบนจอ ไม่ต้องละเอียด)
+tex=tex.replace("new THREE.SphereGeometry(1,32,24)","new THREE.SphereGeometry(1,14,10)")
+for s0,s1 in [("new THREE.SphereGeometry(1,32,24)","new THREE.SphereGeometry(1,14,10)"),("new THREE.ConeGeometry(1,1,20)","new THREE.ConeGeometry(1,1,10)"),("new THREE.CylinderGeometry(1,1,1,20)","new THREE.CylinderGeometry(1,1,1,10)"),("seg||28,ps||0","Math.min(seg||28,14),ps||0")]:
+    helpers=helpers.replace(s0,s1); tex=tex.replace(s0,s1)
+
+helpers=helpers.replace('function particles(pos,color,n,speed,size,grav,opa){\n','function particles(pos,color,n,speed,size,grav,opa){\n  if(typeof FXK!=="undefined")n=Math.max(1,Math.round(n*FXK));\n',1)
+# ไม่ใส่ไฟดวงเล็กที่ตาคาเซะมารุ (ไฟต่อตัวทำให้เครื่องช้ามากเมื่อมีหลายตัว)
+helpers=helpers.replace("const eyeL=new THREE.PointLight(0x7fffe0,.5,.7,2); eyeL.position.set(0,1.0,.3); m.add(eyeL);","")
 a="amp:0,base:sword.userData.base"
 assert helpers.count(a)==1
 helpers=helpers.replace(a,"amp:0,k:sword.userData.trailK||1,base:sword.userData.base")
