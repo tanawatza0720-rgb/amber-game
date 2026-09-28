@@ -177,24 +177,36 @@ function showMap(){
     b.querySelector('.nid').textContent=st.id;b.querySelector('.nnm').textContent=st.name;
     b.querySelector('.nst').textContent=ok?('★'.repeat(s)+'☆'.repeat(3-s)):'ล็อก';
     b.querySelector('.nmeta').textContent=st.waves.length+' คลื่น · พลังงาน '+st.cost;
-    b.onclick=()=>{$('#map').hidden=true;runBattle(st);};box.appendChild(b);});
+    b.onclick=()=>startStage(st);box.appendChild(b);});
 }
 function showResult(win,stars,first){
   const r=$('#result');r.hidden=false;r.className=win?'win':'lose';
   $('#rTitle').textContent=win?'ชนะ!':'พ่ายแพ้';
   const st=$('#rStars');st.innerHTML='';for(let i=0;i<3;i++){const s=document.createElement('span');s.textContent='★';if(i<stars){s.className='on';s.style.animationDelay=(.2+i*.25)+'s';}st.appendChild(s);}
   const rw=$('#rRew');rw.innerHTML='';
-  const items=win?[['เหรียญ','+'+stage.coins],['ค่าประสบการณ์ทีม','+'+stage.xp]].concat(first?[['โบนัสผ่านครั้งแรก','+10 อัมพร']]:[]):[['คำแนะนำ','ลองใช้ "กระโดดฟัน" ทำให้ศัตรูมึน และเก็บ "สามดาบวายุ" ไว้ใช้กับบอส']];
-  items.forEach(([a,b])=>{const d=document.createElement('div');d.className='rr';const x=document.createElement('span');x.textContent=a;const y=document.createElement('b');y.textContent=b;d.append(x,y);rw.appendChild(d);});
+  const tip=[['คำแนะนำ','ใช้ท่าที่ทำให้ศัตรูมึน และเก็บท่าแรงไว้ใช้กับบอส']];
+  const row=(a,b)=>{const d=document.createElement('div');d.className='rr';const x=document.createElement('span');x.textContent=a;const y=document.createElement('b');y.textContent=b;d.append(x,y);rw.appendChild(d);return y;};
+  const btns=['#rMap','#rRetry','#rNext'].map(s=>$(s));
+  if(BN.bid){
+    // ออนไลน์: รางวัลจริงมาจากเซิร์ฟเวอร์
+    const cY=win?row('เหรียญ','…'):null, xY=win?row('ค่าประสบการณ์ผู้เล่น','…'):null; if(!win)tip.forEach(([a,b])=>row(a,b));
+    const note=row('สถานะ','กำลังบันทึกผล…'); btns.forEach(b=>b.disabled=true);
+    bnFinish(win).then(res=>{if(cY){cY.textContent='+'+res.coins;xY.textContent='+'+res.xp;} note.textContent='บันทึกแล้ว ⚡ '+BN.state.player.energy+'/'+BN.state.player.energy_max;})
+      .catch(e=>{if(cY){cY.textContent='-';xY.textContent='-';} note.textContent=BERR[e.code]||BERR.network;})
+      .finally(()=>btns.forEach(b=>b.disabled=false));
+  } else {
+    (win?[['เหรียญ','+'+stage.coins+' (ทดลอง)']]:tip).forEach(([a,b])=>row(a,b));
+    row('โหมดทดลอง','ไม่ได้รับรางวัลจริง');
+  }
   $('#rStarsNote').textContent=win?(stars===3?'ไม่มีมอนสเตอร์ล้มเลย':stars===2?'มีมอนสเตอร์ล้ม 1 ตัว':'มีมอนสเตอร์ล้มมากกว่า 1 ตัว'):'';
   const i=STAGES.indexOf(stage), nx=STAGES[i+1];
-  $('#rNext').hidden=!(win&&nx); if(nx)$('#rNext').onclick=()=>{r.hidden=true;runBattle(nx);};
-  $('#rRetry').onclick=()=>{r.hidden=true;runBattle(stage);};
+  $('#rNext').hidden=!(win&&nx); if(nx)$('#rNext').onclick=()=>startStage(nx);
+  $('#rRetry').onclick=()=>startStage(stage);
   $('#rMap').onclick=()=>{UNITS.forEach(removeUnit);UNITS=[];showMap();};
 }
 $('#bAuto').onclick=()=>{AUTO=!AUTO;$('#bAuto').classList.toggle('on',AUTO);$('#bAuto').setAttribute('aria-pressed',AUTO);if(AUTO&&choose){const c=choose;choose=null;hideSkills();const [s]=aiChoose(actor);target=aiChoose(actor)[1];c(s);}};
 $('#bSpeed').onclick=()=>{SPEED=SPEED===1?2:1;$('#bSpeed').textContent='x'+SPEED;$('#bSpeed').classList.toggle('on',SPEED===2);};
-$('#bExit').onclick=()=>{running=false;if(choose){choose=null;}UNITS.forEach(removeUnit);UNITS=[];actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;showMap();};
+$('#bExit').onclick=()=>{if(BN.bid)bnFinish(false).catch(()=>{});running=false;if(choose){choose=null;}UNITS.forEach(removeUnit);UNITS=[];actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;showMap();};
 
 /* ---------- แตะเลือกเป้า ---------- */
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
@@ -270,7 +282,7 @@ function loop(){
 }
 layout(); loop();
 $('#loadMsg').hidden=false;
-Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดโมเดล '+Math.round(p*100)+'%';}),loadDragon()]).then(([g,dr])=>{if(!dr){const i=TEAM.findIndex(d=>d.sp==='amateru');if(i>=0)TEAM[i]={sp:'kazemaru',lv:5};}$('#loadMsg').hidden=true;if(!g){USE_MESHY=false;$('#bModel').hidden=true;}updModelBtn();showMap();});
+Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดโมเดล '+Math.round(p*100)+'%';}),loadDragon(),bnInit()]).then(([g,dr])=>{if(!dr)TEAM.forEach(d=>{if(d.sp==='amateru')d.sp='kazemaru';});bnRender();$('#loadMsg').hidden=true;if(!g){USE_MESHY=false;$('#bModel').hidden=true;}updModelBtn();showMap();});
 function updModelBtn(){$('#bModel').textContent='โมเดลคาเซะคิริ: '+(USE_MESHY?'Meshy AI':'แบบเดิม');$('#bModel').classList.toggle('on',USE_MESHY);}
 $('#bModel').onclick=()=>{USE_MESHY=!USE_MESHY;updModelBtn();};
 addEventListener('resize',layout);

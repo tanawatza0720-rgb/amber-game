@@ -1825,7 +1825,7 @@ const INFO={
   dojo:()=>{const d=el('div');d.append(para('สนามต่อสู้แบบผลัดกันเล่น จัดทีมมอนสเตอร์ 3 ตัวแล้วออกไปสู้'));
     d.append(rows([['ด่านเนื้อเรื่อง','ใช้พลังงาน 6'],['ดันเจี้ยนรายวัน','ใช้พลังงาน 8'],['ประลองกับผู้เล่น (PvP)','ตั๋ว 5/5'],['หอคอยท้าทาย','ชั้น 14']]));
     const tm=S.team.map(u=>S.mons.find(m=>m.uid===u)).filter(Boolean).map(m=>spOf(m).name).join(', ');
-    openSheet('สนามประลอง','ทีมปัจจุบัน: '+(tm||'-'),d,[['ด่านเนื้อเรื่อง',()=>toast('กำลังเชื่อมด่าน 1-1 ถึง 1-3 เข้ากับฟาร์มในขั้นถัดไป')],['จัดทีม',()=>openBox(),'ghost']]);},
+    openSheet('สนามประลอง','ทีมปัจจุบัน: '+(tm||'-'),d,[['ด่านเนื้อเรื่อง',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
     const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,'★'.repeat(spOf(m).rar)+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},

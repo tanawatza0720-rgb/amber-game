@@ -1,4 +1,4 @@
-import re
+import re,os
 k=open('kazemaru.html',encoding='utf-8').read()
 js=re.findall(r'<script>(.*?)</script>',k,re.S)[-1]
 def cut(a,b):
@@ -25,9 +25,9 @@ a='(evo?buildEvo:buildBaby)(m);'
 assert helpers.count(a)==1
 helpers=helpers.replace(a,'(evo?(USE_MESHY&&MESHY?(mm=>buildMeshyEvo(mm,evo)):buildEvo):buildBaby)(m);')
 shell=open('battle_shell.html',encoding='utf-8').read()
-out=shell.replace('/*__SHARED__*/',tex+"\n"+helpers).replace('/*__WORLD__*/',open('meshy_rig.js',encoding='utf-8').read()+'\n'+open('dragon.js',encoding='utf-8').read()+'\n'+open('battle_world.js',encoding='utf-8').read()).replace('/*__UI__*/',open('battle_ui.js',encoding='utf-8').read())
+out=shell.replace('/*__SHARED__*/',tex+"\n"+helpers).replace('/*__WORLD__*/',open('meshy_rig.js',encoding='utf-8').read()+'\n'+open('dragon.js',encoding='utf-8').read()+'\n'+open('battle_world.js',encoding='utf-8').read()).replace('/*__UI__*/',open('battle_net.js',encoding='utf-8').read()+'\n'+open('battle_ui.js',encoding='utf-8').read())
 open('battle.html','w',encoding='utf-8').write(out)
 open('battle.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</script>',out,re.S)[-1])
-loc=out.replace('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','package/build/three.min.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js','package/examples/js/loaders/GLTFLoader.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js','package/examples/js/utils/SkeletonUtils.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js','package/examples/js/environments/RoomEnvironment.js').replace('<link rel="stylesheet" href="https://fonts.googleapis.com','<link rel="x" href="https://fonts.googleapis.com')
+loc=out.replace('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','package/build/three.min.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js','package/examples/js/loaders/GLTFLoader.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js','package/examples/js/utils/SkeletonUtils.js').replace('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js','package/examples/js/environments/RoomEnvironment.js').replace('<link rel="stylesheet" href="https://fonts.googleapis.com','<link rel="x" href="https://fonts.googleapis.com').replace('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',os.environ.get('SBJS','sb_local.js')).replace('https://spkzkwksjweszytkgokx.supabase.co',os.environ.get('SBURL','http://127.0.0.1:8766')).replace('href="index.html"','href="farm_local.html"')
 open('battle_local.html','w',encoding='utf-8').write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>'+loc+'</body></html>')
 print(len(out))

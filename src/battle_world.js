@@ -63,9 +63,9 @@ const SPECIES={
 };
 const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6}];
 const STAGES=[
-  {id:'1-1',name:'ทางเข้าป่าไผ่',cost:6,coins:100,xp:40,waves:[[{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:2}]]},
-  {id:'1-2',name:'ลานโคมหิน',cost:6,coins:150,xp:60,waves:[[{sp:'kazemaru',lv:3},{sp:'kazemaru',lv:3}],[{sp:'kazemaru',lv:3},{sp:'kazekiri',lv:3}]]},
-  {id:'1-3',name:'ประตูแดงของนินจาชาด',cost:8,coins:250,xp:90,waves:[[{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:3},{sp:'kazemaru',lv:2}],[{sp:'kazekiri',lv:4,boss:1},{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:2}]]},
+  {id:'1-1',name:'ทางเข้าป่าไผ่',cost:6,coins:80,xp:10,waves:[[{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:2}]]},
+  {id:'1-2',name:'ลานโคมหิน',cost:6,coins:100,xp:10,waves:[[{sp:'kazemaru',lv:3},{sp:'kazemaru',lv:3}],[{sp:'kazemaru',lv:3},{sp:'kazekiri',lv:3}]]},
+  {id:'1-3',name:'ประตูแดงของนินจาชาด',cost:6,coins:150,xp:10,waves:[[{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:3},{sp:'kazemaru',lv:2}],[{sp:'kazekiri',lv:4,boss:1},{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:2}]]},
 ];
 const P_SLOTS=[[-2.5,.2],[-4.3,-1.8],[-3.6,2]], E_SLOTS=[[2.5,.2],[4.3,-1.8],[3.6,2]];
 const FACE_P=Math.PI/2-.35, FACE_E=-Math.PI/2+.35;
