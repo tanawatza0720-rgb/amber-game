@@ -52,12 +52,16 @@ const SPECIES={
     {id:'s1',name:'กรงเล็บเพลิง',desc:'บินโฉบเข้าไปงับศัตรู 1 ตัว 115%',cd:0,type:'melee',mult:1.15,target:'one'},
     {id:'s2',name:'ลมหายใจอัมพร',desc:'พ่นไฟใส่ศัตรูทุกตัว 70%',cd:3,type:'ranged',mult:.7,target:'all'},
     {id:'s3',name:'ดิ่งฟ้าถล่ม',desc:'บินขึ้นฟ้าแล้วดิ่งลงกระแทกศัตรูทุกตัว 95% โอกาส 25% ทำให้มึน',cd:4,type:'leap',mult:.95,target:'all',stun:.25}]},
+  kuroga:{name:'คุโรกะ',evo:1,rig:'kuroga',base:{hp:112,atk:40,def:14,spd:44},skills:[
+    {id:'s1',name:'ฟันเงาจันทร์',desc:'ฟันศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},
+    {id:'s2',name:'คมดาบราตรี',desc:'ฟัน 3 ครั้ง ครั้งละ 75% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.75,target:'one'},
+    {id:'s3',name:'ดิ่งฟันสังหาร',desc:'กระโดดฟาดศัตรูทุกตัว 90% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.9,target:'all',stun:.3}]},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42},skills:[
     {id:'s1',name:'ฟันเงา',desc:'ฟันศัตรู 1 ตัว 110%',cd:0,type:'melee',mult:1.1,target:'one'},
     {id:'s2',name:'สามดาบวายุ',desc:'ฟัน 3 ครั้ง ครั้งละ 70% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.7,target:'one'},
     {id:'s3',name:'กระโดดฟัน',desc:'ฟาดพื้นใส่ศัตรูทุกตัว 85% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.85,target:'all',stun:.3}]},
 };
-const TEAM=[{sp:'kazekiri',lv:6},{sp:'amateru',lv:6},{sp:'kazemaru',lv:5}];
+const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6}];
 const STAGES=[
   {id:'1-1',name:'ทางเข้าป่าไผ่',cost:6,coins:100,xp:40,waves:[[{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:2}]]},
   {id:'1-2',name:'ลานโคมหิน',cost:6,coins:150,xp:60,waves:[[{sp:'kazemaru',lv:3},{sp:'kazemaru',lv:3}],[{sp:'kazemaru',lv:3},{sp:'kazekiri',lv:3}]]},
@@ -79,7 +83,7 @@ function tintCrimson(w,boss){
 }
 function makeUnit(side,def,slot){
   const sp=SPECIES[def.sp], f=1+.1*(def.lv-1), bm=def.boss?1.6:1;
-  const w=sp.dragon&&DRAGON?buildDragon():buildMonster(sp.evo);
+  const w=sp.dragon&&DRAGON?buildDragon():buildMonster(sp.rig||sp.evo);
   const inner=w.userData.inner, rig=inner.userData.rig;
   if(def.boss){w.userData.k*=1.3;w.scale.setScalar(w.userData.k);}
   if(side==='E')tintCrimson(w,def.boss);

@@ -1,16 +1,23 @@
 /* ================= โมเดลคาเซะคิริจาก Meshy (มีโครงกระดูก Mixamo) ================= */
 let MESHY=null, USE_MESHY=true, MXA=null;
-const MESHY_URL='kzr/kazekiri_rig.json', MXA_URL='kzr/kazekiri_anims.json';
-function loadMeshy(onProgress){
-  const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
+const MXA_URL='kzr/kazekiri_anims.json';
+// โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json'}, RIGDB={};
+function loadRig(key,onProgress){
+  if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
-    if(!THREE.GLTFLoader||!THREE.SkeletonUtils){res(null);return;}
-    new THREE.GLTFLoader().load(MESHY_URL,g=>{MESHY=g;anims.then(()=>res(g));},x=>{if(onProgress&&x.total)onProgress(x.loaded/x.total);},()=>res(null));
+    if(!THREE.GLTFLoader||!THREE.SkeletonUtils||!RIG_URLS[key]){res(null);return;}
+    new THREE.GLTFLoader().load(RIG_URLS[key],g=>{RIGDB[key]=g;res(g);},x=>{if(onProgress&&x.total)onProgress(x.loaded/x.total);},()=>res(null));
   });
 }
+function loadMeshy(onProgress){
+  const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
+  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),anims]).then(([g])=>{MESHY=g;return g;});
+}
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
-function buildMeshyEvo(m){
-  const root=THREE.SkeletonUtils.clone(MESHY.scene);
+function buildMeshyEvo(m,key){
+  key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
+  const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
   m.add(root);
   const bone=n=>{let f=null;root.traverse(o=>{if(!f&&o.isBone&&o.name.replace(/[^A-Za-z0-9]/g,'').endsWith(n))f=o;});return f;};
   const B={hips:bone('Hips'),spine:bone('Spine'),spine1:bone('Spine1'),spine2:bone('Spine2'),neck:bone('Neck'),head:bone('Head'),
@@ -131,6 +138,7 @@ function buildMeshyEvo(m){
   const swR=katana(R.hd,mt); swR.position.set(0,-.04,0); swR.rotation.set(-.35,0,1.95);
   const swL=katana(L.hd,mt); swL.position.set(0,-.04,0); swL.rotation.set(-.1,0,Math.PI+.1);
   m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;
+  if(key==='kuroga'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ: ดาบยาวเล่มเดียว
   const base=[
     [hips.position,'y',.88],[hips.rotation,'y',.12],[hips.rotation,'x',0],
     [torso.rotation,'x',.05],[torso.rotation,'y',-.04],[torso.rotation,'z',0],
@@ -142,7 +150,7 @@ function buildMeshyEvo(m){
   ];
   applyPose(base);
   m.userData.rig={hips,torso,head,legs,arms,R,L,base};
-  m.userData.meshy=true;
+  m.userData.meshy=true; m.userData.rigKey=key;
   const feet=()=>legs.forEach(l=>{l.ft.rotation.x=-(l.th.rotation.x+l.kn.rotation.x);l.ft.rotation.z=-l.th.rotation.z;});
   feet(); retarget();
   // ย้ายดาบไปติดกระดูกมือจริง (ตามท่า Mixamo ได้)

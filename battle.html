@@ -649,7 +649,7 @@ const easeIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 
 function buildMonster(evo){
   const w=new THREE.Group(), m=new THREE.Group(); w.add(m);
-  (evo?(USE_MESHY&&MESHY?buildMeshyEvo:buildEvo):buildBaby)(m);
+  (evo?(USE_MESHY&&MESHY?(mm=>buildMeshyEvo(mm,evo)):buildEvo):buildBaby)(m);
   w.updateMatrixWorld(true);
   (m.userData.swords||[]).forEach(sw=>sw.traverse(o=>o.userData.noBox=true));const box=new THREE.Box3();m.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!o.userData.noBox)box.expandByObject(o);});
   const size=box.getSize(new THREE.Vector3()), ctr=box.getCenter(new THREE.Vector3());
@@ -725,17 +725,24 @@ function stageMsg(t){const el=$('#stageMsg');el.hidden=!t;el.textContent=t||'';}
 
 /* ================= โมเดลคาเซะคิริจาก Meshy (มีโครงกระดูก Mixamo) ================= */
 let MESHY=null, USE_MESHY=true, MXA=null;
-const MESHY_URL='kzr/kazekiri_rig.json', MXA_URL='kzr/kazekiri_anims.json';
-function loadMeshy(onProgress){
-  const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
+const MXA_URL='kzr/kazekiri_anims.json';
+// โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json'}, RIGDB={};
+function loadRig(key,onProgress){
+  if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
-    if(!THREE.GLTFLoader||!THREE.SkeletonUtils){res(null);return;}
-    new THREE.GLTFLoader().load(MESHY_URL,g=>{MESHY=g;anims.then(()=>res(g));},x=>{if(onProgress&&x.total)onProgress(x.loaded/x.total);},()=>res(null));
+    if(!THREE.GLTFLoader||!THREE.SkeletonUtils||!RIG_URLS[key]){res(null);return;}
+    new THREE.GLTFLoader().load(RIG_URLS[key],g=>{RIGDB[key]=g;res(g);},x=>{if(onProgress&&x.total)onProgress(x.loaded/x.total);},()=>res(null));
   });
 }
+function loadMeshy(onProgress){
+  const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
+  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),anims]).then(([g])=>{MESHY=g;return g;});
+}
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
-function buildMeshyEvo(m){
-  const root=THREE.SkeletonUtils.clone(MESHY.scene);
+function buildMeshyEvo(m,key){
+  key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
+  const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
   m.add(root);
   const bone=n=>{let f=null;root.traverse(o=>{if(!f&&o.isBone&&o.name.replace(/[^A-Za-z0-9]/g,'').endsWith(n))f=o;});return f;};
   const B={hips:bone('Hips'),spine:bone('Spine'),spine1:bone('Spine1'),spine2:bone('Spine2'),neck:bone('Neck'),head:bone('Head'),
@@ -856,6 +863,7 @@ function buildMeshyEvo(m){
   const swR=katana(R.hd,mt); swR.position.set(0,-.04,0); swR.rotation.set(-.35,0,1.95);
   const swL=katana(L.hd,mt); swL.position.set(0,-.04,0); swL.rotation.set(-.1,0,Math.PI+.1);
   m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;
+  if(key==='kuroga'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ: ดาบยาวเล่มเดียว
   const base=[
     [hips.position,'y',.88],[hips.rotation,'y',.12],[hips.rotation,'x',0],
     [torso.rotation,'x',.05],[torso.rotation,'y',-.04],[torso.rotation,'z',0],
@@ -867,7 +875,7 @@ function buildMeshyEvo(m){
   ];
   applyPose(base);
   m.userData.rig={hips,torso,head,legs,arms,R,L,base};
-  m.userData.meshy=true;
+  m.userData.meshy=true; m.userData.rigKey=key;
   const feet=()=>legs.forEach(l=>{l.ft.rotation.x=-(l.th.rotation.x+l.kn.rotation.x);l.ft.rotation.z=-l.th.rotation.z;});
   feet(); retarget();
   // ย้ายดาบไปติดกระดูกมือจริง (ตามท่า Mixamo ได้)
@@ -1153,12 +1161,16 @@ const SPECIES={
     {id:'s1',name:'กรงเล็บเพลิง',desc:'บินโฉบเข้าไปงับศัตรู 1 ตัว 115%',cd:0,type:'melee',mult:1.15,target:'one'},
     {id:'s2',name:'ลมหายใจอัมพร',desc:'พ่นไฟใส่ศัตรูทุกตัว 70%',cd:3,type:'ranged',mult:.7,target:'all'},
     {id:'s3',name:'ดิ่งฟ้าถล่ม',desc:'บินขึ้นฟ้าแล้วดิ่งลงกระแทกศัตรูทุกตัว 95% โอกาส 25% ทำให้มึน',cd:4,type:'leap',mult:.95,target:'all',stun:.25}]},
+  kuroga:{name:'คุโรกะ',evo:1,rig:'kuroga',base:{hp:112,atk:40,def:14,spd:44},skills:[
+    {id:'s1',name:'ฟันเงาจันทร์',desc:'ฟันศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},
+    {id:'s2',name:'คมดาบราตรี',desc:'ฟัน 3 ครั้ง ครั้งละ 75% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.75,target:'one'},
+    {id:'s3',name:'ดิ่งฟันสังหาร',desc:'กระโดดฟาดศัตรูทุกตัว 90% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.9,target:'all',stun:.3}]},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42},skills:[
     {id:'s1',name:'ฟันเงา',desc:'ฟันศัตรู 1 ตัว 110%',cd:0,type:'melee',mult:1.1,target:'one'},
     {id:'s2',name:'สามดาบวายุ',desc:'ฟัน 3 ครั้ง ครั้งละ 70% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.7,target:'one'},
     {id:'s3',name:'กระโดดฟัน',desc:'ฟาดพื้นใส่ศัตรูทุกตัว 85% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.85,target:'all',stun:.3}]},
 };
-const TEAM=[{sp:'kazekiri',lv:6},{sp:'amateru',lv:6},{sp:'kazemaru',lv:5}];
+const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6}];
 const STAGES=[
   {id:'1-1',name:'ทางเข้าป่าไผ่',cost:6,coins:100,xp:40,waves:[[{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:2}]]},
   {id:'1-2',name:'ลานโคมหิน',cost:6,coins:150,xp:60,waves:[[{sp:'kazemaru',lv:3},{sp:'kazemaru',lv:3}],[{sp:'kazemaru',lv:3},{sp:'kazekiri',lv:3}]]},
@@ -1180,7 +1192,7 @@ function tintCrimson(w,boss){
 }
 function makeUnit(side,def,slot){
   const sp=SPECIES[def.sp], f=1+.1*(def.lv-1), bm=def.boss?1.6:1;
-  const w=sp.dragon&&DRAGON?buildDragon():buildMonster(sp.evo);
+  const w=sp.dragon&&DRAGON?buildDragon():buildMonster(sp.rig||sp.evo);
   const inner=w.userData.inner, rig=inner.userData.rig;
   if(def.boss){w.userData.k*=1.3;w.scale.setScalar(w.userData.k);}
   if(side==='E')tintCrimson(w,def.boss);
@@ -1348,7 +1360,7 @@ function previewOrder(n){
 }
 function renderOrder(cur){
   const o=$('#order');o.innerHTML='';
-  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):(u.evo?'คิริ':'มารุ');o.appendChild(c);});
+  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):({kazekiri:'คิริ',kazemaru:'มารุ',amateru:'มังกร',kuroga:'คุโร'}[u.sp]||'');o.appendChild(c);});
 }
 
 /* ================= วงแหวนบอกตัวที่ถึงตาและเป้าหมาย ================= */

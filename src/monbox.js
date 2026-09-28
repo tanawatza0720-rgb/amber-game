@@ -6,6 +6,9 @@ const SPEC={
   kazekiri:{name:'คาเซะคิริ',title:'เงาสามดาบ',rar:4,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:1,maxLv:40,
     base:{hp:102,atk:34,def:13,spd:42},lore:'นินจาเงาผู้ไร้ใบหน้า พกดาบสามเล่ม เคลื่อนไหวเงียบดั่งสายลมยามค่ำ',
     skills:[['ฟันเงา','ฟันศัตรู 1 ตัว 110%'],['สามดาบวายุ','ฟัน 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['กระโดดฟัน','ฟาดพื้นใส่ศัตรูทุกตัว 85% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
+  kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:5,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
+    base:{hp:112,atk:40,def:14,spd:44},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า',
+    skills:[['ฟันเงาจันทร์','ฟันศัตรู 1 ตัว 120%'],['คมดาบราตรี','ฟัน 3 ครั้ง ครั้งละ 75% · คูลดาวน์ 3'],['ดิ่งฟันสังหาร','กระโดดฟาดศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
   amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:5,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
     base:{hp:118,atk:36,def:15,spd:38},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ',
     skills:[['กรงเล็บเพลิง','บินโฉบเข้าไปงับศัตรู 1 ตัว 115%'],['ลมหายใจอัมพร','พ่นไฟใส่ศัตรูทุกตัว 70% · คูลดาวน์ 3'],['ดิ่งฟ้าถล่ม','ดิ่งลงกระแทกศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
@@ -42,7 +45,7 @@ function boxModel(sp){
   if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}
   let w;
   if(S2.dragon&&DRAGON){w=buildDragon();w.scale.setScalar(1.25);}
-  else{w=buildMonster(S2.evo?1:0);w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
+  else{w=buildMonster(S2.rig||(S2.evo?1:0));w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
   w.traverse(o=>{if(o.isMesh){o.castShadow=true;}});
   w.userData.sp=sp; bScene.add(w); BOX.model=w; BOX.spin=0;
   const A=w.userData.inner.userData; if(A.clipW)A.clipW(1);
@@ -67,7 +70,7 @@ function headOf(w,sp){
   return{p:p.add(new THREE.Vector3(F.dx*H,F.dy*H,0)),r:F.r*H};
 }
 // ปรับกรอบหน้าแต่ละสายพันธุ์ (สัดส่วนของความสูงตัว)
-const FACE={kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
+const FACE={kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
 function makeThumb(sp){
   if(THUMB[sp])return THUMB[sp];
   const W=192, rt=new THREE.WebGLRenderTarget(W,W,{encoding:THREE.sRGBEncoding}); rt.texture.encoding=THREE.sRGBEncoding;

@@ -23,7 +23,7 @@ helpers=helpers.replace(a,"(m.userData.swords||[]).forEach(sw=>sw.traverse(o=>o.
 helpers=helpers.replace('m.position.y+=Math.abs(Math.sin(T*2.4))*.045;','m.position.y+=Math.abs(Math.sin(T*2.4))*.018;')
 a='(evo?buildEvo:buildBaby)(m);'
 assert helpers.count(a)==1
-helpers=helpers.replace(a,'(evo?(USE_MESHY&&MESHY?buildMeshyEvo:buildEvo):buildBaby)(m);')
+helpers=helpers.replace(a,'(evo?(USE_MESHY&&MESHY?(mm=>buildMeshyEvo(mm,evo)):buildEvo):buildBaby)(m);')
 shell=open('battle_shell.html',encoding='utf-8').read()
 out=shell.replace('/*__SHARED__*/',tex+"\n"+helpers).replace('/*__WORLD__*/',open('meshy_rig.js',encoding='utf-8').read()+'\n'+open('dragon.js',encoding='utf-8').read()+'\n'+open('battle_world.js',encoding='utf-8').read()).replace('/*__UI__*/',open('battle_ui.js',encoding='utf-8').read())
 open('battle.html','w',encoding='utf-8').write(out)

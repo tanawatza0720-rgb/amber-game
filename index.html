@@ -766,7 +766,7 @@ const easeIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 
 function buildMonster(evo){
   const w=new THREE.Group(), m=new THREE.Group(); w.add(m);
-  (evo?(USE_MESHY&&MESHY?buildMeshyEvo:buildEvo):buildBaby)(m);
+  (evo?(USE_MESHY&&MESHY?(mm=>buildMeshyEvo(mm,evo)):buildEvo):buildBaby)(m);
   w.updateMatrixWorld(true);
   const box=new THREE.Box3();m.traverse(o=>{if(o.isMesh&&!o.userData.outline)box.expandByObject(o);});
   const size=box.getSize(new THREE.Vector3()), ctr=box.getCenter(new THREE.Vector3());
@@ -924,7 +924,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
   const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
-  const SPS={kazemaru:{rar:3,max:20,to:'kazekiri',cost:300},kazekiri:{rar:4,max:40},amateru:{rar:5,max:50}};
+  const SPS={kazemaru:{rar:3,max:20,to:'kazekiri',cost:300},kazekiri:{rar:4,max:40},amateru:{rar:5,max:50},kuroga:{rar:5,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
@@ -938,6 +938,7 @@ const LOCAL=(()=>{
         daily_streak:0,daily_last:null,hatch_count:0,pity:0,quest_day:null,quests:{},team:[],mons:[],nid:1};
       const src=(old&&old.mons&&old.mons.length)?old.mons.map(m=>({sp:m.sp||(m.evo?'kazekiri':'kazemaru'),lv:m.lv})):[{sp:'kazekiri',lv:18},{sp:'kazemaru',lv:4},{sp:'kazemaru',lv:7},{sp:'kazemaru',lv:1}];
       if(!src.some(m=>m.sp==='amateru'))src.push({sp:'amateru',lv:10});
+      if(!src.some(m=>m.sp==='kuroga'))src.push({sp:'kuroga',lv:10});
       src.forEach(m=>D.mons.push({id:D.nid++,sp:m.sp,lv:m.lv}));
       const ord=m=>({kazekiri:1,amateru:2}[m.sp]||3)*100-m.lv;
       D.team=[...D.mons].sort((a,b)=>ord(a)-ord(b)).slice(0,3).map(m=>m.id);
@@ -961,7 +962,7 @@ const LOCAL=(()=>{
     hatch_egg:({kind})=>{if(D.mons.length>=C.slots)fail('box_full');let ch;
       if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=.02;}
       else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=.08;}else fail('bad_egg');
-      let sp='kazemaru'; if(Math.random()<ch||(kind==='gold'&&D.pity>=C.pity_max)){sp='amateru';if(kind==='gold')D.pity=0;}
+      let sp='kazemaru'; if(Math.random()<ch||(kind==='gold'&&D.pity>=C.pity_max)){sp=Math.random()<.5?'amateru':'kuroga';if(kind==='gold')D.pity=0;}
       const m={id:D.nid++,sp,lv:1};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
@@ -979,17 +980,24 @@ const LOCAL=(()=>{
 
 /* ================= โมเดลคาเซะคิริจาก Meshy (มีโครงกระดูก Mixamo) ================= */
 let MESHY=null, USE_MESHY=true, MXA=null;
-const MESHY_URL='kzr/kazekiri_rig.json', MXA_URL='kzr/kazekiri_anims.json';
-function loadMeshy(onProgress){
-  const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
+const MXA_URL='kzr/kazekiri_anims.json';
+// โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json'}, RIGDB={};
+function loadRig(key,onProgress){
+  if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
-    if(!THREE.GLTFLoader||!THREE.SkeletonUtils){res(null);return;}
-    new THREE.GLTFLoader().load(MESHY_URL,g=>{MESHY=g;anims.then(()=>res(g));},x=>{if(onProgress&&x.total)onProgress(x.loaded/x.total);},()=>res(null));
+    if(!THREE.GLTFLoader||!THREE.SkeletonUtils||!RIG_URLS[key]){res(null);return;}
+    new THREE.GLTFLoader().load(RIG_URLS[key],g=>{RIGDB[key]=g;res(g);},x=>{if(onProgress&&x.total)onProgress(x.loaded/x.total);},()=>res(null));
   });
 }
+function loadMeshy(onProgress){
+  const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
+  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),anims]).then(([g])=>{MESHY=g;return g;});
+}
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
-function buildMeshyEvo(m){
-  const root=THREE.SkeletonUtils.clone(MESHY.scene);
+function buildMeshyEvo(m,key){
+  key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
+  const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
   m.add(root);
   const bone=n=>{let f=null;root.traverse(o=>{if(!f&&o.isBone&&o.name.replace(/[^A-Za-z0-9]/g,'').endsWith(n))f=o;});return f;};
   const B={hips:bone('Hips'),spine:bone('Spine'),spine1:bone('Spine1'),spine2:bone('Spine2'),neck:bone('Neck'),head:bone('Head'),
@@ -1110,6 +1118,7 @@ function buildMeshyEvo(m){
   const swR=katana(R.hd,mt); swR.position.set(0,-.04,0); swR.rotation.set(-.35,0,1.95);
   const swL=katana(L.hd,mt); swL.position.set(0,-.04,0); swL.rotation.set(-.1,0,Math.PI+.1);
   m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;
+  if(key==='kuroga'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ: ดาบยาวเล่มเดียว
   const base=[
     [hips.position,'y',.88],[hips.rotation,'y',.12],[hips.rotation,'x',0],
     [torso.rotation,'x',.05],[torso.rotation,'y',-.04],[torso.rotation,'z',0],
@@ -1121,7 +1130,7 @@ function buildMeshyEvo(m){
   ];
   applyPose(base);
   m.userData.rig={hips,torso,head,legs,arms,R,L,base};
-  m.userData.meshy=true;
+  m.userData.meshy=true; m.userData.rigKey=key;
   const feet=()=>legs.forEach(l=>{l.ft.rotation.x=-(l.th.rotation.x+l.kn.rotation.x);l.ft.rotation.z=-l.th.rotation.z;});
   feet(); retarget();
   // ย้ายดาบไปติดกระดูกมือจริง (ตามท่า Mixamo ได้)
@@ -1734,7 +1743,7 @@ function addAgent(data,at,pop){
     w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
     const ag={w,inner:w.userData.inner,data,evo:1,fly:true,ang:Math.random()*6.28,r:8.5+Math.random()*1.5,state:'fly'};AGENTS.push(ag);
     if(pop){w.scale.setScalar(.001);tween(.8,t=>w.scale.setScalar(Math.max(.001,1.7*t)),easeBack);}return ag;}
-  const w=buildMonster(spc.evo?1:0); w.userData.k*=1.5; w.scale.setScalar(w.userData.k); scene.add(w);
+  const w=buildMonster(spc.rig||(spc.evo?1:0)); w.userData.k*=1.5; w.scale.setScalar(w.userData.k); scene.add(w);
   const [x,z]=at||freePoint(.8); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
   const inner=w.userData.inner;
   w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
@@ -1811,7 +1820,7 @@ function para(t){return el('p','ptxt',t);}
 
 const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
-    d.append(rows([['ไข่ป่า · ★5 อามาเทรุ','2%'],['ไข่ทองคำ · ★5 อามาเทรุ','8%'],['การันตี ★5 (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffb347'],['นอกนั้นได้','★3 คาเซะมารุ']]));
+    d.append(rows([['ไข่ป่า · ★5 อามาเทรุ / คุโรกะ','2%'],['ไข่ทองคำ · ★5 อามาเทรุ / คุโรกะ','8%'],['การันตี ★5 (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffb347'],['นอกนั้นได้','★3 คาเซะมารุ']]));
     openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
   dojo:()=>{const d=el('div');d.append(para('สนามต่อสู้แบบผลัดกันเล่น จัดทีมมอนสเตอร์ 3 ตัวแล้วออกไปสู้'));
     d.append(rows([['ด่านเนื้อเรื่อง','ใช้พลังงาน 6'],['ดันเจี้ยนรายวัน','ใช้พลังงาน 8'],['ประลองกับผู้เล่น (PvP)','ตั๋ว 5/5'],['หอคอยท้าทาย','ชั้น 14']]));
@@ -2054,6 +2063,9 @@ const SPEC={
   kazekiri:{name:'คาเซะคิริ',title:'เงาสามดาบ',rar:4,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:1,maxLv:40,
     base:{hp:102,atk:34,def:13,spd:42},lore:'นินจาเงาผู้ไร้ใบหน้า พกดาบสามเล่ม เคลื่อนไหวเงียบดั่งสายลมยามค่ำ',
     skills:[['ฟันเงา','ฟันศัตรู 1 ตัว 110%'],['สามดาบวายุ','ฟัน 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['กระโดดฟัน','ฟาดพื้นใส่ศัตรูทุกตัว 85% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
+  kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:5,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
+    base:{hp:112,atk:40,def:14,spd:44},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า',
+    skills:[['ฟันเงาจันทร์','ฟันศัตรู 1 ตัว 120%'],['คมดาบราตรี','ฟัน 3 ครั้ง ครั้งละ 75% · คูลดาวน์ 3'],['ดิ่งฟันสังหาร','กระโดดฟาดศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
   amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:5,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
     base:{hp:118,atk:36,def:15,spd:38},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ',
     skills:[['กรงเล็บเพลิง','บินโฉบเข้าไปงับศัตรู 1 ตัว 115%'],['ลมหายใจอัมพร','พ่นไฟใส่ศัตรูทุกตัว 70% · คูลดาวน์ 3'],['ดิ่งฟ้าถล่ม','ดิ่งลงกระแทกศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
@@ -2090,7 +2102,7 @@ function boxModel(sp){
   if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}
   let w;
   if(S2.dragon&&DRAGON){w=buildDragon();w.scale.setScalar(1.25);}
-  else{w=buildMonster(S2.evo?1:0);w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
+  else{w=buildMonster(S2.rig||(S2.evo?1:0));w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
   w.traverse(o=>{if(o.isMesh){o.castShadow=true;}});
   w.userData.sp=sp; bScene.add(w); BOX.model=w; BOX.spin=0;
   const A=w.userData.inner.userData; if(A.clipW)A.clipW(1);
@@ -2115,7 +2127,7 @@ function headOf(w,sp){
   return{p:p.add(new THREE.Vector3(F.dx*H,F.dy*H,0)),r:F.r*H};
 }
 // ปรับกรอบหน้าแต่ละสายพันธุ์ (สัดส่วนของความสูงตัว)
-const FACE={kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
+const FACE={kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
 function makeThumb(sp){
   if(THUMB[sp])return THUMB[sp];
   const W=192, rt=new THREE.WebGLRenderTarget(W,W,{encoding:THREE.sRGBEncoding}); rt.texture.encoding=THREE.sRGBEncoding;

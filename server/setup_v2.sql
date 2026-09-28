@@ -18,7 +18,8 @@ create table if not exists public.species (
 );
 insert into public.species (sp,name,rar,max_lv,evolve_to,evolve_cost) values
   ('kazekiri','คาเซะคิริ',4,40,null,0),
-  ('amateru','อามาเทรุ',5,50,null,0)
+  ('amateru','อามาเทรุ',5,50,null,0),
+  ('kuroga','คุโรกะ',5,50,null,0)
 on conflict (sp) do update set name=excluded.name, rar=excluded.rar, max_lv=excluded.max_lv;
 insert into public.species (sp,name,rar,max_lv,evolve_to,evolve_cost) values
   ('kazemaru','คาเซะมารุ',3,20,'kazekiri',300)
@@ -126,7 +127,7 @@ begin
     insert into public.players (user_id, name) values (u, 'นักฝึก#' || upper(substr(replace(u::text,'-',''),1,4))) returning * into p;
     -- มอนสเตอร์เริ่มต้น + มังกรของขวัญ
     insert into public.monsters (user_id, sp, lv) values
-      (u,'kazekiri',18),(u,'kazemaru',4),(u,'kazemaru',7),(u,'kazemaru',1),(u,'amateru',10);
+      (u,'kazekiri',18),(u,'kazemaru',4),(u,'kazemaru',7),(u,'kazemaru',1),(u,'amateru',10),(u,'kuroga',10);
     update public.players set team = (
       select array_agg(id order by ord) from (
         select id, case sp when 'kazekiri' then 1 when 'amateru' then 2 else 3 end*100 - lv as ord
@@ -219,7 +220,7 @@ begin
     chance := 0.08;
   end if;
   if r < chance or (kind = 'gold' and p.pity + 1 >= public._c('pity_max')) then
-    v_sp := 'amateru';
+    v_sp := case when random() < 0.5 then 'amateru' else 'kuroga' end;
     if kind = 'gold' then update public.players set pity = 0 where user_id = u; end if;
   else
     v_sp := 'kazemaru';
@@ -378,3 +379,9 @@ grant execute on function public.game_state(), public.set_name(text), public.hat
   public.claim_quest(text), public.buy_energy(), public.battle_start(text), public.battle_finish(uuid, boolean)
   to authenticated;
 -- ฟังก์ชันภายใน (ขึ้นต้นด้วย _) เรียกจากหน้าเว็บไม่ได้
+
+-- ---------- ของขวัญตัวละครใหม่: คุโรกะ Lv10 ให้ผู้เล่นเดิมที่ยังไม่มี (รันซ้ำได้ ไม่แจกซ้ำ) ----------
+insert into public.monsters (user_id, sp, lv)
+select p.user_id, 'kuroga', 10 from public.players p
+where not exists (select 1 from public.monsters m where m.user_id = p.user_id and m.sp = 'kuroga')
+  and (select count(*) from public.monsters m where m.user_id = p.user_id) < 30;

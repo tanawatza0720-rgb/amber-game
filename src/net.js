@@ -82,7 +82,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
   const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
-  const SPS={kazemaru:{rar:3,max:20,to:'kazekiri',cost:300},kazekiri:{rar:4,max:40},amateru:{rar:5,max:50}};
+  const SPS={kazemaru:{rar:3,max:20,to:'kazekiri',cost:300},kazekiri:{rar:4,max:40},amateru:{rar:5,max:50},kuroga:{rar:5,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
@@ -96,6 +96,7 @@ const LOCAL=(()=>{
         daily_streak:0,daily_last:null,hatch_count:0,pity:0,quest_day:null,quests:{},team:[],mons:[],nid:1};
       const src=(old&&old.mons&&old.mons.length)?old.mons.map(m=>({sp:m.sp||(m.evo?'kazekiri':'kazemaru'),lv:m.lv})):[{sp:'kazekiri',lv:18},{sp:'kazemaru',lv:4},{sp:'kazemaru',lv:7},{sp:'kazemaru',lv:1}];
       if(!src.some(m=>m.sp==='amateru'))src.push({sp:'amateru',lv:10});
+      if(!src.some(m=>m.sp==='kuroga'))src.push({sp:'kuroga',lv:10});
       src.forEach(m=>D.mons.push({id:D.nid++,sp:m.sp,lv:m.lv}));
       const ord=m=>({kazekiri:1,amateru:2}[m.sp]||3)*100-m.lv;
       D.team=[...D.mons].sort((a,b)=>ord(a)-ord(b)).slice(0,3).map(m=>m.id);
@@ -119,7 +120,7 @@ const LOCAL=(()=>{
     hatch_egg:({kind})=>{if(D.mons.length>=C.slots)fail('box_full');let ch;
       if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=.02;}
       else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=.08;}else fail('bad_egg');
-      let sp='kazemaru'; if(Math.random()<ch||(kind==='gold'&&D.pity>=C.pity_max)){sp='amateru';if(kind==='gold')D.pity=0;}
+      let sp='kazemaru'; if(Math.random()<ch||(kind==='gold'&&D.pity>=C.pity_max)){sp=Math.random()<.5?'amateru':'kuroga';if(kind==='gold')D.pity=0;}
       const m={id:D.nid++,sp,lv:1};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},

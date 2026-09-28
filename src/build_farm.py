@@ -14,7 +14,7 @@ assert helpers.count(b)==1
 helpers=helpers.replace(b,"  applyPose(base);\n  m.userData.rig={arms,R,L,base};\n  let blink=0;")
 a='(evo?buildEvo:buildBaby)(m);'
 assert helpers.count(a)==1
-helpers=helpers.replace(a,'(evo?(USE_MESHY&&MESHY?buildMeshyEvo:buildEvo):buildBaby)(m);')
+helpers=helpers.replace(a,'(evo?(USE_MESHY&&MESHY?(mm=>buildMeshyEvo(mm,evo)):buildEvo):buildBaby)(m);')
 shell=open('farm_shell.html',encoding='utf-8').read()
 out=shell.replace('/*__SHARED__*/',tex+"\n"+helpers).replace('/*__WORLD__*/',open('net.js',encoding='utf-8').read()+'\n'+open('meshy_rig.js',encoding='utf-8').read()+'\n'+open('dragon.js',encoding='utf-8').read()+'\n'+open('farm_world.js',encoding='utf-8').read()).replace('/*__UI__*/',open('farm_ui.js',encoding='utf-8').read()).replace('/*__BOX__*/',open('monbox.js',encoding='utf-8').read())
 open('farm.html','w',encoding='utf-8').write(out)
