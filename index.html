@@ -1199,6 +1199,23 @@ function buildMeshyEvo(m,key){
   feet(); retarget();
   // ย้ายดาบไปติดกระดูกมือจริง (ตามท่า Mixamo ได้)
   m.updateMatrixWorld(true);
+  // ฮาคุเนโกะ: ดาบพาดหลังตอนพัก และเลื่อนด้ามเข้ามือก่อนออกท่าฟัน
+  let swordPose=null;
+  if(key==='hakuneko'&&prop&&CS&&MXA.grip&&MXA.grip.R){
+    const P=prop.geometry.attributes.position,lo=new THREE.Vector3(),hi=new THREE.Vector3(),v=new THREE.Vector3();
+    let min=Infinity,max=-Infinity;
+    for(let i=0;i<P.count;i++){v.fromBufferAttribute(P,i);if(v.x<min){min=v.x;lo.copy(v);}if(v.x>max){max=v.x;hi.copy(v);}}
+    const handPos=B.rHand.getWorldPosition(new THREE.Vector3());
+    const hilt=lo.clone().applyMatrix4(prop.matrixWorld).distanceTo(handPos)<hi.clone().applyMatrix4(prop.matrixWorld).distanceTo(handPos)?lo:hi;
+    const blade=hi.clone().sub(lo);if(hilt===hi)blade.negate();blade.normalize();
+    const bi=MXA.bones.indexOf('RightHand'),Fi=CS.Qal[bi].clone().multiply(B.rHand.userData.W).invert();
+    const G=MXA.grip.R,bladeDir=new THREE.Vector3(...G.blade),edge=new THREE.Vector3(...G.edge);
+    const x=new THREE.Vector3().crossVectors(bladeDir,edge),Qs=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,bladeDir,edge));
+    const drawQ=Fi.clone().multiply(Qs).multiply(new THREE.Quaternion().setFromUnitVectors(blade,new THREE.Vector3(0,1,0)));
+    const drawP=new THREE.Vector3(...G.off).multiplyScalar(CS.hs*.72).applyQuaternion(Fi);
+    drawP.sub(hilt.clone().multiply(prop.scale).applyQuaternion(drawQ));
+    swordPose={restP:prop.position.clone(),restQ:prop.quaternion.clone(),drawP,drawQ,blend:0};
+  }
   // จัดดาบให้อยู่ในกำมือตามแกนการจับของท่า Mixamo (ใบดาบออกฝั่งนิ้วโป้ง คมหันไปทางนิ้ว)
   const gripFix=(hand,sd,sw)=>{
     if(!CS||!MXA.grip||!MXA.grip[sd])return false;
@@ -1228,6 +1245,10 @@ function buildMeshyEvo(m,key){
     m.position.y+=Math.sin(T*2)*.008; m.position.x+=Math.sin(T*.9)*.012;
     head.rotation.z=Math.sin(T*.7)*.03;
     feet(); retarget();
+    if(swordPose){const attacking=CS.cur&&/^(slash|slash2|power|combo|jumpatk|leap|spin|powerup)$/.test(CS.cur.name);
+      swordPose.blend+=(Number(attacking)-swordPose.blend)*Math.min(1,dt*11);
+      prop.position.copy(swordPose.restP).lerp(swordPose.drawP,swordPose.blend);
+      prop.quaternion.copy(swordPose.restQ).slerp(swordPose.drawQ,swordPose.blend);}
     if(spearGrip){alignSpear();spearGrip=null;}
   };
 }
