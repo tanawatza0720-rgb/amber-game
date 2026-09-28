@@ -28,7 +28,7 @@ function previewOrder(n){
 }
 function renderOrder(cur){
   const o=$('#order');o.innerHTML='';
-  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):({kazekiri:'คิริ',kazemaru:'มารุ',amateru:'มังกร',kuroga:'คุโร',hakuneko:'เนโกะ',morihime:'โมริ'}[u.sp]||'');o.appendChild(c);});
+  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):({kazekiri:'คิริ',kazemaru:'มารุ',amateru:'มังกร',kuroga:'คุโร',hakuneko:'เนโกะ',morihime:'โมริ',yorugumo:'แมงมุม'}[u.sp]||'');o.appendChild(c);});
 }
 
 /* ================= วงแหวนบอกตัวที่ถึงตาและเป้าหมาย ================= */
@@ -68,7 +68,14 @@ async function perform(u,s,t){
   else if(u.dragon&&s.type==='melee')camSide(u,t,.8);
   else if(s.type==='melee'||s.type==='melee3')camSide(u,t); else camOver(u,()=>centroid(u.side==='P'?'E':'P'),1);
   $('#skname').textContent=s.name; $('#skname').className=u.side==='P'?'p':'e'; $('#skname').hidden=false;
-  if(s.type==='melee'||s.type==='melee3'){
+  if(u.spider){const back=()=>faceTo(u,new THREE.Vector3(u.home.x+(u.side==='P'?5:-5),0,u.home.z),.15);
+    if(s.type==='ranged'){await faceTo(u,centroid(u.side==='P'?'E':'P'),.2);await spiderCast(u,foes,f=>dealHit(u,f,s));}
+    else if(s.type==='leap'){await spiderLeap(u,centroid(u.side==='P'?'E':'P'),foes,()=>foes.forEach(f=>dealHit(u,f,s)));}
+    else{const fr=frontOf(t,u),from=u.w.position.clone();await faceTo(u,fr,.1);spiderSet(u,{walk:1},.1);await tween(.45,k=>u.w.position.lerpVectors(from,fr,k),easeIO);spiderSet(u,{walk:0},.15);
+      await faceTo(u,t.w.position,.08);const n=s.type==='melee3'?3:1;for(let i=0;i<n&&t.alive;i++)await spiderStrike(u,t,()=>dealHit(u,t,s));
+      await faceTo(u,u.home,.1);spiderSet(u,{walk:1},.1);await tween(.45,k=>u.w.position.lerpVectors(fr,u.home,k),easeIO);spiderSet(u,{walk:0},.15);}
+    await back();
+  } else if(s.type==='melee'||s.type==='melee3'){
     await hop(u,frontOf(t,u),.42,1.1);
     await faceTo(u,t.w.position,.08);
     const n=s.type==='melee3'?3:1;
@@ -153,7 +160,7 @@ async function spawnWave(){
 }
 async function finish(win){
   running=false; {const ps=alive('P');if(!BIG&&win&&ps.length)camOver(ps[0],()=>ps[0].w.position.clone().add(new THREE.Vector3(-4,0,1.2)));else camWide();} actRing.visible=false; tgtRing.visible=false; hideSkills();
-  if(win)alive('P').forEach((u,i)=>setTimeout(()=>{if(u.dragon)dragonVictory(u);else if(u.inner.userData.play)u.inner.userData.play('victory',{loop:true,fade:.25});else if(u.evo)poseTo([[u.rig.R.sh.rotation,'z',-2.6],[u.rig.L.sh.rotation,'z',2.6]],.3);else{u.inner.userData.acting=true;poseTo([[u.rig.R.a.rotation,'z',-3],[u.rig.L.a.rotation,'z',2.6]],.3);}particles(tmpV.copy(u.w.position).setY(1.2),0xffd27a,20,2,.05,1.2);},i*150));
+  if(win)alive('P').forEach((u,i)=>setTimeout(()=>{if(u.dragon)dragonVictory(u);else if(u.spider)spiderVictory(u);else if(u.inner.userData.play)u.inner.userData.play('victory',{loop:true,fade:.25});else if(u.evo)poseTo([[u.rig.R.sh.rotation,'z',-2.6],[u.rig.L.sh.rotation,'z',2.6]],.3);else{u.inner.userData.acting=true;poseTo([[u.rig.R.a.rotation,'z',-3],[u.rig.L.a.rotation,'z',2.6]],.3);}particles(tmpV.copy(u.w.position).setY(1.2),0xffd27a,20,2,.05,1.2);},i*150));
   await wait(OPTS.idle?1000:900);
   return win;
 }
@@ -338,7 +345,7 @@ function loop(){
 }
 layout(); loop();
 $('#loadMsg').hidden=false;
-Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดโมเดล '+Math.round(p*100)+'%';}),loadDragon(),bnInit()]).then(([g,dr])=>{
+Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดโมเดล '+Math.round(p*100)+'%';}),loadDragon(),bnInit(),loadSpider()]).then(([g,dr])=>{
   NO_DRAGON=!dr; if(!dr)TEAM.forEach(d=>{if(d.sp==='amateru')d.sp='kazemaru';});
   $('#loadMsg').hidden=true; if(!g)USE_MESHY=false;
   $('#hud').hidden=false; setBossUI(false); idleRender(); showAway(); idleLoop();

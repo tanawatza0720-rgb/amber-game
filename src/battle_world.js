@@ -34,6 +34,10 @@ const SPECIES={
     {id:'s1',name:'แทงหอกพงไพร',desc:'แทงศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},
     {id:'s2',name:'หอกพายุใบไม้',desc:'แทง 3 ครั้ง ครั้งละ 70% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.7,target:'one'},
     {id:'s3',name:'หอกดิ่งฟ้า',desc:'กระโดดปักหอกใส่ศัตรูทุกตัว 90% โอกาส 35% ทำให้มึน',cd:4,type:'leap',mult:.9,target:'all',stun:.35}]},
+  yorugumo:{name:'โยรุกุโมะ',evo:1,spider:1,base:{hp:96,atk:33,def:14,spd:36},skills:[
+    {id:'s1',name:'เขี้ยวพิษ',desc:'ยกขาหน้าแทงศัตรู 1 ตัว 110%',cd:0,type:'melee',mult:1.1,target:'one'},
+    {id:'s2',name:'ลูกแก้วมนตร์ม่วง',desc:'ร่ายลูกแก้วเวทใส่ศัตรูทุกตัว 55%',cd:3,type:'ranged',mult:.55,target:'all'},
+    {id:'s3',name:'กระโจนใยมรณะ',desc:'กระโจนลงกลางศัตรูทุกตัว 80% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.8,target:'all',stun:.3}]},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42},skills:[
     {id:'s1',name:'ฟันเงา',desc:'ฟันศัตรู 1 ตัว 110%',cd:0,type:'melee',mult:1.1,target:'one'},
     {id:'s2',name:'สามดาบวายุ',desc:'ฟัน 3 ครั้ง ครั้งละ 70% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.7,target:'one'},
@@ -94,14 +98,15 @@ function mergeRigid(root){
 }
 function makeUnit(side,def,slot){
   const sp=SPECIES[def.sp], f=(1+.1*(def.lv-1))*(def.mul||1), bm=def.boss?1.6:1;
-  const w=sp.dragon&&DRAGON?buildDragon():buildMonster(sp.rig||sp.evo);
+  const w=sp.dragon&&DRAGON?buildDragon():sp.spider&&SPIDER?buildSpider():buildMonster(sp.rig||sp.evo);
+  const SPD=!!(sp.spider&&SPIDER);
   const inner=w.userData.inner, rig=inner.userData.rig;
   if(def.boss){w.userData.k*=1.3;w.scale.setScalar(w.userData.k);}
   if(side==='E')tintCrimson(w,def.boss);
-  if(side==='E'&&inner.userData.meshy)w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
-  if(sp.evo&&!sp.dragon){(inner.userData.swords||[]).forEach(s=>s.visible=true);
+  if(side==='E'&&(inner.userData.meshy||SPD))w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
+  if(sp.evo&&!sp.dragon&&!SPD){(inner.userData.swords||[]).forEach(s=>s.visible=true);
     if(side==='E'&&!inner.userData.meshy){const em=new THREE.MeshBasicMaterial({color:0xff4a3a});[-1,1].forEach(sx=>{P(rig.head,B1,em,[sx*.042,.03,.1],[.045,.009,.01],[0,sx*-.25,sx*.35]);glow(rig.head,0xff4030,.08,[sx*.042,.03,.11],.8);});}}
-  if(!inner.userData.meshy&&!sp.dragon)mergeRigid(w);
+  if(!inner.userData.meshy&&!sp.dragon&&!SPD)mergeRigid(w);
   const [x,z]=(side==='P'?P_SLOTS:E_SLOTS)[slot];
   w.position.set(x+(def.boss?.6:0),0,z); w.rotation.y=side==='P'?FACE_P:FACE_E; scene.add(w);
   const u={id:UNITS.length,side,sp:def.sp,evo:sp.evo,boss:!!def.boss,lv:def.show||def.lv,
@@ -113,6 +118,7 @@ function makeUnit(side,def,slot){
   u.rad=sp.dragon?1.55*DK:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=4.95*DK;u.camS=2.1*DK;} u.reach=sp.dragon?1.9*DK:inner.userData.meshy?1.25:u.evo?1.0:.72;
   u.mats=[];w.traverse(o=>{if(o.isMesh){o.userData.unit=u.id;PICKU.push(o);if(o.material&&o.material.emissive&&u.mats.indexOf(o.material)<0)u.mats.push(o.material);}});
   if(sp.dragon){u.dragon=true;u.stance=[];}
+  else if(SPD){u.spider=true;u.stance=[];u.rad=.8;u.reach=1.2;u.barY=2.05;}
   else if(u.evo)u.stance=[[rig.hips.position,'y',.78],[rig.hips.rotation,'y',.32],[rig.torso.rotation,'x',.14],[rig.torso.rotation,'y',0],[rig.torso.rotation,'z',.05],[rig.head.rotation,'y',-.3],[rig.head.rotation,'x',-.05],
     [rig.legs[0].th.rotation,'z',-.45],[rig.legs[0].th.rotation,'x',-.4],[rig.legs[0].kn.rotation,'x',.75],[rig.legs[1].th.rotation,'z',.72],[rig.legs[1].th.rotation,'x',.25],[rig.legs[1].kn.rotation,'x',.15],
     [rig.R.sh.rotation,'z',-1.5],[rig.R.sh.rotation,'x',-.35],[rig.R.el.rotation,'z',-1.45],[rig.L.sh.rotation,'z',.95],[rig.L.sh.rotation,'x',-.75],[rig.L.el.rotation,'z',.2]];
@@ -151,6 +157,7 @@ function hitArc(pos,rot,color,scale){
 }
 async function strike(u,i,onHit){
   if(u.dragon)return dragonBite(u,null,onHit);
+  if(u.spider)return spiderStrike(u,{w:{position:u.w.position.clone().add(new THREE.Vector3(Math.sin(u.w.rotation.y),0,Math.cos(u.w.rotation.y)).multiplyScalar(1.4))}},onHit);
   const r=u.rig, A=u.inner.userData;
   if(A.play){const nm=i%2?'slash2':'slash', sp=1.35, inf=A.clipInfo(nm);
     A.play(nm,{speed:sp,fade:.1}); await wait(inf.main/sp*1000); onHit(); hitStop(); await wait(Math.max(120,(inf.dur-inf.main)/sp*1000*.45)); return;}
@@ -177,15 +184,16 @@ async function strikeCombo(u,onHit){
 }
 // หยุดภาพสั้น ๆ ตอนดาบโดน: ชะลอเฉพาะภาพ ไม่ยืดเวลารอของลำดับท่า
 function hitStop(){if(RT){shake=Math.max(shake,.08);return;}HS=.08;clearTimeout(hsTimer);hsTimer=setTimeout(()=>{HS=1;},70);shake=Math.max(shake,.12);}
-async function recoverStance(u){if(u.dragon){u.inner.userData.acting=false;return;}await poseTo(u.stance,.3);u.inner.userData.acting=false;}
+async function recoverStance(u){if(u.dragon||u.spider){u.inner.userData.acting=false;return;}await poseTo(u.stance,.3);u.inner.userData.acting=false;}
 function flashUnit(u,hex){u.mats.forEach(m=>{if(m.userData.e0==null){m.userData.e0=m.emissive.getHex();m.userData.ei0=m.emissiveIntensity;}m.emissive.setHex(hex);m.emissiveIntensity=.9;});setTimeout(()=>u.mats.forEach(m=>{m.emissive.setHex(m.userData.e0);m.emissiveIntensity=m.userData.ei0;}),110/SPEED);}
 async function react(u,fromX){
-  if(RT){flashUnit(u,0xff2a2a);if(u.dragon)dragonReact(u);else if(!u.busy&&u.inner.userData.play)u.inner.userData.play('hit',{speed:1.4,fade:.06});
+  if(RT){flashUnit(u,0xff2a2a);if(u.dragon)dragonReact(u);else if(u.spider)spiderReact(u);else if(!u.busy&&u.inner.userData.play)u.inner.userData.play('hit',{speed:1.4,fade:.06});
     else if(!u.busy&&!u.evo)tween(.12,t=>u.inner.rotation.x=-.35*t).then(()=>tween(.3,t=>u.inner.rotation.x=-.35*(1-t)));return;}
   const dir=u.w.position.x>fromX?1:-1, p0=u.w.position.x;
   flashUnit(u,0xff2a2a);
   tween(.1,t=>u.w.position.x=p0+dir*.3*t,easeOut).then(()=>tween(.3,t=>u.w.position.x=p0+dir*.3*(1-t),easeIO));
   if(u.dragon){dragonReact(u);}
+  else if(u.spider){spiderReact(u);}
   else if(u.inner.userData.play){u.inner.userData.play('hit',{speed:1.4,fade:.06});}
   else if(u.evo){poseTo([[u.rig.torso.rotation,'x',-.4],[u.rig.head.rotation,'x',-.4]],.07);await wait(140);poseTo(u.stance,.3);}
   else{tween(.12,t=>u.inner.rotation.x=-.35*t).then(()=>tween(.3,t=>u.inner.rotation.x=-.35*(1-t)));}
@@ -194,6 +202,7 @@ async function die(u){
   u.alive=false; u.bar.hidden=true;
   const A=u.inner.userData;
   if(u.dragon){await dragonDie(u);}
+  else if(u.spider){await spiderDie(u);}
   else if(A.play){const inf=A.clipInfo('death');A.play('death',{speed:1.25,hold:true,fade:.08});await wait(inf.dur/1.25*1000*.85);}
   else{
   if(u.evo)poseTo([[u.rig.torso.rotation,'x',.5],[u.rig.hips.position,'y',.55],[u.rig.legs[0].kn.rotation,'x',1.3],[u.rig.legs[1].kn.rotation,'x',1.2]],.25);

@@ -24,7 +24,7 @@ index.html        ← ผลลัพธ์ build ของหน้าฟาร
 battle.html       ← ผลลัพธ์ build ของหน้าสนามรบ (ห้ามแก้ตรง)
 src/              ← โค้ดต้นฉบับ แก้ที่นี่เท่านั้น
 server/           ← SQL ของ Supabase + คู่มือเซิร์ฟเวอร์
-kzr/ krg/ hkn/ mrh/ drg/   ← โมเดล 3D + texture (ดูข้อ 5)
+kzr/ krg/ hkn/ mrh/ drg/ spd/   ← โมเดล 3D + texture (ดูข้อ 5)
 legacy/           ← เกมเวอร์ชันแรก ไม่ใช้แล้ว
 privacy.html
 ```
@@ -43,6 +43,7 @@ privacy.html
 | `battle_shell.html` | HTML/CSS หน้าสนามรบ + ช่อง `/*__SHARED__*/ /*__WORLD__*/ /*__UI__*/` |
 | `meshy_rig.js` | โหลดโมเดลมนุษย์ที่มีกระดูก Mixamo (`RIG_URLS`) + **retarget ท่า Mixamo** (`MXA` จาก `kzr/kazekiri_anims.json`) + ดาบในมือ (`gripFix`, `makeFist`) + อาวุธเดิมของโมเดล (`weapon_prop`) |
 | `dragon.js` | มังกรอามาเทรุ: สร้างกระดูก 30 ชิ้นเองตอนโหลด, สปริงทุกข้อ, ท่า `dragonBite/Breath/Dive/Roar/Claw/Tail/Swoop/Strafe/Gust/Victory` |
+| `spider.js` | โยรุกุโมะ (จอมเวทแมงมุม): โหลด `spd/spider_rig.json` (กระดูกตั้งชื่อเอง root/abdomen/spine…head, armR/L, legL1..4/legR1..4 + b/c/t), ท่าทางคำนวณสดด้วยสปริง, ท่า `spiderStrike/Cast/Leap/React/Die/Victory`, ตั้งค่าผ่าน `spiderSet(u,{walk,rear,stab,cast,crouch,recoil,dead},เวลา)` |
 | `battle_world.js` | ข้อมูลตัวละครในสนามรบ `SPECIES` (ค่าพลัง+สกิล), สร้างยูนิต `makeUnit`, ตำแหน่งทีม `P_SLOTS`, แทรก `battle_map.js` ตรง `/*__MAP__*/` |
 | `battle_map.js` | แผนที่ใหญ่: กำแพงเมือง หอคอยคู่ เมือง ค่ายศัตรู เครื่องยิงหิน ระเบิด ไฟ ควัน, ธง `BIG` `LOW` `FXK` (ลดเอฟเฟกต์บนมือถือ), `mapTick()` |
 | `battle_net.js` | เชื่อม Supabase ฝั่งสนามรบ (`brpc()`), โหลดทีมจริง `bnApply()` |
@@ -76,6 +77,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 |---|---|---|---|---|
 | `kazemaru` | คาเซะมารุ | ทั่วไป | สร้างด้วยโค้ด (`buildMonster(0)`) | โค้ด |
 | `kazekiri` | คาเซะคิริ | หายาก (วิวัฒน์จากคาเซะมารุ) | `kzr/kazekiri_rig.json` | Meshy rig |
+| `yorugumo` | โยรุกุโมะ (จอมเวทแมงมุม) | หายาก | `spd/spider_rig.json` | rig เอง 8 ขา (spider.js) |
 | `kuroga` | คุโรกะ | ตำนาน | `krg/kuroga_rig.json` | Meshy rig |
 | `hakuneko` | ฮาคุเนโกะ (นักดาบแมว) | ตำนาน | `hkn/hakuneko_rig.json` | Mixamo auto-rig |
 | `morihime` | โมริฮิเมะ (เอลฟ์ถือหอก) | หายาก | `mrh/morihime_rig.json` | rig เอง (heat-diffusion weights) |
@@ -116,7 +118,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 
 - ทำงานบน branch แยก แล้วเปิด Pull Request เข้า `main` (หรือ commit ตรงถ้าเจ้าของอนุญาต) — **commit ทั้ง `src/` และไฟล์ที่ build แล้ว (`index.html`, `battle.html`) ไปพร้อมกัน**
 - เขียนข้อความ UI เป็นภาษาไทย, สไตล์โค้ดกระชับแบบที่มีอยู่
-- อย่าแก้ไฟล์โมเดลใน `kzr/ krg/ hkn/ mrh/ drg/` ด้วยมือ
+- อย่าแก้ไฟล์โมเดลใน `kzr/ krg/ hkn/ mrh/ drg/ spd/` ด้วยมือ
 - โมเดลของฮาคุเนโกะ/โมริฮิเมะมาจากชุมชน Tripo (ผู้สร้างคนอื่น) — เจ้าของโปรเจกต์ต้องตรวจสิทธิ์การใช้งานก่อนเปิดเกมสาธารณะ
 
 ## 9. สถานะ ณ ล่าสุด และงานที่ค้าง/ไอเดีย

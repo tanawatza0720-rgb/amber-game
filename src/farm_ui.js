@@ -260,7 +260,7 @@ function enterGame(){
 }
 function startFarm(){renderHUD(); layout(); loop(); distTo=48;
   lgStart();
-  Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon()]).then(()=>{
+  Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon(),loadSpider()]).then(()=>{
     modelsReady=true; for(const k in THUMB)delete THUMB[k];
     if(entered){$('#loadMsg').hidden=true; syncAgents(); if(!S.named&&NET.mode==='online')openWelcome();}
   });

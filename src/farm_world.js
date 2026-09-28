@@ -379,6 +379,11 @@ function addAgent(data,at,pop){
     w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
     const ag={w,inner:w.userData.inner,data,evo:1,fly:true,ang:Math.random()*6.28,r:8.5+Math.random()*1.5,state:'fly'};AGENTS.push(ag);
     if(pop){w.scale.setScalar(.001);tween(.8,t=>w.scale.setScalar(Math.max(.001,1.7*t)),easeBack);}return ag;}
+  if(spc.spider&&SPIDER){const w=buildSpider();w.scale.setScalar(1.3);scene.add(w);
+    const [x,z]=at||freePoint(1); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
+    w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
+    const ag={w,inner:w.userData.inner,data,evo:1,spider:true,state:'idle',wait:1+Math.random()*3,tx:x,tz:z,ph:0,yaw:w.rotation.y,speed:1.1};AGENTS.push(ag);
+    if(pop){w.scale.setScalar(.001);tween(.6,t=>w.scale.setScalar(Math.max(.001,1.3*t)),easeBack);}return ag;}
   const w=buildMonster(spc.rig||(spc.evo?1:0)); w.userData.k*=1.5; w.scale.setScalar(w.userData.k); scene.add(w);
   const [x,z]=at||freePoint(.8); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
   const inner=w.userData.inner;
@@ -391,6 +396,12 @@ function addAgent(data,at,pop){
 function agentUpdate(ag,dt){
   const w=ag.w, rig=ag.inner.userData.rig, A=ag.inner.userData;
   if(ag.fly){ag.ang+=dt*.22;const x=Math.cos(ag.ang)*ag.r,z=Math.sin(ag.ang)*ag.r*.8;w.position.set(x,4.2+Math.sin(ag.ang*3)*.6,z);w.rotation.y=Math.atan2(-Math.sin(ag.ang)*ag.r,Math.cos(ag.ang)*ag.r*.8);w.rotation.z=-.18;return;}
+  if(ag.spider){const tg=rig.tg;
+    if(ag.state==='idle'){tg.walk=0;ag.wait-=dt;if(ag.wait<=0){for(let k=0;k<14;k++){const [tx,tz]=freePoint(.8);if(Math.hypot(tx-w.position.x,tz-w.position.z)>2&&!blockedSeg(w.position.x,w.position.z,tx,tz,.5)){ag.tx=tx;ag.tz=tz;ag.state='walk';break;}}if(ag.state!=='walk')ag.wait=1;}return;}
+    const dx=ag.tx-w.position.x,dz=ag.tz-w.position.z,d=Math.hypot(dx,dz);
+    if(d<.2){ag.state='idle';ag.wait=2+Math.random()*5;tg.walk=0;return;}
+    tg.walk=1;const want=Math.atan2(dx,dz);let diff=want-ag.yaw;diff=Math.atan2(Math.sin(diff),Math.cos(diff));ag.yaw+=diff*Math.min(1,dt*4);w.rotation.y=ag.yaw;
+    const sp=ag.speed*(Math.abs(diff)>1?.3:1);w.position.x+=Math.sin(ag.yaw)*sp*dt;w.position.z+=Math.cos(ag.yaw)*sp*dt;return;}
   const MC=!!(A.play&&A.clipInfo&&A.clipInfo('walk'));
   if(MC){if(ag.state==='walk'&&!ag.walking){ag.walking=1;A.play('walk',{loop:true,fade:.25});}else if(ag.state!=='walk'&&ag.walking){ag.walking=0;A.play('idle',{loop:true,fade:.3});}}
   else if(A.clipW)A.clipW(ag.state==='walk'?0:1);

@@ -6,6 +6,9 @@ const SPEC={
   kazekiri:{name:'คาเซะคิริ',title:'เงาสามดาบ',rar:2,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:1,maxLv:40,
     base:{hp:102,atk:34,def:13,spd:42},lore:'นินจาเงาผู้ไร้ใบหน้า พกดาบสามเล่ม เคลื่อนไหวเงียบดั่งสายลมยามค่ำ',
     skills:[['ฟันเงา','ฟันศัตรู 1 ตัว 110%'],['สามดาบวายุ','ฟัน 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['กระโดดฟัน','ฟาดพื้นใส่ศัตรูทุกตัว 85% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
+  yorugumo:{name:'โยรุกุโมะ',title:'จอมเวทแมงมุมราตรี',rar:2,el:'มืด',elc:'#b48cff',role:'เวทมนตร์',evo:1,spider:1,maxLv:40,
+    base:{hp:96,atk:33,def:14,spd:36},lore:'จอมเวทร่างครึ่งแมงมุมผู้ถักใยอยู่ในถ้ำลึกใต้ป่าอัมพร ลูกแก้วม่วงในมือทั้งสองรวบรวมแสงจันทร์ไว้เป็นเวทมนตร์',
+    skills:[['เขี้ยวพิษ','ยกขาหน้าแทงศัตรู 1 ตัว 110%'],['ลูกแก้วมนตร์ม่วง','ร่ายลูกแก้วเวทใส่ศัตรูทุกตัว 55% · คูลดาวน์ 3'],['กระโจนใยมรณะ','กระโจนลงกลางศัตรูทุกตัว 80% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
   kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:3,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
     base:{hp:112,atk:40,def:14,spd:44},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า',
     skills:[['ฟันเงาจันทร์','ฟันศัตรู 1 ตัว 120%'],['คมดาบราตรี','ฟัน 3 ครั้ง ครั้งละ 75% · คูลดาวน์ 3'],['ดิ่งฟันสังหาร','กระโดดฟาดศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
@@ -54,6 +57,7 @@ function boxModel(sp){
   if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}
   let w;
   if(S2.dragon&&DRAGON){w=buildDragon();w.scale.setScalar(.72);}
+  else if(S2.spider&&SPIDER){w=buildSpider();w.scale.setScalar(1.05);}
   else{w=buildMonster(S2.rig||(S2.evo?1:0));w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
   w.traverse(o=>{if(o.isMesh){o.castShadow=true;}});
   w.userData.sp=sp; bScene.add(w); BOX.model=w; BOX.spin=0;
@@ -69,7 +73,7 @@ function frameCam(){
 const THUMB={};
 function headOf(w,sp){
   const inner=w.userData.inner, R=inner.userData.rig; let hb=null;
-  if(SPEC[sp].dragon&&R&&R.head)hb=R.head;
+  if((SPEC[sp].dragon||SPEC[sp].spider)&&R&&R.head)hb=R.head;
   else inner.traverse(o=>{if(!hb&&o.isBone&&/Head$/.test(o.name))hb=o;});
   const box=new THREE.Box3(); inner.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!o.userData.noBox)box.expandByObject(o);});
   const H=box.max.y-box.min.y;
@@ -79,7 +83,7 @@ function headOf(w,sp){
   return{p:p.add(new THREE.Vector3(F.dx*H,F.dy*H,0)),r:F.r*H};
 }
 // ปรับกรอบหน้าแต่ละสายพันธุ์ (สัดส่วนของความสูงตัว)
-const FACE={hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
+const FACE={yorugumo:{dx:0,dy:.03,r:.16},hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
 function makeThumb(sp){
   if(THUMB[sp])return THUMB[sp];
   const W=192, rt=new THREE.WebGLRenderTarget(W,W,{encoding:THREE.sRGBEncoding}); rt.texture.encoding=THREE.sRGBEncoding;
@@ -177,6 +181,7 @@ $('#box').addEventListener('pointerdown',e=>{if(e.target.id==='box')closeBox();}
 function open3d(){const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;
   BOX.open=true;$('#box').classList.add('v3d');$('#mdet').hidden=false;$('#md3Name').textContent=spOf(m).name+' Lv'+m.lv;
   boxModel(m.sp);boxLayout();const A=BOX.model.userData.inner.userData;if(A.play)A.play('victory',{fade:.25});
+  if(spOf(m).spider){const R=A.rig;spiderSet({rig:R},{rear:1,cast:1},.35);setTimeout(()=>spiderSet({rig:R},{rear:0,cast:0},.5),1400);}
   if(spOf(m).dragon)dragonSet({rig:A.rig},{rear:1,spread:1,breath:1},.4),setTimeout(()=>BOX.model&&dragonSet({rig:BOX.model.userData.inner.userData.rig},{rear:0,spread:0,breath:0},.6),1300);}
 function close3d(){BOX.open=false;$('#box').classList.remove('v3d');$('#mdet').hidden=true;if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}renderBox();}
 $('#md3d').onclick=open3d; $('#mdBack').onclick=close3d;

@@ -29,13 +29,14 @@ function stepToward(u,x,z,dist,dt,T){
     u.rig.tg.pitch=Math.min(.5,vl*.08);
   } else { p.x+=dx/L*st; p.z+=dz/L*st; turnToward(u,x,z,dt); }
   const A=u.inner.userData, MC=hasClip(u,'run');
+  if(u.spider)u.rig.tg.walk=1;
   if(!u.moving){if(u.dragon)dragonSet(u,{flapSpd:1.9,flapAmp:.8,lunge:.45,legF:-.3,spread:.3},.15);else if(MC)A.play('run',{loop:true,fade:.15,speed:1.15});}
   u.moving=true;
-  p.y=u.dragon?0:MC?0:Math.abs(Math.sin(T*13))*(u.evo?.1:.14);
+  p.y=u.dragon||u.spider?0:MC?0:Math.abs(Math.sin(T*13))*(u.evo?.1:.14);
   u.dust-=dt; if(u.dust<=0&&!u.dragon&&!LOW&&u.side==='P'){u.dust=.45;particles(tmpV.copy(p).setY(.08),0xb8a888,2,.6,.18,-.1,.35);}
 }
 const hasClip=(u,n)=>{const A=u.inner.userData;return !!(A.play&&A.clipInfo&&A.clipInfo(n));};
-function stopMove(u,keep){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon){dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0,legF:0,spread:0,bank:0,pitch:0},.4);if(u.vel)u.vel.multiplyScalar(.3);}else if(!keep&&hasClip(u,'run'))u.inner.userData.play('idle',{loop:true,fade:.15});}
+function stopMove(u,keep){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon){dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0,legF:0,spread:0,bank:0,pitch:0},.4);if(u.vel)u.vel.multiplyScalar(.3);}else if(u.spider){u.rig.tg.walk=0;}else if(!keep&&hasClip(u,'run'))u.inner.userData.play('idle',{loop:true,fade:.15});}
 // เล่นท่าจาก Mixamo: multi=ตีหลายจังหวะตาม hits, ไม่งั้นตีครั้งเดียวที่จังหวะแรงสุด
 async function clipStrike(u,nm,sp,onHit,multi){
   const A=u.inner.userData,inf=A.clipInfo(nm); A.play(nm,{speed:sp,fade:.1});
@@ -48,8 +49,9 @@ function rtTick(dt,T){
   UNITS.forEach(u=>{
     if(!u.alive)return;
     if(u.stun&&u.dragon){u.stun=0;u.stunT=1.6;u.dizzy=1;stopMove(u,1);dragonSet(u,{droop:1,flapAmp:.25},.25);}
+    if(u.stun&&u.spider){u.stun=0;u.stunT=1.6;u.dizzy=1;stopMove(u,1);spiderSet(u,{crouch:.55,recoil:.4},.2);}
     if(u.stun){u.stun=0;u.stunT=1.6;if(!u.busy&&hasClip(u,'dizzy')){stopMove(u,1);u.inner.userData.play('dizzy',{loop:true,fade:.15});u.dizzy=1;}}
-    if(u.stunT>0){u.stunT-=dt;stopMove(u,1);if(u.stunT<=0&&u.dizzy){u.dizzy=0;if(u.dragon)dragonSet(u,{droop:0,flapAmp:.55},.3);else u.inner.userData.play('idle',{loop:true,fade:.2});}return;}
+    if(u.stunT>0){u.stunT-=dt;stopMove(u,1);if(u.stunT<=0&&u.dizzy){u.dizzy=0;if(u.dragon)dragonSet(u,{droop:0,flapAmp:.55},.3);else if(u.spider)spiderSet(u,{crouch:0,recoil:0},.3);else u.inner.userData.play('idle',{loop:true,fade:.2});}return;}
     if(u.holdT>0){u.holdT-=dt;return;}
     for(const k in u.skT)if(u.skT[k]>0)u.skT[k]-=dt;
     if(u.atkT>0)u.atkT-=dt;
@@ -91,7 +93,11 @@ async function rtUse(u,s,t){
     const AN=ANIM[u.sp]&&u.inner.userData.play?ANIM[u.sp]:null;
     if(AN&&u.side==='P'&&s===ultOf(u)&&hasClip(u,'powerup')){u.inner.userData.play('powerup',{speed:1.8,fade:.1});particles(tmpV.copy(u.w.position).setY(1),0x9fe8ff,24,1.4,.06,1.2,.9);await wait(650);}
     if(u.dragon&&u.side==='P'&&s===ultOf(u))await dragonRoar(u,450);
-    if(s.type==='melee'&&u.dragon){
+    if(u.spider){
+      if(s.type==='ranged')await spiderCast(u,near(t.w.position,4.5),f=>dealHit(u,f,s));
+      else if(s.type==='leap'){const fs=near(t.w.position,3.2),c=t.w.position.clone().setY(0);await spiderLeap(u,c,fs,hitAll(fs));}
+      else{const n=s.type==='melee3'?3:1;for(let i=0;i<n&&t.alive;i++)await spiderStrike(u,t,()=>{if(t.alive)dealHit(u,t,s);});}
+    } else if(s.type==='melee'&&u.dragon){
       const r=Math.random(), f=()=>{if(t.alive)dealHit(u,t,s);};
       const gf=near(t.w.position,3.2);
       if(r<.26)await dragonSwoop(u,t,f); else if(r<.46)await strike(u,0,f); else if(r<.64&&gf.length>1)await dragonGust(u,gf,o=>{if(o.alive)dealHit(u,o,{...s,mult:s.mult*.7});}); else if(r<.84)await dragonClaw(u,t,()=>{if(t.alive)dealHit(u,t,{...s,mult:s.mult*.55});}); else await dragonTail(u,t,()=>near(t.w.position,2.6).forEach(o=>dealHit(u,o,{...s,mult:s.mult*.8})));

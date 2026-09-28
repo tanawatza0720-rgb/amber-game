@@ -929,7 +929,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
   const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
-  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:50},amateru:{rar:4,max:50}};
+  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:50},amateru:{rar:4,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
@@ -1740,6 +1740,119 @@ async function dragonVictory(u){
   dragonSet(u,{alt:alt0},.6); u.busy=false;
 }
 
+/* ================= โยรุกุโมะ: จอมเวทแมงมุมราตรี (โครงกระดูกสร้างเอง ท่าทางคำนวณสด) =================
+   ขา 8 ขา (ขาละ 3 ท่อน) เดินสลับแบบแมงมุมจริง · ช่วงบนเป็นร่างจอมเวท แขน 2 ข้างร่ายเวท
+   โมเดล: spd/spider_rig.json (ชื่อกระดูก root, abdomen, spine…head, armR/foreR/handR, legL1..4/legR1..4 + b/c/t) */
+let SPIDER=null;
+const SPIDER_URL='spd/spider_rig.json', SPIDER_S=1;
+function loadSpider(){
+  return new Promise(res=>{
+    if(!THREE.GLTFLoader||!THREE.SkeletonUtils){res(null);return;}
+    new THREE.GLTFLoader().load(SPIDER_URL,g=>{SPIDER=g;res(g);},undefined,()=>res(null));
+  });
+}
+function buildSpider(){
+  const w=new THREE.Group(), m=new THREE.Group(); w.add(m);
+  const root=THREE.SkeletonUtils.clone(SPIDER.scene); root.scale.setScalar(SPIDER_S); m.add(root);
+  const B={}; root.traverse(o=>{if(o.isBone)B[o.name]=o;});
+  const mats=[]; root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;o.material=o.material.clone();
+    if(typeof ENV!=='undefined'&&ENV){o.material.envMap=ENV;o.material.envMapIntensity=.45;} o.material.emissive=new THREE.Color(0x9a4dff); o.material.emissiveIntensity=0; mats.push(o.material);}});
+  m.userData.mats=mats; m.userData.spider=true;
+  // ขา: หาทิศออกด้านนอกของแต่ละขา (ใช้หมุนยกขา/กวาดขา)
+  const up=new THREE.Vector3(0,1,0), LEGS=[];
+  ['L','R'].forEach(sd=>[1,2,3,4].forEach(i=>{const n='leg'+sd+i, a=B[n], b=B[n+'b'], c=B[n+'c']; if(!a||!b)return;
+    const out=b.position.clone().setY(0).normalize(), ax=new THREE.Vector3().crossVectors(up,out).normalize();
+    // กลุ่มเดินสลับ: L1 R2 L3 R4 | R1 L2 R3 L4
+    const grp=((sd==='L')===(i%2===1))?0:1;
+    LEGS.push({a,b,c,out,ax,grp,front:i===1,sd,i});}));
+  const st={walk:0,rear:0,stab:0,cast:0,crouch:0,recoil:0,dead:0,look:0,lift:0,spin:0};
+  const R={B,st,tg:Object.assign({},st),rate:{},head:B.head,legs:LEGS}; m.userData.rig=R;
+  const PV={}; let lastT=null, ph=Math.random()*6, lookT=0, lookY=0, lookTY=0;
+  const q=new THREE.Quaternion(), q2=new THREE.Quaternion();
+  const rot=(b,x,y,z)=>{if(b)b.rotation.set(x,y,z);};
+  m.userData.idle=T=>{
+    const dt=lastT==null?0:Math.min(.1,T-lastT); lastT=T; const gdt=dt*(typeof SPEED!=='undefined'?SPEED*(typeof HS!=='undefined'?HS:1):1);
+    for(const k in R.tg){const om=Math.min(50,(R.rate[k]||4)*3.2*1.9);let v=PV[k]||0;const n=Math.max(1,Math.ceil(gdt*120)),h=gdt/n;
+      for(let i=0;i<n;i++){v+=(om*om*(R.tg[k]-st[k])-2*om*v)*h;st[k]+=v*h;}PV[k]=v;}
+    ph+=gdt*(2.2+st.walk*7);
+    lookT-=gdt; if(lookT<=0){lookT=1.5+Math.random()*2.5;lookTY=(Math.random()-.5)*.8;} lookY+=(lookTY-lookY)*Math.min(1,gdt*2);
+    const calm=Math.max(0,1-st.stab-st.cast-st.rear-st.dead);
+    // ลำตัว: หายใจ, ยกตัวตอนตั้งท่า, ย่อก่อนกระโดด, ตายแล้วทรุด
+    const bob=Math.sin(ph*2)*.012*st.walk+Math.sin(T*1.6)*.01;
+    m.position.y=bob*SPIDER_S-st.crouch*.12-st.dead*.18;
+    rot(B.root,-st.rear*.35+st.stab*.12+st.crouch*.1-st.recoil*.12+st.dead*.1, Math.sin(ph)*.04*st.walk, Math.sin(ph*.5)*.03*st.walk);
+    rot(B.abdomen,.06+Math.sin(T*1.3)*.05+st.rear*.25-st.recoil*.1+st.dead*.2, Math.sin(T*.7)*.06, 0);
+    rot(B.spine,-st.rear*.1-st.cast*.15+st.stab*.25+Math.sin(T*1.1)*.03, lookY*.2*calm, 0);
+    rot(B.spine1,-st.cast*.12+st.stab*.1+st.dead*.5, lookY*.15*calm, Math.sin(T*.9)*.03);
+    rot(B.chest,-st.cast*.18+Math.sin(T*1.6)*.025, lookY*.15*calm+st.look*.3, 0);
+    rot(B.neck,st.cast*.1+st.dead*.3, lookY*.25*calm, 0);
+    rot(B.head,-st.cast*.2-st.rear*.15+st.recoil*.25+Math.sin(T*2.3)*.03, lookY*.35*calm, Math.sin(T*.8)*.05);
+    // แขน: ว่างๆ ก็ขยับกรงเล็บช้าๆ · ร่ายเวท = ยกสูงชี้ไปหน้า · แทง = เหวี่ยงลง
+    const sw=Math.sin(T*1.7), sw2=Math.sin(T*1.3+1);
+    rot(B.armR,-st.cast*.9+st.stab*.6+sw*.08, st.cast*.4, -.1-st.cast*.5+st.stab*.4+st.dead*.6);
+    rot(B.foreR,-st.cast*.6-st.stab*.3+sw2*.1, 0, st.cast*.3);
+    rot(B.handR,sw*.15-st.cast*.3,0,0);
+    rot(B.armL,-st.cast*.9+st.stab*.6-sw2*.08, -st.cast*.4, .1+st.cast*.5-st.stab*.4-st.dead*.6);
+    rot(B.foreL,-st.cast*.6-st.stab*.3-sw*.1, 0, -st.cast*.3);
+    rot(B.handL,-sw2*.15-st.cast*.3,0,0);
+    // ขา: เดินสลับ 2 กลุ่ม (ยกขา+กวาดไปหน้า) · ขาหน้าใช้แทงได้ · ตายแล้วขาหงิกเข้าหาตัว
+    LEGS.forEach(L=>{
+      const p=ph+(L.grp?Math.PI:0), swing=Math.sin(p)*.28*st.walk, lift=Math.max(0,Math.cos(p))*.45*st.walk;
+      let liftA=lift+Math.max(0,Math.sin(T*.8+L.i*1.7+(L.sd==='L'?0:2)))*.04*calm+st.crouch*-.25+st.rear*(L.i>2?-.1:.25)+st.dead*.9;
+      let knee=lift*.6+st.crouch*.35+st.dead*1.2, yaw=swing;
+      if(L.front){liftA+=st.stab*1.1+st.rear*.5; knee+=-st.stab*.9+st.rear*.3; yaw+=st.stab*.2*(L.sd==='L'?1:-1);}
+      q.setFromAxisAngle(up,yaw); q2.setFromAxisAngle(L.ax,-liftA); L.a.quaternion.copy(q).multiply(q2);
+      L.b.quaternion.setFromAxisAngle(L.ax,knee); if(L.c)L.c.quaternion.setFromAxisAngle(L.ax,-knee*.5+st.dead*.6);
+    });
+    mats.forEach(mt=>{mt.emissiveIntensity=st.cast*.55*(.8+.2*Math.sin(T*14))+Math.max(0,Math.sin(T*2.1))*.05;});
+  };
+  w.userData.k=1; w.userData.inner=m;
+  return w;
+}
+function spiderSet(u,o,d){const R=u.rig;Object.keys(o).forEach(k=>{R.tg[k]=o[k];R.rate[k]=1/Math.max(.05,d||.25);});}
+function spiderHand(u,sd){const b=u.rig.B['hand'+(sd||'R')]||u.rig.B.head;b.updateMatrixWorld(true);return b.getWorldPosition(new THREE.Vector3());}
+/* ---------- เขี้ยวพิษ: ยืดตัว ยกขาหน้า แล้วแทงลงพร้อมกรงเล็บ ---------- */
+async function spiderStrike(u,t,onHit){
+  const dir=new THREE.Vector3(Math.sin(u.w.rotation.y),0,Math.cos(u.w.rotation.y)), home=u.w.position.clone(), K=u.w.scale.x;
+  spiderSet(u,{rear:1,stab:0},.18); await wait(260);
+  spiderSet(u,{rear:0,stab:1},.07);
+  await tween(.12,k=>u.w.position.copy(home).addScaledVector(dir,.45*K*k),easeIn);
+  const hp=t.w.position.clone().setY(.9); hitArc(hp,-.9,0xc58cff,1.2); particles(hp,0xb070ff,14,1.6,.07,.4,.9);
+  onHit(); shake=Math.max(shake,.14); await wait(170);
+  spiderSet(u,{stab:0},.25); await tween(.3,k=>u.w.position.copy(home).addScaledVector(dir,.45*K*(1-k)),easeOut);
+}
+/* ---------- ลูกแก้วมนตร์ม่วง: ยกแขนร่ายเวท ยิงลูกแก้วใส่ศัตรูทุกตัว ---------- */
+async function spiderCast(u,foes,onHitOne){
+  spiderSet(u,{cast:1,rear:.4},.25);
+  const orbs=[]; const hR=spiderHand(u,'R'), hL=spiderHand(u,'L');
+  [hR,hL].forEach(h=>{const g=glow(scene,0xb070ff,.35,[h.x,h.y,h.z],1);orbs.push(g);});
+  await tween(.45,k=>{orbs.forEach((g,i)=>{const h=spiderHand(u,i?'L':'R');g.position.copy(h);g.scale.setScalar(.2+k*.9);});});
+  orbs.forEach(g=>{scene.remove(g);g.material.dispose();});
+  shake=Math.max(shake,.08);
+  await Promise.all(foes.map((f,i)=>new Promise(res=>setTimeout(async()=>{
+    const from=spiderHand(u,i%2?'L':'R'), g=glow(scene,0xc58cff,.5,[from.x,from.y,from.z],1), to=f.w.position.clone().setY(.9), mid=from.clone().lerp(to,.5).add(new THREE.Vector3(0,1.2,0));
+    await tween(.42,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));if(Math.random()<.6)particles(g.position,0x9a4dff,1,.3,.05,.2,.6);},t=>t);
+    scene.remove(g);g.material.dispose();particles(to,0xb070ff,16,2,.08,.3,.9);particles(to,0x2a0a3a,8,1.2,.12,-.2,.7);
+    if(f.alive)onHitOne(f); res();},i*110/SPEED))));
+  spiderSet(u,{cast:0,rear:0},.35); await wait(200);
+}
+/* ---------- กระโจนใยมรณะ: ย่อตัว กระโดดโค้งลงกลางกลุ่มศัตรู ---------- */
+async function spiderLeap(u,c,foes,onHit){
+  const from=u.w.position.clone(), K=u.w.scale.x; await faceTo(u,c,.12);
+  const land=from.clone().lerp(c,.85);
+  spiderSet(u,{crouch:1},.15); await wait(280);
+  spiderSet(u,{crouch:0,rear:.3},.08); particles(tmpV.copy(from).setY(.1),0xb8a888,18,2,.3,-.2,.5);
+  await tween(.55,k=>{u.w.position.lerpVectors(from,land,k);u.w.position.y=Math.sin(k*Math.PI)*1.8*K;},easeIO);
+  u.w.position.y=0; spiderSet(u,{crouch:.8,rear:0},.06); shake=Math.max(shake,.24);
+  shockRing(c,0xb070ff); if(typeof scorch==='function')scorch(c,1.4); particles(tmpV.copy(c).setY(.1),0xb8a888,26,2.4,.35,-.2,.55); particles(tmpV.copy(c).setY(.4),0x9a4dff,20,2,.08,.4,.9);
+  onHit(); await wait(260); spiderSet(u,{crouch:0},.3);
+  await tween(.5,k=>u.w.position.lerpVectors(land,from,k),easeIO);
+}
+function spiderReact(u){spiderSet(u,{recoil:1},.06);setTimeout(()=>spiderSet(u,{recoil:0},.3),170/SPEED);}
+async function spiderDie(u){spiderSet(u,{rear:.8},.1);await wait(220);spiderSet(u,{rear:0,dead:1,cast:0,stab:0},.45);await wait(520);shake=Math.max(shake,.12);
+  particles(tmpV.copy(u.w.position).setY(.3),0x9a4dff,22,1.6,.08,.3,.8);}
+async function spiderVictory(u){if(!u.alive)return;u.busy=true;spiderSet(u,{rear:1,cast:1},.3);await wait(1200);spiderSet(u,{rear:0,cast:0},.4);u.busy=false;}
+
 /* ================= ฟาร์มของผู้เล่น ================= */
 const FARM_R=17;
 const SM=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85},o||{}));
@@ -2121,6 +2234,11 @@ function addAgent(data,at,pop){
     w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
     const ag={w,inner:w.userData.inner,data,evo:1,fly:true,ang:Math.random()*6.28,r:8.5+Math.random()*1.5,state:'fly'};AGENTS.push(ag);
     if(pop){w.scale.setScalar(.001);tween(.8,t=>w.scale.setScalar(Math.max(.001,1.7*t)),easeBack);}return ag;}
+  if(spc.spider&&SPIDER){const w=buildSpider();w.scale.setScalar(1.3);scene.add(w);
+    const [x,z]=at||freePoint(1); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
+    w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
+    const ag={w,inner:w.userData.inner,data,evo:1,spider:true,state:'idle',wait:1+Math.random()*3,tx:x,tz:z,ph:0,yaw:w.rotation.y,speed:1.1};AGENTS.push(ag);
+    if(pop){w.scale.setScalar(.001);tween(.6,t=>w.scale.setScalar(Math.max(.001,1.3*t)),easeBack);}return ag;}
   const w=buildMonster(spc.rig||(spc.evo?1:0)); w.userData.k*=1.5; w.scale.setScalar(w.userData.k); scene.add(w);
   const [x,z]=at||freePoint(.8); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
   const inner=w.userData.inner;
@@ -2133,6 +2251,12 @@ function addAgent(data,at,pop){
 function agentUpdate(ag,dt){
   const w=ag.w, rig=ag.inner.userData.rig, A=ag.inner.userData;
   if(ag.fly){ag.ang+=dt*.22;const x=Math.cos(ag.ang)*ag.r,z=Math.sin(ag.ang)*ag.r*.8;w.position.set(x,4.2+Math.sin(ag.ang*3)*.6,z);w.rotation.y=Math.atan2(-Math.sin(ag.ang)*ag.r,Math.cos(ag.ang)*ag.r*.8);w.rotation.z=-.18;return;}
+  if(ag.spider){const tg=rig.tg;
+    if(ag.state==='idle'){tg.walk=0;ag.wait-=dt;if(ag.wait<=0){for(let k=0;k<14;k++){const [tx,tz]=freePoint(.8);if(Math.hypot(tx-w.position.x,tz-w.position.z)>2&&!blockedSeg(w.position.x,w.position.z,tx,tz,.5)){ag.tx=tx;ag.tz=tz;ag.state='walk';break;}}if(ag.state!=='walk')ag.wait=1;}return;}
+    const dx=ag.tx-w.position.x,dz=ag.tz-w.position.z,d=Math.hypot(dx,dz);
+    if(d<.2){ag.state='idle';ag.wait=2+Math.random()*5;tg.walk=0;return;}
+    tg.walk=1;const want=Math.atan2(dx,dz);let diff=want-ag.yaw;diff=Math.atan2(Math.sin(diff),Math.cos(diff));ag.yaw+=diff*Math.min(1,dt*4);w.rotation.y=ag.yaw;
+    const sp=ag.speed*(Math.abs(diff)>1?.3:1);w.position.x+=Math.sin(ag.yaw)*sp*dt;w.position.z+=Math.cos(ag.yaw)*sp*dt;return;}
   const MC=!!(A.play&&A.clipInfo&&A.clipInfo('walk'));
   if(MC){if(ag.state==='walk'&&!ag.walking){ag.walking=1;A.play('walk',{loop:true,fade:.25});}else if(ag.state!=='walk'&&ag.walking){ag.walking=0;A.play('idle',{loop:true,fade:.3});}}
   else if(A.clipW)A.clipW(ag.state==='walk'?0:1);
@@ -2436,7 +2560,7 @@ function enterGame(){
 }
 function startFarm(){renderHUD(); layout(); loop(); distTo=48;
   lgStart();
-  Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon()]).then(()=>{
+  Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon(),loadSpider()]).then(()=>{
     modelsReady=true; for(const k in THUMB)delete THUMB[k];
     if(entered){$('#loadMsg').hidden=true; syncAgents(); if(!S.named&&NET.mode==='online')openWelcome();}
   });
@@ -2450,6 +2574,9 @@ const SPEC={
   kazekiri:{name:'คาเซะคิริ',title:'เงาสามดาบ',rar:2,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:1,maxLv:40,
     base:{hp:102,atk:34,def:13,spd:42},lore:'นินจาเงาผู้ไร้ใบหน้า พกดาบสามเล่ม เคลื่อนไหวเงียบดั่งสายลมยามค่ำ',
     skills:[['ฟันเงา','ฟันศัตรู 1 ตัว 110%'],['สามดาบวายุ','ฟัน 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['กระโดดฟัน','ฟาดพื้นใส่ศัตรูทุกตัว 85% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
+  yorugumo:{name:'โยรุกุโมะ',title:'จอมเวทแมงมุมราตรี',rar:2,el:'มืด',elc:'#b48cff',role:'เวทมนตร์',evo:1,spider:1,maxLv:40,
+    base:{hp:96,atk:33,def:14,spd:36},lore:'จอมเวทร่างครึ่งแมงมุมผู้ถักใยอยู่ในถ้ำลึกใต้ป่าอัมพร ลูกแก้วม่วงในมือทั้งสองรวบรวมแสงจันทร์ไว้เป็นเวทมนตร์',
+    skills:[['เขี้ยวพิษ','ยกขาหน้าแทงศัตรู 1 ตัว 110%'],['ลูกแก้วมนตร์ม่วง','ร่ายลูกแก้วเวทใส่ศัตรูทุกตัว 55% · คูลดาวน์ 3'],['กระโจนใยมรณะ','กระโจนลงกลางศัตรูทุกตัว 80% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
   kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:3,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
     base:{hp:112,atk:40,def:14,spd:44},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า',
     skills:[['ฟันเงาจันทร์','ฟันศัตรู 1 ตัว 120%'],['คมดาบราตรี','ฟัน 3 ครั้ง ครั้งละ 75% · คูลดาวน์ 3'],['ดิ่งฟันสังหาร','กระโดดฟาดศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
@@ -2498,6 +2625,7 @@ function boxModel(sp){
   if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}
   let w;
   if(S2.dragon&&DRAGON){w=buildDragon();w.scale.setScalar(.72);}
+  else if(S2.spider&&SPIDER){w=buildSpider();w.scale.setScalar(1.05);}
   else{w=buildMonster(S2.rig||(S2.evo?1:0));w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
   w.traverse(o=>{if(o.isMesh){o.castShadow=true;}});
   w.userData.sp=sp; bScene.add(w); BOX.model=w; BOX.spin=0;
@@ -2513,7 +2641,7 @@ function frameCam(){
 const THUMB={};
 function headOf(w,sp){
   const inner=w.userData.inner, R=inner.userData.rig; let hb=null;
-  if(SPEC[sp].dragon&&R&&R.head)hb=R.head;
+  if((SPEC[sp].dragon||SPEC[sp].spider)&&R&&R.head)hb=R.head;
   else inner.traverse(o=>{if(!hb&&o.isBone&&/Head$/.test(o.name))hb=o;});
   const box=new THREE.Box3(); inner.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!o.userData.noBox)box.expandByObject(o);});
   const H=box.max.y-box.min.y;
@@ -2523,7 +2651,7 @@ function headOf(w,sp){
   return{p:p.add(new THREE.Vector3(F.dx*H,F.dy*H,0)),r:F.r*H};
 }
 // ปรับกรอบหน้าแต่ละสายพันธุ์ (สัดส่วนของความสูงตัว)
-const FACE={hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
+const FACE={yorugumo:{dx:0,dy:.03,r:.16},hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
 function makeThumb(sp){
   if(THUMB[sp])return THUMB[sp];
   const W=192, rt=new THREE.WebGLRenderTarget(W,W,{encoding:THREE.sRGBEncoding}); rt.texture.encoding=THREE.sRGBEncoding;
@@ -2621,6 +2749,7 @@ $('#box').addEventListener('pointerdown',e=>{if(e.target.id==='box')closeBox();}
 function open3d(){const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;
   BOX.open=true;$('#box').classList.add('v3d');$('#mdet').hidden=false;$('#md3Name').textContent=spOf(m).name+' Lv'+m.lv;
   boxModel(m.sp);boxLayout();const A=BOX.model.userData.inner.userData;if(A.play)A.play('victory',{fade:.25});
+  if(spOf(m).spider){const R=A.rig;spiderSet({rig:R},{rear:1,cast:1},.35);setTimeout(()=>spiderSet({rig:R},{rear:0,cast:0},.5),1400);}
   if(spOf(m).dragon)dragonSet({rig:A.rig},{rear:1,spread:1,breath:1},.4),setTimeout(()=>BOX.model&&dragonSet({rig:BOX.model.userData.inner.userData.rig},{rear:0,spread:0,breath:0},.6),1300);}
 function close3d(){BOX.open=false;$('#box').classList.remove('v3d');$('#mdet').hidden=true;if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}renderBox();}
 $('#md3d').onclick=open3d; $('#mdBack').onclick=close3d;
