@@ -7,7 +7,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–24 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -122,9 +122,13 @@ const LOCAL=(()=>{
       else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=[.575,.32,.10,.005];}else fail('bad_egg');
       const r=Math.random(); let t=r<ch[3]?4:r<ch[3]+ch[2]?3:r<ch[3]+ch[2]+ch[1]?2:1; if(kind==='gold'&&t<3&&D.pity>=C.pity_max)t=3;
       const pool=Object.keys(SPS).filter(k=>SPS[k].rar===t), sp=pool[Math.floor(Math.random()*pool.length)]||'kazemaru'; if(kind==='gold'&&t>=3)D.pity=0;
-      const m={id:D.nid++,sp,lv:1};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
+      const m={id:D.nid++,sp,lv:1,stars:0};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
+    star_up:({mon_id,mat_ids})=>{const m=mon(mon_id);const st=m.stars||0;if(st>=STAR_MAX)fail('max_stars');const need=starCost(st+1);
+      if(!Array.isArray(mat_ids)||mat_ids.length!==need||new Set(mat_ids).size!==need)fail('bad_material');
+      const xs=mat_ids.map(id=>mon(id));if(xs.some(x=>x.id===m.id||x.sp!==m.sp))fail('not_same_species');if(xs.some(x=>D.team.includes(x.id)))fail('material_in_team');
+      D.mons=D.mons.filter(x=>!mat_ids.includes(x.id));m.stars=st+1;return{stars:m.stars};},
     set_team:({ids})=>{if(!Array.isArray(ids)||ids.length<1||ids.length>6||new Set(ids).size!==ids.length||!ids.every(i=>D.mons.some(m=>m.id===i)))fail('bad_team');D.team=[...ids];return{};},
     claim_daily:()=>{if(D.daily_last===today())fail('already_claimed');const s=D.daily_last===yesterday()?D.daily_streak+1:1;const day=(s-1)%7+1;
       const [kind,amount]=[['coins',200],['amber',5],['coins',300],['coins',400],['amber',10],['coins',500],['amber',30]][day-1];D[kind]+=amount;D.daily_streak=s;D.daily_last=today();return{day,kind,amount};},

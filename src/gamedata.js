@@ -60,3 +60,21 @@ const SKILLS={
     {id:'s4',name:'หัวใจมังกรอัมพร',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 15% · อามาเทรุรับดาเมจลดลง 25% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.15,dr:.25,crit:.1}}]
 };
 const passiveOf=sp=>{const s=(SKILLS[sp]||[]).find(x=>x.type==='passive');return s?s.passive:null;};
+
+/* ================= ดาว (วิวัฒนาการด้วยตัวซ้ำ) =================
+   เริ่ม 0 ดาว สูงสุด 6 ดาว · ใช้ตัวซ้ำ (สายพันธุ์เดียวกัน) ดาวละ 1 ตัว ยกเว้นดาวที่ 3 และ 6 ใช้ 2 ตัว (รวม 8 ตัว)
+   ทุกดาวที่ได้ สกิลขึ้น 1 Lv วนตามลำดับ: ท่า 2 → ท่า 3 → ติดตัว → ท่า 2 … (โจมตีปกติไม่อัป) · ค่าพลังไม่เพิ่ม */
+const STAR_MAX=6;
+const starCost=next=>next===3||next===6?2:1;          // ตัวซ้ำที่ต้องใช้เพื่อขึ้นไปดาว next
+const SK_STEP=.1, PAS_STEP=.15;                         // สกิลแรงขึ้นต่อ Lv: ท่าโจมตี +10% · ติดตัว +15%
+function skillLvs(sp,stars){
+  const L=SKILLS[sp]||[], up=L.filter(s=>s.id!=='s1'), n=up.length, st=Math.max(0,Math.min(STAR_MAX,stars||0));
+  return L.map(s=>{const i=up.indexOf(s);if(i<0||!n)return 1;return 1+(st>i?Math.floor((st-1-i)/n)+1:0);});
+}
+function skillsAt(sp,stars){
+  const lv=skillLvs(sp,stars);
+  return (SKILLS[sp]||[]).map((s,i)=>{const k=lv[i]-1, o=Object.assign({},s,{lv:lv[i]});
+    if(s.type==='passive'){o.passive={};for(const p in s.passive){let v=s.passive[p]*(1+PAS_STEP*k);if(p==='revive')v=Math.min(.6,v);if(p==='dr')v=Math.min(.45,v);o.passive[p]=+v.toFixed(3);}}
+    else{if(s.mult)o.mult=+(s.mult*(1+SK_STEP*k)).toFixed(3);if(s.stun)o.stun=Math.min(.8,s.stun+.03*k);}
+    return o;});
+}

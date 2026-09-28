@@ -28,7 +28,7 @@ function bnApply(st){
   let team=ids.map(id=>mons.find(m=>Number(m.id)===id)).filter(Boolean);
   if(!team.length)team=[...mons].sort((a,b)=>b.lv-a.lv).slice(0,6);
   team=team.filter(m=>SPECIES[m.sp]).slice(0,6);
-  if(team.length)TEAM.splice(0,TEAM.length,...team.map(m=>({sp:NO_DRAGON&&m.sp==='amateru'?'kazemaru':m.sp,lv:m.lv})));
+  if(team.length)TEAM.splice(0,TEAM.length,...team.map(m=>({sp:NO_DRAGON&&m.sp==='amateru'?'kazemaru':m.sp,lv:m.lv,stars:m.stars||0})));
   if(typeof idleRender==='function')idleRender();
 }
 async function bnInit(){

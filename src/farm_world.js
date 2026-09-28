@@ -438,7 +438,7 @@ function applyState(st){
   if(!st||!st.player)return; const p=st.player;
   Object.assign(S,{name:p.name,lv:p.lv,xp:p.xp,coins:p.coins,amber:p.amber,energy:p.energy,energyMax:p.energy_max,energyNext:p.energy_next,energySec:p.energy_sec,
     amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now()});
-  S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv}));
+  S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0}));
   if(typeof renderHUD==='function')renderHUD();
 }
 function syncAgents(){AGENTS.forEach(a=>{scene.remove(a.w);});AGENTS.length=0;PICK.splice(0,PICK.length,...PICK.filter(o=>o.userData.agent==null));S.mons.forEach(d=>addAgent(d));}

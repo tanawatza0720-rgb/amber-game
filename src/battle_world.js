@@ -16,7 +16,7 @@ const BT={
 /* ================= ข้อมูลมอนสเตอร์และด่าน ================= */
 const SPECIES={
   kazemaru:{name:'คาเซะมารุ',evo:0,base:{hp:64,atk:20,def:8,spd:26}},
-  amateru:{name:'อามาเทรุ',evo:1,dragon:1,base:{hp:175,atk:66,def:24,spd:56}},
+  amateru:{name:'อามาเทรุ',evo:1,dragon:1,base:{hp:190,atk:74,def:26,spd:60}},
   kuroga:{name:'คุโรกะ',evo:1,rig:'kuroga',base:{hp:130,atk:48,def:16,spd:50}},
   hakuneko:{name:'ฮาคุเนโกะ',evo:1,rig:'hakuneko',base:{hp:120,atk:51,def:14,spd:56}},
   morihime:{name:'โมริฮิเมะ',evo:1,rig:'morihime',base:{hp:110,atk:32,def:17,spd:38}},
@@ -97,8 +97,8 @@ function makeUnit(side,def,slot){
   const u={id:UNITS.length,side,sp:def.sp,evo:sp.evo,boss:!!def.boss,lv:def.show||def.lv,
     name:side==='P'?sp.name:(def.boss?'หัวหน้านินจาชาด':sp.evo?'นินจาชาด':'นินจาชาดจิ๋ว'),
     maxHp:Math.round(sp.base.hp*f*bm), atk:Math.round(sp.base.atk*f*(def.boss?.85:1)), def:Math.round(sp.base.def*f), spd:sp.base.spd+def.lv,
-    skills:sp.skills, cds:{}, gauge:Math.random()*30, stun:0, alive:true, w, inner, rig, home:new THREE.Vector3(x,0,z), face:w.rotation.y};
-  u.hp=u.maxHp; u.el=def.el||sp.el; u.pas=passiveOf(def.sp); u.revived=false;
+    skills:skillsAt(def.sp,def.stars||0), stars:def.stars||0, cds:{}, gauge:Math.random()*30, stun:0, alive:true, w, inner, rig, home:new THREE.Vector3(x,0,z), face:w.rotation.y};
+  u.hp=u.maxHp; u.el=def.el||sp.el; u.pas=(u.skills.find(s=>s.type==='passive')||{}).passive||null; u.revived=false;
   const DK=sp.dragon?DRAGON_BATTLE_K:1; if(sp.dragon){w.scale.setScalar(DK);const R=inner.userData.rig;if(R&&R.st){R.st.alt=R.tg.alt=2.6;}}
   u.rad=sp.dragon?1.55*DK:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=4.95*DK;u.camS=2.1*DK;} u.reach=sp.dragon?1.9*DK:inner.userData.meshy?1.25:u.evo?1.0:.72;
   u.mats=[];w.traverse(o=>{if(o.isMesh){o.userData.unit=u.id;PICKU.push(o);if(o.material&&o.material.emissive&&u.mats.indexOf(o.material)<0)u.mats.push(o.material);}});

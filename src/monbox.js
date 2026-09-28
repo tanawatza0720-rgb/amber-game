@@ -13,7 +13,7 @@ const SPEC={
   morihime:{name:'โมริฮิเมะ',title:'ธิดาหอกแห่งพงไพร',rar:2,el:'ไม้',elc:'#7fd46a',role:'จู่โจม',evo:1,rig:'morihime',maxLv:40,
     base:{hp:110,atk:32,def:17,spd:38},lore:'เอลฟ์ผู้พิทักษ์ป่าลึก ผ้าคลุมปักลายใบไม้พลิ้วตามสายลม หอกยาวของเธอแทงได้แม่นยำราวกับเงาใบไม้ที่ร่วงหล่น'},
   amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:4,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
-    base:{hp:175,atk:66,def:24,spd:56},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ'},
+    base:{hp:190,atk:74,def:26,spd:60},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ'},
 };// ธาตุและสกิลมาจาก gamedata.js
 Object.keys(SPEC).forEach(k=>{const e=EL_OF[k];if(e){SPEC[k].el=e;SPEC[k].elc=ELEM[e].c;}SPEC[k].skills=SKILLS[k]||[];});
 const spOf=d=>SPEC[d.sp]||SPEC.kazemaru;
@@ -122,9 +122,17 @@ function icon(m,cls){const sp=spOf(m);const c=el('button','ic r'+sp.rar+(cls?' '
   const img=el('img');img.src=makeThumb(m.sp);img.alt=sp.name;c.append(img);
   c.append(el('span','st',stars(sp.rar)));
   const lv=el('span','lv'+(m.lv>=sp.maxLv?' max':''),m.lv+'');c.append(lv);
+  if(m.stars){c.classList.add('hs');c.append(el('span','sr'+(m.stars>=STAR_MAX?' full':''),'★'.repeat(m.stars)));}
   if(S.team.includes(m.uid)){const t=el('span','tm');t.innerHTML=FLAG;c.append(t);}
-  if(sp.evolveTo&&m.lv>=sp.maxLv){const e=el('span','ev','↑');e.title='วิวัฒนาการได้';c.append(e);}
-  c.title=sp.name+' Lv'+m.lv; return c;}
+  if(sp.evolveTo&&m.lv>=sp.maxLv){const e=el('span','ev','↑');e.title='เปลี่ยนร่างได้';c.append(e);}
+  else if(canStar(m)){const e=el('span','ev','★');e.title='วิวัฒน์ (ขึ้นดาว) ได้';c.append(e);}
+  c.title=sp.name+' Lv'+m.lv+(m.stars?' ★'+m.stars:''); return c;}
+// วัตถุดิบขึ้นดาว: ตัวซ้ำสายพันธุ์เดียวกันที่ไม่อยู่ในทีม เลือกตัวดาว/เลเวลต่ำสุดก่อน
+function starMats(m){const need=starCost((m.stars||0)+1);
+  const L=S.mons.filter(x=>x.sp===m.sp&&x.uid!==m.uid&&!S.team.includes(x.uid)).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
+  return {need,list:L.slice(0,need),have:L.length};}
+const canStar=m=>(m.stars||0)<STAR_MAX&&starMats(m).have>=starMats(m).need;
+const starStr=n=>'★'.repeat(n)+'☆'.repeat(STAR_MAX-n);
 function renderTeam(){
   const t=$('#bTeam'); t.innerHTML='';
   for(let i=0;i<6;i++){const m=S.mons.find(x=>x.uid===S.team[i]);let s;
@@ -151,6 +159,7 @@ function renderDetail(){
   document.querySelectorAll('.bTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===boxTab));
   if(!m)return; const sp=spOf(m), st=statOf(m);
   const h=el('div','iHead');const e=el('span','iEl',sp.el);e.style.background=sp.elc;h.append(e);h.append(el('b',null,sp.name));{const tg=el('span','iTier r'+sp.rar,stars(sp.rar));h.append(tg);}P.append(h);
+  {const r=el('div','iStars');r.append(el('span','ss',starStr(m.stars||0)));r.append(el('small',null,(m.stars||0)>=STAR_MAX?'ดาวเต็ม':'ดาว '+(m.stars||0)+'/'+STAR_MAX));P.append(r);}
   P.append(el('div','iSub',sp.title+' · '+sp.role));
   if(boxTab==='info'){
     const x=el('div','iExp');x.append(el('span',null,'LV'));const bar=el('div');const i=el('i');i.style.width=(m.lv/sp.maxLv*100)+'%';bar.append(i);bar.append(el('em',null,m.lv>=sp.maxLv?'MAX':m.lv+' / '+sp.maxLv));x.append(bar);P.append(x);
@@ -159,16 +168,25 @@ function renderDetail(){
     [['เลเวล',m.lv+' / '+sp.maxLv],['พลังชีวิต (HP)',fmt(st.hp*10)],['โจมตี (ATK)',st.atk*10],['ป้องกัน (DEF)',st.def*10],['ความเร็ว (SPD)',st.spd],['ธาตุ',ELEM[sp.el].i+' ธาตุ'+sp.el],['ชนะทาง',nm(EI.strong),'adv'],['แพ้ทาง',nm(EI.weak),'weak'],['พลังรวม',fmt(power(m)),'pw']]
       .forEach(([k,v,c],j)=>{const r=el('tr',j===5?'sep':'');r.append(el('td',null,k));const td=el('td',c||null,v+'');if(j===5)td.style.color=sp.elc;r.append(td);T.append(r);});}
     P.append(T);
-  }else if(boxTab==='skill'){sp.skills.forEach((k,i)=>{const pv=k.type==='passive',s=el('div','skr'+(pv?' pas':''));s.append(el('span','skn',pv?'ติดตัว':(i+1)+''));const t=el('div');t.append(el('b',null,k.name));t.append(el('p',null,k.desc.replace(/^ติดตัว: /,'')));s.append(t);P.append(s);});
-    {const n=el('p','skNote','ทั่วไป 2 สกิล · หายาก 3 สกิล · ตำนานและเทพเจ้า 3 สกิล + สกิลติดตัว');P.append(n);}}
+  }else if(boxTab==='skill'){{const st=m.stars||0, cur=skillLvs(m.sp,st), nx=st<STAR_MAX?skillLvs(m.sp,st+1):cur;
+    sp.skills.forEach((k,i)=>{const pv=k.type==='passive',s=el('div','skr'+(pv?' pas':''));s.append(el('span','skn',pv?'ติดตัว':(i+1)+''));const t=el('div');
+      const hd=el('b',null,k.name);hd.append(el('span','skLv'+(cur[i]>1?' up':''),'Lv'+cur[i]));if(nx[i]>cur[i])hd.append(el('span','skNx','ดาวถัดไป → Lv'+nx[i]));t.append(hd);
+      t.append(el('p',null,k.desc.replace(/^ติดตัว: /,'')));
+      if(cur[i]>1)t.append(el('p','skBon',(pv?'ผลสกิลติดตัว':'ความแรงสกิล')+' +'+Math.round((cur[i]-1)*(pv?PAS_STEP:SK_STEP)*100)+'%'));
+      else if(k.id==='s1')t.append(el('p','skBon dim','โจมตีปกติ ไม่อัปตามดาว'));
+      s.append(t);P.append(s);});
+    P.append(el('p','skNote','วิวัฒน์ด้วยตัวซ้ำ: ทุกดาวสกิลขึ้น 1 Lv วนตามลำดับ (ท่า 2 → ท่า 3 → ติดตัว) · ใช้ตัวซ้ำดาวละ 1 ตัว ดาวที่ 3 และ 6 ใช้ 2 ตัว · สูงสุด 6 ดาว'));}}
   else P.append(el('p','iLore',sp.lore));
   const inT=S.team.includes(m.uid);
   $('#mdTeam').innerHTML='';$('#mdTeam').append(el('span',null,inT?'ออกทีม':'ใส่ทีม'));$('#mdTeam').append(el('small',null,inT?'อยู่ในทีม':S.team.length>=6?'สลับตัวที่ 6':'ทีม '+S.team.length+'/6'));
   const maxed=m.lv>=sp.maxLv, cost=lvCost(m);
   $('#mdUp').innerHTML=''; $('#mdUp').append(el('span',null,maxed?'MAX':'อัปเลเวล')); $('#mdUp').append(el('small',null,maxed?'เลเวลเต็ม':fmt(cost)+' เหรียญ'));
   $('#mdUp').disabled=maxed;
-  const canEvo=sp.evolveTo&&maxed; $('#mdEvo').disabled=!canEvo;
-  $('#mdEvo').innerHTML=''; $('#mdEvo').append(el('span',null,'วิวัฒน์')); $('#mdEvo').append(el('small',null,!sp.evolveTo?'ร่างสุดท้าย':canEvo?'300 เหรียญ':'ต้อง Lv '+sp.maxLv));
+  const canEvo=sp.evolveTo&&maxed, nst=m.stars||0, SM=starMats(m);
+  $('#mdEvo').innerHTML='';
+  if(canEvo){$('#mdEvo').disabled=false;$('#mdEvo').append(el('span',null,'เปลี่ยนร่าง'));$('#mdEvo').append(el('small',null,'300 เหรียญ'));}
+  else{$('#mdEvo').disabled=nst>=STAR_MAX||SM.have<SM.need;$('#mdEvo').append(el('span',null,'วิวัฒน์'));
+    $('#mdEvo').append(el('small',null,nst>=STAR_MAX?'ดาวเต็มแล้ว':'ใช้ตัวซ้ำ '+SM.need+' ตัว ('+Math.min(SM.have,99)+'/'+SM.need+')'));}
 }
 document.querySelectorAll('.bTabs button').forEach(b=>b.onclick=()=>{boxTab=b.dataset.t;renderDetail();});
 $('#bSort').onchange=e=>{boxSort=e.target.value;renderBox();};
@@ -189,8 +207,9 @@ $('#mdTeam').onclick=async()=>{const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)
 $('#mdUp').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid===uid);if(!m)return;const sp=spOf(m);if(m.lv>=sp.maxLv)return;
   const r=await act('level_up',{mon_id:uid});if(!r)return;
   bumpRes('coins');renderBox();const ic=$('#bList .ic.sel');if(ic)ic.classList.add('pop');
-  if(r.lv>=sp.maxLv&&sp.evolveTo)toast('ถึงเลเวลสูงสุด! วิวัฒนาการได้แล้ว');};
-$('#mdEvo').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid===uid);if(!m)return;const sp=spOf(m);if(!sp.evolveTo||m.lv<sp.maxLv)return;
+  if(r.lv>=sp.maxLv&&sp.evolveTo)toast('ถึงเลเวลสูงสุด! เปลี่ยนร่างได้แล้ว');};
+$('#mdEvo').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid===uid);if(!m)return;const sp=spOf(m);
+  if(!(sp.evolveTo&&m.lv>=sp.maxLv))return starUp(m);
   open3d(); $('#mdBack').disabled=true;
   const w=BOX.model; const p=new THREE.Vector3(0,1,0);
   const glowT=tween(1.4,t=>{w.rotation.y+=.05+t*.5;w.traverse(o=>{if(o.isMesh&&o.material&&o.material.emissive){o.material.emissive.setHex(0xfff0c0);o.material.emissiveIntensity=t*2;}});});
@@ -200,7 +219,20 @@ $('#mdEvo').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid=
   boxSpark(p,0xffffff,70,3.4);boxSpark(p,0xffc94d,50,2.6);
   boxModel(r.sp); $('#md3Name').textContent=SPEC[r.sp].name+' Lv1';
   boxSpark(p,0xffc94d,40,2); const A=BOX.model.userData.inner.userData; if(A.play)A.play('victory',{fade:.1});
-  $('#mdBack').disabled=false; toast('วิวัฒนาการสำเร็จ! กลายเป็น '+SPEC[r.sp].name);};
+  $('#mdBack').disabled=false; toast('เปลี่ยนร่างสำเร็จ! กลายเป็น '+SPEC[r.sp].name);};
+// วิวัฒนาการ (ขึ้นดาว): กดครั้งแรกบอกว่าจะใช้ตัวไหน กดซ้ำภายใน 6 วินาทีเพื่อยืนยัน
+async function starUp(m){
+  const sp=spOf(m), st=m.stars||0, SM=starMats(m);
+  if(st>=STAR_MAX){toast('ดาวเต็มแล้ว');return;}
+  if(SM.have<SM.need){toast('ต้องมี '+sp.name+' ซ้ำที่ไม่อยู่ในทีมอีก '+(SM.need-SM.have)+' ตัว');return;}
+  const A=BOX.starArm; if(!A||A.uid!==m.uid||A.st!==st||Date.now()-A.t>6000){BOX.starArm={uid:m.uid,st,t:Date.now()};
+    toast('แตะอีกครั้งเพื่อยืนยัน: ใช้ '+SM.list.map(x=>sp.name+' Lv'+x.lv+(x.stars?' ★'+x.stars:'')).join(' + ')+' เป็นวัตถุดิบ');return;}
+  BOX.starArm=null; const before=skillLvs(m.sp,st);
+  const r=await act('star_up',{mon_id:m.uid,mat_ids:SM.list.map(x=>x.uid)}); if(!r)return;
+  const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=spOf(m).skills[i];
+  renderBox(); const ic=$('#bList .ic.sel'); if(ic)ic.classList.add('pop');
+  toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:''));
+}
 // หมุนโมเดลด้วยการลาก (มุมมอง 3D)
 addEventListener('pointerdown',e=>{if(!BOX.open||e.target.closest('button'))return;BOX.drag={x:e.clientX,s:BOX.spin};});
 addEventListener('pointermove',e=>{if(BOX.drag)BOX.spin=BOX.drag.s+(e.clientX-BOX.drag.x)*.012;});
