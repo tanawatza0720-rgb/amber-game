@@ -181,6 +181,7 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
 .iTbl .pw{color:var(--amber)}
 .skr{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);margin-bottom:6px}
 .skn{flex:none;width:24px;height:24px;border-radius:6px;background:rgba(255,179,71,.2);color:var(--amber);display:grid;place-items:center;font-weight:700;font-size:12px}
+.skr.pas{background:rgba(255,106,176,.08);border:1px solid rgba(255,138,196,.25)}.skr.pas .skn{width:auto;padding:0 6px;background:rgba(255,106,176,.2);color:#ff9ccc;font-size:10px}.skNote{font-size:11px;color:var(--muted);margin:8px 2px 0}td.adv{color:#ffb35a}td.weak{color:#9aa7b8}
 .skr b{font-size:13px}.skr p{margin:2px 0 0;font-size:12px;color:var(--muted)}
 .iLore{font-size:13px;color:var(--muted);line-height:1.7;margin:4px 0}
 .bActs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;border-top:1px solid var(--line)}
@@ -844,6 +845,69 @@ function popDmg(w,text,color){
 }
 function stageMsg(t){const el=$('#stageMsg');el.hidden=!t;el.textContent=t||'';}
 
+
+/* ================= ข้อมูลเกมที่ใช้ร่วมกัน (ฟาร์ม + สนามรบ) =================
+   ธาตุ 6 ธาตุ + ตารางแพ้ทาง และสกิลของทุกสายพันธุ์ (แก้ที่นี่ที่เดียว)
+   ระดับ: ทั่วไป 2 สกิล · หายาก 3 สกิล · ตำนาน/เทพเจ้า 3 สกิล + สกิลติดตัว (type:'passive') */
+const ELEM={
+  'ดิน':{c:'#c8a26a',i:'🪨'}, 'น้ำ':{c:'#5fb3ff',i:'💧'}, 'ลม':{c:'#6fe0b0',i:'🌪️'},
+  'ไฟ':{c:'#ff8a3a',i:'🔥'}, 'แสง':{c:'#ffd36a',i:'☀️'}, 'มืด':{c:'#b48cff',i:'🌙'}};
+// วงจรธาตุพื้นฐาน: น้ำ > ไฟ > ลม > ดิน > น้ำ (ตัวหน้าชนะตัวถัดไป)
+const EL_CYCLE=['น้ำ','ไฟ','ลม','ดิน'];
+const EL_ADV=1.3, EL_WEAK=.8, EL_LD=1.5, EL_LD_OVER=1.15, EL_LD_UNDER=.9;
+function elMul(a,d){
+  if(!a||!d||a===d)return 1;
+  const ia=EL_CYCLE.indexOf(a), id=EL_CYCLE.indexOf(d);
+  if(ia>=0&&id>=0){if((ia+1)%4===id)return EL_ADV;if((id+1)%4===ia)return EL_WEAK;return 1;}
+  if(ia<0&&id<0)return EL_LD;          // แสง ↔ มืด แพ้ทางกันเอง แรงทั้งสองฝั่ง
+  return ia<0?EL_LD_OVER:EL_LD_UNDER;  // แสง/มืด ได้เปรียบธาตุพื้นฐานทุกธาตุเล็กน้อย
+}
+// ข้อความอธิบายธาตุ (ใช้ในคลังมอนสเตอร์)
+function elInfo(e){
+  const all=Object.keys(ELEM), strong=all.filter(d=>elMul(e,d)>1), weak=all.filter(d=>elMul(d,e)>1&&elMul(e,d)<=1);
+  return {strong,weak};
+}
+const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ'};
+
+/* สกิล: mult = คูณพลังโจมตี · cd = คูลดาวน์ (เทิร์น; เรียลไทม์ ×2.3 วินาที) · stun = โอกาสทำให้มึน
+   passive: dmgLow (แรงขึ้นใส่ศัตรูเลือด<50%) · crit (เพิ่มโอกาสคริ) · revive (รอดตาย 1 ครั้ง คืนเลือด %) · teamAtk (ทั้งทีมแรงขึ้น) · dr (รับดาเมจลดลง) */
+const SKILLS={
+  // ---------- ทั่วไป ----------
+  kazemaru:[
+    {id:'s1',name:'ฟันดาบไม้',desc:'ฟันศัตรู 1 ตัว 100%',cd:0,type:'melee',mult:1,target:'one'},
+    {id:'s2',name:'ดาวกระจายจิ๋ว',desc:'ขว้างดาวกระจายใส่ศัตรูรอบตัว 50% · คูลดาวน์ 3',cd:3,type:'ranged',mult:.5,target:'all'}],
+  // ---------- หายาก ----------
+  kazekiri:[
+    {id:'s1',name:'ฟันเงา',desc:'ฟันศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
+    {id:'s2',name:'สามดาบวายุ',desc:'ฟัน 3 ครั้ง ครั้งละ 62% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.62,target:'one'},
+    {id:'s3',name:'กระโดดฟัน',desc:'ฟาดพื้นใส่ศัตรูรอบจุดตก 80% โอกาส 25% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.25}],
+  yorugumo:[
+    {id:'s1',name:'เขี้ยวพิษ',desc:'ยกขาหน้าแทงศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
+    {id:'s2',name:'ลูกแก้วมนตร์ม่วง',desc:'ร่ายลูกแก้วเวทใส่ศัตรูรอบเป้าหมาย 58% · คูลดาวน์ 3',cd:3,type:'ranged',mult:.58,target:'all'},
+    {id:'s3',name:'กระโจนใยมรณะ',desc:'กระโจนลงกลางศัตรู 78% โอกาส 30% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.78,target:'all',stun:.3}],
+  morihime:[
+    {id:'s1',name:'แทงหอกพงไพร',desc:'แทงศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
+    {id:'s2',name:'หอกพายุใบไม้',desc:'แทง 3 ครั้ง ครั้งละ 60% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.6,target:'one'},
+    {id:'s3',name:'หอกดิ่งฟ้า',desc:'กระโดดปักหอกใส่ศัตรูรอบจุดตก 80% โอกาส 30% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.3}],
+  // ---------- ตำนาน ----------
+  kuroga:[
+    {id:'s1',name:'ฟันเงาจันทร์',desc:'ฟันศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},
+    {id:'s2',name:'คมดาบราตรี',desc:'ฟัน 3 ครั้ง ครั้งละ 82% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.82,target:'one'},
+    {id:'s3',name:'ดิ่งฟันสังหาร',desc:'กระโดดฟาดศัตรูรอบจุดตก 105% โอกาส 35% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.05,target:'all',stun:.35},
+    {id:'s4',name:'สัญชาตญาณนักล่า',desc:'ติดตัว: โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 35%',type:'passive',passive:{dmgLow:.35}}],
+  hakuneko:[
+    {id:'s1',name:'ฟันตะวันทอง',desc:'ฟันศัตรู 1 ตัว 125%',cd:0,type:'melee',mult:1.25,target:'one'},
+    {id:'s2',name:'กรงเล็บเก้าชีวิต',desc:'ฟัน 3 ครั้ง ครั้งละ 80% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.8,target:'one'},
+    {id:'s3',name:'ดาบจันทร์เสี้ยว',desc:'กระโดดฟันศัตรูรอบจุดตก 110% โอกาส 30% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.1,target:'all',stun:.3},
+    {id:'s4',name:'เก้าชีวิต',desc:'ติดตัว: เมื่อเลือดหมดครั้งแรกจะรอดและฟื้นเลือด 35% (1 ครั้งต่อการต่อสู้) · โอกาสคริ +10%',type:'passive',passive:{revive:.35,crit:.1}}],
+  // ---------- เทพเจ้า ----------
+  amateru:[
+    {id:'s1',name:'กรงเล็บเพลิง',desc:'บินโฉบเข้าไปงับศัตรู 1 ตัว 140%',cd:0,type:'melee',mult:1.4,target:'one'},
+    {id:'s2',name:'ลมหายใจอัมพร',desc:'พ่นไฟใส่ศัตรูรอบเป้าหมาย 100% · คูลดาวน์ 3',cd:3,type:'ranged',mult:1,target:'all'},
+    {id:'s3',name:'ดิ่งฟ้าถล่ม',desc:'บินขึ้นฟ้าแล้วดิ่งลงกระแทกศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
+    {id:'s4',name:'หัวใจมังกรอัมพร',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 15% · อามาเทรุรับดาเมจลดลง 25% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.15,dr:.25,crit:.1}}]
+};
+const passiveOf=sp=>{const s=(SKILLS[sp]||[]).find(x=>x.type==='passive');return s?s.passive:null;};
 
 /* ================= เชื่อมต่อเซิร์ฟเวอร์ (Supabase) =================
    ออนไลน์: ทุกการใช้เหรียญ/อัมพร/สุ่มไข่/อัปเลเวล ให้เซิร์ฟเวอร์ตัดสิน (ดู setup_v2.sql)
@@ -2569,27 +2633,21 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=48;
 /* ================= คลังมอนสเตอร์ (ดูมอนสเตอร์ที่มี · อัปเลเวล · วิวัฒนาการ · จัดทีม) ================= */
 const SPEC={
   kazemaru:{name:'คาเซะมารุ',title:'นินจาฝึกหัดแห่งสายลม',rar:1,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:0,maxLv:20,evolveTo:'kazekiri',
-    base:{hp:64,atk:20,def:8,spd:26},lore:'ลูกนินจาตัวจิ๋วที่ฝึกฟันดาบไม้ทุกวัน ดวงตาเรืองแสงกะพริบได้เมื่อตื่นเต้น',
-    skills:[['ฟันดาบไม้','ฟันศัตรู 1 ตัว 100%'],['ดาวกระจายจิ๋ว','ขว้างดาวกระจายใส่ศัตรูทุกตัว 55% · คูลดาวน์ 3']]},
+    base:{hp:64,atk:20,def:8,spd:26},lore:'ลูกนินจาตัวจิ๋วที่ฝึกฟันดาบไม้ทุกวัน ดวงตาเรืองแสงกะพริบได้เมื่อตื่นเต้น'},
   kazekiri:{name:'คาเซะคิริ',title:'เงาสามดาบ',rar:2,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:1,maxLv:40,
-    base:{hp:102,atk:34,def:13,spd:42},lore:'นินจาเงาผู้ไร้ใบหน้า พกดาบสามเล่ม เคลื่อนไหวเงียบดั่งสายลมยามค่ำ',
-    skills:[['ฟันเงา','ฟันศัตรู 1 ตัว 110%'],['สามดาบวายุ','ฟัน 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['กระโดดฟัน','ฟาดพื้นใส่ศัตรูทุกตัว 85% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
+    base:{hp:102,atk:34,def:13,spd:42},lore:'นินจาเงาผู้ไร้ใบหน้า พกดาบสามเล่ม เคลื่อนไหวเงียบดั่งสายลมยามค่ำ'},
   yorugumo:{name:'โยรุกุโมะ',title:'จอมเวทแมงมุมราตรี',rar:2,el:'มืด',elc:'#b48cff',role:'เวทมนตร์',evo:1,spider:1,maxLv:40,
-    base:{hp:100,atk:34,def:14,spd:38},lore:'จอมเวทร่างครึ่งแมงมุมผู้ถักใยอยู่ในถ้ำลึกใต้ป่าอัมพร ลูกแก้วม่วงในมือทั้งสองรวบรวมแสงจันทร์ไว้เป็นเวทมนตร์',
-    skills:[['เขี้ยวพิษ','ยกขาหน้าแทงศัตรู 1 ตัว 110%'],['ลูกแก้วมนตร์ม่วง','ร่ายลูกแก้วเวทใส่ศัตรูทุกตัว 55% · คูลดาวน์ 3'],['กระโจนใยมรณะ','กระโจนลงกลางศัตรูทุกตัว 80% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
+    base:{hp:100,atk:34,def:14,spd:38},lore:'จอมเวทร่างครึ่งแมงมุมผู้ถักใยอยู่ในถ้ำลึกใต้ป่าอัมพร ลูกแก้วม่วงในมือทั้งสองรวบรวมแสงจันทร์ไว้เป็นเวทมนตร์'},
   kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:3,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
-    base:{hp:130,atk:48,def:16,spd:50},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า',
-    skills:[['ฟันเงาจันทร์','ฟันศัตรู 1 ตัว 120%'],['คมดาบราตรี','ฟัน 3 ครั้ง ครั้งละ 75% · คูลดาวน์ 3'],['ดิ่งฟันสังหาร','กระโดดฟาดศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
+    base:{hp:130,atk:48,def:16,spd:50},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า'},
   hakuneko:{name:'ฮาคุเนโกะ',title:'นักดาบแมวขาวแห่งตะวันทอง',rar:3,el:'แสง',elc:'#ffd36a',role:'จู่โจม',evo:1,rig:'hakuneko',maxLv:50,
-    base:{hp:120,atk:51,def:14,spd:56},lore:'นักดาบเผ่าแมวขาวผู้ร่าเริง แบกดาบโค้งไว้บนบ่าเสมอ ว่ากันว่าเธอมีเก้าชีวิตและยังไม่เคยใช้หมดสักครั้ง',
-    skills:[['ฟันตะวันทอง','ฟันศัตรู 1 ตัว 125%'],['กรงเล็บเก้าชีวิต','ฟัน 3 ครั้ง ครั้งละ 72% · คูลดาวน์ 3'],['ดาบจันทร์เสี้ยว','กระโดดฟันศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
+    base:{hp:120,atk:51,def:14,spd:56},lore:'นักดาบเผ่าแมวขาวผู้ร่าเริง แบกดาบโค้งไว้บนบ่าเสมอ ว่ากันว่าเธอมีเก้าชีวิตและยังไม่เคยใช้หมดสักครั้ง'},
   morihime:{name:'โมริฮิเมะ',title:'ธิดาหอกแห่งพงไพร',rar:2,el:'ไม้',elc:'#7fd46a',role:'จู่โจม',evo:1,rig:'morihime',maxLv:40,
-    base:{hp:110,atk:32,def:17,spd:38},lore:'เอลฟ์ผู้พิทักษ์ป่าลึก ผ้าคลุมปักลายใบไม้พลิ้วตามสายลม หอกยาวของเธอแทงได้แม่นยำราวกับเงาใบไม้ที่ร่วงหล่น',
-    skills:[['แทงหอกพงไพร','แทงศัตรู 1 ตัว 120%'],['หอกพายุใบไม้','แทง 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['หอกดิ่งฟ้า','กระโดดปักหอกใส่ศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
+    base:{hp:110,atk:32,def:17,spd:38},lore:'เอลฟ์ผู้พิทักษ์ป่าลึก ผ้าคลุมปักลายใบไม้พลิ้วตามสายลม หอกยาวของเธอแทงได้แม่นยำราวกับเงาใบไม้ที่ร่วงหล่น'},
   amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:4,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
-    base:{hp:175,atk:66,def:24,spd:56},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ',
-    skills:[['กรงเล็บเพลิง','บินโฉบเข้าไปงับศัตรู 1 ตัว 115%'],['ลมหายใจอัมพร','พ่นไฟใส่ศัตรูทุกตัว 70% · คูลดาวน์ 3'],['ดิ่งฟ้าถล่ม','ดิ่งลงกระแทกศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
-};
+    base:{hp:175,atk:66,def:24,spd:56},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ'},
+};// ธาตุและสกิลมาจาก gamedata.js
+Object.keys(SPEC).forEach(k=>{const e=EL_OF[k];if(e){SPEC[k].el=e;SPEC[k].elc=ELEM[e].c;}SPEC[k].skills=SKILLS[k]||[];});
 const spOf=d=>SPEC[d.sp]||SPEC.kazemaru;
 // ระดับมอนสเตอร์ 4 ขั้น: ทั่วไป < หายาก < ตำนาน < เทพเจ้า
 const TIER={1:{n:'ทั่วไป',c:'#c9d1dc',hx:0xc9d1dc},2:{n:'หายาก',c:'#5fb3ff',hx:0x5fb3ff},3:{n:'ตำนาน',c:'#ffc94d',hx:0xffc94d},4:{n:'เทพเจ้า',c:'#ff6ab0',hx:0xff6ab0}};
@@ -2729,10 +2787,12 @@ function renderDetail(){
   if(boxTab==='info'){
     const x=el('div','iExp');x.append(el('span',null,'LV'));const bar=el('div');const i=el('i');i.style.width=(m.lv/sp.maxLv*100)+'%';bar.append(i);bar.append(el('em',null,m.lv>=sp.maxLv?'MAX':m.lv+' / '+sp.maxLv));x.append(bar);P.append(x);
     const T=el('table','iTbl');
-    [['เลเวล',m.lv+' / '+sp.maxLv],['พลังชีวิต (HP)',fmt(st.hp*10)],['โจมตี (ATK)',st.atk*10],['ป้องกัน (DEF)',st.def*10],['ความเร็ว (SPD)',st.spd],['ธาตุ','ธาตุ'+sp.el],['พลังรวม',fmt(power(m)),'pw']]
-      .forEach(([k,v,c],j)=>{const r=el('tr',j===5?'sep':'');r.append(el('td',null,k));const td=el('td',c||null,v+'');if(j===5)td.style.color=sp.elc;r.append(td);T.append(r);});
+    {const EI=elInfo(sp.el), nm=l=>l.length?l.map(x=>ELEM[x].i+' '+x).join(' · '):'—';
+    [['เลเวล',m.lv+' / '+sp.maxLv],['พลังชีวิต (HP)',fmt(st.hp*10)],['โจมตี (ATK)',st.atk*10],['ป้องกัน (DEF)',st.def*10],['ความเร็ว (SPD)',st.spd],['ธาตุ',ELEM[sp.el].i+' ธาตุ'+sp.el],['ชนะทาง',nm(EI.strong),'adv'],['แพ้ทาง',nm(EI.weak),'weak'],['พลังรวม',fmt(power(m)),'pw']]
+      .forEach(([k,v,c],j)=>{const r=el('tr',j===5?'sep':'');r.append(el('td',null,k));const td=el('td',c||null,v+'');if(j===5)td.style.color=sp.elc;r.append(td);T.append(r);});}
     P.append(T);
-  }else if(boxTab==='skill'){sp.skills.forEach(([n,d],i)=>{const s=el('div','skr');s.append(el('span','skn',(i+1)+''));const t=el('div');t.append(el('b',null,n));t.append(el('p',null,d));s.append(t);P.append(s);});}
+  }else if(boxTab==='skill'){sp.skills.forEach((k,i)=>{const pv=k.type==='passive',s=el('div','skr'+(pv?' pas':''));s.append(el('span','skn',pv?'ติดตัว':(i+1)+''));const t=el('div');t.append(el('b',null,k.name));t.append(el('p',null,k.desc.replace(/^ติดตัว: /,'')));s.append(t);P.append(s);});
+    {const n=el('p','skNote','ทั่วไป 2 สกิล · หายาก 3 สกิล · ตำนานและเทพเจ้า 3 สกิล + สกิลติดตัว');P.append(n);}}
   else P.append(el('p','iLore',sp.lore));
   const inT=S.team.includes(m.uid);
   $('#mdTeam').innerHTML='';$('#mdTeam').append(el('span',null,inT?'ออกทีม':'ใส่ทีม'));$('#mdTeam').append(el('small',null,inT?'อยู่ในทีม':S.team.length>=6?'สลับตัวที่ 6':'ทีม '+S.team.length+'/6'));

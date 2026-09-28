@@ -9,7 +9,8 @@ function rtInit(u){
   u.skills.forEach(s=>{if(s.cd)u.skT[s.id]=s.cd*1.6*(.5+Math.random()*.6);});
   return u;
 }
-const ultOf=u=>u.skills[u.skills.length-1];
+const actSk=u=>u.skills.filter(s=>s.type!=='passive');
+const ultOf=u=>{const a=actSk(u);return a[a.length-1];};
 function nearestFoe(u){
   let best=null,bd=1e9;
   UNITS.forEach(o=>{if(!o.alive||o.side===u.side)return;const d=Math.hypot(o.w.position.x-u.w.position.x,o.w.position.z-u.w.position.z);if(d<bd){bd=d;best=o;}});
@@ -167,6 +168,7 @@ async function rtBattle(st,opts){
     if(waveIdx>0)alive('P').forEach(u=>{const h=Math.round(u.maxHp*.25);u.hp=Math.min(u.maxHp,u.hp+h);updateBar(u);popNum(u,'+'+h,'heal');});
     $('#wave').textContent=(OPTS.label?OPTS.label+' · ':'')+'คลื่น '+(waveIdx+1)+'/'+st.waves.length;
     const wv=st.waves[waveIdx], boss=wv.some(d=>d.boss);
+    {const e=wv.find(d=>d.el);if(e&&ELEM[e.el])$('#wave').textContent+=' · ศัตรูธาตุ'+e.el+' '+ELEM[e.el].i;}
     rtSpawn(wv);
     if(boss){shake=.25;banner('บอสปรากฏตัว!','boss');}
     else if(waveIdx===0&&OPTS.banner)banner(OPTS.banner,'');

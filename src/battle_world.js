@@ -15,34 +15,16 @@ const BT={
 /*__MAP__*/
 /* ================= ข้อมูลมอนสเตอร์และด่าน ================= */
 const SPECIES={
-  kazemaru:{name:'คาเซะมารุ',evo:0,base:{hp:64,atk:20,def:8,spd:26},skills:[
-    {id:'s1',name:'ฟันดาบไม้',desc:'ฟันศัตรู 1 ตัว 100%',cd:0,type:'melee',mult:1,target:'one'},
-    {id:'s2',name:'ดาวกระจายจิ๋ว',desc:'ขว้างดาวกระจายใส่ศัตรูทุกตัว 55%',cd:3,type:'ranged',mult:.55,target:'all'}]},
-  amateru:{name:'อามาเทรุ',evo:1,dragon:1,base:{hp:175,atk:66,def:24,spd:56},skills:[
-    {id:'s1',name:'กรงเล็บเพลิง',desc:'บินโฉบเข้าไปงับศัตรู 1 ตัว 115%',cd:0,type:'melee',mult:1.15,target:'one'},
-    {id:'s2',name:'ลมหายใจอัมพร',desc:'พ่นไฟใส่ศัตรูทุกตัว 70%',cd:3,type:'ranged',mult:.7,target:'all'},
-    {id:'s3',name:'ดิ่งฟ้าถล่ม',desc:'บินขึ้นฟ้าแล้วดิ่งลงกระแทกศัตรูทุกตัว 95% โอกาส 25% ทำให้มึน',cd:4,type:'leap',mult:.95,target:'all',stun:.25}]},
-  kuroga:{name:'คุโรกะ',evo:1,rig:'kuroga',base:{hp:130,atk:48,def:16,spd:50},skills:[
-    {id:'s1',name:'ฟันเงาจันทร์',desc:'ฟันศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},
-    {id:'s2',name:'คมดาบราตรี',desc:'ฟัน 3 ครั้ง ครั้งละ 75% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.75,target:'one'},
-    {id:'s3',name:'ดิ่งฟันสังหาร',desc:'กระโดดฟาดศัตรูทุกตัว 90% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.9,target:'all',stun:.3}]},
-  hakuneko:{name:'ฮาคุเนโกะ',evo:1,rig:'hakuneko',base:{hp:120,atk:51,def:14,spd:56},skills:[
-    {id:'s1',name:'ฟันตะวันทอง',desc:'ฟันศัตรู 1 ตัว 125%',cd:0,type:'melee',mult:1.25,target:'one'},
-    {id:'s2',name:'กรงเล็บเก้าชีวิต',desc:'ฟัน 3 ครั้ง ครั้งละ 72% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.72,target:'one'},
-    {id:'s3',name:'ดาบจันทร์เสี้ยว',desc:'กระโดดฟันศัตรูทุกตัว 95% โอกาส 25% ทำให้มึน',cd:4,type:'leap',mult:.95,target:'all',stun:.25}]},
-  morihime:{name:'โมริฮิเมะ',evo:1,rig:'morihime',base:{hp:110,atk:32,def:17,spd:38},skills:[
-    {id:'s1',name:'แทงหอกพงไพร',desc:'แทงศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},
-    {id:'s2',name:'หอกพายุใบไม้',desc:'แทง 3 ครั้ง ครั้งละ 70% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.7,target:'one'},
-    {id:'s3',name:'หอกดิ่งฟ้า',desc:'กระโดดปักหอกใส่ศัตรูทุกตัว 90% โอกาส 35% ทำให้มึน',cd:4,type:'leap',mult:.9,target:'all',stun:.35}]},
-  yorugumo:{name:'โยรุกุโมะ',evo:1,spider:1,base:{hp:100,atk:34,def:14,spd:38},skills:[
-    {id:'s1',name:'เขี้ยวพิษ',desc:'ยกขาหน้าแทงศัตรู 1 ตัว 110%',cd:0,type:'melee',mult:1.1,target:'one'},
-    {id:'s2',name:'ลูกแก้วมนตร์ม่วง',desc:'ร่ายลูกแก้วเวทใส่ศัตรูทุกตัว 55%',cd:3,type:'ranged',mult:.55,target:'all'},
-    {id:'s3',name:'กระโจนใยมรณะ',desc:'กระโจนลงกลางศัตรูทุกตัว 80% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.8,target:'all',stun:.3}]},
-  kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42},skills:[
-    {id:'s1',name:'ฟันเงา',desc:'ฟันศัตรู 1 ตัว 110%',cd:0,type:'melee',mult:1.1,target:'one'},
-    {id:'s2',name:'สามดาบวายุ',desc:'ฟัน 3 ครั้ง ครั้งละ 70% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.7,target:'one'},
-    {id:'s3',name:'กระโดดฟัน',desc:'ฟาดพื้นใส่ศัตรูทุกตัว 85% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.85,target:'all',stun:.3}]},
+  kazemaru:{name:'คาเซะมารุ',evo:0,base:{hp:64,atk:20,def:8,spd:26}},
+  amateru:{name:'อามาเทรุ',evo:1,dragon:1,base:{hp:175,atk:66,def:24,spd:56}},
+  kuroga:{name:'คุโรกะ',evo:1,rig:'kuroga',base:{hp:130,atk:48,def:16,spd:50}},
+  hakuneko:{name:'ฮาคุเนโกะ',evo:1,rig:'hakuneko',base:{hp:120,atk:51,def:14,spd:56}},
+  morihime:{name:'โมริฮิเมะ',evo:1,rig:'morihime',base:{hp:110,atk:32,def:17,spd:38}},
+  yorugumo:{name:'โยรุกุโมะ',evo:1,spider:1,base:{hp:100,atk:34,def:14,spd:38}},
+  kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42}},
 };
+// สกิลและธาตุมาจาก gamedata.js (ใช้ร่วมกับคลังมอนสเตอร์)
+Object.keys(SPECIES).forEach(k=>{SPECIES[k].skills=SKILLS[k];SPECIES[k].el=EL_OF[k];});
 const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6},{sp:'kazemaru',lv:5},{sp:'kazemaru',lv:4},{sp:'kazemaru',lv:4}];
 /* ด่านแบบ idle: ด่านที่ n ต้องการพลังทีม REQ(n) (ตรงกับเซิร์ฟเวอร์ _req) ด่านที่ 10,20,... เป็นบอส */
 const POWB=sp=>{const b=SPECIES[sp].base;return b.hp+b.atk*4+b.def*3+b.spd*2;};
@@ -50,20 +32,23 @@ const REQ=n=>Math.round(1400*Math.pow(1.04,Math.max(1,n)-1));
 const stLabel=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1);
 const teamPow=()=>Math.round(TEAM.reduce((s,d)=>s+POWB(d.sp)*(1+.1*(d.lv-1)),0));
 // จัดศัตรูให้พลังรวมประมาณ E
-function makeWave(defs,E){
+// ธาตุของศัตรู: เปลี่ยนไปตามด่านและคลื่น ให้การจัดทีมตามธาตุมีผล
+const EN_ELS=['ลม','ดิน','น้ำ','ไฟ','มืด','แสง'];
+const enemyEl=(n,i)=>EN_ELS[(n+i*2)%EN_ELS.length];
+function makeWave(defs,E,el){
   const sum=defs.reduce((s,d)=>s+POWB(d.sp),0), f=Math.max(.35,E/sum);
   const lv=Math.max(1,Math.round(1+10*(f-1))), mul=f/(1+.1*(lv-1));
-  return defs.map(d=>Object.assign({lv,mul},d));
+  return defs.map(d=>Object.assign({lv,mul},el?{el}:{},d));
 }
 function idleStage(n,E){
   const M='kazemaru',K='kazekiri', mk=(nm,nk)=>{const a=Array(nm).fill(M);for(let i=0;i<nk;i++)a.splice(Math.floor((i+.5)*a.length/(nk+.001)),0,K);return a;};
   const pool=n<4?[mk(6,0),mk(7,1),mk(8,1)]:n<10?[mk(8,1),mk(9,2),mk(10,2)]:[mk(9,2),mk(10,3),mk(11,3)];
   const cap=typeof LOW!=='undefined'&&LOW?7:99;
-  return {id:stLabel(n),name:'หน้าประตูนครอัมพร',waves:pool.map(k=>makeWave(k.slice(0,cap).map(sp=>({sp,show:n})),E))};
+  return {id:stLabel(n),name:'หน้าประตูนครอัมพร',waves:pool.map((k,i)=>makeWave(k.slice(0,cap).map(sp=>({sp,show:n})),E,enemyEl(n,i)))};
 }
 function bossStage(n){
   const R=REQ(n);
-  return {id:stLabel(n),name:'ประตูแดงของนินจาชาด',waves:[makeWave(['kazemaru','kazemaru','kazekiri','kazemaru','kazemaru','kazekiri','kazemaru','kazemaru'].map(sp=>({sp,show:n})),R*.55),makeWave(['kazemaru','kazemaru','kazemaru',null,'kazemaru','kazemaru','kazemaru'].map(sp=>sp?{sp,show:n}:{sp:'kazekiri',boss:1,show:n}),R*.85)]};
+  return {id:stLabel(n),name:'ประตูแดงของนินจาชาด',waves:[makeWave(['kazemaru','kazemaru','kazekiri','kazemaru','kazemaru','kazekiri','kazemaru','kazemaru'].map(sp=>({sp,show:n})),R*.55,enemyEl(n,0)),makeWave(['kazemaru','kazemaru','kazemaru',null,'kazemaru','kazemaru','kazemaru'].map(sp=>sp?{sp,show:n}:{sp:'kazekiri',boss:1,show:n}),R*.85,EN_ELS[(Math.ceil(n/10)+3)%EN_ELS.length])]};
 }
 const DRAGON_BATTLE_K=2; // มังกรในสนามรบใหญ่เป็น 2 เท่า (สัตว์ในตำนาน)
 const P_SLOTS=[[-12,0],[-14,-2.6],[-14,2.6],[-16.5,-5],[-16.5,0],[-16.5,5]], E_SLOTS=[[12,0],[14,-2.6],[14,2.6]];
@@ -113,7 +98,7 @@ function makeUnit(side,def,slot){
     name:side==='P'?sp.name:(def.boss?'หัวหน้านินจาชาด':sp.evo?'นินจาชาด':'นินจาชาดจิ๋ว'),
     maxHp:Math.round(sp.base.hp*f*bm), atk:Math.round(sp.base.atk*f*(def.boss?.85:1)), def:Math.round(sp.base.def*f), spd:sp.base.spd+def.lv,
     skills:sp.skills, cds:{}, gauge:Math.random()*30, stun:0, alive:true, w, inner, rig, home:new THREE.Vector3(x,0,z), face:w.rotation.y};
-  u.hp=u.maxHp;
+  u.hp=u.maxHp; u.el=def.el||sp.el; u.pas=passiveOf(def.sp); u.revived=false;
   const DK=sp.dragon?DRAGON_BATTLE_K:1; if(sp.dragon){w.scale.setScalar(DK);const R=inner.userData.rig;if(R&&R.st){R.st.alt=R.tg.alt=2.6;}}
   u.rad=sp.dragon?1.55*DK:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=4.95*DK;u.camS=2.1*DK;} u.reach=sp.dragon?1.9*DK:inner.userData.meshy?1.25:u.evo?1.0:.72;
   u.mats=[];w.traverse(o=>{if(o.isMesh){o.userData.unit=u.id;PICKU.push(o);if(o.material&&o.material.emissive&&u.mats.indexOf(o.material)<0)u.mats.push(o.material);}});
@@ -228,16 +213,29 @@ async function throwAt(u,t){
 function shockRing(pos,color){const m=new THREE.Mesh(new THREE.RingGeometry(.3,.45,64),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.position.copy(pos).setY(.04);scene.add(m);tween(.55,k=>{m.scale.setScalar(1+k*7);m.material.opacity=.9*(1-k);},easeOut).then(()=>{scene.remove(m);m.geometry.dispose();m.material.dispose();});}
 
 /* ================= คำนวณดาเมจ ================= */
+// ทีมได้บัฟโจมตีจากสกิลติดตัว (ไม่ซ้อนกัน ใช้ค่าสูงสุดของทีม)
+let elTipT=0;
+function teamAtkOf(side){let m=0;UNITS.forEach(o=>{if(o.alive&&o.side===side&&o.pas&&o.pas.teamAtk)m=Math.max(m,o.pas.teamAtk);});return m;}
 function dealHit(att,t,skill){
   if(!t.alive)return;
-  const crit=Math.random()<.15;
+  const ap=att.pas||{}, tp=t.pas||{}, em=elMul(att.el,t.el);
+  const crit=Math.random()<.15+(ap.crit||0);
   let d=att.atk*skill.mult*(.9+Math.random()*.2)*(crit?1.5:1)*60/(60+t.def);
+  d*=em*(1+teamAtkOf(att.side));
+  if(ap.dmgLow&&t.hp<t.maxHp*.5)d*=1+ap.dmgLow;
+  if(tp.dr)d*=1-tp.dr;
   d=Math.max(1,Math.round(d));
   t.hp=Math.max(0,t.hp-d);
-  popNum(t,(crit?'คริ! ':'')+d,crit?'crit':'dmg');
+  popNum(t,d+(em>1?' ▲':em<1?' ▼':''),crit?'crit':em>1?'dmg adv':em<1?'dmg weak':'dmg');
+  if(em>1&&performance.now()-elTipT>2500){elTipT=performance.now();setTimeout(()=>popNum(t,'แพ้ทางธาตุ!','info adv'),120/SPEED);}
   shake=Math.max(shake,crit?.14:.07);
-  particles(tmpV.copy(t.w.position).setY(t.evo?1.3:.8),crit?0xffd27a:0xffffff,crit?16:9,2,.05,1.4);
-  hitArc(tmpV.copy(t.w.position).setY(t.evo?1.35:.8).add(new THREE.Vector3(0,0,.3)),(Math.random()-.5)*1.6+(att.side==='P'?.4:-.4)+Math.PI*(Math.random()<.5?0:1),crit?0xffd27a:0xe8f0ff,t.boss?1.4:1);
+  particles(tmpV.copy(t.w.position).setY(t.evo?1.3:.8),crit?0xffd27a:em>1?0xffb070:0xffffff,crit?16:9,2,.05,1.4);
+  hitArc(tmpV.copy(t.w.position).setY(t.evo?1.35:.8).add(new THREE.Vector3(0,0,.3)),(Math.random()-.5)*1.6+(att.side==='P'?.4:-.4)+Math.PI*(Math.random()<.5?0:1),crit?0xffd27a:em>1?0xffa060:0xe8f0ff,t.boss?1.4:1);
+  if(t.hp<=0&&tp.revive&&!t.revived){ // สกิลติดตัว: รอดตาย 1 ครั้ง
+    t.revived=true; t.hp=Math.round(t.maxHp*tp.revive);
+    setTimeout(()=>popNum(t,'เก้าชีวิต! +'+t.hp,'heal'),200/SPEED);
+    particles(tmpV.copy(t.w.position).setY(1),0xfff0a0,26,1.8,.06,1.2,.9); shockRing(tmpV.copy(t.w.position),0xffe08a);
+  }
   if(skill.stun&&t.hp>0&&Math.random()<skill.stun){t.stun=1;setTimeout(()=>popNum(t,'มึน','info'),250/SPEED);}
   updateBar(t);
   if(t.hp<=0)die(t); else react(t,att.w.position.x);

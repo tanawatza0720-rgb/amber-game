@@ -2,8 +2,8 @@
 const ov=$('#ov');
 function makeBar(u){
   const b=document.createElement('div'); b.className='ubar '+(u.side==='P'?'p':'e')+(u.boss?' boss':'');
-  b.innerHTML='<div class="un"><span class="lv"></span><span class="nm"></span><span class="st" hidden>มึน</span></div><div class="hp"><i></i><em></em></div><div class="atb"><i></i></div>';
-  b.querySelector('.lv').textContent=u.lv; b.querySelector('.nm').textContent=u.name; ov.appendChild(b); u.barEl=b; setTimeout(()=>updateBar(u),0); return b;
+  b.innerHTML='<div class="un"><span class="lv"></span><span class="el"></span><span class="nm"></span><span class="st" hidden>มึน</span></div><div class="hp"><i></i><em></em></div><div class="atb"><i></i></div>';
+  b.querySelector('.lv').textContent=u.lv; b.querySelector('.nm').textContent=u.name; {const e=b.querySelector('.el'),E=ELEM[u.el];if(E){e.textContent=E.i;e.title='ธาตุ'+u.el;}else e.remove();} ov.appendChild(b); u.barEl=b; setTimeout(()=>updateBar(u),0); return b;
 }
 function updateBar(u){const b=u.barEl;if(!b)return;b.querySelector('.hp i').style.width=(u.hp/u.maxHp*100)+'%';b.querySelector('.hp em').textContent=u.hp+'/'+u.maxHp;b.querySelector('.st').hidden=!u.stun;}
 function popNum(u,text,cls){
@@ -41,7 +41,7 @@ let AUTO=false, choose=null;
 function pickDefaultTarget(){const es=alive('E');if(target&&target.alive)return target;return es.reduce((a,b)=>a.hp/a.maxHp<b.hp/b.maxHp?a:b,es[0]);}
 function showSkills(u){
   const box=$('#skills');box.innerHTML='';box.hidden=false;
-  u.skills.forEach(s=>{const cd=u.cds[s.id]||0;const b=document.createElement('button');b.className='sk'+(s.id!=='s1'?' sp':'');b.disabled=cd>0;
+  u.skills.filter(s=>s.type!=='passive').forEach(s=>{const cd=u.cds[s.id]||0;const b=document.createElement('button');b.className='sk'+(s.id!=='s1'?' sp':'');b.disabled=cd>0;
     b.innerHTML='<b></b><small></small>'+(cd?'<i class="cd"></i>':'');b.querySelector('b').textContent=s.name;b.querySelector('small').textContent=s.target==='all'?'ศัตรูทุกตัว':'ศัตรู 1 ตัว';if(cd)b.querySelector('.cd').textContent=cd;
     b.title=s.desc;b.onclick=()=>{if(choose){const c=choose;choose=null;c(s);}};
     b.onpointerenter=()=>{$('#skdesc').textContent=s.desc;};box.appendChild(b);});
@@ -50,7 +50,7 @@ function showSkills(u){
 }
 function hideSkills(){$('#skills').hidden=true;$('#skdesc').textContent='';$('#acthd').hidden=true;}
 function aiChoose(u){
-  const ready=u.skills.filter(s=>!(u.cds[s.id]>0));
+  const ready=u.skills.filter(s=>s.type!=='passive'&&!(u.cds[s.id]>0));
   let s=ready.find(x=>x.id==='s3')||(ready.find(x=>x.id==='s2')&&Math.random()<.7?ready.find(x=>x.id==='s2'):null)||u.skills[0];
   const foes=alive(u.side==='P'?'E':'P');
   const t=Math.random()<.6?foes.reduce((a,b)=>a.hp<b.hp?a:b,foes[0]):foes[Math.floor(Math.random()*foes.length)];

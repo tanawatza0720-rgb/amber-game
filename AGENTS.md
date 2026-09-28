@@ -36,6 +36,7 @@ privacy.html
 | `kazemaru.html` | ไฟล์ต้นทางของ **ตัวช่วยร่วม** (texture ที่วาดเอง, ฟังก์ชันสร้างรูปทรง `P()` `J()` `glow()` `particles()` `tween()` `katana()` `buildMonster()` ฯลฯ) build จะ "ตัด" ช่วงโค้ดตาม **คอมเมนต์มาร์กเกอร์** ภาษาไทย — ห้ามแก้/ลบบรรทัดมาร์กเกอร์ `/* ---------- ตัวช่วยสร้างรูปทรง ---------- */` เป็นต้น |
 | `trail_patch.py` | แพตช์แสงแนวดาบ (trail) ใส่ในตัวช่วยร่วมตอน build |
 | `farm_shell.html` | HTML/CSS ของหน้าฟาร์ม + ช่องว่าง `/*__SHARED__*/ /*__WORLD__*/ /*__UI__*/ /*__BOX__*/` |
+| `gamedata.js` | **ข้อมูลกลางที่ทั้งฟาร์มและสนามรบใช้**: ธาตุ `ELEM` + ตารางแพ้ทาง `elMul(ธาตุผู้ตี, ธาตุผู้โดน)`, ธาตุของแต่ละตัว `EL_OF`, สกิลทุกตัว `SKILLS` (รวมสกิลติดตัว `type:'passive'`) — แก้สกิล/ธาตุที่นี่ที่เดียว |
 | `net.js` | เชื่อม Supabase ฝั่งฟาร์ม (`api()`, `act()` เรียก RPC) + **LocalServer ออฟไลน์** (`LOCAL`, ตาราง `SPS`) ที่กติกาเหมือนเซิร์ฟเวอร์ |
 | `farm_world.js` | ฉากฟาร์ม 3D, สิ่งก่อสร้าง, มอนสเตอร์เดินเล่น (agents), `applyState()` |
 | `farm_ui.js` | HUD, แผ่นข้อมูลอาคาร (`INFO.hatch/dojo/...`), ฟักไข่, รายวัน, ภารกิจ, จดหมาย |
@@ -44,7 +45,7 @@ privacy.html
 | `meshy_rig.js` | โหลดโมเดลมนุษย์ที่มีกระดูก Mixamo (`RIG_URLS`) + **retarget ท่า Mixamo** (`MXA` จาก `kzr/kazekiri_anims.json`) + ดาบในมือ (`gripFix`, `makeFist`) + อาวุธเดิมของโมเดล (`weapon_prop`) |
 | `dragon.js` | มังกรอามาเทรุ: สร้างกระดูก 30 ชิ้นเองตอนโหลด, สปริงทุกข้อ, ท่า `dragonBite/Breath/Dive/Roar/Claw/Tail/Swoop/Strafe/Gust/Victory` |
 | `spider.js` | โยรุกุโมะ (จอมเวทแมงมุม): โหลด `spd/spider_rig.json` (กระดูกตั้งชื่อเอง root/abdomen/spine…head, armR/L, legL1..4/legR1..4 + b/c/t), ท่าทางคำนวณสดด้วยสปริง, ท่า `spiderStrike/Cast/Leap/React/Die/Victory`, ตั้งค่าผ่าน `spiderSet(u,{walk,rear,stab,cast,crouch,recoil,dead},เวลา)` |
-| `battle_world.js` | ข้อมูลตัวละครในสนามรบ `SPECIES` (ค่าพลัง+สกิล), สร้างยูนิต `makeUnit`, ตำแหน่งทีม `P_SLOTS`, แทรก `battle_map.js` ตรง `/*__MAP__*/` |
+| `battle_world.js` | ข้อมูลตัวละครในสนามรบ `SPECIES` (ค่าพลัง; สกิล/ธาตุดึงจาก gamedata.js), คำนวณดาเมจ `dealHit` (ธาตุ + สกิลติดตัว), ธาตุศัตรูแต่ละคลื่น `enemyEl`, สร้างยูนิต `makeUnit`, ตำแหน่งทีม `P_SLOTS`, แทรก `battle_map.js` ตรง `/*__MAP__*/` |
 | `battle_map.js` | แผนที่ใหญ่: กำแพงเมือง หอคอยคู่ เมือง ค่ายศัตรู เครื่องยิงหิน ระเบิด ไฟ ควัน, ธง `BIG` `LOW` `FXK` (ลดเอฟเฟกต์บนมือถือ), `mapTick()` |
 | `battle_net.js` | เชื่อม Supabase ฝั่งสนามรบ (`brpc()`), โหลดทีมจริง `bnApply()` |
 | `battle_rt.js` | เอนจินต่อสู้เรียลไทม์: `rtTick` (AI เดิน/ตี), `rtUse` (ใช้สกิล), ตาราง `ANIM` (ท่า Mixamo ของแต่ละตัว) |
@@ -89,8 +90,8 @@ python3 build_battle.py && cp battle.html ../battle.html
 
 ### เพิ่มตัวละครมนุษย์ใหม่ ต้องแก้ 6 ที่ให้ตรงกัน
 1. `meshy_rig.js` → `RIG_URLS` + `loadMeshy()` (โหลดล่วงหน้า)
-2. `monbox.js` → `SPEC` (ชื่อ, ฉายา, rar, ธาตุ, ค่าพลัง, lore, สกิล) + `FACE` (กรอบรูปหน้า)
-3. `battle_world.js` → `SPECIES` (ค่าพลัง + สกิล `type: melee/melee3/ranged/leap`)
+2. `monbox.js` → `SPEC` (ชื่อ, ฉายา, rar, ค่าพลัง, lore) + `FACE` (กรอบรูปหน้า)
+3. `battle_world.js` → `SPECIES` (ค่าพลัง) · `gamedata.js` → `EL_OF` (ธาตุ) + `SKILLS` (สกิล `type: melee/melee3/ranged/leap/passive`)
 4. `battle_rt.js` → `ANIM` (ท่าที่ใช้ตอน s1/s2/s3) · `battle_ui.js` → ชื่อย่อในแถบลำดับ
 5. `net.js` → `SPS` (โหมดออฟไลน์)
 6. **เซิร์ฟเวอร์**: `insert into public.species (sp,name,rar,max_lv,...)` + ตั้ง `pow` (= hp + atk×4 + def×3 + spd×2) — การฟักไข่สุ่มตาม `rar` เอง ไม่ต้องแก้ฟังก์ชัน
@@ -133,3 +134,13 @@ python3 build_battle.py && cp battle.html ../battle.html
 - ตรวจความเนียนของผิวโมริฮิเมะตอนขยับ (rig ทำเองไม่ผ่าน Mixamo)
 - ท่าเฉพาะของหอก (ตอนนี้โมริฮิเมะใช้ท่าดาบ)
 - ทดสอบความลื่นบนมือถือรุ่นล่าง
+
+## ระบบสกิลและธาตุ (gamedata.js)
+
+**จำนวนสกิลตามระดับ:** ทั่วไป 2 (โจมตีปกติ + ท่า 1) · หายาก 3 · ตำนาน 3 + ติดตัว · เทพเจ้า 3 + ติดตัว (แรงสุด)
+- ช่วงตัวคูณ s1: ทั่วไป 1.0 · หายาก 1.05 · ตำนาน 1.2–1.25 · เทพเจ้า 1.4 · ท่าสุดท้าย (ไม้ตาย) หายาก ~0.8 · ตำนาน ~1.05–1.1 · เทพเจ้า 1.5
+- สกิลติดตัว `passive:{...}` ที่ `dealHit` รองรับ: `dmgLow` (แรงขึ้นใส่ศัตรูเลือด<50%), `crit` (+โอกาสคริ), `revive` (รอดตาย 1 ครั้ง คืนเลือด %), `teamAtk` (ทั้งทีมแรงขึ้น ใช้ค่าสูงสุดในทีม ไม่ซ้อน), `dr` (รับดาเมจลดลง)
+- ท่าไม้ตาย = สกิล active ตัวสุดท้าย (`ultOf` ข้าม passive)
+
+**ธาตุ 6 ธาตุ:** วงจร น้ำ > ไฟ > ลม > ดิน > น้ำ (ชนะทาง ×1.3, แพ้ทาง ×0.8) · แสง ↔ มืด ×1.5 ทั้งสองฝั่ง · แสง/มืด ตีธาตุพื้นฐาน ×1.15 และโดนธาตุพื้นฐานตี ×0.9
+- ศัตรูทุกคลื่นมีธาตุ (`enemyEl(ด่าน, คลื่น)`) แสดงบนแถบ "คลื่น" ด้านบน · ยังไม่มีตัวละครธาตุน้ำ
