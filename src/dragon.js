@@ -106,32 +106,54 @@ function buildDragon(){
   const T3=(b,x,y,z)=>b.userData.sp.t.set(x,y,z);
   let ph=Math.random()*6, lastT=null, lookY=0,lookX=0,lookT=0,lookTY=0,lookTX=0, stretchT=4+Math.random()*4, stretchK=0;
   const lastP=new THREE.Vector3(), lastYaw={v:null}; let turnV=0, fwdV=0;
+  const PV={}; // ความเร็วของแต่ละค่าท่าทาง (ทำให้เปลี่ยนท่าแบบเร่ง-ผ่อน ไม่กระชาก)
+  const vis=new THREE.Vector3(), visV=new THREE.Vector3(); let visYaw=null, yawV=0, visInit=false;
+  let glideT=3+Math.random()*4, glideOn=0, glideK=0;
   m.userData.idle=T=>{
     const dt=lastT==null?0:Math.min(.1,T-lastT); lastT=T; const gdt=dt*(typeof SPEED!=='undefined'?SPEED*HS:1);
-    for(const k in R.tg){const r=R.rate[k]||4;st[k]+=(R.tg[k]-st[k])*Math.min(1,gdt*r*3.2);}
+    // ค่าท่าทาง: สปริงหน่วงวิกฤต (มีความเร็ว) แทนการเลื่อนตรงๆ -> เริ่ม/หยุดท่านุ่มนวล
+    { const n0=Math.max(1,Math.ceil(gdt/(1/120))), h0=gdt/n0;
+      for(const k in R.tg){const om=Math.min(55,(R.rate[k]||4)*3.2*1.9);let v=PV[k]||0;
+        for(let i=0;i<n0;i++){v+=(om*om*(R.tg[k]-st[k])-2*om*v)*h0;st[k]+=v*h0;} PV[k]=v;} }
+    // ตัวที่มองเห็นตามตำแหน่ง/ทิศจริงแบบสปริง: การย้ายตำแหน่งหรือหันตัวกะทันหันจะถูกทำให้โค้งนุ่ม
+    { const W=w, sc=W.scale.x||1;
+      if(!visInit||vis.distanceTo(W.position)>8*sc){vis.copy(W.position);visV.set(0,0,0);visYaw=W.rotation.y;yawV=0;visInit=true;}
+      const kP=46, cP=2*Math.sqrt(kP)*.92, kY=38, cY=2*Math.sqrt(kY);
+      const n1=Math.max(1,Math.ceil(gdt/(1/120))), h1=gdt/n1;
+      for(let i=0;i<n1;i++){
+        visV.x+=((W.position.x-vis.x)*kP-visV.x*cP)*h1; visV.y+=((W.position.y-vis.y)*kP-visV.y*cP)*h1; visV.z+=((W.position.z-vis.z)*kP-visV.z*cP)*h1;
+        vis.addScaledVector(visV,h1);
+        let dy=W.rotation.y-visYaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); yawV+=(dy*kY-yawV*cY)*h1; visYaw+=yawV*h1;}
+      const ox=(vis.x-W.position.x)/sc, oy=(vis.y-W.position.y)/sc, oz=(vis.z-W.position.z)/sc, cy=Math.cos(-W.rotation.y), sy=Math.sin(-W.rotation.y);
+      m.position.set(ox*cy+oz*sy, oy, -ox*sy+oz*cy);
+      let ry=visYaw-W.rotation.y; m.rotation.y=Math.atan2(Math.sin(ry),Math.cos(ry)); }
     // ความเร็วจริงของตัว (ใช้ทำแรงเฉื่อย: หางลาก ตัวเอียง)
-    const W=w; if(lastYaw.v==null){lastYaw.v=W.rotation.y;lastP.copy(W.position);}
-    if(gdt>0){let dy=W.rotation.y-lastYaw.v;dy=Math.atan2(Math.sin(dy),Math.cos(dy));turnV+=(dy/gdt-turnV)*Math.min(1,gdt*6);
-      const dv=W.position.clone().sub(lastP);fwdV+=((dv.x*Math.sin(W.rotation.y)+dv.z*Math.cos(W.rotation.y))/gdt-fwdV)*Math.min(1,gdt*5);}
-    lastYaw.v=W.rotation.y; lastP.copy(W.position);
+    if(lastYaw.v==null){lastYaw.v=visYaw;lastP.copy(vis);}
+    if(gdt>0){let dy=visYaw-lastYaw.v;dy=Math.atan2(Math.sin(dy),Math.cos(dy));turnV+=(dy/gdt-turnV)*Math.min(1,gdt*6);
+      const dv=vis.clone().sub(lastP);fwdV+=((dv.x*Math.sin(visYaw)+dv.z*Math.cos(visYaw))/gdt-fwdV)*Math.min(1,gdt*5);}
+    lastYaw.v=visYaw; lastP.copy(vis);
     // มองซ้ายขวาเป็นระยะ + ยืดปีกเล่นเวลาว่าง
     lookT-=gdt; if(lookT<=0){lookT=1.2+Math.random()*2.5;lookTY=(Math.random()-.5)*.9;lookTX=(Math.random()-.5)*.35;}
     lookY+=(lookTY-lookY)*Math.min(1,gdt*2.5); lookX+=(lookTX-lookX)*Math.min(1,gdt*2.5);
     const calm=Math.max(0,1-st.rear-st.lunge-st.roar-st.breath-st.fold-Math.abs(st.tailWhip)-st.droop);
     stretchT-=gdt; if(stretchT<=0){stretchT=6+Math.random()*6;stretchK=1;} stretchK=Math.max(0,stretchK-gdt*.6);
+    // ร่อน: หยุดตีปีกเป็นพักๆ กางปีกรับลม แล้วค่อยกลับมาตีปีก
+    glideT-=gdt; if(glideT<=0){if(glideOn){glideOn=0;glideT=4+Math.random()*5;}else{glideOn=1;glideT=1.3+Math.random()*1.2;}}
+    glideK+=((glideOn&&st.fly>.5?calm:0)-glideK)*Math.min(1,gdt*2.2);
     const stretchA=Math.sin(Math.min(1,1-stretchK)*Math.PI)*calm*(stretchK>0?1:0);
     // จังหวะปีก: ตีลงเร็ว ยกขึ้นช้า
-    ph+=gdt*(5.2*st.flapSpd*(1-st.droop*.6)*(1-stretchA*.5));
+    ph+=gdt*(5.2*st.flapSpd*(1-st.droop*.6)*(1-stretchA*.5)*(1-glideK*.55));
     const sp=ph+.5*Math.sin(ph), fl=Math.sin(sp), vel=Math.cos(sp), up=Math.max(0,-vel);
-    const amp=st.flapAmp*(1-st.fold)*(1-st.droop*.7)*(1-stretchA*.6), open=.38-st.fold*1.3+(st.spread+stretchA*.8)*.3-st.droop*.5;
+    const amp=st.flapAmp*(1-st.fold)*(1-st.droop*.7)*(1-stretchA*.6)*(1-glideK*.82), open=.38-st.fold*1.3+(st.spread+stretchA*.8+glideK*.7)*.3-st.droop*.5;
     const sweep=st.fold*.75-(st.spread+stretchA)*.25;
     WL.forEach((b,i)=>{const lag=i*.75, a=[open+fl*amp, Math.sin(sp-lag)*amp*.55+up*amp*.3-st.fold*.7+(st.spread+stretchA)*.12, Math.sin(sp-lag)*amp*.5+up*amp*.25-st.fold*.5+stretchA*.1, Math.sin(sp-lag)*amp*.45-st.fold*.3][i];
       const tw=vel*amp*.18*(i+1)/4, sy=i===0?sweep-up*.14*amp:(st.fold*.4-stretchA*.1)*(i<3?1:.5)+Math.sin(sp-lag-.5)*.1*amp;
       T3(b,tw,sy,-a); T3(WR[i],tw,-sy,a);});
     // ลำตัว: ขึ้นลงตามปีก เอียงตามการเลี้ยว ก้มตามความเร็ว
-    const lift=st.fly*(.9+(-Math.sin(sp-.6))*.18*st.flapAmp/.55)+st.rise+Math.sin(T*.9)*.05;
+    const lift=st.fly*(.9+(-Math.sin(sp-.6))*.18*amp/.55)+st.rise+Math.sin(T*.9)*.05-glideK*.12;
     hover.position.y=baseY+(lift+st.alt*(1+Math.sin(T*.7)*.08))*(1-st.dead)-st.droop*.25;
-    hover.position.x=Math.sin(T*.55)*.22*calm; hover.position.z=Math.sin(T*1.1)*.12*calm;
+    hover.position.x=Math.sin(T*.55)*.3*calm; hover.position.z=Math.sin(T*1.1)*.16*calm;
+    hover.rotation.z=Math.sin(T*.55+1.2)*.05*calm; hover.rotation.x=glideK*.06*calm;
     const lean=Math.min(.35,Math.max(-.2,fwdV*.06)), bank=st.bank*.35-turnV*.12;
     T3(N.hips,-st.rear*.3+st.lunge*.18+lean*.5-st.pitch*.45+Math.sin(sp+2)*.04*st.fly+st.dead*.25+st.droop*.12-st.recoil*.12, 0, bank);
     T3(N.sp,-st.rear*.2+st.lunge*.1+Math.sin(sp+1.6)*.03, turnV*.05, bank*.4);
@@ -221,7 +243,7 @@ async function dragonFly(u,to,dur,h){
 async function dragonBite(u,t,onHit){
   const dir=dragonDir(u), home=u.w.position.clone();
   // ง้าง: ยืดตัวขึ้น กางปีกค้าง หัวเงย
-  const altB=u.rig.st.alt; dragonSet(u,{rear:1,spread:1,flapAmp:.25,flapSpd:.6,rise:.35,jaw:1,alt:altB*.35},.22); await wait(300);
+  const altB=u.rig.st.alt; dragonSet(u,{rear:1,spread:1,flapAmp:.25,flapSpd:.6,rise:.35,jaw:1,alt:Math.min(altB,.6)},.22); await wait(300);
   // พุ่ง
   dragonSet(u,{rear:0,lunge:1,spread:.3,flapAmp:.9,flapSpd:2.2,rise:0,jaw:0,legF:.7},.08);
   const LG=.7*u.w.scale.x; await tween(.12,k=>u.w.position.copy(home).addScaledVector(dir,LG*k),easeIn);
@@ -271,7 +293,7 @@ async function dragonDive(u,c,foes,onHit){
   // ทะยาน: ตีปีกแรง ฝุ่นฟุ้ง
   dragonSet(u,{flapSpd:2.6,flapAmp:.95,rear:.6,spread:.5},.15);
   smoke(tmpV.copy(from).setY(.2)); particles(tmpV.copy(from).setY(.1),0xb8a888,26,2.4,.35,-.2,.5);
-  const apex=from.clone().lerp(c,.45).setY(5.5*u.w.scale.x);
+  const apex=from.clone().lerp(c,.45).setY(6.5*u.w.scale.x);
   await tween(.6,t=>{u.w.position.lerpVectors(from,apex,t);u.w.position.y=apex.y*Math.sin(t*Math.PI*.5);},easeOut);
   // ค้างกลางฟ้า หุบปีก ตัวลุกเป็นไฟ
   dragonSet(u,{fold:.9,lunge:1,rear:0,breath:1,flapAmp:.15,spread:0},.18);
@@ -307,7 +329,7 @@ async function dragonRoar(u,dur){
 /* ---------- ตะปบซ้าย-ขวา ---------- */
 async function dragonClaw(u,t,onHit){
   const dir=dragonDir(u), home=u.w.position.clone();
-  const altC=u.rig.st.alt; dragonSet(u,{legF:.6,lunge:.3,rear:.35,spread:.5,flapAmp:.8,flapSpd:1.6,jaw:.4,alt:altC*.3},.18); await wait(240);
+  const altC=u.rig.st.alt; dragonSet(u,{legF:.6,lunge:.3,rear:.35,spread:.5,flapAmp:.8,flapSpd:1.6,jaw:.4,alt:Math.min(altC,.5)},.18); await wait(240);
   for(const side of ['clawL','clawR']){
     dragonSet(u,{[side]:-.6},.1); await wait(130);
     dragonSet(u,{[side]:1,rear:0,lunge:.8},.07);
@@ -343,16 +365,89 @@ async function dragonSwoop(u,t,onHit){
 }
 /* ---------- หมุนตัวฟาดหาง ---------- */
 async function dragonTail(u,t,onHit){
-  const y0=u.w.rotation.y;
-  dragonSet(u,{tailWhip:-1,rise:.35,spread:.7,flapSpd:2.2,flapAmp:.8},.15); await wait(260);
+  const y0=u.w.rotation.y, altT=u.rig.st.alt;
+  dragonSet(u,{tailWhip:-1,rise:.35,spread:.7,flapSpd:2.2,flapAmp:.8,alt:Math.min(altT,.7)},.2); await wait(300);
   dragonSet(u,{tailWhip:1},.12);
   let hit=false;
   await tween(.6,k=>{u.w.rotation.y=y0+k*Math.PI*2;
     if(!hit&&k>.42){hit=true;onHit();const c=t.w.position.clone().setY(.05);shockRing(c,0xffe0a0);shake=Math.max(shake,.22);particles(tmpV.copy(c).setY(.2),0xb8a888,18,2,.3,-.2,.5);hitArc(tmpV.copy(c).setY(1),0,0xffd090,1.6);}},easeIO);
-  u.w.rotation.y=y0; dragonSet(u,{tailWhip:0,rise:0,spread:0,flapSpd:1,flapAmp:.55},.3); await wait(220);
+  u.w.rotation.y=y0; dragonSet(u,{tailWhip:0,rise:0,spread:0,flapSpd:1,flapAmp:.55,alt:altT},.45); await wait(260);
 }
 async function dragonDie(u){
   dragonSet(u,{flapSpd:2.8,flapAmp:1,rear:.8,spread:1},.1); await wait(260);
   dragonSet(u,{fold:1,dead:1,flapAmp:.1,rear:0,spread:0,breath:0},.5); await wait(520); shake=Math.max(shake,.18);
   particles(tmpV.copy(u.w.position).setY(.3),0xb8b0a0,28,1.8,.32,-.3,.5); embers(u.w.position.clone(),12,1.6);
+}
+
+const bez2=(a,b,c,k,o)=>o.copy(a).multiplyScalar((1-k)*(1-k)).addScaledVector(b,2*k*(1-k)).addScaledVector(c,k*k);
+function followPath(u,P,Q,turn,bankK){const yaw=Math.atan2(Q.x-P.x,Q.z-P.z);let d=yaw-u.w.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));u.w.rotation.y+=d*turn;u.rig.tg.bank=Math.max(-1,Math.min(1,-d*bankK));}
+/* ---------- บินพ่นไฟกวาดแนว: ลดระดับบินผ่านกลุ่มศัตรู พ่นไฟลงพื้นเป็นทาง แล้วไต่กลับ ---------- */
+async function dragonStrafe(u,foes,hitOne){
+  const K=u.w.scale.x, from=u.w.position.clone(), c=new THREE.Vector3();
+  foes.forEach(f=>c.add(f.w.position)); c.divideScalar(Math.max(1,foes.length)); c.y=0;
+  const dir=c.clone().sub(from).setY(0).normalize(), sgn=Math.random()<.5?-1:1, side=new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar(sgn);
+  const start=from.clone(), ctrl=from.clone().lerp(c,.55).addScaledVector(side,2.2*K), end=c.clone().addScaledVector(dir,6*K).addScaledVector(side,-1.2*K);
+  const alt0=u.rig.st.alt;
+  // ขึ้นเล็กน้อย สูดไฟ
+  dragonSet(u,{alt:alt0+.5,flapSpd:2,flapAmp:.85,spread:.5,pitch:-.35,breath:.6,jaw:.4},.25);
+  await chargeIn(u,380);
+  dragonSet(u,{alt:Math.max(1.2,alt0*.6),pitch:.3,lunge:.55,headDown:.95,jaw:1,breath:1,flapSpd:1.5,flapAmp:.55,spread:.2},.22);
+  const ml=takeLight(0xff9a40,8); const hit=new Set(); let acc=0, last=performance.now();
+  const P=new THREE.Vector3(), Q=new THREE.Vector3(), G=new THREE.Vector3();
+  shake=Math.max(shake,.08);
+  await tween(1.5,k=>{
+    bez2(start,ctrl,end,k,P); bez2(start,ctrl,end,Math.min(1,k+.03),Q); u.w.position.x=P.x; u.w.position.z=P.z; followPath(u,P,Q,.3,3);
+    const now=performance.now(); acc+=now-last; last=now; if(k<.12||k>.9)return;
+    const mo=dragonMouth(u); ml.position.copy(mo); ml.intensity=3.5+Math.random()*1.5;
+    const fwd=Q.clone().sub(P).setY(0).normalize(); G.copy(mo).addScaledVector(fwd,1.6*K).setY(.15);
+    while(acc>34){acc-=34;
+      const d=G.clone().sub(mo), L=d.length(); d.normalize();
+      for(let j=0;j<3;j++)fireSprite(mo,d.clone().multiplyScalar(L/(.42+Math.random()*.12)).add(new THREE.Vector3((Math.random()-.5)*1.6,(Math.random()-.3),(Math.random()-.5)*1.6)),.5+Math.random()*.2,.4+Math.random()*.3,{grav:1,grow:3.8});
+      fireSprite(G.clone().add(new THREE.Vector3((Math.random()-.5)*1.2,.2,(Math.random()-.5)*1.2)),new THREE.Vector3((Math.random()-.5),1.6+Math.random(),(Math.random()-.5)),.7,.6,{grav:-.6,grow:2.6});
+      if(Math.random()<.3)fireSprite(G.clone().setY(.5),new THREE.Vector3(0,1.3,0),1.2,.6,{smoke:true,grav:.3,grow:2.2});
+    }
+    if(Math.random()<.12)scorch(G.clone().setY(0),.9);
+    foes.forEach(f=>{if(!hit.has(f)&&f.alive&&Math.hypot(f.w.position.x-G.x,f.w.position.z-G.z)<1.8*K){hit.add(f);hitOne(f);embers(f.w.position.clone().setY(.3),8,1.2);fireLight(f.w.position.clone().setY(1),3,.5);shake=Math.max(shake,.14);}});
+  },t=>t*t*(3-2*t)*.55+t*.45);
+  // คนที่ไม่โดนระหว่างบินผ่าน ก็โดนไฟลามตอนท้าย (กันพลาด)
+  foes.forEach(f=>{if(!hit.has(f)&&f.alive){hitOne(f);embers(f.w.position.clone().setY(.3),6,1);}});
+  tween(.45,k=>ml.intensity*=1-k).then(()=>freeLight(ml));
+  // ไต่ขึ้นวนกลับ
+  dragonSet(u,{alt:alt0+1.3,pitch:-.5,lunge:.2,headDown:0,jaw:0,breath:0,flapSpd:2.3,flapAmp:.95,spread:.4},.3);
+  const p0=u.w.position.clone(), back=from.clone().addScaledVector(side,-.8*K), mid=p0.clone().addScaledVector(dir,2.5*K).addScaledVector(side,-3.5*K);
+  await tween(1.25,k=>{bez2(p0,mid,back,k,P);bez2(p0,mid,back,Math.min(1,k+.03),Q);u.w.position.x=P.x;u.w.position.z=P.z;followPath(u,P,Q,.26,3);},easeIO);
+  dragonSet(u,{alt:alt0,pitch:0,lunge:0,spread:0,flapSpd:1,flapAmp:.55,bank:0},.5);
+}
+/* ---------- ลมปีกพายุ: ลอยตั้งตัว กระพือปีกหนัก 3 ครั้ง ลมกระแทกศัตรูกระเด็น ---------- */
+async function dragonGust(u,foes,hitOne){
+  const K=u.w.scale.x, alt0=u.rig.st.alt, home=u.w.position.clone();
+  const c=new THREE.Vector3(); foes.forEach(f=>c.add(f.w.position)); c.divideScalar(Math.max(1,foes.length)); c.y=0;
+  const dir=c.clone().sub(home).setY(0).normalize();
+  dragonSet(u,{rear:.9,spread:1,alt:alt0+.6,flapAmp:.35,flapSpd:.55,pitch:-.3,jaw:.3},.3); await wait(380);
+  for(let b=0;b<3;b++){
+    dragonSet(u,{flapAmp:1.3,flapSpd:2.4,rear:.5+b*.15,spread:.6,jaw:.5+b*.2},.07);
+    await tween(.12,k=>u.w.position.copy(home).addScaledVector(dir,-.25*K*k));
+    const g=home.clone().addScaledVector(dir,2.5*K).setY(.05);
+    shockRing(g,0xe8dcc0); particles(tmpV.copy(g).setY(.15),0xc8b898,(typeof LOW!=='undefined'&&LOW)?10:22,2.8,.4,-.2,.55);
+    for(let i=0;i<((typeof LOW!=='undefined'&&LOW)?4:9);i++){const a=(Math.random()-.5)*1.4, v=dir.clone().applyAxisAngle(new THREE.Vector3(0,1,0),a).multiplyScalar(7+Math.random()*5);v.y=.4+Math.random();
+      fireSprite(home.clone().addScaledVector(dir,1.2*K).setY(.5+Math.random()),v,.7,.7,{smoke:true,grav:.2,grow:2.6});}
+    shake=Math.max(shake,.1+b*.05);
+    if(b===2){foes.forEach(f=>{if(!f.alive)return;hitOne(f);
+      if(!f.busy&&!f.dragon){const p0=f.w.position.clone(), pd=p0.clone().sub(home).setY(0).normalize(), to=p0.clone().addScaledVector(pd,1.6);
+        tween(.35,k=>{f.w.position.lerpVectors(p0,to,k);f.w.position.y=Math.sin(k*Math.PI)*.5;},easeOut).then(()=>{f.w.position.y=0;particles(tmpV.copy(f.w.position).setY(.1),0xb8a888,6,1,.2,-.2,.4);});}});}
+    await tween(.2,k=>u.w.position.copy(home).addScaledVector(dir,-.25*K*(1-k)),easeOut);
+    dragonSet(u,{flapAmp:.45,flapSpd:1},.12); await wait(130);
+  }
+  dragonSet(u,{rear:0,spread:0,alt:alt0,flapAmp:.55,flapSpd:1,pitch:0,jaw:0},.45); await wait(250);
+}
+/* ---------- ฉลองชัย: บินวนเป็นวงกว้างไต่ระดับ แล้วคำรามกลางฟ้า ---------- */
+async function dragonVictory(u){
+  if(!u.alive)return; u.busy=true;
+  const K=u.w.scale.x, c=u.w.position.clone(), R=2.4*K, a0=Math.random()*Math.PI*2, alt0=u.rig.st.alt, sg=Math.random()<.5?1:-1;
+  dragonSet(u,{alt:alt0+1.4,spread:.5,flapSpd:1.9,flapAmp:.85,pitch:-.25},.35);
+  const P=new THREE.Vector3(), Q=new THREE.Vector3(), at=(k,o)=>{const a=a0+sg*k*Math.PI*2;return o.set(c.x+(Math.cos(a)-Math.cos(a0))*R,0,c.z+(Math.sin(a)-Math.sin(a0))*R);};
+  await tween(2.8,k=>{at(k,P);at(Math.min(1.02,k+.02),Q);u.w.position.x=P.x;u.w.position.z=P.z;followPath(u,P,Q,.25,2.4);},easeIO);
+  dragonSet(u,{bank:0,pitch:0},.4);
+  await dragonRoar(u,1100);
+  dragonSet(u,{alt:alt0},.6); u.busy=false;
 }

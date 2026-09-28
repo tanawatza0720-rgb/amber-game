@@ -55,6 +55,13 @@ function rtTick(dt,T){
     if(u.atkT>0)u.atkT-=dt;
     if(u.busy)return;
     const [t,d]=nearestFoe(u);
+    if(u.patrol&&t){u.patrol=0;stopMove(u);}
+    if(!t&&u.dragon){ // มังกร: บินวนลาดตระเวนเหนือจุดตั้งหลักระหว่างรอศัตรูระลอกใหม่
+      const K=u.w.scale.x, a=T*.42+(u.slot||0), tx=u.home.x+Math.cos(a)*1.7*K, tz=u.home.z+Math.sin(a)*1.1*K;
+      stepToward(u,tx,tz,Math.max(.8,Math.hypot(tx-u.w.position.x,tz-u.w.position.z)),dt,T);
+      if(!u.patrol){u.patrol=1;dragonSet(u,{flapSpd:1.15,flapAmp:.6,lunge:.12,legF:0,spread:.15},.6);}
+      return;
+    }
     if(!t){ // ไม่มีศัตรู: เดินกลับตำแหน่งตั้งหลัก
       const hd=Math.hypot(u.home.x-u.w.position.x,u.home.z-u.w.position.z);
       if(hd>.15)stepToward(u,u.home.x,u.home.z,hd,dt,T); else{stopMove(u);turnToward(u,u.home.x+(u.side==='P'?5:-5),u.home.z,dt);}
@@ -86,7 +93,8 @@ async function rtUse(u,s,t){
     if(u.dragon&&u.side==='P'&&s===ultOf(u))await dragonRoar(u,450);
     if(s.type==='melee'&&u.dragon){
       const r=Math.random(), f=()=>{if(t.alive)dealHit(u,t,s);};
-      if(r<.3)await dragonSwoop(u,t,f); else if(r<.55)await strike(u,0,f); else if(r<.8)await dragonClaw(u,t,()=>{if(t.alive)dealHit(u,t,{...s,mult:s.mult*.55});}); else await dragonTail(u,t,()=>near(t.w.position,2.6).forEach(o=>dealHit(u,o,{...s,mult:s.mult*.8})));
+      const gf=near(t.w.position,3.2);
+      if(r<.26)await dragonSwoop(u,t,f); else if(r<.46)await strike(u,0,f); else if(r<.64&&gf.length>1)await dragonGust(u,gf,o=>{if(o.alive)dealHit(u,o,{...s,mult:s.mult*.7});}); else if(r<.84)await dragonClaw(u,t,()=>{if(t.alive)dealHit(u,t,{...s,mult:s.mult*.55});}); else await dragonTail(u,t,()=>near(t.w.position,2.6).forEach(o=>dealHit(u,o,{...s,mult:s.mult*.8})));
     } else if(s.type==='melee'&&AN){
       const ls=AN.s1; await clipStrike(u,ls[Math.floor(Math.random()*ls.length)],1.35,()=>{if(t.alive){dealHit(u,t,s);hitStop();}});
     } else if(s.type==='melee'){
@@ -97,7 +105,7 @@ async function rtUse(u,s,t){
       else for(let i=0;i<3&&t.alive;i++)await strike(u,i,()=>dealHit(u,t,s));
     } else if(s.type==='ranged'&&u.dragon){
       const fs=near(t.w.position,4.5); await faceTo(u,t.w.position,.2);
-      await dragonBreath(u,fs,hitAll(fs));
+      if(Math.random()<.5)await dragonBreath(u,fs,hitAll(fs)); else await dragonStrafe(u,fs,o=>{if(o.alive)dealHit(u,o,s);});
     } else if(s.type==='ranged'){
       const fs=near(u.w.position,9).slice(0,4); u.inner.userData.acting=true; const r=u.rig;
       for(const f of fs){faceTo(u,f.w.position,.08);poseTo([[r.R.a.rotation,'z',-1.2],[r.R.a.rotation,'x',-1.4]],.08);

@@ -153,7 +153,7 @@ async function spawnWave(){
 }
 async function finish(win){
   running=false; {const ps=alive('P');if(!BIG&&win&&ps.length)camOver(ps[0],()=>ps[0].w.position.clone().add(new THREE.Vector3(-4,0,1.2)));else camWide();} actRing.visible=false; tgtRing.visible=false; hideSkills();
-  if(win)alive('P').forEach((u,i)=>setTimeout(()=>{if(u.dragon)dragonRoar(u,1600);else if(u.inner.userData.play)u.inner.userData.play('victory',{loop:true,fade:.25});else if(u.evo)poseTo([[u.rig.R.sh.rotation,'z',-2.6],[u.rig.L.sh.rotation,'z',2.6]],.3);else{u.inner.userData.acting=true;poseTo([[u.rig.R.a.rotation,'z',-3],[u.rig.L.a.rotation,'z',2.6]],.3);}particles(tmpV.copy(u.w.position).setY(1.2),0xffd27a,20,2,.05,1.2);},i*150));
+  if(win)alive('P').forEach((u,i)=>setTimeout(()=>{if(u.dragon)dragonVictory(u);else if(u.inner.userData.play)u.inner.userData.play('victory',{loop:true,fade:.25});else if(u.evo)poseTo([[u.rig.R.sh.rotation,'z',-2.6],[u.rig.L.sh.rotation,'z',2.6]],.3);else{u.inner.userData.acting=true;poseTo([[u.rig.R.a.rotation,'z',-3],[u.rig.L.a.rotation,'z',2.6]],.3);}particles(tmpV.copy(u.w.position).setY(1.2),0xffd27a,20,2,.05,1.2);},i*150));
   await wait(OPTS.idle?1000:900);
   return win;
 }
