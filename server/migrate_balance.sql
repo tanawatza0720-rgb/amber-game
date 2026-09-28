@@ -11,7 +11,7 @@ update public.species set max_lv = 40 where sp = 'morihime';   -- ระดั�
 
 -- ฟักไข่: สุ่มระดับก่อน แล้วสุ่มสายพันธุ์ในระดับนั้น
 --   ไข่ป่า   : ทั่วไป 83% · หายาก 15%   · ตำนาน 2%     · เทพเจ้า 0%
---   ไข่ทองคำ : ทั่วไป 55% · หายาก 32%   · ตำนาน 12.5%  · เทพเจ้า 0.5%
+--   ไข่ทองคำ : ทั่วไป 57.5% · หายาก 32% · ตำนาน 10%    · เทพเจ้า 0.5%
 --   การันตี : ไข่ทองคำครบ 30 ใบที่ยังไม่ได้ระดับตำนานขึ้นไป ใบนั้นได้ตำนานแน่นอน
 create or replace function public.hatch_egg(kind text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
@@ -27,7 +27,7 @@ begin
   else
     if p.amber < public._c('gold_cost') then raise exception 'not_enough_amber'; end if;
     update public.players set amber = amber - public._c('gold_cost'), pity = pity + 1 where user_id = u;
-    w := array[0.55, 0.32, 0.125, 0.005];
+    w := array[0.575, 0.32, 0.10, 0.005];
   end if;
   if r < w[4] then t := 4;
   elsif r < w[4] + w[3] then t := 3;
