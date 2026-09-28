@@ -27,10 +27,14 @@ const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
     d.append(rows([['ไข่ป่า · ★5 อามาเทรุ / คุโรกะ','2%'],['ไข่ทองคำ · ★5 อามาเทรุ / คุโรกะ','8%'],['การันตี ★5 (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffb347'],['นอกนั้นได้','★3 คาเซะมารุ']]));
     openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
-  dojo:()=>{const d=el('div');d.append(para('สนามต่อสู้แบบผลัดกันเล่น จัดทีมมอนสเตอร์ 3 ตัวแล้วออกไปสู้'));
-    d.append(rows([['ด่านเนื้อเรื่อง','ใช้พลังงาน 6'],['ดันเจี้ยนรายวัน','ใช้พลังงาน 8'],['ประลองกับผู้เล่น (PvP)','ตั๋ว 5/5'],['หอคอยท้าทาย','ชั้น 14']]));
+  dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
+    const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
+    const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
+    d.append(rows([['ด่านที่ผ่านแล้ว',S.stage?lb(S.stage):'-'],['พลังทีม',(S.power||0).toLocaleString('en-US')],
+      ['ด่านต่อไป',S.boss?'บอส '+lb(S.stage+1):lb(S.stage+1)+' · ต้องการ '+(S.need||0).toLocaleString('en-US'),S.boss?'#ffd24a':S.power>=S.need?'#5fe0c0':'#ffb09a'],
+      ['รางวัลสะสม','🪙 '+Math.floor(sec*(S.rateC||0)/60).toLocaleString('en-US')+' · '+(h?h+' ชม. ':'')+m+' นาที','#ffb347']]));
     const tm=S.team.map(u=>S.mons.find(m=>m.uid===u)).filter(Boolean).map(m=>spOf(m).name).join(', ');
-    openSheet('สนามประลอง','ทีมปัจจุบัน: '+(tm||'-'),d,[['ด่านเนื้อเรื่อง',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
+    openSheet('ผจญภัย','ทีมปัจจุบัน: '+(tm||'-'),d,[['ไปผจญภัย',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
     const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,'★'.repeat(spOf(m).rar)+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},

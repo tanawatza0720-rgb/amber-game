@@ -1,4 +1,4 @@
-<title>ตำนานป่าอัมพร · ด่านเนื้อเรื่อง</title>
+<title>ตำนานป่าอัมพร · ผจญภัย</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Bai+Jamjuree:wght@400;600&display=swap">
@@ -71,7 +71,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 #banner.boss{color:#ffd0c8;text-shadow:0 3px 0 #5a0c0c,0 0 20px rgba(255,60,40,.9)}
 @keyframes ban{0%{opacity:0;transform:scaleX(.3)}15%{opacity:1;transform:scaleX(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
 /* แผนที่ */
-#map,#result{position:fixed;inset:0;display:grid;place-items:center;padding:16px;background:radial-gradient(ellipse at center,rgba(20,12,8,.35),rgba(10,6,4,.8))}
+#away,#result{position:fixed;inset:0;display:grid;place-items:center;padding:16px;background:radial-gradient(ellipse at center,rgba(20,12,8,.35),rgba(10,6,4,.8))}
 .card{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 16px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
 .card h1{margin:0;font-family:'Chakra Petch',sans-serif;font-size:22px;color:var(--amber)}
 .card .sub{margin:4px 0 14px;font-size:12px;color:var(--muted)}
@@ -94,6 +94,27 @@ a.mbtn{display:grid;place-items:center;text-decoration:none;color:inherit}
 .sub.net{margin-top:-8px;color:var(--mint)}.sub.net.off{color:#ffc27a}
 .rbtns button:disabled{opacity:.5}
 #bMsg{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9;max-width:90vw;background:rgba(120,30,20,.92);border:1px solid rgba(255,160,140,.5);border-radius:12px;padding:10px 16px;font-size:13px;text-align:center}
+a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
+#idle{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+@media (min-aspect-ratio:9/10){#idle{left:auto;right:14px;width:340px}}
+.iprow{display:flex;gap:10px;align-items:stretch}
+.ipst,.ippw{background:rgba(0,0,0,.3);border-radius:10px;padding:6px 10px;display:flex;flex-direction:column;justify-content:center}
+.ipst b,.ippw b{font-family:'Chakra Petch',sans-serif;font-size:18px;color:var(--amber)}
+.ippw{flex:1}
+.iprow small,.chest small{font-size:10px;color:var(--muted)}
+#ipNeed{font-size:11px}#ipNeed.ok{color:var(--mint)}#ipNeed.low{color:#ffb09a}#ipNeed.boss{color:#ffd24a}
+.ipboss{height:44px;border-radius:12px;border:1px solid #ffb09a;background:linear-gradient(180deg,#e0523f,#8e1f18);color:#fff;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 4px rgba(255,90,78,.35)}}
+.chest{display:flex;gap:10px;align-items:center}
+.cinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.cinfo b{font-size:14px;font-variant-numeric:tabular-nums}
+.cbar{height:6px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden}.cbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffcf7a,#d9822b);transition:width .5s}
+#ipClaim{flex:none;width:72px;height:46px;border-radius:12px;border:1px solid #ffd9a0;background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;font-family:'Chakra Petch',sans-serif;font-weight:700}
+#ipClaim:disabled{filter:grayscale(.8);opacity:.6}
+.trial{font-size:12px;color:#ffc27a;line-height:1.5}
+.ipteam{font-size:11px;color:var(--muted);line-height:1.5}.ipteam b{color:var(--bone);font-weight:600}.ipteam a{color:var(--amber)}
+#away .rr{margin-top:6px}
+.rbtns button:disabled{opacity:.5}
 #loadMsg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px}
 /* เมนูคำสั่งแบบแนวตั้งด้านขวา (จอแนวนอน) */
 #acthd{pointer-events:none;display:flex;flex-direction:column;align-items:center;text-shadow:0 1px 3px #000}
@@ -136,9 +157,10 @@ a.mbtn{display:grid;place-items:center;text-decoration:none;color:inherit}
   <div class="hrow">
     <div class="title"><div id="stTitle"></div><div id="wave"></div></div>
     <div class="hbtns">
-      <button class="hb" id="bAuto" aria-pressed="false">ออโต้</button>
+      <a class="hb" id="farmLink" href="index.html">‹ ฟาร์ม</a>
+      <button class="hb" id="bAuto" aria-pressed="false" hidden>ออโต้</button>
       <button class="hb" id="bSpeed">x1</button>
-      <button class="hb" id="bExit" aria-label="ออกจากด่าน">✕</button>
+      <button class="hb" id="bExit" hidden>ยอมแพ้</button>
     </div>
   </div>
   <div id="order"></div>
@@ -146,32 +168,38 @@ a.mbtn{display:grid;place-items:center;text-decoration:none;color:inherit}
 <div id="skname" hidden></div>
 <div id="banner" hidden></div>
 <div id="skwrap"><div id="acthd" hidden></div><div id="skills" hidden></div><div id="skdesc"></div></div>
-<div id="bMsg" hidden></div>
 <div id="loadMsg" hidden>กำลังโหลดโมเดล…</div>
-<div id="map" class="modal" hidden>
+<div id="idle" hidden>
+  <div class="iprow">
+    <div class="ipst"><small>ผ่านแล้ว</small><b id="ipStage">-</b></div>
+    <div class="ippw"><small>พลังทีม</small><b id="ipPow">0</b><span id="ipNeed"></span></div>
+  </div>
+  <button id="ipBoss" class="ipboss" hidden></button>
+  <div id="ipChest" class="chest" hidden>
+    <div class="cinfo"><small>รางวัลสะสม (ได้แม้ปิดเกม)</small><b id="ipRew"></b><div class="cbar"><i id="ipBar"></i></div><small id="ipTime"></small></div>
+    <button id="ipClaim">เก็บ</button>
+  </div>
+  <div id="ipTrial" class="trial" hidden>โหมดทดลอง: ยังไม่ได้เข้าสู่ระบบ ดูการต่อสู้ได้แต่ไม่ได้รางวัล · เข้าสู่ระบบที่หน้าฟาร์มก่อน</div>
+  <div class="ipteam">ทีม: <span id="ipTeam"></span> · <a href="index.html">จัดทีม/อัปเลเวลในฟาร์ม</a></div>
+</div>
+<div id="away" class="modal" hidden>
   <div class="card">
-    <h1>บทที่ 1 · ป่าไผ่สนธยา</h1>
-    <p class="sub">ผ่านด่านก่อนหน้าเพื่อปลดล็อกด่านถัดไป · ด่านละ 6 พลังงาน</p>
-    <p class="sub net" id="mapNet"></p>
-    <div id="nodes"></div>
-    <button id="bModel" class="mbtn"></button>
-    <div class="team">ทีมของคุณ: <span id="teamLine"></span><br><small>เปลี่ยนทีมได้ที่ปุ่ม “จัดทีม” ในฟาร์ม</small></div>
-    <a class="mbtn back" href="index.html">‹ กลับฟาร์ม</a>
+    <h1>ยินดีต้อนรับกลับ!</h1>
+    <p class="sub" id="awTime"></p>
+    <div class="rr"><span>เหรียญ</span><b id="awCoins"></b></div>
+    <div class="rr"><span>ค่าประสบการณ์ผู้เล่น</span><b id="awXp"></b></div>
+    <div class="rbtns" style="margin-top:14px"><button id="awLater">ภายหลัง</button><button id="awClaim" class="main">เก็บรางวัล</button></div>
   </div>
 </div>
 <div id="result" hidden>
   <div class="card">
     <h2 id="rTitle"></h2>
-    <div id="rStars"></div>
     <div id="rStarsNote"></div>
     <div id="rRew"></div>
-    <div class="rbtns">
-      <button id="rMap">แผนที่</button>
-      <button id="rRetry">เล่นอีกครั้ง</button>
-      <button id="rNext" class="main">ด่านถัดไป</button>
-    </div>
+    <div class="rbtns"><button id="rBack" class="main">กลับไปผจญภัย</button></div>
   </div>
 </div>
+<div id="bMsg" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>

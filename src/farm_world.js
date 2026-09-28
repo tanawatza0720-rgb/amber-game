@@ -136,7 +136,7 @@ building('hatch','ศาลฟักไข่',0,3.2,2.9,g=>{
 });
 
 /* สนามประลอง (โดโจ) */
-building('dojo','สนามประลอง',-6.8,-.4,3.3,g=>{
+building('dojo','ประตูผจญภัย',-6.8,-.4,3.3,g=>{
   g.rotation.y=.5;
   P(g,B1,stoneM,[0,.25,0],[5.2,.5,4.2]); P(g,B1,stoneM,[0,.12,2.35],[1.8,.24,.6]);
   P(g,B1,woodM,[0,1.5,0],[4.4,2,3.4]);
@@ -423,7 +423,7 @@ const save=()=>{SafeStore.setItem('amber_mail_read',S.mailRead?'1':'0');};
 function applyState(st){
   if(!st||!st.player)return; const p=st.player;
   Object.assign(S,{name:p.name,lv:p.lv,xp:p.xp,coins:p.coins,amber:p.amber,energy:p.energy,energyMax:p.energy_max,energyNext:p.energy_next,energySec:p.energy_sec,
-    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||''});
+    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now()});
   S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv}));
   if(typeof renderHUD==='function')renderHUD();
 }

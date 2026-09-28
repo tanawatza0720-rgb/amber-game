@@ -235,7 +235,7 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
 </div>
 
 <nav id="dock">
-  <button class="nbtn" id="nBattle"><svg viewBox="0 0 24 24"><path d="M4 3l9 9-2 2-9-9zM20 3l-9 9 2 2 9-9z" fill="#dfe5ee"/><path d="M5 17l2 2-3 3-2-2zM19 17l-2 2 3 3 2-2z" fill="#c9a24a"/></svg>ต่อสู้</button>
+  <button class="nbtn" id="nBattle"><svg viewBox="0 0 24 24"><path d="M4 3l9 9-2 2-9-9zM20 3l-9 9 2 2 9-9z" fill="#dfe5ee"/><path d="M5 17l2 2-3 3-2-2zM19 17l-2 2 3 3 2-2z" fill="#c9a24a"/></svg>ผจญภัย</button>
   <button class="nbtn" id="nMons"><svg viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-8 8v9l3-2 2 2 3-2 3 2 2-2 3 2v-9a8 8 0 0 0-8-8z" fill="#3a3f4a"/><circle cx="9" cy="11" r="2" fill="#7fffe0"/><circle cx="15" cy="11" r="2" fill="#7fffe0"/></svg>มอนสเตอร์</button>
   <button class="nbtn big" id="nHatch"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="7" ry="9" fill="#fff4d6"/><path d="M6 12l3 2 3-3 3 3 3-2" stroke="#d9822b" stroke-width="1.6" fill="none"/></svg>ฟักไข่</button>
   <button class="nbtn" id="nQuest"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="#e9dcc0"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#8a6a44" stroke-width="2"/></svg>ภารกิจ<span class="badge" id="bQuest" hidden>1</span></button>
@@ -1500,7 +1500,7 @@ building('hatch','ศาลฟักไข่',0,3.2,2.9,g=>{
 });
 
 /* สนามประลอง (โดโจ) */
-building('dojo','สนามประลอง',-6.8,-.4,3.3,g=>{
+building('dojo','ประตูผจญภัย',-6.8,-.4,3.3,g=>{
   g.rotation.y=.5;
   P(g,B1,stoneM,[0,.25,0],[5.2,.5,4.2]); P(g,B1,stoneM,[0,.12,2.35],[1.8,.24,.6]);
   P(g,B1,woodM,[0,1.5,0],[4.4,2,3.4]);
@@ -1787,7 +1787,7 @@ const save=()=>{SafeStore.setItem('amber_mail_read',S.mailRead?'1':'0');};
 function applyState(st){
   if(!st||!st.player)return; const p=st.player;
   Object.assign(S,{name:p.name,lv:p.lv,xp:p.xp,coins:p.coins,amber:p.amber,energy:p.energy,energyMax:p.energy_max,energyNext:p.energy_next,energySec:p.energy_sec,
-    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||''});
+    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now()});
   S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv}));
   if(typeof renderHUD==='function')renderHUD();
 }
@@ -1822,10 +1822,14 @@ const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
     d.append(rows([['ไข่ป่า · ★5 อามาเทรุ / คุโรกะ','2%'],['ไข่ทองคำ · ★5 อามาเทรุ / คุโรกะ','8%'],['การันตี ★5 (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffb347'],['นอกนั้นได้','★3 คาเซะมารุ']]));
     openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
-  dojo:()=>{const d=el('div');d.append(para('สนามต่อสู้แบบผลัดกันเล่น จัดทีมมอนสเตอร์ 3 ตัวแล้วออกไปสู้'));
-    d.append(rows([['ด่านเนื้อเรื่อง','ใช้พลังงาน 6'],['ดันเจี้ยนรายวัน','ใช้พลังงาน 8'],['ประลองกับผู้เล่น (PvP)','ตั๋ว 5/5'],['หอคอยท้าทาย','ชั้น 14']]));
+  dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
+    const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
+    const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
+    d.append(rows([['ด่านที่ผ่านแล้ว',S.stage?lb(S.stage):'-'],['พลังทีม',(S.power||0).toLocaleString('en-US')],
+      ['ด่านต่อไป',S.boss?'บอส '+lb(S.stage+1):lb(S.stage+1)+' · ต้องการ '+(S.need||0).toLocaleString('en-US'),S.boss?'#ffd24a':S.power>=S.need?'#5fe0c0':'#ffb09a'],
+      ['รางวัลสะสม','🪙 '+Math.floor(sec*(S.rateC||0)/60).toLocaleString('en-US')+' · '+(h?h+' ชม. ':'')+m+' นาที','#ffb347']]));
     const tm=S.team.map(u=>S.mons.find(m=>m.uid===u)).filter(Boolean).map(m=>spOf(m).name).join(', ');
-    openSheet('สนามประลอง','ทีมปัจจุบัน: '+(tm||'-'),d,[['ด่านเนื้อเรื่อง',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
+    openSheet('ผจญภัย','ทีมปัจจุบัน: '+(tm||'-'),d,[['ไปผจญภัย',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
     const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,'★'.repeat(spOf(m).rar)+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},

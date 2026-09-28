@@ -107,12 +107,11 @@ async function perform(u,s,t){
 }
 
 /* ================= วงจรการต่อสู้ ================= */
-let stage=null, waveIdx=0, deaths=0, running=false;
-async function runBattle(st){
-  stage=st; waveIdx=0; deaths=0; running=true;
+let stage=null, waveIdx=0, deaths=0, running=false, OPTS={};
+async function runBattle(st,opts){
+  stage=st; OPTS=opts||{}; waveIdx=0; deaths=0; running=true;
   UNITS.forEach(removeUnit); UNITS=[]; PICKU=[]; RIGS=[]; clearTrails();
   TEAM.forEach((d,i)=>makeUnit('P',d,i));
-  $('#hud').hidden=false; $('#stTitle').textContent=st.id+' '+st.name;
   await spawnWave();
   while(running){
     if(!alive('E').length){
@@ -126,10 +125,10 @@ async function runBattle(st){
     Object.keys(u.cds).forEach(k=>{if(u.cds[k]>0)u.cds[k]--;});
     if(u.stun){u.stun=0;updateBar(u);popNum(u,'มึน ข้ามเทิร์น','info');await wait(700);continue;}
     let s,t;
-    if(u.side==='P'&&!AUTO){
+    if(u.side==='P'&&!AUTO&&!OPTS.idle){
       target=pickDefaultTarget(); showTarget();
       s=await new Promise(res=>{choose=res;showSkills(u);});
-      if(!running)return;
+      if(!running||!s)return;
       hideSkills(); t=s.target==='all'?null:target;
     } else { [s,t]=aiChoose(u); await wait(u.side==='E'?450:250); }
     if(!running)return;
@@ -144,69 +143,116 @@ async function spawnWave(){
   UNITS.filter(u=>u.side==='E').forEach(removeUnit); UNITS=UNITS.filter(u=>u.side==='P');
   const wv=stage.waves[waveIdx];
   const boss=wv.some(d=>d.boss);
-  await banner(boss?'บอสปรากฏตัว!':'คลื่น '+(waveIdx+1)+'/'+stage.waves.length,boss?'boss':'');
-  $('#wave').textContent='คลื่น '+(waveIdx+1)+'/'+stage.waves.length;
+  if(!OPTS.idle){await banner(boss?'บอสปรากฏตัว!':'คลื่น '+(waveIdx+1)+'/'+stage.waves.length,boss?'boss':'');$('#wave').textContent='คลื่น '+(waveIdx+1)+'/'+stage.waves.length;}
+  else if(OPTS.banner)await banner(OPTS.banner,'');
   const slots=wv.length===1?[0]:wv.length===2?[1,2]:[1,0,2];
-  const order=wv.length===3?[wv[0],wv[1],wv[2]]:wv;
-  const made=order.map((d,i)=>makeUnit('E',d,slots[i]));
-  made.forEach((u,i)=>{const k=u.w.scale.x;u.w.position.y=6;smoke(tmpV.copy(u.home).setY(.5));tween(.55+i*.1,t=>u.w.position.y=6*(1-t),t=>{const n=7.5625,d=2.75;if(t<1/d)return n*t*t;if(t<2/d)return n*(t-=1.5/d)*t+.75;if(t<2.5/d)return n*(t-=2.25/d)*t+.9375;return n*(t-=2.625/d)*t+.984375;});});
+  const made=wv.map((d,i)=>makeUnit('E',d,slots[i]));
+  made.forEach((u,i)=>{u.w.position.y=6;smoke(tmpV.copy(u.home).setY(.5));tween(.55+i*.1,t=>u.w.position.y=6*(1-t),t=>{const n=7.5625,d=2.75;if(t<1/d)return n*t*t;if(t<2/d)return n*(t-=1.5/d)*t+.75;if(t<2.5/d)return n*(t-=2.25/d)*t+.9375;return n*(t-=2.625/d)*t+.984375;});});
   if(boss){shake=.25;}
-  await wait(900);
+  await wait(OPTS.idle?600:900);
 }
-function finish(win){
+async function finish(win){
   running=false; {const ps=alive('P');if(win&&ps.length)camOver(ps[0],()=>ps[0].w.position.clone().add(new THREE.Vector3(-4,0,1.2)));else camWide();} actRing.visible=false; tgtRing.visible=false; hideSkills();
-  const stars=win?(deaths===0?3:deaths===1?2:1):0;
-  const prev=PROG.stars[stage.id]||0, first=win&&!prev;
-  if(win){PROG.stars[stage.id]=Math.max(prev,stars);saveProg();}
   if(win)alive('P').forEach((u,i)=>setTimeout(()=>{if(u.dragon)dragonSet(u,{rear:1,breath:1,flapSpd:1.6},.4);else if(u.inner.userData.play)u.inner.userData.play('victory',{loop:true,fade:.25});else if(u.evo)poseTo([[u.rig.R.sh.rotation,'z',-2.6],[u.rig.L.sh.rotation,'z',2.6]],.3);else{u.inner.userData.acting=true;poseTo([[u.rig.R.a.rotation,'z',-3],[u.rig.L.a.rotation,'z',2.6]],.3);}particles(tmpV.copy(u.w.position).setY(1.2),0xffd27a,20,2,.05,1.2);},i*150));
-  setTimeout(()=>showResult(win,stars,first),900/SPEED);
+  await wait(OPTS.idle?1000:900);
+  return win;
 }
 
-/* ================= หน้าจอ ================= */
-const PKEY='amber_battle_prog_v1';
-let PROG; try{PROG=JSON.parse(localStorage.getItem(PKEY))||{stars:{}};}catch(e){PROG={stars:{}};}
-const saveProg=()=>{try{localStorage.setItem(PKEY,JSON.stringify(PROG));}catch(e){}};
-function unlocked(i){return i===0||(PROG.stars[STAGES[i-1].id]||0)>0;}
-function showMap(){
-  camWide();
-  $('#hud').hidden=true; $('#result').hidden=true; $('#map').hidden=false; hideSkills();
-  const box=$('#nodes');box.innerHTML='';
-  STAGES.forEach((st,i)=>{const b=document.createElement('button');const ok=unlocked(i), s=PROG.stars[st.id]||0;
-    b.className='node'+(ok?'':' locked')+(st.waves.some(w=>w.some(d=>d.boss))?' bossn':'');b.disabled=!ok;
-    b.innerHTML='<span class="nid"></span><span class="nnm"></span><span class="nst"></span><span class="nmeta"></span>';
-    b.querySelector('.nid').textContent=st.id;b.querySelector('.nnm').textContent=st.name;
-    b.querySelector('.nst').textContent=ok?('★'.repeat(s)+'☆'.repeat(3-s)):'ล็อก';
-    b.querySelector('.nmeta').textContent=st.waves.length+' คลื่น · พลังงาน '+st.cost;
-    b.onclick=()=>startStage(st);box.appendChild(b);});
+/* ================= โหมด idle: ดันด่านเอง ================= */
+let MODE='idle', CUR=null;
+function idleRender(){
+  const p=BN.online&&BN.state?BN.state.player:null, tl=$('#ipTeam');
+  tl.textContent='';TEAM.forEach((d,i)=>{if(i)tl.append(' · ');const b=document.createElement('b');b.textContent=SPECIES[d.sp].name+' Lv'+d.lv;tl.append(b);});
+  const pow=teamPow();
+  $('#ipPow').textContent=fmtN(p?p.power:pow);
+  if(!p){$('#ipNeed').textContent='';$('#ipBoss').hidden=true;$('#ipChest').hidden=true;$('#ipTrial').hidden=false;$('#ipStage').textContent='-';return;}
+  $('#ipTrial').hidden=true;$('#ipChest').hidden=false;
+  $('#ipStage').textContent=p.stage?stLabel(p.stage):'-';
+  const ok=p.power>=p.need;
+  $('#ipNeed').textContent=p.boss?'ด่านต่อไปเป็นบอส':(ok?'พอสำหรับด่าน '+stLabel(p.stage+1):'ด่าน '+stLabel(p.stage+1)+' ต้องการ '+fmtN(p.need));
+  $('#ipNeed').className=p.boss?'boss':ok?'ok':'low';
+  $('#ipBoss').hidden=!p.boss||MODE!=='idle'; $('#ipBoss').textContent='⚔ ท้าบอสด่าน '+stLabel(p.stage+1);
+  const q=idleNow();
+  $('#ipRew').textContent='🪙 '+fmtN(q.coins)+'  ·  ✦ '+fmtN(q.xp)+' exp';
+  $('#ipBar').style.width=(q.sec/q.max*100)+'%';
+  $('#ipTime').textContent=(q.sec>=q.max?'เต็มแล้ว! ':'')+fmtDur(q.sec)+' / '+fmtDur(q.max)+' · 🪙 '+p.rate_c+'/นาที';
+  $('#ipClaim').disabled=q.sec<60;
 }
-function showResult(win,stars,first){
-  const r=$('#result');r.hidden=false;r.className=win?'win':'lose';
-  $('#rTitle').textContent=win?'ชนะ!':'พ่ายแพ้';
-  const st=$('#rStars');st.innerHTML='';for(let i=0;i<3;i++){const s=document.createElement('span');s.textContent='★';if(i<stars){s.className='on';s.style.animationDelay=(.2+i*.25)+'s';}st.appendChild(s);}
-  const rw=$('#rRew');rw.innerHTML='';
-  const tip=[['คำแนะนำ','ใช้ท่าที่ทำให้ศัตรูมึน และเก็บท่าแรงไว้ใช้กับบอส']];
-  const row=(a,b)=>{const d=document.createElement('div');d.className='rr';const x=document.createElement('span');x.textContent=a;const y=document.createElement('b');y.textContent=b;d.append(x,y);rw.appendChild(d);return y;};
-  const btns=['#rMap','#rRetry','#rNext'].map(s=>$(s));
-  if(BN.bid){
-    // ออนไลน์: รางวัลจริงมาจากเซิร์ฟเวอร์
-    const cY=win?row('เหรียญ','…'):null, xY=win?row('ค่าประสบการณ์ผู้เล่น','…'):null; if(!win)tip.forEach(([a,b])=>row(a,b));
-    const note=row('สถานะ','กำลังบันทึกผล…'); btns.forEach(b=>b.disabled=true);
-    bnFinish(win).then(res=>{if(cY){cY.textContent='+'+res.coins;xY.textContent='+'+res.xp;} note.textContent='บันทึกแล้ว ⚡ '+BN.state.player.energy+'/'+BN.state.player.energy_max;})
-      .catch(e=>{if(cY){cY.textContent='-';xY.textContent='-';} note.textContent=BERR[e.code]||BERR.network;})
-      .finally(()=>btns.forEach(b=>b.disabled=false));
-  } else {
-    (win?[['เหรียญ','+'+stage.coins+' (ทดลอง)']]:tip).forEach(([a,b])=>row(a,b));
-    row('โหมดทดลอง','ไม่ได้รับรางวัลจริง');
+setInterval(()=>{if(!document.hidden)idleRender();},1000);
+async function idleLoop(){
+  for(;;){
+    if(MODE!=='idle'||document.hidden){await sleep(700);continue;}
+    const p=BN.online&&BN.state?BN.state.player:null, pow=teamPow();
+    let n, E, label, push=false, won=true;
+    const farm=()=>{n=Math.max(1,p?p.stage:1);E=Math.min(REQ(n),pow*.55);};
+    if(!p){farm();label='โหมดทดลอง';}
+    else if(p.boss||p.power<p.need){farm();label=p.boss?'ฟาร์มอยู่ · รอท้าบอสด่าน '+stLabel(p.stage+1):'ฟาร์มอยู่ · อัปเลเวลทีมเพื่อไปต่อ';}
+    else{
+      try{const r=await brpc('idle_push');bnApply(r.state);push=true;won=r.won;n=r.stage;E=pow*(won?.55:1.8);label=won?'บุกด่านใหม่':'พลังไม่พอ';}
+      catch(e){if(e.code!=='too_fast')bMsg(BERR[e.code]||BERR.network);if(e.code==='session')BN.online=false;farm();label='ฟาร์มอยู่';}
+    }
+    if(MODE!=='idle')continue;
+    $('#stTitle').textContent='ด่าน '+stLabel(n)+' · ป่าไผ่สนธยา'; $('#wave').textContent=label;
+    CUR=runBattle(idleStage(n,E),{idle:true,banner:push?'ด่าน '+stLabel(n):null});
+    await CUR; CUR=null;
+    if(MODE!=='idle')continue;
+    if(push)await banner(won?'ผ่านด่าน '+stLabel(n)+'!':'พลังไม่พอ · ต้องการ '+fmtN(REQ(n)),won?'':'boss');
+    else await wait(600);
+    idleRender();
   }
-  $('#rStarsNote').textContent=win?(stars===3?'ไม่มีมอนสเตอร์ล้มเลย':stars===2?'มีมอนสเตอร์ล้ม 1 ตัว':'มีมอนสเตอร์ล้มมากกว่า 1 ตัว'):'';
-  const i=STAGES.indexOf(stage), nx=STAGES[i+1];
-  $('#rNext').hidden=!(win&&nx); if(nx)$('#rNext').onclick=()=>startStage(nx);
-  $('#rRetry').onclick=()=>startStage(stage);
-  $('#rMap').onclick=()=>{UNITS.forEach(removeUnit);UNITS=[];showMap();};
 }
+function setBossUI(on){
+  $('#idle').hidden=on; $('#bAuto').hidden=!on; $('#bExit').hidden=!on; $('#farmLink').hidden=on;
+  AUTO=false; $('#bAuto').classList.remove('on'); $('#bAuto').setAttribute('aria-pressed','false');
+}
+async function startBoss(){
+  if(MODE!=='idle'||!BN.online)return;
+  MODE='boss'; $('#ipBoss').disabled=true;
+  running=false; if(CUR)await CUR;
+  let r;
+  try{r=await brpc('boss_start');}catch(e){bMsg(BERR[e.code]||BERR.network);MODE='idle';$('#ipBoss').disabled=false;return;}
+  $('#ipBoss').disabled=false;
+  BN.bid=r.battle_id; BN.t0=Date.now(); bnApply(r.state);
+  const n=r.stage; setBossUI(true);
+  $('#stTitle').textContent='ด่านบอส '+stLabel(n); $('#hud').hidden=false;
+  const win=await runBattle(bossStage(n),{idle:false});
+  showBossResult(!!win,n);
+}
+async function showBossResult(win,n){
+  const r=$('#result');r.hidden=false;r.className=win?'win':'lose';
+  $('#rTitle').textContent=win?'ชนะบอส!':'พ่ายแพ้';
+  const rw=$('#rRew');rw.innerHTML='';
+  const row=(a,b)=>{const d=document.createElement('div');d.className='rr';const x=document.createElement('span');x.textContent=a;const y=document.createElement('b');y.textContent=b;d.append(x,y);rw.appendChild(d);return y;};
+  const note=row('สถานะ','กำลังบันทึกผล…'); const back=$('#rBack'); back.disabled=true;
+  $('#rStarsNote').textContent=win?'ปลดล็อกด่าน '+stLabel(n+1)+' แล้ว ทีมจะดันด่านต่อเอง':'ลองอัปเลเวลทีมในฟาร์ม หรือใช้ท่าที่ทำให้ศัตรูมึนกับบอส';
+  const bid=BN.bid; BN.bid=null;
+  try{const w=15600-(Date.now()-BN.t0);if(w>0)await sleep(w);
+    const res=await brpc('boss_finish',{battle_id:bid,won:win}); bnApply(res.state);
+    if(res.won){row('เหรียญ','+'+fmtN(res.coins));row('อัมพร','+'+res.amber);} note.textContent='บันทึกแล้ว';}
+  catch(e){note.textContent=BERR[e.code]||BERR.network;}
+  back.disabled=false;
+}
+$('#rBack').onclick=()=>{$('#result').hidden=true;setBossUI(false);MODE='idle';idleRender();};
+$('#ipBoss').onclick=startBoss;
+$('#ipClaim').onclick=()=>claimIdle();
+async function claimIdle(){
+  const b=$('#ipClaim'),c=$('#awClaim'); if(b.disabled&&!c)return; b.disabled=true;if(c)c.disabled=true;
+  try{const r=await brpc('idle_claim');bnApply(r.state);$('#away').hidden=true;bMsg('ได้รับ 🪙 '+fmtN(r.coins)+' · ✦ '+fmtN(r.xp)+' exp');}
+  catch(e){bMsg(BERR[e.code]||BERR.network);}
+  finally{if(c)c.disabled=false;idleRender();}
+}
+function showAway(){
+  const q=idleNow(); if(!q||q.sec<600)return;
+  $('#awTime').textContent='ทีมของคุณสู้ต่อระหว่างที่ไม่อยู่ '+fmtDur(q.sec)+(q.sec>=q.max?' (เต็มแล้ว)':'');
+  $('#awCoins').textContent='+'+fmtN(q.coins); $('#awXp').textContent='+'+fmtN(q.xp); $('#away').hidden=false;
+}
+$('#awClaim').onclick=()=>claimIdle();
+$('#awLater').onclick=()=>{$('#away').hidden=true;};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&BN.online)bnRefresh().then(()=>{if(MODE==='idle')showAway();});});
+setInterval(()=>{if(!document.hidden&&MODE==='idle')bnRefresh();},60000);
 $('#bAuto').onclick=()=>{AUTO=!AUTO;$('#bAuto').classList.toggle('on',AUTO);$('#bAuto').setAttribute('aria-pressed',AUTO);if(AUTO&&choose){const c=choose;choose=null;hideSkills();const [s]=aiChoose(actor);target=aiChoose(actor)[1];c(s);}};
 $('#bSpeed').onclick=()=>{SPEED=SPEED===1?2:1;$('#bSpeed').textContent='x'+SPEED;$('#bSpeed').classList.toggle('on',SPEED===2);};
-$('#bExit').onclick=()=>{if(BN.bid)bnFinish(false).catch(()=>{});running=false;if(choose){choose=null;}UNITS.forEach(removeUnit);UNITS=[];actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;showMap();};
+$('#bExit').onclick=()=>{if(MODE!=='boss'||!running)return;running=false;if(choose){const c=choose;choose=null;c(null);}actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;hideSkills();};
 
 /* ---------- แตะเลือกเป้า ---------- */
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
@@ -282,7 +328,9 @@ function loop(){
 }
 layout(); loop();
 $('#loadMsg').hidden=false;
-Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดโมเดล '+Math.round(p*100)+'%';}),loadDragon(),bnInit()]).then(([g,dr])=>{if(!dr)TEAM.forEach(d=>{if(d.sp==='amateru')d.sp='kazemaru';});bnRender();$('#loadMsg').hidden=true;if(!g){USE_MESHY=false;$('#bModel').hidden=true;}updModelBtn();showMap();});
-function updModelBtn(){$('#bModel').textContent='โมเดลคาเซะคิริ: '+(USE_MESHY?'Meshy AI':'แบบเดิม');$('#bModel').classList.toggle('on',USE_MESHY);}
-$('#bModel').onclick=()=>{USE_MESHY=!USE_MESHY;updModelBtn();};
+Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดโมเดล '+Math.round(p*100)+'%';}),loadDragon(),bnInit()]).then(([g,dr])=>{
+  NO_DRAGON=!dr; if(!dr)TEAM.forEach(d=>{if(d.sp==='amateru')d.sp='kazemaru';});
+  $('#loadMsg').hidden=true; if(!g)USE_MESHY=false;
+  $('#hud').hidden=false; setBossUI(false); idleRender(); showAway(); idleLoop();
+});
 addEventListener('resize',layout);

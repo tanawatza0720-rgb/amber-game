@@ -62,11 +62,25 @@ const SPECIES={
     {id:'s3',name:'กระโดดฟัน',desc:'ฟาดพื้นใส่ศัตรูทุกตัว 85% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.85,target:'all',stun:.3}]},
 };
 const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6}];
-const STAGES=[
-  {id:'1-1',name:'ทางเข้าป่าไผ่',cost:6,coins:80,xp:10,waves:[[{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:2}]]},
-  {id:'1-2',name:'ลานโคมหิน',cost:6,coins:100,xp:10,waves:[[{sp:'kazemaru',lv:3},{sp:'kazemaru',lv:3}],[{sp:'kazemaru',lv:3},{sp:'kazekiri',lv:3}]]},
-  {id:'1-3',name:'ประตูแดงของนินจาชาด',cost:6,coins:150,xp:10,waves:[[{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:3},{sp:'kazemaru',lv:2}],[{sp:'kazekiri',lv:4,boss:1},{sp:'kazemaru',lv:2},{sp:'kazemaru',lv:2}]]},
-];
+/* ด่านแบบ idle: ด่านที่ n ต้องการพลังทีม REQ(n) (ตรงกับเซิร์ฟเวอร์ _req) ด่านที่ 10,20,... เป็นบอส */
+const POWB=sp=>{const b=SPECIES[sp].base;return b.hp+b.atk*4+b.def*3+b.spd*2;};
+const REQ=n=>Math.round(1400*Math.pow(1.04,Math.max(1,n)-1));
+const stLabel=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1);
+const teamPow=()=>Math.round(TEAM.reduce((s,d)=>s+POWB(d.sp)*(1+.1*(d.lv-1)),0));
+// จัดศัตรูให้พลังรวมประมาณ E
+function makeWave(defs,E){
+  const sum=defs.reduce((s,d)=>s+POWB(d.sp),0), f=Math.max(.35,E/sum);
+  const lv=Math.max(1,Math.round(1+10*(f-1))), mul=f/(1+.1*(lv-1));
+  return defs.map(d=>Object.assign({lv,mul},d));
+}
+function idleStage(n,E){
+  const k=n<4?['kazemaru','kazemaru','kazemaru']:n%3===0?['kazekiri','kazemaru','kazekiri']:['kazemaru','kazekiri','kazemaru'];
+  return {id:stLabel(n),name:'ป่าไผ่สนธยา',waves:[makeWave(k.map(sp=>({sp,show:n})),E)]};
+}
+function bossStage(n){
+  const R=REQ(n);
+  return {id:stLabel(n),name:'ประตูแดงของนินจาชาด',waves:[makeWave([{sp:'kazemaru',show:n},{sp:'kazekiri',show:n},{sp:'kazemaru',show:n}],R*.55),makeWave([{sp:'kazemaru',show:n},{sp:'kazekiri',boss:1,show:n},{sp:'kazemaru',show:n}],R*.95)]};
+}
 const P_SLOTS=[[-2.5,.2],[-4.3,-1.8],[-3.6,2]], E_SLOTS=[[2.5,.2],[4.3,-1.8],[3.6,2]];
 const FACE_P=Math.PI/2-.35, FACE_E=-Math.PI/2+.35;
 
@@ -82,7 +96,7 @@ function tintCrimson(w,boss){
   });
 }
 function makeUnit(side,def,slot){
-  const sp=SPECIES[def.sp], f=1+.1*(def.lv-1), bm=def.boss?1.6:1;
+  const sp=SPECIES[def.sp], f=(1+.1*(def.lv-1))*(def.mul||1), bm=def.boss?1.6:1;
   const w=sp.dragon&&DRAGON?buildDragon():buildMonster(sp.rig||sp.evo);
   const inner=w.userData.inner, rig=inner.userData.rig;
   if(def.boss){w.userData.k*=1.3;w.scale.setScalar(w.userData.k);}
@@ -92,7 +106,7 @@ function makeUnit(side,def,slot){
     if(side==='E'&&!inner.userData.meshy){const em=new THREE.MeshBasicMaterial({color:0xff4a3a});[-1,1].forEach(sx=>{P(rig.head,B1,em,[sx*.042,.03,.1],[.045,.009,.01],[0,sx*-.25,sx*.35]);glow(rig.head,0xff4030,.08,[sx*.042,.03,.11],.8);});}}
   const [x,z]=(side==='P'?P_SLOTS:E_SLOTS)[slot];
   w.position.set(x+(def.boss?.6:0),0,z); w.rotation.y=side==='P'?FACE_P:FACE_E; scene.add(w);
-  const u={id:UNITS.length,side,sp:def.sp,evo:sp.evo,boss:!!def.boss,lv:def.lv,
+  const u={id:UNITS.length,side,sp:def.sp,evo:sp.evo,boss:!!def.boss,lv:def.show||def.lv,
     name:side==='P'?sp.name:(def.boss?'หัวหน้านินจาชาด':sp.evo?'นินจาชาด':'นินจาชาดจิ๋ว'),
     maxHp:Math.round(sp.base.hp*f*bm), atk:Math.round(sp.base.atk*f*(def.boss?.85:1)), def:Math.round(sp.base.def*f), spd:sp.base.spd+def.lv,
     skills:sp.skills, cds:{}, gauge:Math.random()*30, stun:0, alive:true, w, inner, rig, home:new THREE.Vector3(x,0,z), face:w.rotation.y};
