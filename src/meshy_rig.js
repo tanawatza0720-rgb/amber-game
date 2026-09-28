@@ -154,7 +154,21 @@ function buildMeshyEvo(m,key){
   const feet=()=>legs.forEach(l=>{l.ft.rotation.x=-(l.th.rotation.x+l.kn.rotation.x);l.ft.rotation.z=-l.th.rotation.z;});
   feet(); retarget();
   // ย้ายดาบไปติดกระดูกมือจริง (ตามท่า Mixamo ได้)
-  m.updateMatrixWorld(true); B.rHand.attach(swR); B.lHand.attach(swL);
+  m.updateMatrixWorld(true);
+  // จัดดาบให้อยู่ในกำมือตามแกนการจับของท่า Mixamo (ใบดาบออกฝั่งนิ้วโป้ง คมหันไปทางนิ้ว)
+  const gripFix=(hand,sd,sw)=>{
+    if(!CS||!MXA.grip||!MXA.grip[sd])return false;
+    const bi=MXA.bones.indexOf(sd==='R'?'RightHand':'LeftHand'); if(bi<0)return false;
+    const G=MXA.grip[sd], F=CS.Qal[bi].clone().multiply(hand.userData.W), Fi=F.clone().invert();
+    const blade=new THREE.Vector3(...G.blade), edge=new THREE.Vector3(...G.edge), x=new THREE.Vector3().crossVectors(blade,edge);
+    const Qs=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,blade,edge));
+    const Hq=wq(hand), toNow=Hq.clone().multiply(Fi);
+    const off=new THREE.Vector3(...G.off).multiplyScalar(CS.hs*.72).applyQuaternion(toNow);
+    const sc=sw.scale.x; sw.parent.remove(sw); m.add(sw);
+    sw.position.copy(posM(hand)).add(off); sw.quaternion.copy(toNow.multiply(Qs)); sw.scale.setScalar(sc);
+    m.updateMatrixWorld(true); hand.attach(sw); return true;};
+  if(!gripFix(B.rHand,'R',swR))B.rHand.attach(swR);
+  if(!gripFix(B.lHand,'L',swL))B.lHand.attach(swL);
   if(CS){play('idle',{loop:true,from:Math.random()*2});CS.w=CS.wT=1;}
   m.userData.idle=T=>{
     if(CS){const dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}

@@ -22,7 +22,13 @@ for(const c of CLIPS){
   const world=(localR,localT)=>{const W=[],P=[];const order=[];const visit=i=>{order.push(i);(nodes[i].children||[]).forEach(visit);};visit(0);
     order.forEach(i=>{const p=parent[i];if(p<0){W[i]=localR[i].clone();P[i]=localT[i].clone();}else{W[i]=W[p].clone().multiply(localR[i]);P[i]=localT[i].clone().applyQuaternion(W[p]).add(P[p]);}});return {W,P};};
   const rest=world(restR,restT);
-  if(!out.hipsY){out.hipsY=rest.P[byName.Hips].y;BONES.forEach(b=>{const d=rest.P[byName[CHILD[b]]].clone().sub(rest.P[byName[b]]).normalize();out.restDir[b]=[d.x,d.y,d.z].map(x=>+x.toFixed(4));});}
+  if(!out.hipsY){out.hipsY=rest.P[byName.Hips].y;BONES.forEach(b=>{const d=rest.P[byName[CHILD[b]]].clone().sub(rest.P[byName[b]]).normalize();out.restDir[b]=[d.x,d.y,d.z].map(x=>+x.toFixed(4));});
+    // ทิศการจับดาบ: ใบดาบออกทางฝั่งนิ้วโป้ง (ก้อย→ชี้), คมดาบหันไปทางนิ้ว
+    out.grip={};['Right','Left'].forEach(sd=>{const P=n=>rest.P[byName[sd+'Hand'+n]]||rest.P[byName[sd+n]];const h=rest.P[byName[sd+'Hand']];
+      const blade=P('Index1').clone().sub(P('Pinky1')).normalize(), f=P('Middle1').clone().sub(h), fd=f.clone().normalize(), edge=fd.clone().addScaledVector(blade,-fd.dot(blade)).normalize();
+      const mid=P('Index1').clone().add(P('Pinky1')).multiplyScalar(.5).sub(h);
+      out.grip[sd[0]]={blade:[blade.x,blade.y,blade.z].map(x=>+x.toFixed(4)),edge:[edge.x,edge.y,edge.z].map(x=>+x.toFixed(4)),off:[mid.x,mid.y,mid.z].map(x=>+x.toFixed(4))};});
+    console.log('grip',JSON.stringify(out.grip));}
   const N=Math.round(dur*30)+1, q=[], hp=[], hand=[];
   for(let f=0;f<N;f++){const time=Math.min(dur,f/30);
     const lr=restR.map((r,i)=>tr[i]&&tr[i].rotation?sample(tr[i].rotation,time,new T.Quaternion()):r.clone());
