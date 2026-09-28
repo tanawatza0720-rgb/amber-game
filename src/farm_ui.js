@@ -26,8 +26,8 @@ function para(t){return el('p','ptxt',t);}
 const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
     const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th></tr>';
-    [[4,'อามาเทรุ','1%','6%'],[3,'คุโรกะ','4%','16%'],[2,'คาเซะคิริ','13%','33%'],[1,'คาเซะมารุ','82%','45%']].forEach(([r,n,a,b])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t,' '+n);tr2.append(td);[a,b].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
-    d.append(T); d.append(rows([['การันตีระดับเทพเจ้า (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ff8ac4']]));
+    [[4,'—','0.5%'],[3,'2%','12.5%'],[2,'15%','32%'],[1,'83%','55%']].forEach(([r,a,b])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t);tr2.append(td);[a,b].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
+    d.append(T); d.append(rows([['ระดับเทพเจ้า','ออกจากไข่ทองคำเท่านั้น','#ff8ac4'],['การันตีระดับตำนานขึ้นไป (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
     openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));

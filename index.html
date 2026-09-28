@@ -929,7 +929,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
   const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
-  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:50},amateru:{rar:4,max:50}};
+  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:40},amateru:{rar:4,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
@@ -965,10 +965,10 @@ const LOCAL=(()=>{
     game_state:()=>state(),
     set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>24)fail('bad_name');D.name=n;D.named=true;return{};},
     hatch_egg:({kind})=>{if(D.mons.length>=C.slots)fail('box_full');let ch;
-      if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=[.82,.13,.04,.01];}
-      else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=[.45,.33,.16,.06];}else fail('bad_egg');
-      const r=Math.random(); let t=(kind==='gold'&&D.pity>=C.pity_max)?4:r<ch[3]?4:r<ch[3]+ch[2]?3:r<ch[3]+ch[2]+ch[1]?2:1;
-      const pool=Object.keys(SPS).filter(k=>SPS[k].rar===t), sp=pool[Math.floor(Math.random()*pool.length)]||'kazemaru'; if(kind==='gold'&&t===4)D.pity=0;
+      if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=[.83,.15,.02,0];}
+      else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=[.55,.32,.125,.005];}else fail('bad_egg');
+      const r=Math.random(); let t=r<ch[3]?4:r<ch[3]+ch[2]?3:r<ch[3]+ch[2]+ch[1]?2:1; if(kind==='gold'&&t<3&&D.pity>=C.pity_max)t=3;
+      const pool=Object.keys(SPS).filter(k=>SPS[k].rar===t), sp=pool[Math.floor(Math.random()*pool.length)]||'kazemaru'; if(kind==='gold'&&t>=3)D.pity=0;
       const m={id:D.nid++,sp,lv:1};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
@@ -2326,8 +2326,8 @@ function para(t){return el('p','ptxt',t);}
 const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
     const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th></tr>';
-    [[4,'อามาเทรุ','1%','6%'],[3,'คุโรกะ','4%','16%'],[2,'คาเซะคิริ','13%','33%'],[1,'คาเซะมารุ','82%','45%']].forEach(([r,n,a,b])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t,' '+n);tr2.append(td);[a,b].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
-    d.append(T); d.append(rows([['การันตีระดับเทพเจ้า (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ff8ac4']]));
+    [[4,'—','0.5%'],[3,'2%','12.5%'],[2,'15%','32%'],[1,'83%','55%']].forEach(([r,a,b])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t);tr2.append(td);[a,b].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
+    d.append(T); d.append(rows([['ระดับเทพเจ้า','ออกจากไข่ทองคำเท่านั้น','#ff8ac4'],['การันตีระดับตำนานขึ้นไป (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
     openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
@@ -2575,19 +2575,19 @@ const SPEC={
     base:{hp:102,atk:34,def:13,spd:42},lore:'นินจาเงาผู้ไร้ใบหน้า พกดาบสามเล่ม เคลื่อนไหวเงียบดั่งสายลมยามค่ำ',
     skills:[['ฟันเงา','ฟันศัตรู 1 ตัว 110%'],['สามดาบวายุ','ฟัน 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['กระโดดฟัน','ฟาดพื้นใส่ศัตรูทุกตัว 85% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
   yorugumo:{name:'โยรุกุโมะ',title:'จอมเวทแมงมุมราตรี',rar:2,el:'มืด',elc:'#b48cff',role:'เวทมนตร์',evo:1,spider:1,maxLv:40,
-    base:{hp:96,atk:33,def:14,spd:36},lore:'จอมเวทร่างครึ่งแมงมุมผู้ถักใยอยู่ในถ้ำลึกใต้ป่าอัมพร ลูกแก้วม่วงในมือทั้งสองรวบรวมแสงจันทร์ไว้เป็นเวทมนตร์',
+    base:{hp:100,atk:34,def:14,spd:38},lore:'จอมเวทร่างครึ่งแมงมุมผู้ถักใยอยู่ในถ้ำลึกใต้ป่าอัมพร ลูกแก้วม่วงในมือทั้งสองรวบรวมแสงจันทร์ไว้เป็นเวทมนตร์',
     skills:[['เขี้ยวพิษ','ยกขาหน้าแทงศัตรู 1 ตัว 110%'],['ลูกแก้วมนตร์ม่วง','ร่ายลูกแก้วเวทใส่ศัตรูทุกตัว 55% · คูลดาวน์ 3'],['กระโจนใยมรณะ','กระโจนลงกลางศัตรูทุกตัว 80% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
   kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:3,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
-    base:{hp:112,atk:40,def:14,spd:44},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า',
+    base:{hp:130,atk:48,def:16,spd:50},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า',
     skills:[['ฟันเงาจันทร์','ฟันศัตรู 1 ตัว 120%'],['คมดาบราตรี','ฟัน 3 ครั้ง ครั้งละ 75% · คูลดาวน์ 3'],['ดิ่งฟันสังหาร','กระโดดฟาดศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
   hakuneko:{name:'ฮาคุเนโกะ',title:'นักดาบแมวขาวแห่งตะวันทอง',rar:3,el:'แสง',elc:'#ffd36a',role:'จู่โจม',evo:1,rig:'hakuneko',maxLv:50,
-    base:{hp:104,atk:43,def:12,spd:50},lore:'นักดาบเผ่าแมวขาวผู้ร่าเริง แบกดาบโค้งไว้บนบ่าเสมอ ว่ากันว่าเธอมีเก้าชีวิตและยังไม่เคยใช้หมดสักครั้ง',
+    base:{hp:120,atk:51,def:14,spd:56},lore:'นักดาบเผ่าแมวขาวผู้ร่าเริง แบกดาบโค้งไว้บนบ่าเสมอ ว่ากันว่าเธอมีเก้าชีวิตและยังไม่เคยใช้หมดสักครั้ง',
     skills:[['ฟันตะวันทอง','ฟันศัตรู 1 ตัว 125%'],['กรงเล็บเก้าชีวิต','ฟัน 3 ครั้ง ครั้งละ 72% · คูลดาวน์ 3'],['ดาบจันทร์เสี้ยว','กระโดดฟันศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
-  morihime:{name:'โมริฮิเมะ',title:'ธิดาหอกแห่งพงไพร',rar:2,el:'ไม้',elc:'#7fd46a',role:'จู่โจม',evo:1,rig:'morihime',maxLv:50,
-    base:{hp:120,atk:38,def:16,spd:42},lore:'เอลฟ์ผู้พิทักษ์ป่าลึก ผ้าคลุมปักลายใบไม้พลิ้วตามสายลม หอกยาวของเธอแทงได้แม่นยำราวกับเงาใบไม้ที่ร่วงหล่น',
+  morihime:{name:'โมริฮิเมะ',title:'ธิดาหอกแห่งพงไพร',rar:2,el:'ไม้',elc:'#7fd46a',role:'จู่โจม',evo:1,rig:'morihime',maxLv:40,
+    base:{hp:110,atk:32,def:17,spd:38},lore:'เอลฟ์ผู้พิทักษ์ป่าลึก ผ้าคลุมปักลายใบไม้พลิ้วตามสายลม หอกยาวของเธอแทงได้แม่นยำราวกับเงาใบไม้ที่ร่วงหล่น',
     skills:[['แทงหอกพงไพร','แทงศัตรู 1 ตัว 120%'],['หอกพายุใบไม้','แทง 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['หอกดิ่งฟ้า','กระโดดปักหอกใส่ศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
   amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:4,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
-    base:{hp:118,atk:36,def:15,spd:38},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ',
+    base:{hp:175,atk:66,def:24,spd:56},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ',
     skills:[['กรงเล็บเพลิง','บินโฉบเข้าไปงับศัตรู 1 ตัว 115%'],['ลมหายใจอัมพร','พ่นไฟใส่ศัตรูทุกตัว 70% · คูลดาวน์ 3'],['ดิ่งฟ้าถล่ม','ดิ่งลงกระแทกศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
 };
 const spOf=d=>SPEC[d.sp]||SPEC.kazemaru;
