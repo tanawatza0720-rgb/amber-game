@@ -156,7 +156,7 @@ function buildMeshyEvo(m,key){
       const mp=MAP.get(b); let W;
       if(mp){proxyWQ(mp[0],pq); W=pq.clone(); if(mp[1])W.multiply(mp[1]); W.multiply(b.userData.W);}
       else{W=parentW.clone().multiply(b.userData.rq); if(b===B.spine2&&breath)W.multiply(_q2.setFromAxisAngle(_v2.set(1,0,0),breath));}
-      if(cw>0&&CS.idx.has(b)){const Wc=clipW(CS.idx.get(b),b);W.slerp(Wc,cw);}
+      if(cw>0&&CS.idx.has(b)){const Wc=clipW(CS.idx.get(b),b,W);W.slerp(Wc,cw);}
       b.quaternion.copy(_q1.copy(parentW).invert().multiply(W));
       b.children.forEach(c=>{if(c.isBone)visit(c,W);});
     };
@@ -165,8 +165,14 @@ function buildMeshyEvo(m,key){
   const _qa=new THREE.Quaternion(),_qb=new THREE.Quaternion();
   const sampleD=(c,bi,out)=>{const cl=MXA.clips[c.name],q=cl.q,nb=MXA.bones.length,n=cl.n;const f=Math.min(n-1,Math.max(0,c.t*30)),i0=Math.floor(f),i1=Math.min(n-1,i0+1),fr=f-i0;
     const a=(i0*nb+bi)*4,b=(i1*nb+bi)*4; _qa.set(q[a],q[a+1],q[a+2],q[a+3]); out.set(q[b],q[b+1],q[b+2],q[b+3]); return out.copy(_qa.slerp(out,fr));};
-  function clipW(bi,b){const D=sampleD(CS.cur,bi,new THREE.Quaternion());
+  function clipW(bi,b,baseW){const D=sampleD(CS.cur,bi,new THREE.Quaternion());
     if(CS.prev&&CS.fade<1){const Dp=sampleD(CS.prev,bi,_qb);D.copy(Dp.slerp(D,CS.fade));}
+    // ตัวละครใหม่มีท่าพักกระดูกต่างจากต้นฉบับ ใช้การหมุนที่เปลี่ยนจากท่ายืนแทนทิศสัมบูรณ์
+    if((key==='hakuneko'||key==='morihime')&&MXA.clips.idle){const q=MXA.clips.idle.q,i=bi*4;
+      _qa.set(q[i],q[i+1],q[i+2],q[i+3]).invert();
+      const leg=key==='morihime'&&/(UpLeg|Leg|Foot|Toe)/.test(b.name);
+      const t=leg&&!['idle','walk','run'].includes(CS.cur.name)?.95:key==='morihime'?.3:.15;
+      return D.multiply(_qa).slerp(_q3.identity(),t).multiply(baseW);}
     return D.multiply(CS.Qal[bi]).multiply(b.userData.W);}
   function play(name,o){o=o||{};if(!CS||!MXA.clips[name])return Promise.resolve();
     if(CS.cur&&CS.cur.done)CS.cur.done();
