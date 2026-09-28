@@ -153,7 +153,7 @@ async function spawnWave(){
 }
 async function finish(win){
   running=false; {const ps=alive('P');if(win&&ps.length)camOver(ps[0],()=>ps[0].w.position.clone().add(new THREE.Vector3(-4,0,1.2)));else camWide();} actRing.visible=false; tgtRing.visible=false; hideSkills();
-  if(win)alive('P').forEach((u,i)=>setTimeout(()=>{if(u.dragon)dragonSet(u,{rear:1,breath:1,flapSpd:1.6},.4);else if(u.inner.userData.play)u.inner.userData.play('victory',{loop:true,fade:.25});else if(u.evo)poseTo([[u.rig.R.sh.rotation,'z',-2.6],[u.rig.L.sh.rotation,'z',2.6]],.3);else{u.inner.userData.acting=true;poseTo([[u.rig.R.a.rotation,'z',-3],[u.rig.L.a.rotation,'z',2.6]],.3);}particles(tmpV.copy(u.w.position).setY(1.2),0xffd27a,20,2,.05,1.2);},i*150));
+  if(win)alive('P').forEach((u,i)=>setTimeout(()=>{if(u.dragon)dragonRoar(u,1600);else if(u.inner.userData.play)u.inner.userData.play('victory',{loop:true,fade:.25});else if(u.evo)poseTo([[u.rig.R.sh.rotation,'z',-2.6],[u.rig.L.sh.rotation,'z',2.6]],.3);else{u.inner.userData.acting=true;poseTo([[u.rig.R.a.rotation,'z',-3],[u.rig.L.a.rotation,'z',2.6]],.3);}particles(tmpV.copy(u.w.position).setY(1.2),0xffd27a,20,2,.05,1.2);},i*150));
   await wait(OPTS.idle?1000:900);
   return win;
 }
@@ -325,7 +325,10 @@ function loop(){
   camera.position.copy(CAM).add(tmpV.set(Math.sin(T*.3)*.06,Math.sin(T*.4)*.03,0));
   if(shake>.002){camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake;shake*=.86;}
   camera.lookAt(LOOK);
-  OCC.forEach(g=>{const dx=g.position.x-camera.position.x,dz=g.position.z-camera.position.z;const r=g.userData.occR||3.4;g.visible=dx*dx+dz*dz>r*r;});
+  { const lx=LOOK.x-camera.position.x, lz=LOOK.z-camera.position.z, ll=lx*lx+lz*lz||1;
+    OCC.forEach(g=>{const dx=g.position.x-camera.position.x,dz=g.position.z-camera.position.z;const r=g.userData.occR||3.4;
+      const t=(dx*lx+dz*lz)/ll, px=dx-lx*t, pz=dz-lz*t, block=t>0&&t<.92&&px*px+pz*pz<(r*.5)*(r*.5);
+      g.visible=dx*dx+dz*dz>r*r&&!block;}); }
   UNITS.forEach(u=>{if(!u.alive){u.inner.visible=true;return;}const near=u!==actor&&camMode.type!=='wide'&&camera.position.distanceTo(u.w.position)<(actor?camera.position.distanceTo(actor.w.position)-.3:3.1);u.inner.visible=!near;if(u.barEl&&near)u.barEl.style.visibility='hidden';});
   renderer.render(scene,camera);
 }

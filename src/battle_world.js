@@ -29,7 +29,7 @@ const rimL=new THREE.DirectionalLight(0x8fb0ff,.9); rimL.position.set(-6,5,-8); 
     for(let k=0;k<6;k++){const l=new THREE.Mesh(new THREE.PlaneGeometry(.55,.09),lm);l.position.set((Math.random()-.5)*.7,h*(.55+Math.random()*.45),(Math.random()-.5)*.7);l.rotation.set(Math.random(),Math.random()*3,-.4);g.add(l);}g.rotation.z=(Math.random()-.5)*.06;}};
   grove(-8,-7,14,5); grove(8,-7,14,5); grove(-9,8,12,5); grove(9,8,12,5); grove(-15,4,10,4); grove(15,4,10,4); grove(0,13,14,8); grove(-12,0,10,4); grove(12,-1,10,4); grove(0,-12,16,8);
   const maple=(x,z,s)=>{const g=J(scene,x,0,z);g.userData.occR=5.2;OCC.push(g);g.scale.setScalar(s);P(g,Y1,SM(0x5b3a24),[0,1,0],[.18,2,.18]);[0xd9482b,0xf07a2a,0xc23a3a,0xe8a33a].forEach((c,i)=>P(g,new THREE.IcosahedronGeometry(1,1),SM(c,{flatShading:true}),[Math.cos(i*1.7)*.6,2.5+Math.sin(i*2.3)*.3,Math.sin(i*1.7)*.5],[1,.85,1]));};
-  maple(-5.5,-5,1.2); maple(5.8,-5.4,1.1); maple(-9.5,4,1); maple(9.8,3.2,1.05); maple(-4.5,7.5,1.1); maple(5,8,1.15);
+  maple(-5.5,-5,1.2); maple(5.8,-5.4,1.1); maple(-9.5,4,1); maple(9.8,3.2,1.05); maple(-8.5,11,1.1); maple(9,11.5,1.15);
   // โทริอิไกล ๆ
   const tg=J(scene,0,0,-8.5), red=SM(0xb23a2c,{roughness:.6}), blk=SM(0x1f1f22,{roughness:.5});
   [-1.6,1.6].forEach(x=>P(tg,Y1,red,[x,2.1,0],[.2,4.2,.2]));P(tg,B1,red,[0,3.4,0],[4,.22,.24]);P(tg,B1,blk,[0,4.15,0],[4.9,.26,.4]);

@@ -17,19 +17,20 @@ function nearestFoe(u){
 }
 function turnToward(u,x,z,dt){
   const want=Math.atan2(x-u.w.position.x,z-u.w.position.z);let d=want-u.w.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));
+  if(u.dragon)u.rig.tg.bank=Math.max(-1,Math.min(1,-d*1.8));
   u.w.rotation.y+=d*Math.min(1,dt*10);
 }
 function stepToward(u,x,z,dist,dt,T){
   const p=u.w.position, dx=x-p.x, dz=z-p.z, L=Math.hypot(dx,dz)||1, st=Math.min(dist,RT_MOVE*(u.dragon?1.15:1)*dt);
   p.x+=dx/L*st; p.z+=dz/L*st; turnToward(u,x,z,dt);
   const A=u.inner.userData, MC=hasClip(u,'run');
-  if(!u.moving){if(u.dragon)dragonSet(u,{flapSpd:1.9,flapAmp:.75,lunge:.3},.15);else if(MC)A.play('run',{loop:true,fade:.15,speed:1.15});}
+  if(!u.moving){if(u.dragon)dragonSet(u,{flapSpd:1.9,flapAmp:.8,lunge:.45,legF:-.3,spread:.3},.15);else if(MC)A.play('run',{loop:true,fade:.15,speed:1.15});}
   u.moving=true;
   p.y=u.dragon?.25+Math.sin(T*6)*.08:MC?0:Math.abs(Math.sin(T*13))*(u.evo?.1:.14);
   u.dust-=dt; if(u.dust<=0&&!u.dragon){u.dust=.22;particles(tmpV.copy(p).setY(.08),0xb8a888,3,.6,.18,-.1,.35);}
 }
 const hasClip=(u,n)=>{const A=u.inner.userData;return !!(A.play&&A.clipInfo&&A.clipInfo(n));};
-function stopMove(u,keep){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon)dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0},.3);else if(!keep&&hasClip(u,'run'))u.inner.userData.play('idle',{loop:true,fade:.15});}
+function stopMove(u,keep){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon)dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0,legF:0,spread:0,bank:0},.3);else if(!keep&&hasClip(u,'run'))u.inner.userData.play('idle',{loop:true,fade:.15});}
 // เล่นท่าจาก Mixamo: multi=ตีหลายจังหวะตาม hits, ไม่งั้นตีครั้งเดียวที่จังหวะแรงสุด
 async function clipStrike(u,nm,sp,onHit,multi){
   const A=u.inner.userData,inf=A.clipInfo(nm); A.play(nm,{speed:sp,fade:.1});
@@ -41,8 +42,9 @@ function rtTick(dt,T){
   if(!RT)return;
   UNITS.forEach(u=>{
     if(!u.alive)return;
+    if(u.stun&&u.dragon){u.stun=0;u.stunT=1.6;u.dizzy=1;stopMove(u,1);dragonSet(u,{droop:1,flapAmp:.25},.25);}
     if(u.stun){u.stun=0;u.stunT=1.6;if(!u.busy&&hasClip(u,'dizzy')){stopMove(u,1);u.inner.userData.play('dizzy',{loop:true,fade:.15});u.dizzy=1;}}
-    if(u.stunT>0){u.stunT-=dt;stopMove(u,1);if(u.stunT<=0&&u.dizzy){u.dizzy=0;u.inner.userData.play('idle',{loop:true,fade:.2});}return;}
+    if(u.stunT>0){u.stunT-=dt;stopMove(u,1);if(u.stunT<=0&&u.dizzy){u.dizzy=0;if(u.dragon)dragonSet(u,{droop:0,flapAmp:.55},.3);else u.inner.userData.play('idle',{loop:true,fade:.2});}return;}
     if(u.holdT>0){u.holdT-=dt;return;}
     for(const k in u.skT)if(u.skT[k]>0)u.skT[k]-=dt;
     if(u.atkT>0)u.atkT-=dt;
@@ -76,7 +78,11 @@ async function rtUse(u,s,t){
     if(u.dragon&&s.type!=='melee'){}else await faceTo(u,t.w.position,.08);
     const AN=ANIM[u.sp]&&u.inner.userData.play?ANIM[u.sp]:null;
     if(AN&&u.side==='P'&&s===ultOf(u)&&hasClip(u,'powerup')){u.inner.userData.play('powerup',{speed:1.8,fade:.1});particles(tmpV.copy(u.w.position).setY(1),0x9fe8ff,24,1.4,.06,1.2,.9);await wait(650);}
-    if(s.type==='melee'&&AN){
+    if(u.dragon&&u.side==='P'&&s===ultOf(u))await dragonRoar(u,450);
+    if(s.type==='melee'&&u.dragon){
+      const r=Math.random(), f=()=>{if(t.alive)dealHit(u,t,s);};
+      if(r<.4)await strike(u,0,f); else if(r<.75)await dragonClaw(u,t,()=>{if(t.alive)dealHit(u,t,{...s,mult:s.mult*.55});}); else await dragonTail(u,t,()=>near(t.w.position,2.6).forEach(o=>dealHit(u,o,{...s,mult:s.mult*.8})));
+    } else if(s.type==='melee'&&AN){
       const ls=AN.s1; await clipStrike(u,ls[Math.floor(Math.random()*ls.length)],1.35,()=>{if(t.alive){dealHit(u,t,s);hitStop();}});
     } else if(s.type==='melee'){
       await strike(u,Math.random()<.5?0:1,()=>{if(t.alive)dealHit(u,t,s);});
@@ -132,7 +138,7 @@ function rtSpawn(wv){
 async function rtBattle(st,opts){
   stage=st; OPTS=opts||{}; running=true; RT={manual:!!OPTS.manual};
   UNITS.forEach(removeUnit); UNITS=[]; PICKU=[]; RIGS=[]; clearTrails();
-  TEAM.forEach((d,i)=>{const u=rtInit(makeUnit('P',d,i));if(hasClip(u,'battlecry')&&(OPTS.banner||OPTS.manual)){u.holdT=1.3;setTimeout(()=>u.alive&&u.inner.userData.play('battlecry',{speed:1.7,fade:.15}),150);}});
+  TEAM.forEach((d,i)=>{const u=rtInit(makeUnit('P',d,i));if(hasClip(u,'battlecry')&&(OPTS.banner||OPTS.manual)){u.holdT=1.3;setTimeout(()=>u.alive&&u.inner.userData.play('battlecry',{speed:1.7,fade:.15}),150);}else if(u.dragon&&(OPTS.banner||OPTS.manual)){u.holdT=1.4;setTimeout(()=>u.alive&&dragonRoar(u,700),150);}});
   document.body.classList.add('rt'); camMode={type:'wide'}; camK=1.6; actRing.visible=tgtRing.visible=false;
   if(RT.manual)ultButtons(true);
   let won=null;
