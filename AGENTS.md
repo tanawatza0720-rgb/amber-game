@@ -78,7 +78,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 | `kazekiri` | คาเซะคิริ | หายาก (วิวัฒน์จากคาเซะมารุ) | `kzr/kazekiri_rig.json` | Meshy rig |
 | `kuroga` | คุโรกะ | ตำนาน | `krg/kuroga_rig.json` | Meshy rig |
 | `hakuneko` | ฮาคุเนโกะ (นักดาบแมว) | ตำนาน | `hkn/hakuneko_rig.json` | Mixamo auto-rig |
-| `morihime` | โมริฮิเมะ (เอลฟ์ถือหอก) | ตำนาน | `mrh/morihime_rig.json` | rig เอง (heat-diffusion weights) |
+| `morihime` | โมริฮิเมะ (เอลฟ์ถือหอก) | หายาก | `mrh/morihime_rig.json` | rig เอง (heat-diffusion weights) |
 | `amateru` | อามาเทรุ (มังกร) | เทพเจ้า | `drg/dragon.json` | กระดูกสร้างในโค้ด (dragon.js) |
 
 - ไฟล์ `*_rig.json` = glTF JSON (buffer ฝังเป็น base64) + `baseColor*.jpg` ในโฟลเดอร์เดียวกัน, ชื่อกระดูกแบบ **Mixamo** (`mixamorig:Hips`, `...RightHand`, `...RightHandMiddle4` ใช้บอกทิศมือ, `...HeadTop_End`)
@@ -121,7 +121,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 
 ## 9. สถานะ ณ ล่าสุด และงานที่ค้าง/ไอเดีย
 
-เสร็จแล้ว: ระบบ idle+บอส, สู้เรียลไทม์, ทีม 6 ตัว, แผนที่เมืองใหญ่, มังกรพร้อมท่าหลายแบบ, มือกำดาบ, ระดับ 4 ขั้น, ตัวละครตำนานใหม่ 2 ตัว
+เสร็จแล้ว: ระบบ idle+บอส, สู้เรียลไทม์, ทีม 6 ตัว, แผนที่เมืองใหญ่, มังกรพร้อมท่าหลายแบบ, มือกำดาบ, ระดับ 4 ขั้น, ฮาคุเนโกะระดับตำนานและโมริฮิเมะระดับหายาก
 
 ค้าง/น่าทำต่อ:
 - ปรับสมดุล `_req(n)` (พลังที่ด่านต้องการ) สำหรับทีม 6 ตัว

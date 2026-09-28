@@ -654,3 +654,6 @@ insert into public.species (sp,name,rar,max_lv,evolve_to,evolve_cost) values
 on conflict (sp) do update set name=excluded.name, rar=excluded.rar, max_lv=excluded.max_lv;
 update public.species set pow = case sp when 'hakuneko' then 412 when 'morihime' then 404 else pow end
 where sp in ('hakuneko','morihime');
+
+-- โมริฮิเมะเป็นระดับหายาก (รันซ้ำได้)
+update public.species set rar=2 where sp='morihime';

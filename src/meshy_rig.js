@@ -73,9 +73,11 @@ function buildMeshyEvo(m,key){
   root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;
     o.material=o.material.clone();if(ENV){o.material.envMap=ENV;o.material.envMapIntensity=.55;}
     if(o.material.emissive)o.material.emissive.set(0x000000);}});
-  // อาวุธเดิมของโมเดล (ถืออยู่ในท่าต้นฉบับ): ติดกับกระดูกมือขวาตามตำแหน่งเดิมเป๊ะ
+  // อาวุธเดิมของโมเดล: ติดกับมือขวา และปรับมุมหอกของโมริฮิเมะรอบจุดจับ
   let prop=null; root.traverse(o=>{if(!prop&&o.name==='weapon_prop')prop=o;});
+  let spearGrip=null;
   if(prop&&B.rHand){B.rHand.attach(prop);
+    if(key==='morihime'){spearGrip=new THREE.Group();B.rHand.add(spearGrip);spearGrip.attach(prop);}
     const P=prop.geometry.attributes.position, hp=B.rHand.getWorldPosition(new THREE.Vector3()), inv=new THREE.Matrix4().copy(prop.matrixWorld).invert(), hl=hp.applyMatrix4(inv), v=new THREE.Vector3(), tip=new THREE.Vector3(); let best=-1;
     for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i);const d=v.distanceTo(hl);if(d>best){best=d;tip.copy(v);}}
     const mk=q=>{const o=new THREE.Object3D();o.position.copy(q);prop.add(o);return o;};
@@ -156,7 +158,7 @@ function buildMeshyEvo(m,key){
       const mp=MAP.get(b); let W;
       if(mp){proxyWQ(mp[0],pq); W=pq.clone(); if(mp[1])W.multiply(mp[1]); W.multiply(b.userData.W);}
       else{W=parentW.clone().multiply(b.userData.rq); if(b===B.spine2&&breath)W.multiply(_q2.setFromAxisAngle(_v2.set(1,0,0),breath));}
-      if(cw>0&&CS.idx.has(b)){const Wc=clipW(CS.idx.get(b),b);W.slerp(Wc,cw);}
+      if(cw>0&&CS.idx.has(b)){const Wc=clipW(CS.idx.get(b),b,W);W.slerp(Wc,cw);}
       b.quaternion.copy(_q1.copy(parentW).invert().multiply(W));
       b.children.forEach(c=>{if(c.isBone)visit(c,W);});
     };
@@ -165,8 +167,14 @@ function buildMeshyEvo(m,key){
   const _qa=new THREE.Quaternion(),_qb=new THREE.Quaternion();
   const sampleD=(c,bi,out)=>{const cl=MXA.clips[c.name],q=cl.q,nb=MXA.bones.length,n=cl.n;const f=Math.min(n-1,Math.max(0,c.t*30)),i0=Math.floor(f),i1=Math.min(n-1,i0+1),fr=f-i0;
     const a=(i0*nb+bi)*4,b=(i1*nb+bi)*4; _qa.set(q[a],q[a+1],q[a+2],q[a+3]); out.set(q[b],q[b+1],q[b+2],q[b+3]); return out.copy(_qa.slerp(out,fr));};
-  function clipW(bi,b){const D=sampleD(CS.cur,bi,new THREE.Quaternion());
+  function clipW(bi,b,baseW){const D=sampleD(CS.cur,bi,new THREE.Quaternion());
     if(CS.prev&&CS.fade<1){const Dp=sampleD(CS.prev,bi,_qb);D.copy(Dp.slerp(D,CS.fade));}
+    // ตัวละครใหม่มีท่าพักกระดูกต่างจากต้นฉบับ ใช้การหมุนที่เปลี่ยนจากท่ายืนแทนทิศสัมบูรณ์
+    if((key==='hakuneko'||key==='morihime')&&MXA.clips.idle){const q=MXA.clips.idle.q,i=bi*4;
+      _qa.set(q[i],q[i+1],q[i+2],q[i+3]).invert();
+      const leg=key==='morihime'&&(b===B.hips||/(UpLeg|Leg|Foot|Toe)/.test(b.name));
+      const t=leg&&!['idle','walk','run'].includes(CS.cur.name)?.95:key==='morihime'?.3:.15;
+      return D.multiply(_qa).slerp(_q3.identity(),t).multiply(baseW);}
     return D.multiply(CS.Qal[bi]).multiply(b.userData.W);}
   function play(name,o){o=o||{};if(!CS||!MXA.clips[name])return Promise.resolve();
     if(CS.cur&&CS.cur.done)CS.cur.done();
@@ -186,7 +194,7 @@ function buildMeshyEvo(m,key){
   const mt=mats();
   const swR=prop?null:katana(R.hd,mt); if(swR){swR.position.set(0,-.04,0); swR.rotation.set(-.35,0,1.95);}
   const swL=prop?null:katana(L.hd,mt); if(swL){swL.position.set(0,-.04,0); swL.rotation.set(-.1,0,Math.PI+.1);}
-  if(prop){m.userData.swords=[prop];prop.visible=false;}
+  if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||key==='morihime';}
   else{m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;}
   if(key==='kuroga'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ: ดาบยาวเล่มเดียว
   const base=[
@@ -222,11 +230,18 @@ function buildMeshyEvo(m,key){
   if(!gripFix(B.lHand,'L',swL))B.lHand.attach(swL);
   makeFist(root,[[B.rHand,swR,'R'],[B.lHand,swL,'L']]);}
   if(CS){play('idle',{loop:true,from:Math.random()*2});CS.w=CS.wT=1;}
+  const alignSpear=()=>{m.updateMatrixWorld(true);
+    const P=prop.geometry.attributes.position,v=new THREE.Vector3(),lo=new THREE.Vector3(),hi=new THREE.Vector3();let min=Infinity,max=-Infinity;
+    for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i).applyMatrix4(prop.matrixWorld);if(v.y<min){min=v.y;lo.copy(v);}if(v.y>max){max=v.y;hi.copy(v);}}
+    const up=new THREE.Vector3(0,1,0).applyQuaternion(m.getWorldQuaternion(new THREE.Quaternion()));
+    const turn=new THREE.Quaternion().setFromUnitVectors(hi.sub(lo).normalize(),up),handQ=B.rHand.getWorldQuaternion(new THREE.Quaternion());
+    spearGrip.quaternion.premultiply(handQ.clone().invert().multiply(turn).multiply(handQ));};
   m.userData.idle=T=>{
     if(CS){const dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}
     breath=Math.sin(T*2)*.025;
     m.position.y+=Math.sin(T*2)*.008; m.position.x+=Math.sin(T*.9)*.012;
     head.rotation.z=Math.sin(T*.7)*.03;
     feet(); retarget();
+    if(spearGrip){alignSpear();spearGrip=null;}
   };
 }
