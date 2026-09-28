@@ -74,12 +74,13 @@ function makeWave(defs,E){
   return defs.map(d=>Object.assign({lv,mul},d));
 }
 function idleStage(n,E){
-  const k=n<4?['kazemaru','kazemaru','kazemaru']:n%3===0?['kazekiri','kazemaru','kazekiri']:['kazemaru','kazekiri','kazemaru'];
-  return {id:stLabel(n),name:'ป่าไผ่สนธยา',waves:[makeWave(k.map(sp=>({sp,show:n})),E)]};
+  const pool=n<4?[['kazemaru','kazemaru','kazemaru'],['kazemaru','kazemaru','kazemaru','kazemaru'],['kazemaru','kazekiri','kazemaru']]
+    :[['kazemaru','kazekiri','kazemaru','kazemaru'],['kazekiri','kazemaru','kazekiri'],['kazemaru','kazekiri','kazemaru','kazekiri']];
+  return {id:stLabel(n),name:'ป่าไผ่สนธยา',waves:pool.map(k=>makeWave(k.map(sp=>({sp,show:n})),E))};
 }
 function bossStage(n){
   const R=REQ(n);
-  return {id:stLabel(n),name:'ประตูแดงของนินจาชาด',waves:[makeWave([{sp:'kazemaru',show:n},{sp:'kazekiri',show:n},{sp:'kazemaru',show:n}],R*.55),makeWave([{sp:'kazemaru',show:n},{sp:'kazekiri',boss:1,show:n},{sp:'kazemaru',show:n}],R*.95)]};
+  return {id:stLabel(n),name:'ประตูแดงของนินจาชาด',waves:[makeWave([{sp:'kazemaru',show:n},{sp:'kazekiri',show:n},{sp:'kazemaru',show:n}],R*.55),makeWave([{sp:'kazemaru',show:n},{sp:'kazekiri',boss:1,show:n},{sp:'kazemaru',show:n}],R*.85)]};
 }
 const P_SLOTS=[[-2.5,.2],[-4.3,-1.8],[-3.6,2]], E_SLOTS=[[2.5,.2],[4.3,-1.8],[3.6,2]];
 const FACE_P=Math.PI/2-.35, FACE_E=-Math.PI/2+.35;
@@ -177,10 +178,12 @@ async function strikeCombo(u,onHit){
   await wait(Math.max(150,(inf.dur-last)/sp*1000*.4));
 }
 // หยุดภาพสั้น ๆ ตอนดาบโดน: ชะลอเฉพาะภาพ ไม่ยืดเวลารอของลำดับท่า
-function hitStop(){HS=.08;clearTimeout(hsTimer);hsTimer=setTimeout(()=>{HS=1;},70);shake=Math.max(shake,.12);}
+function hitStop(){if(RT){shake=Math.max(shake,.08);return;}HS=.08;clearTimeout(hsTimer);hsTimer=setTimeout(()=>{HS=1;},70);shake=Math.max(shake,.12);}
 async function recoverStance(u){if(u.dragon){u.inner.userData.acting=false;return;}await poseTo(u.stance,.3);u.inner.userData.acting=false;}
 function flashUnit(u,hex){u.mats.forEach(m=>{if(m.userData.e0==null){m.userData.e0=m.emissive.getHex();m.userData.ei0=m.emissiveIntensity;}m.emissive.setHex(hex);m.emissiveIntensity=.9;});setTimeout(()=>u.mats.forEach(m=>{m.emissive.setHex(m.userData.e0);m.emissiveIntensity=m.userData.ei0;}),110/SPEED);}
 async function react(u,fromX){
+  if(RT){flashUnit(u,0xff2a2a);if(u.dragon)dragonReact(u);else if(!u.busy&&u.inner.userData.play)u.inner.userData.play('hit',{speed:1.4,fade:.06});
+    else if(!u.busy&&!u.evo)tween(.12,t=>u.inner.rotation.x=-.35*t).then(()=>tween(.3,t=>u.inner.rotation.x=-.35*(1-t)));return;}
   const dir=u.w.position.x>fromX?1:-1, p0=u.w.position.x;
   flashUnit(u,0xff2a2a);
   tween(.1,t=>u.w.position.x=p0+dir*.3*t,easeOut).then(()=>tween(.3,t=>u.w.position.x=p0+dir*.3*(1-t),easeIO));

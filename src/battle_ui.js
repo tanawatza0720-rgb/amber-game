@@ -184,17 +184,18 @@ async function idleLoop(){
     if(MODE!=='idle'||document.hidden){await sleep(700);continue;}
     const p=BN.online&&BN.state?BN.state.player:null, pow=teamPow();
     let n, E, label, push=false, won=true;
-    const farm=()=>{n=Math.max(1,p?p.stage:1);E=Math.min(REQ(n),pow*.55);};
+    const farm=()=>{n=Math.max(1,p?p.stage:1);E=Math.min(REQ(n),pow*.42);};
     if(!p){farm();label='โหมดทดลอง';}
     else if(p.boss||p.power<p.need){farm();label=p.boss?'ฟาร์มอยู่ · รอท้าบอสด่าน '+stLabel(p.stage+1):'ฟาร์มอยู่ · อัปเลเวลทีมเพื่อไปต่อ';}
     else{
-      try{const r=await brpc('idle_push');bnApply(r.state);push=true;won=r.won;n=r.stage;E=pow*(won?.55:1.8);label=won?'บุกด่านใหม่':'พลังไม่พอ';}
+      try{const r=await brpc('idle_push');bnApply(r.state);push=true;won=r.won;n=r.stage;E=pow*(won?.42:1.5);label=won?'บุกด่านใหม่':'พลังไม่พอ';}
       catch(e){if(e.code!=='too_fast')bMsg(BERR[e.code]||BERR.network);if(e.code==='session')BN.online=false;farm();label='ฟาร์มอยู่';}
     }
     if(MODE!=='idle')continue;
-    $('#stTitle').textContent='ด่าน '+stLabel(n)+' · ป่าไผ่สนธยา'; $('#wave').textContent=label;
-    CUR=runBattle(idleStage(n,E),{idle:true,banner:push?'ด่าน '+stLabel(n):null});
-    await CUR; CUR=null;
+    $('#stTitle').textContent='ด่าน '+stLabel(n)+' · ป่าไผ่สนธยา';
+    CUR=rtBattle(idleStage(n,E),{idle:true,label,banner:push?'ด่าน '+stLabel(n):null});
+    const vis=await CUR; CUR=null;
+    if(push&&vis!==undefined&&vis!==won)console.warn('visual result differs from server',vis,won);
     if(MODE!=='idle')continue;
     if(push)await banner(won?'ผ่านด่าน '+stLabel(n)+'!':'พลังไม่พอ · ต้องการ '+fmtN(REQ(n)),won?'':'boss');
     else await wait(600);
@@ -215,7 +216,7 @@ async function startBoss(){
   BN.bid=r.battle_id; BN.t0=Date.now(); bnApply(r.state);
   const n=r.stage; setBossUI(true);
   $('#stTitle').textContent='ด่านบอส '+stLabel(n); $('#hud').hidden=false;
-  const win=await runBattle(bossStage(n),{idle:false});
+  const win=await rtBattle(bossStage(n),{manual:true,label:'ด่านบอส'});
   showBossResult(!!win,n);
 }
 async function showBossResult(win,n){
@@ -252,7 +253,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&BN.online
 setInterval(()=>{if(!document.hidden&&MODE==='idle')bnRefresh();},60000);
 $('#bAuto').onclick=()=>{AUTO=!AUTO;$('#bAuto').classList.toggle('on',AUTO);$('#bAuto').setAttribute('aria-pressed',AUTO);if(AUTO&&choose){const c=choose;choose=null;hideSkills();const [s]=aiChoose(actor);target=aiChoose(actor)[1];c(s);}};
 $('#bSpeed').onclick=()=>{SPEED=SPEED===1?2:1;$('#bSpeed').textContent='x'+SPEED;$('#bSpeed').classList.toggle('on',SPEED===2);};
-$('#bExit').onclick=()=>{if(MODE!=='boss'||!running)return;running=false;if(choose){const c=choose;choose=null;c(null);}actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;hideSkills();};
+$('#bExit').onclick=()=>{if(MODE!=='boss'||!running)return;running=false;if(choose){const c=choose;choose=null;c(null);}actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;ultButtons(false);};
 
 /* ---------- แตะเลือกเป้า ---------- */
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
@@ -295,6 +296,7 @@ function camUpdate(){
     CAMt.copy(_cf).addScaledVector(_cr,dist).setY((port?2.6:2.0)+ex*.5); LOOKt.copy(_cf).setY(1.05+ex*.35);
   } else {
     if(port){CAMt.set(-12,9,.5);LOOKt.set(.5,.3,-.3);} else {CAMt.set(.6,5.2,10.2);LOOKt.set(0,1,0);}
+    if(RT){const us=UNITS.filter(u=>u.alive);if(us.length){let cx=0,cz=0;us.forEach(u=>{cx+=u.w.position.x;cz+=u.w.position.z;});cx=Math.max(-3,Math.min(4,cx/us.length));cz/=us.length;CAMt.x+=cx*.7;LOOKt.x+=cx*.7;CAMt.z+=cz*.3;LOOKt.z+=cz*.3;}}
   }
 }
 function layout(){const w=view.clientWidth,h=view.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;const a=camera.aspect;
@@ -307,7 +309,7 @@ function loop(){
   const rdt=Math.min(clock.getDelta(),.1), dt=rdt*SPEED*HS; T+=rdt;
   for(let i=tweens.length-1;i>=0;i--){const tw=tweens[i];tw.t+=dt;const k=Math.min(1,tw.t/tw.d);tw.fn(tw.ease(k));if(k>=1){tweens.splice(i,1);tw.r();}}
   for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.p.position.addScaledVector(q.v,dt);q.v.y-=dt*q.grav;q.v.multiplyScalar(q.grow?.96:1);q.life-=dt*q.decay;q.p.material.opacity=Math.max(0,q.life*q.o);if(q.grow)q.p.scale.multiplyScalar(1+dt*.9);if(q.life<=0){scene.remove(q.p);q.p.material.dispose();parts.splice(i,1);}}
-  rigUpdate(dt);
+  rigUpdate(dt); rtTick(dt,T);
   UNITS.forEach(u=>{if(u.alive||u.w.visible)u.inner.userData.idle(T);});
   separate(); trailUpdate(); blobUpdate();
   falling.forEach((l,i)=>{l.position.y-=rdt*.35;l.position.x+=Math.sin(T+i)*rdt*.3;l.rotation.x+=rdt*(1.5+i%3);l.rotation.y+=rdt;if(l.position.y<.05)l.position.set((Math.random()-.5)*16,5+Math.random()*2,-6+Math.random()*10);});
