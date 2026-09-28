@@ -1310,7 +1310,7 @@ if(LOW){renderer.shadowMap.enabled=false;} else {renderer.shadowMap.type=THREE.P
 renderer.toneMappingExposure=1.12; camera.far=700; camera.updateProjectionMatrix();
 const MAP0=scene.children.length;
 const FXK=LOW?.35:.65;
-const MAPK={road:14,smokes:[],fires:[],flags:[],balls:[],nextBall:2};
+const MAPK={road:14,smokes:[],fires:[],flags:[],balls:[],debris:[],nextBall:2};
 // ท้องฟ้าครึ้มสงคราม: เมฆเทาทึบด้านบน ขอบฟ้าเรืองส้มจากไฟ
 scene.background=new THREE.Color(0x4a4e58);
 const skyM=new THREE.Mesh(new THREE.SphereGeometry(420,32,16),new THREE.MeshBasicMaterial({side:THREE.BackSide,fog:false,
@@ -1326,6 +1326,16 @@ function sunFollow(c){sun.position.set(c.x+40,38,c.z+25);sun.target.position.set
 const falling=[], flies=[];
 {
   const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[Math.floor(Math.random()*a.length)];
+  // สัญญาณรบกวน 3 มิติแบบนุ่ม (value noise + fbm) ใช้ปั้นหิน/ภูเขา/พุ่มไม้ให้เป็นธรรมชาติ
+  const hsh=(x,y,z)=>{let h=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453;return h-Math.floor(h);};
+  const vn=(x,y,z)=>{const X=Math.floor(x),Y=Math.floor(y),Z=Math.floor(z),fx=x-X,fy=y-Y,fz=z-Z,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),w=fz*fz*(3-2*fz);
+    const L=(a,b,t)=>a+(b-a)*t;return L(L(L(hsh(X,Y,Z),hsh(X+1,Y,Z),u),L(hsh(X,Y+1,Z),hsh(X+1,Y+1,Z),u),v),L(L(hsh(X,Y,Z+1),hsh(X+1,Y,Z+1),u),L(hsh(X,Y+1,Z+1),hsh(X+1,Y+1,Z+1),u),v),w)*2-1;};
+  const fbm=(x,y,z,o)=>{let a=0,f=1,amp=.5;for(let i=0;i<(o||4);i++){a+=vn(x*f,y*f,z*f)*amp;f*=2.03;amp*=.5;}return a;};
+  // รวมจุดซ้ำให้ผิวเชื่อมกัน (ได้ผิวเรียบไม่เป็นเหลี่ยม)
+  const weld=g=>{const p=g.attributes.position,map=new Map(),pos=[],idx=[];for(let i=0;i<p.count;i++){const k=Math.round(p.getX(i)*1e4)+'_'+Math.round(p.getY(i)*1e4)+'_'+Math.round(p.getZ(i)*1e4);
+      let j=map.get(k);if(j===undefined){j=pos.length/3;map.set(k,j);pos.push(p.getX(i),p.getY(i),p.getZ(i));}idx.push(j);}
+    const o=new THREE.BufferGeometry();o.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));o.setIndex(idx);return o;};
+  const withUV=g=>{if(!g.attributes.uv)g.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count*2),2));return g;};
   // ---------- พื้นดิน: ภูมิประเทศลูกคลื่น + สีไล่เนียน (หญ้าแห้ง → ดินโคลนกลางสนาม → รอยไหม้) ----------
   const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
   const nz=(x,z)=>Math.sin(x*.045+z*.03)*.55+Math.sin(x*.11-z*.07+1.3)*.3+Math.sin(x*.23+z*.19+2.1)*.15+Math.sin(x*.61-z*.53)*.06;
@@ -1371,7 +1381,11 @@ const falling=[], flies=[];
   const winM=new THREE.MeshStandardMaterial({color:0x2a1a10,emissive:0xffa24a,emissiveIntensity:1.6});
   const woodM=SM(0x4e3726,{map:TX.wood,roughness:.88}), woodD=SM(0x33241a,{map:TX.wood,roughness:.92}), ironM=SM(0x3a3c40,{roughness:.5,metalness:.6});
   const flagM=new THREE.MeshStandardMaterial({color:0xd49a3a,side:THREE.DoubleSide,roughness:.7}), flagE=new THREE.MeshStandardMaterial({color:0x8a1c16,side:THREE.DoubleSide,roughness:.7});
-  const rockM=SM(0x7a7670,{map:TX.stone,roughness:.95,flatShading:true}), rockD=SM(0x57534e,{map:TX.stone,roughness:.95,flatShading:true}); rockM.userData.uvk=rockD.userData.uvk=.12;
+  const rockT=srgb(canvasTex(256,(x,s)=>{x.fillStyle='#8a8781';x.fillRect(0,0,s,s);
+    for(let i=0;i<60;i++){const cx=Math.random()*s,cy=Math.random()*s,r=10+Math.random()*50,g=x.createRadialGradient(cx,cy,0,cx,cy,r);const v=Math.random()<.5?'60,58,55':'165,160,150';g.addColorStop(0,`rgba(${v},.3)`);g.addColorStop(1,`rgba(${v},0)`);x.fillStyle=g;x.fillRect(0,0,s,s);}
+    for(let i=0;i<9000;i++){const v=90+Math.random()*100|0;x.fillStyle=`rgba(${v},${v-2},${v-6},.35)`;x.fillRect(Math.random()*s,Math.random()*s,1.5,1.5);}
+    for(let i=0;i<14;i++){x.strokeStyle=`rgba(35,33,30,${.3+Math.random()*.3})`;x.lineWidth=.8+Math.random();x.beginPath();let px=Math.random()*s,py=Math.random()*s;x.moveTo(px,py);for(let k=0;k<6;k++){px+=rnd(-22,22);py+=rnd(-22,22);x.lineTo(px,py);}x.stroke();}}));
+  const rockM=SM(0x9a978f,{map:rockT,roughness:.96}), rockD=SM(0x6e6b65,{map:rockT,roughness:.96}); rockM.userData.uvk=rockD.userData.uvk=.12;
   const burnM=SM(0x3a2f22,{roughness:1});
   const O8=new THREE.CylinderGeometry(1,1,1,8), CN8=new THREE.ConeGeometry(1,1,8), CN4=new THREE.ConeGeometry(1,1,4);
   const flag=(parent,x,y,z,m,s)=>{const pole=J(parent,x,y,z);P(pole,Y1,woodM,[0,1.6*(s||1),0],[.1,3.2*(s||1),.1]);const f=new THREE.Mesh(new THREE.PlaneGeometry(2.4*(s||1),1.3*(s||1),6,1),m||flagM);f.position.set(1.2*(s||1),2.6*(s||1),0);pole.add(f);MAPK.flags.push(f);};
@@ -1452,20 +1466,33 @@ const falling=[], flies=[];
   for(let i=0;i<(LOW?12:30);i++){const x=rnd(FX-40,FX-10),z=rnd(-50,50);if(Math.abs(z)<6)continue;if(Math.hypot(x-CX,z-CZ)<36)continue;house(x,0,z,rnd(0,6));}
 
   // ---------- ภูเขาหินขรุขระล้อมรอบ (ด้านหลังเมืองสูงชัน) ----------
-  const peakGeo=(()=>{const g=new THREE.ConeGeometry(1,1,9,6),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),k=.5-y;
-      const n=1+(Math.sin(x*9+y*7)+Math.sin(z*11-y*5)+Math.sin((x+z)*6))*.09*(k+.2);p.setXYZ(i,x*n,y+(Math.sin(x*13+z*7)*.03),z*n);}g.computeVertexNormals();return g;})();
-  const peak=(x,z,r,h,m)=>{const o=new THREE.Mesh(peakGeo,m||rockM);o.position.set(x,h/2-1+MAPK.heightAt(x,z)*.6,z);o.scale.set(r,h,r*rnd(.8,1.2));o.rotation.y=rnd(0,6);o.receiveShadow=true;scene.add(o);};
+  const peakGeo=(()=>{const g=weld(new THREE.ConeGeometry(1,1,28,18)),p=g.attributes.position,c=new Float32Array(p.count*3),sd=Math.random()*50;
+    for(let i=0;i<p.count;i++){let x=p.getX(i),y=p.getY(i),z=p.getZ(i);const k=.5-y, r=Math.hypot(x,z)||1e-4;
+      const ridge=1-Math.abs(vn(x*3+sd,y*4,z*3)); const n=fbm(x*2.2+sd,y*2.6,z*2.2)*.35+ridge*.18;
+      const s=1+n*(k*.9+.15); x*=s; z*=s; y+=fbm(x*4,y*3+sd,z*4,3)*.05;
+      p.setXYZ(i,x,y,z); const t=Math.min(1,Math.max(0,(y+.5))), v=.55+.35*t+n*.35; c[i*3]=v*1.02;c[i*3+1]=v;c[i*3+2]=v*.96;}
+    g.setAttribute('color',new THREE.BufferAttribute(c,3));g.computeVertexNormals();return withUV(g);})();
+  const peakM=SM(0x8c877f,{map:rockT,roughness:.95,vertexColors:true}), peakD=SM(0x68645e,{map:rockT,roughness:.95,vertexColors:true}); peakM.userData.uvk=peakD.userData.uvk=.06;
+  const peak=(x,z,r,h,m)=>{const o=new THREE.Mesh(peakGeo,m===rockD?peakD:peakM);o.position.set(x,h/2-1+MAPK.heightAt(x,z)*.6,z);o.scale.set(r,h,r*rnd(.8,1.2));o.rotation.y=rnd(0,6);o.receiveShadow=true;scene.add(o);};
   for(let i=0;i<34;i++){const a=Math.PI*.5+i/33*Math.PI, R=rnd(118,150);peak(Math.cos(a)*R-20,Math.sin(a)*R*.9,rnd(18,30),rnd(45,95),i%2?rockM:rockD);}
   for(let i=0;i<26;i++){const a=-Math.PI*.5+i/25*Math.PI, R=rnd(125,160);peak(Math.cos(a)*R+10,Math.sin(a)*R*.9,rnd(18,32),rnd(30,70),i%2?rockM:rockD);}
   // หน้าผาหินข้างสนาม
-  const rockGeo=(()=>{const g=new THREE.IcosahedronGeometry(1,1),p=g.attributes.position;for(let i=0;i<p.count;i++){const v=new THREE.Vector3().fromBufferAttribute(p,i);v.multiplyScalar(1+(Math.sin(v.x*5.1)+Math.sin(v.y*4.3+1)+Math.sin(v.z*6.2+2))*.08);p.setXYZ(i,v.x,v.y,v.z);}g.computeVertexNormals();return g;})();
-  const rock=(x,z,sx,sy,sz,m)=>{const r=new THREE.Mesh(rockGeo,m||rockM);r.position.set(x,sy*.3+MAPK.heightAt(x,z),z);r.scale.set(sx,sy,sz);r.rotation.set(rnd(-.2,.2),rnd(0,6),rnd(-.2,.2));r.receiveShadow=true;scene.add(r);};
+  const ROCKS=[0,1,2,3].map(v=>{const g=weld(new THREE.IcosahedronGeometry(1,LOW?3:4)),p=g.attributes.position,c=new Float32Array(p.count*3),sd=v*17.3;
+    for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);const ridge=1-Math.abs(vn(x*2.2+sd,y*2.2,z*2.2));
+      let n=fbm(x*1.4+sd,y*1.4,z*1.4)*.5+ridge*ridge*.22+fbm(x*6+sd,y*6,z*6,3)*.08; n+=Math.round(y*5+fbm(x,y,z,2)*2)*.012;
+      let s=1+n; let nx=x*s,ny=y*s*(.75+v*.12),nz=z*s; if(ny<-.3)ny=-.3+(ny+.3)*.2; p.setXYZ(i,nx,ny,nz);
+      const cr=.62+n*.9, top=Math.max(0,y)*.22; const moss=Math.max(0,y-.45)*1.2*Math.max(0,fbm(x*3,y*3+sd,z*3,2)+.2);
+      c[i*3]=Math.min(1.2,cr+top)*(1-moss*.25);c[i*3+1]=Math.min(1.2,cr+top)*(1-moss*.05);c[i*3+2]=Math.min(1.2,cr+top)*(.97-moss*.35);}
+    g.setAttribute('color',new THREE.BufferAttribute(c,3));g.computeVertexNormals();return withUV(g);});
+  rockM.flatShading=rockD.flatShading=false; rockM.vertexColors=rockD.vertexColors=true;
+  MAPK.debGeo=ROCKS; MAPK.debM=SM(0x6a645c,{map:rockT,roughness:.95,vertexColors:true});
+  const rock=(x,z,sx,sy,sz,m)=>{const r=new THREE.Mesh(pick(ROCKS),m||rockM);r.position.set(x,sy*.3+MAPK.heightAt(x,z),z);r.scale.set(sx,sy,sz);r.rotation.set(rnd(-.2,.2),rnd(0,6),rnd(-.2,.2));r.receiveShadow=true;scene.add(r);};
   [[0,36],[16,40],[-14,38],[30,35],[6,-36],[-12,-38],[24,-37],[44,32],[44,-34]].forEach(([x,z],i)=>{rock(x,z,rnd(6,10),rnd(6,12),rnd(5,8),i%2?rockM:rockD);rock(x+rnd(-5,5),z+Math.sign(z)*rnd(4,7),rnd(5,8),rnd(9,16),rnd(5,7),rockD);});
   for(let i=0;i<(LOW?25:60);i++){const x=rnd(-28,60),z=(Math.random()<.5?-1:1)*rnd(12,32);rock(x,z,rnd(.5,1.4),rnd(.4,1),rnd(.5,1.4));}
 
   // ---------- ซากสนามรบ: หลุมไหม้ หอกปัก โล่ เกวียนพัง หลักแหลม ----------
   MAPK.burns.forEach(([x,z,r])=>{r*=.8;
-    for(let k=0;k<6;k++){const a=k/6*Math.PI*2+rnd(-.3,.3);P(scene,B1,rockD,[x+Math.cos(a)*r,.1,z+Math.sin(a)*r],[rnd(.3,.7),rnd(.15,.35),rnd(.3,.7)],[rnd(-.3,.3),a,rnd(-.3,.3)]);}});
+    for(let k=0;k<6;k++){const a=k/6*Math.PI*2+rnd(-.3,.3);const m=new THREE.Mesh(pick(ROCKS),rockD);m.position.set(x+Math.cos(a)*r,.05,z+Math.sin(a)*r);m.scale.set(rnd(.25,.5),rnd(.15,.3),rnd(.25,.5));m.rotation.y=rnd(0,6);scene.add(m);}});
   for(let i=0;i<(LOW?30:70);i++){const x=rnd(-28,42),z=rnd(-26,26);P(scene,Y1,woodD,[x,.9,z],[.05,2,.05],[rnd(-.5,.5),0,rnd(-.5,.5)]);}
   for(let i=0;i<(LOW?12:30);i++){const x=rnd(-28,42),z=rnd(-26,26);P(scene,Y1,Math.random()<.5?woodM:ironM,[x,.08,z],[.45,.06,.45],[rnd(-.4,.4),0,rnd(-.4,.4)]);}
   for(let i=0;i<(LOW?3:7);i++){const g=J(scene,rnd(-20,35),0,rnd(-22,22));g.rotation.set(rnd(-.2,.2),rnd(0,6),rnd(-.3,.3));
@@ -1474,38 +1501,95 @@ const falling=[], flies=[];
   for(let z=-40;z<=40;z+=2.2){if(Math.abs(z)<9)continue;const x=FX+7+Math.abs(z)*.05;P(scene,Y1,woodD,[x,.9,z],[.12,2.4,.12],[0,0,-.7]);P(scene,Y1,woodD,[x,.9,z+.8],[.12,2.4,.12],[0,0,.7]);}
 
   // ---------- ค่ายศัตรู ----------
-  const EX=46, tentM=SM(0x5a1c1a,{roughness:.85}), tentM2=SM(0x3a1614,{roughness:.85});
-  for(let z=-30;z<=30;z+=1.2){if(Math.abs(z)<6)continue;const h=rnd(3,4.4);P(scene,Y1,woodD,[EX+rnd(-.2,.2),h/2,z],[.34,h,.34]);P(scene,CN8,woodD,[EX,h+.4,z],[.36,.9,.36]);}
-  for(let i=0;i<(LOW?8:16);i++){const g=J(scene,EX+rnd(5,28),0,rnd(-24,24));const r=rnd(2.2,3.4);P(g,CN8,i%2?tentM:tentM2,[0,r*.75,0],[r,r*1.5,r],[0,rnd(0,3),0]);}
-  // หอรบล้อเลื่อน
-  const siege=(x,z)=>{const g=J(scene,x,0,z);g.rotation.y=Math.PI/2+rnd(-.2,.2);const H=11;
-    [[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5]].forEach(([a,b])=>P(g,B1,woodD,[a,H/2,b],[.4,H,.4]));
-    for(let y=2;y<H;y+=2.2){P(g,B1,woodM,[0,y,-1.5],[3.4,.25,.3]);P(g,B1,woodM,[0,y,1.5],[3.4,.25,.3]);P(g,B1,woodM,[-1.5,y,0],[.3,.25,3.4]);P(g,B1,woodM,[1.5,y,0],[.3,.25,3.4]);}
-    P(g,B1,woodM,[0,H,0],[3.8,.35,3.8]);P(g,B1,SM(0x6a5a44,{roughness:.9}),[0,H*.55,-1.7],[3.4,H*.8,.1]);
-    [[-1.8,-1.8],[1.8,-1.8],[-1.8,1.8],[1.8,1.8]].forEach(([a,b])=>P(g,Y1,woodD,[a,.7,b],[.7,.25,.7],[0,0,Math.PI/2]));
-    flag(g,0,H,0,flagE,1);};
-  siege(EX-6,-15);siege(EX-5,14);if(!LOW)siege(EX+10,0);
-  // เครื่องยิงหิน (ใช้เป็นจุดปล่อยลูกไฟ)
+  const EX=46;
+  // พื้นผิวไม้กระดาน (ลายเสี้ยน ร่องต่อ ปุ่มไม้) และผ้าใบเต็นท์ (ลายทอ คราบดิน)
+  const plankT=srgb(canvasTex(256,(x,s)=>{x.fillStyle='#7a5a3c';x.fillRect(0,0,s,s);const W=32;
+    for(let q=0;q<s/W;q++){const v=(Math.random()-.5)*30;x.fillStyle=`rgb(${120+v|0},${88+v|0},${58+v|0})`;x.fillRect(q*W+1,0,W-2,s);
+      for(let k=0;k<26;k++){x.strokeStyle=`rgba(50,32,18,${.12+Math.random()*.2})`;x.lineWidth=1;x.beginPath();const xx=q*W+3+Math.random()*(W-6);x.moveTo(xx,0);x.bezierCurveTo(xx+rnd(-3,3),s*.3,xx+rnd(-3,3),s*.6,xx+rnd(-2,2),s);x.stroke();}
+      if(Math.random()<.6){const ky=Math.random()*s;x.fillStyle='rgba(40,25,12,.6)';x.beginPath();x.ellipse(q*W+W/2,ky,3,6,0,0,Math.PI*2);x.fill();}
+      x.fillStyle='rgba(20,12,6,.8)';x.fillRect(q*W,0,1.5,s);}
+    const g=x.createLinearGradient(0,0,0,s);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.35)');x.fillStyle=g;x.fillRect(0,0,s,s);}));
+  const canvasT=srgb(canvasTex(128,(x,s)=>{x.fillStyle='#b8a888';x.fillRect(0,0,s,s);for(let i=0;i<s;i+=2){x.fillStyle='rgba(0,0,0,.06)';x.fillRect(i,0,1,s);x.fillRect(0,i,s,1);}
+    for(let i=0;i<30;i++){const cx=Math.random()*s,cy=Math.random()*s,r=5+Math.random()*20,g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(70,55,35,.25)');g.addColorStop(1,'rgba(70,55,35,0)');x.fillStyle=g;x.fillRect(0,0,s,s);}}));
+  const plankM=SM(0x9a8a78,{map:plankT,roughness:.9}), beamM=SM(0x6a5846,{map:plankT,roughness:.9}), hideM=SM(0x3e2a1e,{roughness:1,metalness:0}), ropeM=SM(0x8a7a5a,{roughness:1});
+  plankM.userData.uvk=.35; beamM.userData.uvk=.5;
+  const tentR=SM(0x7a3026,{map:canvasT,roughness:.95}), tentB=SM(0x8e7c5e,{map:canvasT,roughness:.95}), tentD=SM(0x4e2a22,{map:canvasT,roughness:.95});
+  [tentR,tentB,tentD].forEach(m=>m.userData.uvk=.25);
+  const beam=(g,a,b,t,m)=>{const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),L=A.distanceTo(B),o=new THREE.Mesh(B1,m||beamM);o.position.copy(A).add(B).multiplyScalar(.5);o.scale.set(t,L,t);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());o.castShadow=o.receiveShadow=true;g.add(o);return o;};
+  const wheel=(g,x,y,z,r,rotY)=>{const w=J(g,x,y,z);w.rotation.y=rotY||0;P(w,new THREE.TorusGeometry(r,r*.12,6,18),beamM,[0,0,0]);P(w,Y1,beamM,[0,0,0],[r*.22,r*.35,r*.22],[Math.PI/2,0,0]);for(let k=0;k<6;k++){const a=k/6*Math.PI;beam(w,[Math.cos(a)*r,Math.sin(a)*r,0],[-Math.cos(a)*r,-Math.sin(a)*r,0],r*.09);}return w;};
+  // รั้วซุงปลายแหลม
+  for(let z=-30;z<=30;z+=1.1){if(Math.abs(z)<6)continue;const h=rnd(3,4.4),x=EX+rnd(-.25,.25);P(scene,Y1,beamM,[x,h/2,z],[.3,h,.3],[rnd(-.05,.05),0,rnd(-.06,.06)]);P(scene,CN8,beamM,[x,h+.35,z],[.3,.8,.3]);}
+  for(let z=-30;z<=30;z+=6){if(Math.abs(z)<6)continue;beam(scene,[EX-.3,1.2,z-3],[EX-.3,1.4,z+3],.18,beamM);beam(scene,[EX-.3,2.6,z-3],[EX-.3,2.8,z+3],.18,beamM);}
+  // เต็นท์: ทรงสันจั่วพร้อมเสาและเชือก / เต็นท์กลมผู้บัญชาการ
+  const ridgeTent=(x,z,m)=>{const g=J(scene,x,0,z);g.rotation.y=rnd(0,Math.PI);const L=rnd(3,4.4),W=rnd(2.2,3),H=rnd(1.8,2.4);
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1,3,1,false),m);t.rotation.x=-Math.PI/2;t.scale.set(W*.58,L,H*.66);t.position.y=H*.33;t.castShadow=t.receiveShadow=true;g.add(t);
+    beam(g,[0,0,-L/2-.1],[0,H*1.02,-L/2-.1],.1);beam(g,[0,0,L/2+.1],[0,H*1.02,L/2+.1],.1);
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>beam(g,[0,H,b*L/2],[a*W,0,b*(L/2+.6)],.03,ropeM));};
+  const roundTent=(x,z,r,m)=>{const g=J(scene,x,0,z);P(g,new THREE.CylinderGeometry(r,r,1.4,16,1,true),m,[0,.7,0]);P(g,new THREE.ConeGeometry(r*1.08,r*.95,16),m,[0,1.4+r*.47,0]);P(g,Y1,beamM,[0,1.4+r,0],[.08,1.2,.08]);flag(g,0,1.4+r*.95,0,flagE,.6);
+    for(let k=0;k<8;k++){const a=k/8*Math.PI*2;beam(g,[Math.cos(a)*r,1.3,Math.sin(a)*r],[Math.cos(a)*(r+1.4),0,Math.sin(a)*(r+1.4)],.03,ropeM);}};
+  for(let i=0;i<(LOW?7:14);i++)ridgeTent(EX+rnd(6,28),rnd(-24,24),pick([tentR,tentB,tentD]));
+  roundTent(EX+22,0,3.2,tentR); if(!LOW){roundTent(EX+26,-14,2.4,tentD);roundTent(EX+26,14,2.4,tentB);}
+  // ลังไม้ ถังไม้ กองหอก
+  for(let i=0;i<(LOW?8:20);i++){const x=EX+rnd(3,28),z=rnd(-24,24);if(Math.random()<.5)P(scene,B1,plankM,[x,.45,z],[.9,.9,.9],[0,rnd(0,3),0]);else P(scene,Y1,plankM,[x,.55,z],[.42,1.1,.42]);}
+  // หอรบล้อเลื่อน: โครงเสาเอียงสอบ ผนังกระดาน หนังสัตว์คลุมด้านหน้า เชิงเทิน สะพานพาดยกขึ้น ล้อซี่
+  const siege=(x,z)=>{const g=J(scene,x,0,z);g.rotation.y=-Math.PI/2+rnd(-.15,.15);const H=13,B=2.2,T=1.6;
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>beam(g,[a*B,.8,b*B],[a*T,H,b*T],.35));
+    for(let y=1.5;y<H;y+=2.4){const k=(y-.8)/(H-.8),w=B+(T-B)*k;beam(g,[-w,y,-w],[w,y,-w],.22);beam(g,[-w,y,w],[w,y,w],.22);beam(g,[-w,y,-w],[-w,y,w],.22);beam(g,[w,y,-w],[w,y,w],.22);}
+    const wall=(sx)=>{const m=new THREE.Mesh(B1,plankM);m.position.set(sx*(B+T)/2,H*.52,0);m.scale.set(.15,H*.9,(B+T)*1.95/2);m.rotation.z=-sx*Math.atan((B-T)/H);m.castShadow=m.receiveShadow=true;g.add(m);};wall(-1);wall(1);
+    const front=new THREE.Mesh(B1,beamM);front.position.set(0,H*.5,(B+T)/2+.12);front.scale.set((B+T)*1.95/2,H*.92,.12);front.rotation.x=Math.atan((B-T)/H);front.castShadow=true;g.add(front);
+    for(let y=2;y<H-1;y+=2.4)beam(g,[-(B+T)/2,y,(B+T)/2+.22],[(B+T)/2,y,(B+T)/2+.22],.14,beamM);
+    P(g,B1,plankM,[0,H,0],[T*2.4,.3,T*2.4]);for(let k=-1;k<=1;k+=2)for(let q=-2;q<=2;q++){P(g,B1,plankM,[q*T*.45,H+.6,k*T*1.15],[T*.3,.9,.2]);P(g,B1,plankM,[k*T*1.15,H+.6,q*T*.45],[.2,.9,T*.3]);}
+    const br=J(g,0,H-1.2,T+.2);br.rotation.x=-.25;P(br,B1,plankM,[0,1.6,0],[T*1.8,3.2,.2]);
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>wheel(g,a*(B+.25),.95,b*(B-.4),.95,Math.PI/2));
+    beam(g,[-(B+.25),.95,-(B-.4)],[-(B+.25),.95,(B-.4)],.18);beam(g,[(B+.25),.95,-(B-.4)],[(B+.25),.95,(B-.4)],.18);
+    flag(g,0,H+.8,0,flagE,1.2);};
+  siege(EX-7,-15);siege(EX-6,14);if(!LOW)siege(EX+9,-2);
+  // เครื่องเหวี่ยงหิน (แขนขยับตอนยิง)
   MAPK.cats=[];
-  const catapult=(x,z)=>{const g=J(scene,x,0,z);g.rotation.y=Math.PI/2;P(g,B1,woodD,[0,.5,0],[2.2,.4,3.2]);P(g,B1,woodM,[-.9,1.5,0],[.3,2.2,.3]);P(g,B1,woodM,[.9,1.5,0],[.3,2.2,.3]);
-    P(g,B1,woodM,[0,2.3,-.4],[.25,.25,3.4],[.6,0,0]);[[-1.1,-1.3],[1.1,-1.3],[-1.1,1.3],[1.1,1.3]].forEach(([a,b])=>P(g,Y1,woodD,[a,.45,b],[.45,.2,.45],[0,0,Math.PI/2]));
-    MAPK.cats.push(new THREE.Vector3(x,3,z));};
-  [[EX+8,-10],[EX+9,8],[EX+14,-20],[EX+14,20]].forEach(([x,z])=>catapult(x,z));
-  // กองไฟในค่าย
-  [[EX+8,-4],[EX+12,10],[EX+20,-14],[EX+22,4]].forEach(([x,z])=>{const g=J(scene,x,0,z);for(let k=0;k<5;k++)P(g,Y1,woodD,[0,.2,0],[.18,1.4,.18],[Math.PI/2.4,k*1.2,0]);
+  const trebuchet=(x,z)=>{const g=J(scene,x,0,z);g.rotation.y=-Math.PI/2;const HH=4.2;
+    beam(g,[-1.6,.3,-2.6],[-1.6,.3,2.6],.35);beam(g,[1.6,.3,-2.6],[1.6,.3,2.6],.35);beam(g,[-1.6,.3,-2.2],[1.6,.3,-2.2],.3);beam(g,[-1.6,.3,2.2],[1.6,.3,2.2],.3);
+    [-1.5,1.5].forEach(sx=>{beam(g,[sx,.4,-1.8],[sx*.9,HH,0],.28);beam(g,[sx,.4,1.8],[sx*.9,HH,0],.28);beam(g,[sx,.4,0],[sx*.9,HH,0],.22);});
+    beam(g,[-1.5,HH,0],[1.5,HH,0],.25);
+    const arm=J(g,0,HH,0); arm.userData.noMergeTree=true; const A=[];
+    const ab=new THREE.Mesh(B1,beamM);ab.scale.set(.28,7.5,.28);ab.position.set(0,1.5,0);ab.castShadow=true;arm.add(ab);
+    const cw=new THREE.Mesh(B1,plankM);cw.scale.set(1.6,1.4,1.4);cw.position.set(0,-2.4,0);cw.castShadow=true;arm.add(cw);
+    const sl=new THREE.Mesh(Y1,ropeM);sl.scale.set(.04,2.2,.04);sl.position.set(0,5.2,.3);sl.rotation.x=.4;arm.add(sl);
+    [ab,cw,sl].forEach(o=>o.userData.noMerge=true);
+    arm.rotation.x=-.95; [[-1.6,-2.6],[1.6,-2.6],[-1.6,2.6],[1.6,2.6]].forEach(([a,b])=>wheel(g,a+(a>0?.3:-.3),.6,b*.8,.6,Math.PI/2));
+    MAPK.cats.push({p:new THREE.Vector3(x,HH+4,z),arm,t:9});};
+  [[EX+10,-10],[EX+11,8],[EX+16,-20],[EX+16,20]].forEach(([x,z])=>trebuchet(x,z));
+  // กองไฟในค่าย (ฟืนเรียงกระโจม)
+  [[EX+8,-4],[EX+12,10],[EX+20,-14],[EX+22,6]].forEach(([x,z])=>{const g=J(scene,x,0,z);for(let k=0;k<7;k++){const a=k/7*Math.PI*2;beam(g,[Math.cos(a)*.7,0,Math.sin(a)*.7],[0,1.1,0],.12,beamM);}
+    for(let k=0;k<8;k++){const a=k/8*Math.PI*2;P(g,B1,rockD,[Math.cos(a)*1,.12,Math.sin(a)*1],[.35,.25,.3],[0,a,0]);}
     MAPK.fires.push({gl:glow(g,0xffa040,2.6,[0,.9,0],.9)});glow(g,0xff6a20,5,[0,.3,0],.35);});
 
-  // ---------- ต้นไม้แห้ง/ป่าสนเข้ม (instanced) ----------
-  const trunkG=new THREE.CylinderGeometry(.16,.26,2,5), coneG=new THREE.ConeGeometry(1.4,4,6);
-  const NT=LOW?120:240, trunk=new THREE.InstancedMesh(trunkG,SM(0x4a3524),NT), pine=new THREE.InstancedMesh(coneG,SM(0xffffff,{flatShading:true}),NT);
-  const mm=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3(), col=new THREE.Color(); let nt=0;
+  // ---------- ต้นไม้: สนหลายชั้นขอบใบแตก + ไม้ใบพุ่มกลม (ผิวเรียบ มีเงาในพุ่ม) ----------
+  const colorize=(g,fn)=>{const p=g.attributes.position,c=new Float32Array(p.count*3);for(let i=0;i<p.count;i++){const v=fn(p.getX(i),p.getY(i),p.getZ(i));c[i*3]=v[0];c[i*3+1]=v[1];c[i*3+2]=v[2];}g.setAttribute('color',new THREE.BufferAttribute(c,3));return g;};
+  const mergeG=list=>{list=list.map(g=>g.index?g.toNonIndexed():g);let n=0;list.forEach(g=>n+=g.attributes.position.count);const P=new Float32Array(n*3),N=new Float32Array(n*3),C=new Float32Array(n*3);let o=0;
+    list.forEach(g=>{P.set(g.attributes.position.array,o*3);N.set(g.attributes.normal.array,o*3);C.set(g.attributes.color.array,o*3);o+=g.attributes.position.count;});
+    const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.BufferAttribute(P,3));G.setAttribute('normal',new THREE.BufferAttribute(N,3));G.setAttribute('color',new THREE.BufferAttribute(C,3));G.computeBoundingSphere();return G;};
+  const pineGeo=(()=>{const parts=[];const tr=new THREE.CylinderGeometry(.12,.22,3,7);tr.translate(0,1.5,0);tr.computeVertexNormals();parts.push(colorize(tr,()=>[.3,.21,.14]));
+    for(let L=0;L<4;L++){const r=1.55-L*.32,h=1.8-L*.12,y=1.3+L*1.05;let c=new THREE.ConeGeometry(r,h,10,2,false);const p=c.attributes.position;
+      for(let i=0;i<p.count;i++){let x=p.getX(i),yy=p.getY(i),z=p.getZ(i);const a=Math.atan2(z,x), rr=Math.hypot(x,z), t=(yy+h/2)/h;
+        const droop=(1-t)*(1-t)*.35*(.6+.4*Math.sin(a*6+L*1.7)); const k=1+(1-t)*.14*Math.sin(a*9+L*2.3);
+        p.setXYZ(i,x*k,yy-droop+y,z*k);}
+      c.computeVertexNormals();c=colorize(c,(x,yy,z)=>{const t=Math.min(1,Math.max(0,(yy-y+h/2)/h)),rr=Math.hypot(x,z)/r;const v=.42+.35*t+.25*rr;return [.1*v+.01,.19*v+.02,.1*v+.01];});parts.push(c);}
+    return mergeG(parts);})();
+  const leafGeo=(()=>{const parts=[];const tr=new THREE.CylinderGeometry(.14,.26,2.4,7);tr.translate(0,1.2,0);tr.computeVertexNormals();parts.push(colorize(tr,()=>[.3,.22,.15]));
+    [[0,3.2,0,1.3],[.8,2.7,.3,.9],[-.7,2.8,-.2,.95],[.2,2.6,-.8,.85],[-.2,3.8,.3,.8]].forEach(([x,y,z,r],k)=>{let b=weld(new THREE.IcosahedronGeometry(r,1));const p=b.attributes.position;
+      for(let i=0;i<p.count;i++){const X=p.getX(i),Y=p.getY(i),Z=p.getZ(i),n=1+fbm(X*2+k,Y*2,Z*2,3)*.35;p.setXYZ(i,X*n+x,Y*n*.85+y,Z*n+z);}
+      b.computeVertexNormals();b=colorize(b,(X,Y,Z)=>{const t=Math.min(1,Math.max(0,(Y-y+r)/(2*r)));const v=.45+.55*t;return [v,v,v];});parts.push(b);});
+    return mergeG(parts);})();
+  const treeM=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,side:THREE.DoubleSide});
+  const NT=LOW?110:220, NL=LOW?40:80, pine=new THREE.InstancedMesh(pineGeo,treeM,NT), leaf=new THREE.InstancedMesh(leafGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.85}),NL);
+  const mm=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3(), col=new THREE.Color(); let nt=0, nl=0;
   const okSpot=(x,z)=>!(Math.abs(z)<34&&x>FX-4&&x<EX+32)&&!(Math.hypot(x-CX,z-CZ)<40)&&!(x<FX+4&&x>FX-30&&Math.abs(z)<60);
-  for(let i=0;i<4000&&nt<NT;i++){const x=rnd(-110,100),z=rnd(-100,100);if(!okSpot(x,z)||Math.hypot(x/1.2,z)>105)continue;
-    const s=rnd(.9,1.7);q.setFromEuler(new THREE.Euler(0,rnd(0,6),0));
-    const hy=MAPK.heightAt(x,z);mm.compose(ps.set(x,hy+s,z),q,sc.set(s,s,s));trunk.setMatrixAt(nt,mm);mm.compose(ps.set(x,hy+s*3,z),q,sc.set(s,s,s));pine.setMatrixAt(nt,mm);
-    pine.setColorAt(nt,col.setHSL(.26+rnd(-.04,.05),.22+rnd(0,.12),.14+rnd(0,.08)).convertSRGBToLinear());nt++;}
-  trunk.count=pine.count=nt;
-  [trunk,pine].forEach(o=>{o.castShadow=false;o.receiveShadow=true;o.instanceMatrix.needsUpdate=true;if(o.instanceColor)o.instanceColor.needsUpdate=true;scene.add(o);});
+  for(let i=0;i<6000&&(nt<NT||nl<NL);i++){const x=rnd(-110,100),z=rnd(-100,100);if(!okSpot(x,z)||Math.hypot(x/1.2,z)>105)continue;
+    const s=rnd(.8,1.6),hy=MAPK.heightAt(x,z)-.1;q.setFromEuler(new THREE.Euler(rnd(-.05,.05),rnd(0,6),rnd(-.05,.05)));mm.compose(ps.set(x,hy,z),q,sc.set(s,s*rnd(.9,1.2),s));
+    if(Math.random()<.75&&nt<NT){pine.setMatrixAt(nt,mm);pine.setColorAt(nt,col.setRGB(rnd(.85,1.1),rnd(.85,1.1),rnd(.8,1)));nt++;}
+    else if(nl<NL){leaf.setMatrixAt(nl,mm);leaf.setColorAt(nl,col.setHSL(pick([rnd(.06,.1),rnd(.16,.22),rnd(.2,.26)]),rnd(.25,.42),rnd(.15,.24)).convertSRGBToLinear());nl++;}}
+  pine.count=nt; leaf.count=nl;
+  [pine,leaf].forEach(o=>{o.castShadow=false;o.receiveShadow=true;o.instanceMatrix.needsUpdate=true;if(o.instanceColor)o.instanceColor.needsUpdate=true;scene.add(o);});
 
   // ---------- หญ้าแห้งและพุ่มไม้ (instanced) ----------
   { const tuftG=new THREE.ConeGeometry(.14,.6,4), NG=LOW?500:1400, tuft=new THREE.InstancedMesh(tuftG,SM(0xffffff),NG); let ng=0;
@@ -1553,14 +1637,14 @@ const falling=[], flies=[];
     if(!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||o.isSprite||!o.geometry||!o.material||Array.isArray(o.material))return;
     if(o.material.transparent||o===skyM||MAPK.flags.includes(o))return;
     if(o.geometry.parameters&&o.geometry.parameters.width>=400)return;
-    if(o.userData.noMerge)return;
+    if(o.userData.noMerge)return; {let pp=o.parent;while(pp){if(pp.userData&&pp.userData.noMergeTree)return;pp=pp.parent;}}
     let g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone(); g.applyMatrix4(o.matrixWorld);
     if(o.material.userData.uvk&&g.attributes.normal){const k=o.material.userData.uvk,pa=g.attributes.position,na=g.attributes.normal,ua=g.attributes.uv;
       for(let i=0;i<pa.count;i+=3){const ax=Math.abs(na.getX(i))+Math.abs(na.getX(i+1)),ay=Math.abs(na.getY(i))+Math.abs(na.getY(i+1)),az=Math.abs(na.getZ(i))+Math.abs(na.getZ(i+1));
         for(let j=i;j<i+3;j++){const x=pa.getX(j),y=pa.getY(j),z=pa.getZ(j);if(ay>=ax&&ay>=az)ua.setXY(j,x*k,z*k);else if(ax>=az)ua.setXY(j,z*k,y*k);else ua.setXY(j,x*k,y*k);}}}
     { g.computeBoundingBox(); const y0=g.boundingBox.min.y, hgt=Math.max(.5,g.boundingBox.max.y-y0), tint=.92+Math.random()*.16, pa=g.attributes.position, ca=new Float32Array(pa.count*3);
       for(let i=0;i<pa.count;i++){const t=(pa.getY(i)-y0), ao=.5+.5*Math.min(1,t/Math.min(3,hgt*.5)), top=1+.08*Math.min(1,t/Math.max(hgt,1)); const v=Math.min(1.2,ao*tint*top); ca[i*3]=v;ca[i*3+1]=v*.99;ca[i*3+2]=v*.97;}
-      g.setAttribute('color',new THREE.BufferAttribute(ca,3)); }
+      if(g.attributes.color){const oc=g.attributes.color;for(let i=0;i<pa.count;i++){ca[i*3]*=oc.getX(i);ca[i*3+1]*=oc.getY(i);ca[i*3+2]*=oc.getZ(i);}} g.setAttribute('color',new THREE.BufferAttribute(ca,3)); }
     if(!g.attributes.uv)g.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count*2),2));
     const key=o.material; if(!groups.has(key))groups.set(key,[]); groups.get(key).push(g); kill.push(o);}));
   kill.forEach(o=>o.parent&&o.parent.remove(o));
@@ -1585,17 +1669,49 @@ function mapTick(T){
   MAPK.flags.forEach((f,i)=>{f.rotation.y=Math.sin(T*2.2+i)*.35;});
   MAPK.fires.forEach((f,i)=>{f.gl.scale.setScalar(f.gl.userData.s0||(f.gl.userData.s0=f.gl.scale.x));f.gl.scale.multiplyScalar(.9+Math.sin(T*9+i*3)*.08+Math.random()*.06);});
   MAPK.smokes.forEach(s=>{s.t.offset.y=-T*s.sp;s.fire.scale.setScalar(3.4+Math.sin(T*8+s.ph)*.5+Math.random()*.4);});
-  // ลูกไฟ
-  if(T>MAPK.nextBall&&MAPK.cats&&MAPK.cats.length){MAPK.nextBall=T+(LOW?5:2.5)+Math.random()*3;
-    const from=MAPK.cats[Math.floor(Math.random()*MAPK.cats.length)].clone(), to=new THREE.Vector3(-34+Math.random()*4,6+Math.random()*7,(Math.random()-.5)*60);
-    if(Math.random()<.3)to.set(-45-Math.random()*40,3+Math.random()*10,(Math.random()-.5)*40);
-    const b=glow(scene,0xff8a30,2.2,[from.x,from.y,from.z],1);MAPK.balls.push({b,from,to,t:0,d:3+Math.random()*1.2,trail:0});}
-  for(let i=MAPK.balls.length-1;i>=0;i--){const o=MAPK.balls[i];o.t+=1/60;const k=Math.min(1,o.t/o.d);
-    _bv.lerpVectors(o.from,o.to,k);_bv.y+=Math.sin(k*Math.PI)*28;o.b.position.copy(_bv);
-    o.trail-=1/60;if(o.trail<=0){o.trail=LOW?.12:.05;fireSprite(_bv.clone(),new THREE.Vector3(0,.4,0),.7,.9,{smoke:Math.random()<.4,grav:0,grow:2.5});}
-    if(k>=1){for(let j=0;j<(LOW?6:16);j++)fireSprite(o.to.clone(),new THREE.Vector3((Math.random()-.5)*6,Math.random()*5,(Math.random()-.5)*6),.8,1.2,{grav:-2,grow:3});
-      for(let j=0;j<(LOW?2:5);j++)fireSprite(o.to.clone(),new THREE.Vector3((Math.random()-.5)*2,2+Math.random()*2,(Math.random()-.5)*2),1.6,1.4,{smoke:true,grav:.3,grow:3});
-      scene.remove(o.b);o.b.material.dispose();MAPK.balls.splice(i,1);}}
+  // เครื่องเหวี่ยงหิน: แขนเหวี่ยง -> ปล่อยก้อนหินติดไฟ -> ตกระเบิด
+  const dt2=Math.min(.05,dt||1/60);
+  (MAPK.cats||[]).forEach(c=>{c.t+=dt2;const t=c.t;
+    {const e=Math.min(1,Math.max(0,(t-.38)/3.1));c.arm.rotation.x=t<.38?-.95+2.45*Math.pow(t/.38,2):1.5-2.45*e*e*(3-2*e);}
+    if(c.fire&&t>=.3){c.fire=false;launch(c);}});
+  if(T>MAPK.nextBall&&MAPK.cats&&MAPK.cats.length){MAPK.nextBall=T+(LOW?5:2.8)+Math.random()*3;const c=MAPK.cats[Math.floor(Math.random()*MAPK.cats.length)];if(c.t>3.5){c.t=0;c.fire=true;}}
+  for(let i=MAPK.balls.length-1;i>=0;i--){const o=MAPK.balls[i];o.t+=dt2;const k=Math.min(1,o.t/o.d);
+    _bv.lerpVectors(o.from,o.to,k);_bv.y+=Math.sin(k*Math.PI)*o.arc;o.m.position.copy(_bv);o.m.rotation.x+=dt2*6;o.m.rotation.z+=dt2*4;
+    o.trail-=dt2;if(o.trail<=0){o.trail=LOW?.1:.04;fireSprite(_bv.clone(),new THREE.Vector3((Math.random()-.5)*.4,.6,(Math.random()-.5)*.4),.55,1.1,{grav:0,grow:2});if(Math.random()<.5)fireSprite(_bv.clone(),new THREE.Vector3(0,.8,0),1.6,1,{smoke:true,grav:.2,grow:3.5});}
+    if(k>=1){scene.remove(o.m);MAPK.balls.splice(i,1);boom(o.to);}}
+  // เศษหินกระเด็น
+  for(let i=MAPK.debris.length-1;i>=0;i--){const d=MAPK.debris[i];d.life-=dt2;d.v.y-=18*dt2;d.m.position.addScaledVector(d.v,dt2);d.m.rotation.x+=d.r*dt2;d.m.rotation.y+=d.r*.7*dt2;
+    const gy=d.floor;if(d.m.position.y<gy){d.m.position.y=gy;d.v.y*=-.3;d.v.x*=.6;d.v.z*=.6;d.r*=.5;}
+    if(d.life<=0){scene.remove(d.m);MAPK.debris.splice(i,1);}}
+
+}
+
+// ยิงก้อนหินติดไฟจากเครื่องเหวี่ยง
+function launch(c){
+  const from=c.p.clone(), r=Math.random(), to=new THREE.Vector3();
+  if(r<.55)to.set(-34+Math.random()*2,5+Math.random()*8,(Math.random()-.5)*56);        // กำแพงเมือง
+  else if(r<.8)to.set(-50-Math.random()*40,3+Math.random()*10,(Math.random()-.5)*40);  // ในเมือง
+  else to.set(-26+Math.random()*24,0,(Math.random()-.5)*30);                           // ทุ่งหน้ากำแพง
+  const m=new THREE.Mesh(MAPK.debGeo[0],MAPK.debM);m.scale.setScalar(.55);m.castShadow=true;scene.add(m);
+  glow(m,0xff9a40,5,[0,0,0],.9);
+  MAPK.balls.push({m,from,to,t:0,d:2.6+Math.random()*1,arc:22+Math.random()*10,trail:0});
+  for(let j=0;j<6;j++)fireSprite(from.clone(),new THREE.Vector3((Math.random()-.5)*2,Math.random()*2,(Math.random()-.5)*2),.5,.9,{grav:0,grow:2});
+}
+// ระเบิดตอนกระทบ: แสงวาบ ลูกไฟพองตัว ควันดำ เศษหินกระเด็น คลื่นฝุ่น รอยไหม้ สั่นกล้องถ้าอยู่ใกล้
+function boom(p){
+  const ground=p.y<1.2;
+  try{const l=takeLight(0xffa860,26);l.position.copy(p).setY(p.y+2);tween(.6,k=>{l.intensity=14*(1-k)*(1-k);}).then(()=>freeLight(l));}catch(e){}
+  const core=glow(scene,0xfff0c8,1,[p.x,p.y+.5,p.z],1);tween(.6,k=>{core.scale.setScalar(3+k*12);core.material.opacity=1-k*k;},t=>t).then(()=>scene.remove(core));
+  const nF=LOW?8:18, nS=LOW?3:8, nD=LOW?4:10;
+  for(let j=0;j<nF;j++){const a=Math.random()*Math.PI*2,sp=2+Math.random()*5;fireSprite(p.clone(),new THREE.Vector3(Math.cos(a)*sp,1.5+Math.random()*5,Math.sin(a)*sp),.6+Math.random()*.5,1.2+Math.random()*1.2,{grav:-1.5,grow:3.2});}
+  for(let j=0;j<nS;j++)fireSprite(p.clone().add(new THREE.Vector3((Math.random()-.5)*2,Math.random(),(Math.random()-.5)*2)),new THREE.Vector3((Math.random()-.5)*1.5,1.2+Math.random()*1.5,(Math.random()-.5)*1.5),3.2+Math.random()*1.5,2.2+Math.random(),{smoke:true,grav:.2,grow:4.5});
+  particles(p.clone().setY(p.y+.3),0xffd27a,LOW?6:14,3.5,.06,1.4);
+  for(let j=0;j<nD;j++){const m=new THREE.Mesh(MAPK.debGeo[j%4],MAPK.debM);m.scale.setScalar(.12+Math.random()*.25);m.position.copy(p);scene.add(m);
+    const a=Math.random()*Math.PI*2,sp=3+Math.random()*6;MAPK.debris.push({m,v:new THREE.Vector3(Math.cos(a)*sp,3+Math.random()*7,Math.sin(a)*sp),r:(Math.random()-.5)*14,life:2.5+Math.random(),floor:.08});}
+  const gp=ground?p.clone():new THREE.Vector3(p.x+2.5,0,p.z);
+  shockRing(gp.clone().setY(.05),0xc8b898); if(ground)scorch(gp,2.4);
+  particles(gp.clone().setY(.2),0xa89878,LOW?8:18,2.6,.3,-.2,.5);
+  const d=Math.hypot(p.x-LOOK.x,p.z-LOOK.z); if(d<40)shake=Math.max(shake,.22*(1-d/40));
 }
 
 /* ================= ข้อมูลมอนสเตอร์และด่าน ================= */
