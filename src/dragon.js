@@ -223,7 +223,7 @@ async function dragonBite(u,t,onHit){
   dragonSet(u,{rear:1,spread:1,flapAmp:.25,flapSpd:.6,rise:.35,jaw:1},.22); await wait(300);
   // พุ่ง
   dragonSet(u,{rear:0,lunge:1,spread:.3,flapAmp:.9,flapSpd:2.2,rise:0,jaw:0,legF:.7},.08);
-  await tween(.12,k=>u.w.position.copy(home).addScaledVector(dir,.7*k),easeIn);
+  const LG=.7*u.w.scale.x; await tween(.12,k=>u.w.position.copy(home).addScaledVector(dir,LG*k),easeIn);
   const hp=dragonMouth(u);
   clawSlash(hp.clone().addScaledVector(dir,.2),dir,0xffb050);
   for(let i=0;i<14;i++)fireSprite(hp,new THREE.Vector3((Math.random()-.5)*3,Math.random()*2,(Math.random()-.5)*3),.35,.18);
@@ -232,7 +232,7 @@ async function dragonBite(u,t,onHit){
   await wait(160);
   // ถอยกลับ ตีปีกแรง
   dragonSet(u,{lunge:0,legF:0,flapAmp:.6,flapSpd:1.2},.25);
-  await tween(.3,k=>u.w.position.copy(home).addScaledVector(dir,.7*(1-k)),easeOut);
+  await tween(.3,k=>u.w.position.copy(home).addScaledVector(dir,LG*(1-k)),easeOut);
   dragonSet(u,{spread:0,flapSpd:1,flapAmp:.55},.3); await wait(120);
 }
 
@@ -270,7 +270,7 @@ async function dragonDive(u,c,foes,onHit){
   // ทะยาน: ตีปีกแรง ฝุ่นฟุ้ง
   dragonSet(u,{flapSpd:2.6,flapAmp:.95,rear:.6,spread:.5},.15);
   smoke(tmpV.copy(from).setY(.2)); particles(tmpV.copy(from).setY(.1),0xb8a888,26,2.4,.35,-.2,.5);
-  const apex=from.clone().lerp(c,.45).setY(5.5);
+  const apex=from.clone().lerp(c,.45).setY(5.5*u.w.scale.x);
   await tween(.6,t=>{u.w.position.lerpVectors(from,apex,t);u.w.position.y=apex.y*Math.sin(t*Math.PI*.5);},easeOut);
   // ค้างกลางฟ้า หุบปีก ตัวลุกเป็นไฟ
   dragonSet(u,{fold:.9,lunge:1,rear:0,breath:1,flapAmp:.15,spread:0},.18);

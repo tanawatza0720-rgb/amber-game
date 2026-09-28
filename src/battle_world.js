@@ -53,6 +53,7 @@ function bossStage(n){
   const R=REQ(n);
   return {id:stLabel(n),name:'ประตูแดงของนินจาชาด',waves:[makeWave(['kazemaru','kazemaru','kazekiri','kazemaru','kazemaru','kazekiri','kazemaru','kazemaru'].map(sp=>({sp,show:n})),R*.55),makeWave(['kazemaru','kazemaru','kazemaru',null,'kazemaru','kazemaru','kazemaru'].map(sp=>sp?{sp,show:n}:{sp:'kazekiri',boss:1,show:n}),R*.85)]};
 }
+const DRAGON_BATTLE_K=2; // มังกรในสนามรบใหญ่เป็น 2 เท่า (สัตว์ในตำนาน)
 const P_SLOTS=[[-12,0],[-14,-2.6],[-14,2.6],[-16.5,-5],[-16.5,0],[-16.5,5]], E_SLOTS=[[12,0],[14,-2.6],[14,2.6]];
 const FACE_P=Math.PI/2-.35, FACE_E=-Math.PI/2+.35;
 
@@ -100,7 +101,8 @@ function makeUnit(side,def,slot){
     maxHp:Math.round(sp.base.hp*f*bm), atk:Math.round(sp.base.atk*f*(def.boss?.85:1)), def:Math.round(sp.base.def*f), spd:sp.base.spd+def.lv,
     skills:sp.skills, cds:{}, gauge:Math.random()*30, stun:0, alive:true, w, inner, rig, home:new THREE.Vector3(x,0,z), face:w.rotation.y};
   u.hp=u.maxHp;
-  u.rad=sp.dragon?1.55:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=5.2;u.camS=2.1;} u.reach=sp.dragon?1.9:inner.userData.meshy?1.25:u.evo?1.0:.72;
+  const DK=sp.dragon?DRAGON_BATTLE_K:1; if(sp.dragon){w.scale.setScalar(DK);}
+  u.rad=sp.dragon?1.55*DK:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=5.2*DK*.78;u.camS=2.1*DK;} u.reach=sp.dragon?1.9*DK:inner.userData.meshy?1.25:u.evo?1.0:.72;
   u.mats=[];w.traverse(o=>{if(o.isMesh){o.userData.unit=u.id;PICKU.push(o);if(o.material&&o.material.emissive&&u.mats.indexOf(o.material)<0)u.mats.push(o.material);}});
   if(sp.dragon){u.dragon=true;u.stance=[];}
   else if(u.evo)u.stance=[[rig.hips.position,'y',.78],[rig.hips.rotation,'y',.32],[rig.torso.rotation,'x',.14],[rig.torso.rotation,'y',0],[rig.torso.rotation,'z',.05],[rig.head.rotation,'y',-.3],[rig.head.rotation,'x',-.05],
