@@ -15,42 +15,62 @@ function loadDragon(){
       const pos=geo.attributes.position, n=pos.count;
       const SI=new Uint16Array(n*4), SW=new Float32Array(n*4);
       const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
-      // กระดูก (21 ชิ้น): 0 สะโพก 1 อก 2 คอ1 3 คอ2 4 หัว 5 กราม 6-9 หาง 10-12 ปีกซ้าย 13-15 ปีกขวา 16 ขาหน้าซ้าย 17 ขาหน้าขวา 18 ขาหลังซ้าย 19 ขาหลังขวา
-      const NB=20;
+      const wingW=(ax,y)=>ss(.17,.32,ax)*ss(-.38,-.12,y);
+      // แนวกลางลำตัว (y ตามตำแหน่ง z) และแนวปีก (y,z ตามระยะออกข้าง) คำนวณจากตัวโมเดลเอง
+      const NZ=40, zlo=[],zhi=[],zc=new Array(NZ).fill(0);for(let b=0;b<NZ;b++){zlo[b]=1e9;zhi[b]=-1e9;}
+      const NA=10, wy=new Array(NA).fill(0), wz=new Array(NA).fill(0), wc=new Array(NA).fill(0);
+      for(let i=0;i<n;i++){const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),ax=Math.abs(x);
+        if(ax<.14){const b=Math.min(NZ-1,Math.max(0,Math.floor((z+1)/2*NZ)));zlo[b]=Math.min(zlo[b],y);zhi[b]=Math.max(zhi[b],y);zc[b]++;}
+        if(wingW(ax,y)>.5){const b=Math.min(NA-1,Math.max(0,Math.floor((ax-.17)/.083)));wy[b]+=y;wz[b]+=z;wc[b]++;}}
+      const cy=zc.map((c,b)=>c?(zlo[b]+zhi[b])/2:null); for(let b=0;b<NZ;b++)if(cy[b]==null){let l=b,r=b;while(l>=0&&cy[l]==null)l--;while(r<NZ&&cy[r]==null)r++;cy[b]=l<0?cy[r]:r>=NZ?cy[l]:(cy[l]+cy[r])/2;}
+      const cyAt=z=>{const f=Math.min(NZ-1.001,Math.max(0,(z+1)/2*NZ-.5)),b=Math.floor(f);return cy[b]+(cy[Math.min(NZ-1,b+1)]-cy[b])*(f-b);};
+      const wAt=(ax,arr)=>{const f=Math.min(NA-1.001,Math.max(0,(ax-.17)/.083-.5)),b=Math.floor(f),v=k=>wc[k]?arr[k]/wc[k]:0;return v(b)+(v(Math.min(NA-1,b+1))-v(b))*(f-b);};
+      // โครงกระดูก 30 ชิ้น
+      const RIG=[]; const bone=(name,parent,p)=>{RIG.push({name,parent,p});return RIG.length-1;};
+      const AXZ=[['t6',-.95],['t5',-.8],['t4',-.65],['t3',-.5],['t2',-.35],['t1',-.2],['hips',-.05],['sp',.12],['chest',.28],['n1',.44],['n2',.54],['n3',.62],['n4',.7],['head',.78]];
+      const AXI={};
+      AXI.hips=bone('hips',-1,[0,cyAt(-.05),-.05]);
+      AXI.sp=bone('sp',AXI.hips,[0,cyAt(.12),.12]); AXI.chest=bone('chest',AXI.sp,[0,cyAt(.28),.28]);
+      let pv=AXI.chest; ['n1','n2','n3','n4','head'].forEach(k=>{const z=AXZ.find(a=>a[0]===k)[1];AXI[k]=bone(k,pv,[0,cyAt(z),z]);pv=AXI[k];});
+      AXI.jaw=bone('jaw',AXI.head,[0,cyAt(.78)-.06,.82]);
+      pv=AXI.hips; ['t1','t2','t3','t4','t5','t6'].forEach(k=>{const z=AXZ.find(a=>a[0]===k)[1];AXI[k]=bone(k,pv,[0,cyAt(z),z]);pv=AXI[k];});
+      const WA=[.19,.36,.54,.72], WB={L:[],R:[]};
+      ['L','R'].forEach(sd=>{const sx=sd==='L'?-1:1;let p=AXI.chest;WA.forEach((a,k)=>{const yy=k?wAt(a,wy):.14,zz=k?wAt(a,wz):.26;p=bone('w'+sd+(k+1),p,[sx*a,yy,zz]);WB[sd].push(p);});});
+      const LG={FL:bone('FL',AXI.chest,[-.13,cyAt(.38)-.1,.38]),FR:bone('FR',AXI.chest,[.13,cyAt(.38)-.1,.38]),BL:bone('BL',AXI.hips,[-.13,cyAt(-.08)-.12,-.08]),BR:bone('BR',AXI.hips,[.13,cyAt(-.08)-.12,-.08])};
+      const AXB=AXZ.map(a=>[AXI[a[0]],a[1]]);
       for(let i=0;i<n;i++){
         const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),ax=Math.abs(x),L=x<0;
-        const w=new Array(NB).fill(0);
-        const wing=ss(.17,.32,ax)*ss(-.38,-.12,y);
-        const s2=ss(.36,.5,ax), s3=ss(.6,.76,ax);
-        if(wing>0){const a=L?10:13; w[a]+=wing*(1-s2); w[a+1]+=wing*s2*(1-s3); w[a+2]+=wing*s3;}
+        const w={}; const add=(k,v)=>{if(v>0)w[k]=(w[k]||0)+v;};
+        const wing=wingW(ax,y);
+        if(wing>0){const B=WB[L?'L':'R'];let k=0;while(k<WA.length-1&&ax>WA[k+1])k++;
+          if(k>=WA.length-1)add(B[k],wing);else{const t=Math.min(1,Math.max(0,(ax-WA[k])/(WA[k+1]-WA[k])));add(B[k],wing*(1-t));add(B[k+1],wing*t);}}
         let r=1-wing;
         const legB=ss(-.34,-.44,y)*ss(-.34,-.26,z)*(1-ss(.1,.18,z))*ss(.03,.08,ax)*r;
         const legF=ss(-.28,-.38,y)*ss(.24,.3,z)*(1-ss(.5,.58,z))*ss(.03,.08,ax)*r;
-        if(legB>0){w[L?18:19]+=legB;r-=legB;} if(legF>0){w[L?16:17]+=legF;r-=legF;}
-        const hd=ss(.66,.74,z), n2=ss(.56,.64,z), n1=ss(.44,.52,z), ch=ss(.02,.2,z);
-        const jaw=hd*ss(.8,.86,z)*ss(-.17,-.24,y);
-        const t1=ss(-.18,-.32,z), t2=ss(-.46,-.58,z), t3=ss(-.7,-.8,z), t4=ss(-.86,-.94,z);
-        const chain=[[0,1-ch-t1>0?(1-ch)*(1-t1):0],[1,ch*(1-n1)],[2,n1*(1-n2)],[3,n2*(1-hd)],[4,hd-jaw],[5,jaw],[6,t1*(1-t2)],[7,t2*(1-t3)],[8,t3*(1-t4)],[9,t4]];
-        let tot=chain.reduce((a,b)=>a+Math.max(0,b[1]),0)||1;
-        chain.forEach(([k,v])=>{w[k]+=Math.max(0,v)/tot*r;});
-        const idx=w.map((v,k)=>[v,k]).sort((a,b)=>b[0]-a[0]).slice(0,4); const sum=idx.reduce((a,b)=>a+b[0],0)||1;
-        idx.forEach(([v,k],j)=>{SI[i*4+j]=k;SW[i*4+j]=v/sum;});
+        add(L?LG.BL:LG.BR,legB); add(L?LG.FL:LG.FR,legF); r-=legB+legF;
+        // แกนลำตัว: ถ่วงแบบเส้นตรงระหว่างกระดูกสองชิ้นที่ใกล้ที่สุด ทำให้โค้งเนียน
+        let k=0; while(k<AXB.length-1&&z>AXB[k+1][1])k++;
+        let ia,ib,t;
+        if(z<=AXB[0][1]){ia=ib=AXB[0][0];t=0;} else if(k>=AXB.length-1){ia=ib=AXB[AXB.length-1][0];t=0;}
+        else{ia=AXB[k][0];ib=AXB[k+1][0];t=(z-AXB[k][1])/(AXB[k+1][1]-AXB[k][1]);}
+        const jw=ss(.74,.8,z)*ss(-.17,-.24,y);
+        const put=(bi,v)=>{if(bi===AXI.head){add(AXI.jaw,v*jw);add(AXI.head,v*(1-jw));}else add(bi,v);};
+        put(ia,r*(1-t)); put(ib,r*t);
+        const idx=Object.entries(w).map(([k2,v])=>[v,+k2]).sort((a,b)=>b[0]-a[0]).slice(0,4); const sum=idx.reduce((a,b)=>a+b[0],0)||1;
+        idx.forEach(([v,k2],jj)=>{SI[i*4+jj]=k2;SW[i*4+jj]=v/sum;});
       }
-      // ขยายปีกให้กางกว้าง: ยืดส่วนปีกออกจากโคนปีก (ยิ่งไกลโคนยิ่งยืดมาก)
-      for(let i=0;i<n;i++){
-        const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),ax=Math.abs(x);
-        const wing=ss(.17,.32,ax)*ss(-.38,-.12,y); if(wing<=0)continue;
-        const sx=Math.sign(x)||1, rx=.19, ex=Math.max(0,ax-rx);
-        pos.setX(i,sx*(rx+ex*(1+(WING_X-1)*wing)));
-        pos.setZ(i,.26+(z-.26)*(1+(WING_Z-1)*wing*ss(.2,.5,ax)));
-        pos.setY(i,y+ex*(WING_X-1)*wing*.12);
-      }
+      // ขยายปีกให้กางกว้าง (ยืดจากโคนปีก)
+      const stretch=(x,y,z,wg)=>{const ax=Math.abs(x),sx=Math.sign(x)||1,rx=.19,ex=Math.max(0,ax-rx);
+        return [sx*(rx+ex*(1+(WING_X-1)*wg)), y+ex*(WING_X-1)*wg*.12, .26+(z-.26)*(1+(WING_Z-1)*wg*ss(.2,.5,ax))];};
+      for(let i=0;i<n;i++){const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),wg=wingW(Math.abs(x),y);if(wg<=0)continue;const q=stretch(x,y,z,wg);pos.setXYZ(i,q[0],q[1],q[2]);}
+      RIG.forEach(b=>{if(/^w[LR]/.test(b.name))b.p=stretch(b.p[0],b.p[1],b.p[2],1);});
       pos.needsUpdate=true; geo.computeVertexNormals(); geo.computeBoundingBox();
       geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(SI,4));
       geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(SW,4));
+      geo.userData.rig=RIG;
       const mat=mesh.material.clone(); mat.skinning=true; if(ENV){mat.envMap=ENV;mat.envMapIntensity=.5;}
       mat.emissive=new THREE.Color(0xff5a1a); mat.emissiveIntensity=.0; mat.emissiveMap=mat.map;
-      DRAGON={geo,mat,minY:geo.boundingBox.min.y};
+      DRAGON={geo,mat,rig:RIG,minY:geo.boundingBox.min.y};
       res(DRAGON);
     },undefined,()=>res(null));
   });
@@ -58,59 +78,77 @@ function loadDragon(){
 function buildDragon(){
   const w=new THREE.Group(), m=new THREE.Group(); w.add(m);
   const hover=new THREE.Group(); m.add(hover);
-  const B=[]; const mk=(p,x,y,z)=>{const b=new THREE.Bone();b.position.set(x,y,z);B.push(b);if(p)p.add(b);return b;};
-  const WX=WING_X, wy=d=>d*.33+d*(WX-1)*.12;
-  const body=mk(null,0,-.3,0), chest=mk(body,0,.05,.3), neck1=mk(chest,0,.1,.24), neck2=mk(neck1,0,0,.12), head=mk(neck2,0,0,.1), jaw=mk(head,0,-.06,.04),
-        tail1=mk(body,0,-.03,-.3), tail2=mk(tail1,0,-.1,-.24), tail3=mk(tail2,0,-.08,-.24), tail4=mk(tail3,0,.02,-.16),
-        wl1=mk(chest,-.19,.39,-.04), wl2=mk(wl1,-.24*WX,wy(.24),0), wl3=mk(wl2,-.25*WX,wy(.25),0),
-        wr1=mk(chest,.19,.39,-.04), wr2=mk(wr1,.24*WX,wy(.24),0), wr3=mk(wr2,.25*WX,wy(.25),0),
-        lfl=mk(chest,-.14,-.08,.08), lfr=mk(chest,.14,-.08,.08), lbl=mk(body,-.14,-.08,-.08), lbr=mk(body,.14,-.08,-.08);
+  const B=DRAGON.rig.map(()=>new THREE.Bone()), N={};
+  DRAGON.rig.forEach((d,i)=>{const b=B[i];b.name=d.name;N[d.name]=b;const pp=d.parent<0?[0,0,0]:DRAGON.rig[d.parent].p;b.position.set(d.p[0]-pp[0],d.p[1]-pp[1],d.p[2]-pp[2]);if(d.parent>=0)B[d.parent].add(b);});
   const mesh=new THREE.SkinnedMesh(DRAGON.geo,DRAGON.mat.clone()); mesh.material.skinning=true;
-  mesh.add(body); mesh.updateMatrixWorld(true); mesh.bind(new THREE.Skeleton(B)); mesh.castShadow=true; mesh.receiveShadow=true; mesh.frustumCulled=false;
+  mesh.add(B[0]); mesh.updateMatrixWorld(true); mesh.bind(new THREE.Skeleton(B)); mesh.castShadow=true; mesh.receiveShadow=true; mesh.frustumCulled=false;
   const S=DRAGON_S; hover.scale.setScalar(S); hover.add(mesh);
   const baseY=-DRAGON.minY*S;
   m.userData.dragon=true; m.userData.mats=[mesh.material];
-  // ค่าท่าทาง: ปรับด้วย dragonSet แล้วค่อย ๆ เข้าหาเป้า
   const st={fly:1,flapAmp:.55,flapSpd:1,rear:0,lunge:0,fold:0,breath:0,headDown:0,dead:0,spread:0,rise:0,jaw:0,
     legF:0,clawL:0,clawR:0,tailWhip:0,roar:0,droop:0,bank:0,look:0,recoil:0};
-  const R={body,chest,neck:neck1,neck1,neck2,head,jaw,tail1,tail2,tail3,tail4,wl1,wl2,wl3,wr1,wr2,wr3,lfl,lfr,lbl,lbr,st,tg:Object.assign({},st),rate:{}};
+  const neck=[N.n1,N.n2,N.n3,N.n4], tail=[N.t1,N.t2,N.t3,N.t4,N.t5,N.t6], WL=[N.wL1,N.wL2,N.wL3,N.wL4], WR=[N.wR1,N.wR2,N.wR3,N.wR4];
+  const R={body:N.hips,chest:N.chest,neck:N.n1,neck1:N.n1,neck2:N.n3,head:N.head,jaw:N.jaw,tail1:N.t1,wl1:N.wL1,wr1:N.wR1,st,tg:Object.assign({},st),rate:{}};
   m.userData.rig=R;
-  { const g=glow(head,0xffa040,.7,[0,-.05,.16],0); g.material.opacity=0; m.userData.mouthGlow=g; }
-  let ph=Math.random()*6, lastT=null;
+  { const g=glow(N.head,0xffa040,.7,[0,-.05,.16],0); g.material.opacity=0; m.userData.mouthGlow=g; }
+  // สปริงทุกข้อต่อ: ปลายโซ่ (หาง ปลายปีก คอ) นิ่มกว่า จะตามช้าและเหวี่ยงเลยนิดหน่อย = พลิ้ว
+  const SP=[]; const spring=(b,k,z)=>{const s={b,k,c:2*Math.sqrt(k)*(z||1),t:new THREE.Vector3(),v:new THREE.Vector3(),r:new THREE.Vector3()};b.userData.sp=s;SP.push(s);return s;};
+  spring(N.hips,140);spring(N.sp,110);spring(N.chest,110);
+  neck.forEach((b,i)=>spring(b,90-i*14,.8)); spring(N.head,70,.75); spring(N.jaw,160);
+  tail.forEach((b,i)=>spring(b,70-i*9,.62));
+  [WL,WR].forEach(ws=>ws.forEach((b,i)=>spring(b,[260,150,90,55][i],[.9,.75,.6,.5][i])));
+  [N.FL,N.FR,N.BL,N.BR].forEach(b=>spring(b,90,.7));
+  const T3=(b,x,y,z)=>b.userData.sp.t.set(x,y,z);
+  let ph=Math.random()*6, lastT=null, lookY=0,lookX=0,lookT=0,lookTY=0,lookTX=0, stretchT=4+Math.random()*4, stretchK=0;
+  const lastP=new THREE.Vector3(), lastYaw={v:null}; let turnV=0, fwdV=0;
   m.userData.idle=T=>{
     const dt=lastT==null?0:Math.min(.1,T-lastT); lastT=T; const gdt=dt*(typeof SPEED!=='undefined'?SPEED*HS:1);
     for(const k in R.tg){const r=R.rate[k]||4;st[k]+=(R.tg[k]-st[k])*Math.min(1,gdt*r*3.2);}
-    ph+=gdt*(5.2*st.flapSpd*(1-st.droop*.6));
-    const sp=ph+.45*Math.sin(ph), fl=Math.sin(sp), vel=Math.cos(sp), up=Math.max(0,-vel);
-    const amp=st.flapAmp*(1-st.fold)*(1-st.droop*.7), open=.38-st.fold*1.3+st.spread*.3-st.droop*.5;
-    // ปีก 3 ท่อน: โคนตีก่อน ปลายตามหลัง (เป็นคลื่น)
-    const a1=open+fl*amp, a2=Math.sin(sp-.9)*amp*.7+up*amp*.4-st.fold*.9+st.spread*.15, a3=Math.sin(sp-1.7)*amp*.6+up*amp*.3-st.fold*.6+st.spread*.2;
-    wl1.rotation.z=-a1; wr1.rotation.z=a1; wl2.rotation.z=-a2; wr2.rotation.z=a2; wl3.rotation.z=-a3; wr3.rotation.z=a3;
-    const sw=st.fold*.75-up*.14*amp-st.spread*.25; wl1.rotation.y=sw; wr1.rotation.y=-sw;
-    wl2.rotation.y=st.fold*.5+Math.sin(sp-.6)*.1*amp; wr2.rotation.y=-wl2.rotation.y; wl3.rotation.y=st.fold*.4+Math.sin(sp-1.2)*.12*amp; wr3.rotation.y=-wl3.rotation.y;
-    // ลำตัวลอยขึ้นลงตามจังหวะปีก
-    const lift=st.fly*(.9+(-Math.sin(sp-.6))*.16*st.flapAmp/.55)+st.rise;
+    // ความเร็วจริงของตัว (ใช้ทำแรงเฉื่อย: หางลาก ตัวเอียง)
+    const W=w; if(lastYaw.v==null){lastYaw.v=W.rotation.y;lastP.copy(W.position);}
+    if(gdt>0){let dy=W.rotation.y-lastYaw.v;dy=Math.atan2(Math.sin(dy),Math.cos(dy));turnV+=(dy/gdt-turnV)*Math.min(1,gdt*6);
+      const dv=W.position.clone().sub(lastP);fwdV+=((dv.x*Math.sin(W.rotation.y)+dv.z*Math.cos(W.rotation.y))/gdt-fwdV)*Math.min(1,gdt*5);}
+    lastYaw.v=W.rotation.y; lastP.copy(W.position);
+    // มองซ้ายขวาเป็นระยะ + ยืดปีกเล่นเวลาว่าง
+    lookT-=gdt; if(lookT<=0){lookT=1.2+Math.random()*2.5;lookTY=(Math.random()-.5)*.9;lookTX=(Math.random()-.5)*.35;}
+    lookY+=(lookTY-lookY)*Math.min(1,gdt*2.5); lookX+=(lookTX-lookX)*Math.min(1,gdt*2.5);
+    const calm=Math.max(0,1-st.rear-st.lunge-st.roar-st.breath-st.fold-Math.abs(st.tailWhip)-st.droop);
+    stretchT-=gdt; if(stretchT<=0){stretchT=6+Math.random()*6;stretchK=1;} stretchK=Math.max(0,stretchK-gdt*.6);
+    const stretchA=Math.sin(Math.min(1,1-stretchK)*Math.PI)*calm*(stretchK>0?1:0);
+    // จังหวะปีก: ตีลงเร็ว ยกขึ้นช้า
+    ph+=gdt*(5.2*st.flapSpd*(1-st.droop*.6)*(1-stretchA*.5));
+    const sp=ph+.5*Math.sin(ph), fl=Math.sin(sp), vel=Math.cos(sp), up=Math.max(0,-vel);
+    const amp=st.flapAmp*(1-st.fold)*(1-st.droop*.7)*(1-stretchA*.6), open=.38-st.fold*1.3+(st.spread+stretchA*.8)*.3-st.droop*.5;
+    const sweep=st.fold*.75-(st.spread+stretchA)*.25;
+    WL.forEach((b,i)=>{const lag=i*.75, a=[open+fl*amp, Math.sin(sp-lag)*amp*.55+up*amp*.3-st.fold*.7+(st.spread+stretchA)*.12, Math.sin(sp-lag)*amp*.5+up*amp*.25-st.fold*.5+stretchA*.1, Math.sin(sp-lag)*amp*.45-st.fold*.3][i];
+      const tw=vel*amp*.18*(i+1)/4, sy=i===0?sweep-up*.14*amp:(st.fold*.4-stretchA*.1)*(i<3?1:.5)+Math.sin(sp-lag-.5)*.1*amp;
+      T3(b,tw,sy,-a); T3(WR[i],tw,-sy,a);});
+    // ลำตัว: ขึ้นลงตามปีก เอียงตามการเลี้ยว ก้มตามความเร็ว
+    const lift=st.fly*(.9+(-Math.sin(sp-.6))*.18*st.flapAmp/.55)+st.rise+Math.sin(T*.9)*.05;
     hover.position.y=baseY+lift*(1-st.dead)-st.droop*.25;
-    body.rotation.x=-st.rear*.5+st.lunge*.3+Math.sin(ph+1.4)*.04+st.dead*.25+st.droop*.15-st.recoil*.2;
-    body.rotation.z=st.bank*.35+Math.sin(T*.8)*.03;
-    chest.rotation.x=-st.rear*.3+st.lunge*.12+Math.sin(ph+1.1)*.05-st.recoil*.15;
-    // คอ-หัว: ส่ายหาเป้า หายใจ คำราม
-    const sway=Math.sin(T*.7)*.12+st.look;
-    neck1.rotation.x=st.rear*.4-st.lunge*.3+st.headDown*.35-st.roar*.45+st.droop*.5+st.recoil*.35+Math.sin(T*1.3)*.05;
-    neck2.rotation.x=st.rear*.25-st.lunge*.25+st.headDown*.3-st.roar*.3+st.droop*.3+Math.sin(T*1.3-.5)*.05;
-    head.rotation.x=-st.rear*.35-st.lunge*.15+st.headDown*.25+st.roar*.25+st.droop*.2-st.recoil*.2;
-    neck1.rotation.y=sway*.6; neck2.rotation.y=sway*.5; head.rotation.y=sway*.4;
-    head.rotation.z=Math.sin(T*16)*st.roar*.18+Math.sin(T*3)*st.droop*.15;
-    jaw.rotation.x=Math.max(st.jaw,st.roar*.9,st.breath*.5)*.65+Math.max(0,Math.sin(T*.9))*.04;
-    // หาง 4 ท่อน: คลื่นหาง + ฟาดหาง
+    hover.position.x=Math.sin(T*.6)*.06*calm; 
+    const lean=Math.min(.35,Math.max(-.2,fwdV*.06)), bank=st.bank*.35-turnV*.12;
+    T3(N.hips,-st.rear*.3+st.lunge*.18+lean*.5+Math.sin(sp+2)*.04*st.fly+st.dead*.25+st.droop*.12-st.recoil*.12, 0, bank);
+    T3(N.sp,-st.rear*.2+st.lunge*.1+Math.sin(sp+1.6)*.03, turnV*.05, bank*.4);
+    T3(N.chest,-st.rear*.25+st.lunge*.1+Math.sin(sp+1.2)*.04-st.recoil*.12, turnV*.06, bank*.2);
+    // คอเป็นตัว S หัวพยายามตั้งตรง
+    const nx=st.rear*.14-st.lunge*.1+st.headDown*.12-st.roar*.15+st.droop*.16+st.recoil*.12-lean*.2+lookX*.3;
+    const ny=lookY*.25*calm+st.look*.25-turnV*.08, wav=Math.sin(T*1.3);
+    neck.forEach((b,i)=>T3(b,nx+wav*.03*(i%2?1:-1)+Math.sin(sp-.8-i*.4)*.03*st.fly, ny, Math.sin(T*.9-i*.5)*.03));
+    T3(N.head,-nx*1.8+st.headDown*.2+st.roar*.2+st.droop*.25-st.recoil*.2+lookX*.4, ny*.8, Math.sin(T*16)*st.roar*.2+Math.sin(T*3)*st.droop*.15);
+    T3(N.jaw,Math.max(st.jaw,st.roar*.9,st.breath*.55)*.65+Math.max(0,Math.sin(T*.9))*.05,0,0);
+    // หาง: คลื่นเดินทาง + ลากตามการเลี้ยว + ฟาดหาง
     const tw=st.tailWhip;
-    [tail1,tail2,tail3,tail4].forEach((t,i)=>{t.rotation.y=Math.sin(T*1.6-i*.7)*(.18+i*.05)*(1-Math.abs(tw))+tw*(.35+i*.1);
-      t.rotation.x=(i===0?.1:.05)+Math.sin(ph-i*.6)*.06*st.fly-st.rear*.12*(i===0?1:0);});
-    // ขาหน้า: พับตอนบิน ยื่นตะปบ; ขาหลัง: ห้อยแกว่ง
-    const legSw=Math.sin(ph*.5)*.12;
-    lfl.rotation.x=-.5+st.legF*1.3+st.clawL*1.5+legSw; lfr.rotation.x=-.5+st.legF*1.3+st.clawR*1.5-legSw;
-    lfl.rotation.z=-st.clawL*.4; lfr.rotation.z=st.clawR*.4;
-    lbl.rotation.x=.35+Math.sin(ph*.5+1)*.15-st.rear*.4+st.lunge*.3; lbr.rotation.x=.35+Math.sin(ph*.5+2)*.15-st.rear*.4+st.lunge*.3;
+    tail.forEach((b,i)=>T3(b,(i===0?.08:.04)+Math.sin(ph*.8-i*.7)*.05*st.fly-st.rear*.08+lean*.08+st.droop*.04,
+      Math.sin(T*1.5-i*.6)*(.1+i*.03)*(1-Math.abs(tw))+tw*(.22+i*.06)+turnV*.1*(i+1)*.3, Math.sin(T*1.1-i*.5)*.04));
+    // ขา
+    const legSw=Math.sin(ph*.5)*.1;
+    T3(N.FL,-.5+st.legF*1.3+st.clawL*1.5+legSw-lean*.5,0,-st.clawL*.4); T3(N.FR,-.5+st.legF*1.3+st.clawR*1.5-legSw-lean*.5,0,st.clawR*.4);
+    T3(N.BL,.35+Math.sin(ph*.5+1)*.14-st.rear*.4+st.lunge*.3+lean,0,0); T3(N.BR,.35+Math.sin(ph*.5+2)*.14-st.rear*.4+st.lunge*.3+lean,0,0);
+    // ขยับสปริง (แบ่งช่วงย่อยให้เสถียร)
+    const n=Math.max(1,Math.ceil(gdt/(1/90))), h=gdt/n;
+    for(let s=0;s<n;s++)SP.forEach(q=>{q.v.x+=((q.t.x-q.r.x)*q.k-q.v.x*q.c)*h;q.v.y+=((q.t.y-q.r.y)*q.k-q.v.y*q.c)*h;q.v.z+=((q.t.z-q.r.z)*q.k-q.v.z*q.c)*h;q.r.addScaledVector(q.v,h);});
+    SP.forEach(q=>q.b.rotation.set(q.r.x,q.r.y,q.r.z));
     mesh.material.emissiveIntensity=.06+st.breath*.7*(.85+.15*Math.sin(T*18))+st.roar*.25+Math.max(0,Math.sin(T*2.3))*.04;
     if(m.userData.mouthGlow){m.userData.mouthGlow.material.opacity=Math.max(st.breath*.95,st.roar*.5);m.userData.mouthGlow.scale.setScalar(.25+Math.max(st.breath,st.roar*.5)*.55*(1+.2*Math.sin(T*22)));}
   };
