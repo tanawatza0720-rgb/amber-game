@@ -3,7 +3,7 @@ const T=require('./package/build/three.min.js');
 const fs=require('fs');
 const BONES=['Hips','Spine','Spine1','Spine2','Neck','Head','RightShoulder','RightArm','RightForeArm','RightHand','LeftShoulder','LeftArm','LeftForeArm','LeftHand','RightUpLeg','RightLeg','RightFoot','RightToeBase','LeftUpLeg','LeftLeg','LeftFoot','LeftToeBase'];
 const CHILD={Hips:'Spine',Spine:'Spine1',Spine1:'Spine2',Spine2:'Neck',Neck:'Head',Head:'HeadTop_End',RightShoulder:'RightArm',RightArm:'RightForeArm',RightForeArm:'RightHand',RightHand:'RightHandMiddle1',LeftShoulder:'LeftArm',LeftArm:'LeftForeArm',LeftForeArm:'LeftHand',LeftHand:'LeftHandMiddle1',RightUpLeg:'RightLeg',RightLeg:'RightFoot',RightFoot:'RightToeBase',RightToeBase:'RightToe_End',LeftUpLeg:'LeftLeg',LeftLeg:'LeftFoot',LeftFoot:'LeftToeBase',LeftToeBase:'LeftToe_End'};
-const CLIPS=['idle','slash','slash2','combo','leap','hit','death','victory'];
+const CLIPS=['idle','slash','slash2','combo','leap','hit','death','victory','run','walk','dizzy','powerup','spin','power','jumpatk','dodge','battlecry'];
 function readGlb(f){const b=fs.readFileSync(f);const l=b.readUInt32LE(12);const j=JSON.parse(b.slice(20,20+l).toString());const binStart=20+l+8;const bin=b.slice(binStart);return {j,bin};}
 function acc(g,i){const a=g.j.accessors[i],bv=g.j.bufferViews[a.bufferView];const n={SCALAR:1,VEC3:3,VEC4:4}[a.type];const off=(bv.byteOffset||0)+(a.byteOffset||0);const arr=new Float32Array(a.count*n);for(let k=0;k<a.count*n;k++)arr[k]=g.bin.readFloatLE(off+k*4);return {arr,n,count:a.count};}
 const out={fps:30,bones:BONES,clips:{},restDir:{},hipsY:0};

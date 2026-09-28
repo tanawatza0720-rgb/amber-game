@@ -22,18 +22,28 @@ function turnToward(u,x,z,dt){
 function stepToward(u,x,z,dist,dt,T){
   const p=u.w.position, dx=x-p.x, dz=z-p.z, L=Math.hypot(dx,dz)||1, st=Math.min(dist,RT_MOVE*(u.dragon?1.15:1)*dt);
   p.x+=dx/L*st; p.z+=dz/L*st; turnToward(u,x,z,dt);
-  if(!u.moving&&u.dragon)dragonSet(u,{flapSpd:1.9,flapAmp:.75,lunge:.3},.15);
+  const A=u.inner.userData, MC=hasClip(u,'run');
+  if(!u.moving){if(u.dragon)dragonSet(u,{flapSpd:1.9,flapAmp:.75,lunge:.3},.15);else if(MC)A.play('run',{loop:true,fade:.15,speed:1.15});}
   u.moving=true;
-  p.y=u.dragon?.25+Math.sin(T*6)*.08:Math.abs(Math.sin(T*13))*(u.evo?.1:.14);
+  p.y=u.dragon?.25+Math.sin(T*6)*.08:MC?0:Math.abs(Math.sin(T*13))*(u.evo?.1:.14);
   u.dust-=dt; if(u.dust<=0&&!u.dragon){u.dust=.22;particles(tmpV.copy(p).setY(.08),0xb8a888,3,.6,.18,-.1,.35);}
 }
-function stopMove(u){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon)dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0},.3);}
+const hasClip=(u,n)=>{const A=u.inner.userData;return !!(A.play&&A.clipInfo&&A.clipInfo(n));};
+function stopMove(u,keep){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon)dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0},.3);else if(!keep&&hasClip(u,'run'))u.inner.userData.play('idle',{loop:true,fade:.15});}
+// เล่นท่าจาก Mixamo: multi=ตีหลายจังหวะตาม hits, ไม่งั้นตีครั้งเดียวที่จังหวะแรงสุด
+async function clipStrike(u,nm,sp,onHit,multi){
+  const A=u.inner.userData,inf=A.clipInfo(nm); A.play(nm,{speed:sp,fade:.1});
+  if(multi){let last=0;for(const h of inf.hits){await wait((h-last)/sp*1000);last=h;onHit();}await wait(Math.max(120,(inf.dur-last)/sp*1000*.35));}
+  else{await wait(inf.main/sp*1000);onHit();await wait(Math.max(120,(inf.dur-inf.main)/sp*1000*.4));}
+}
+const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'}};
 function rtTick(dt,T){
   if(!RT)return;
   UNITS.forEach(u=>{
     if(!u.alive)return;
-    if(u.stun){u.stun=0;u.stunT=1.6;}
-    if(u.stunT>0){u.stunT-=dt;stopMove(u);return;}
+    if(u.stun){u.stun=0;u.stunT=1.6;if(!u.busy&&hasClip(u,'dizzy')){stopMove(u,1);u.inner.userData.play('dizzy',{loop:true,fade:.15});u.dizzy=1;}}
+    if(u.stunT>0){u.stunT-=dt;stopMove(u,1);if(u.stunT<=0&&u.dizzy){u.dizzy=0;u.inner.userData.play('idle',{loop:true,fade:.2});}return;}
+    if(u.holdT>0){u.holdT-=dt;return;}
     for(const k in u.skT)if(u.skT[k]>0)u.skT[k]-=dt;
     if(u.atkT>0)u.atkT-=dt;
     if(u.busy)return;
@@ -43,6 +53,7 @@ function rtTick(dt,T){
       if(hd>.15)stepToward(u,u.home.x,u.home.z,hd,dt,T); else{stopMove(u);turnToward(u,u.home.x+(u.side==='P'?5:-5),u.home.z,dt);}
       return;
     }
+    if(!u.dodged&&u.hp<u.maxHp*.35&&d<3&&hasClip(u,'dodge')){u.dodged=1;stopMove(u,1);rtDodge(u,t);return;}
     const manual=RT.manual&&u.side==='P'&&!AUTO;
     if(u.queued&&d<8){const s=u.queued;u.queued=null;stopMove(u);rtUse(u,s,t);return;}
     const ready=u.skills.filter(s=>s.cd&&u.skT[s.id]<=0&&!(manual&&s===ultOf(u)));
@@ -63,10 +74,15 @@ async function rtUse(u,s,t){
       if(u.side==='P'&&s===ultOf(u)){const k=$('#skname');k.textContent=s.name;k.className='p';k.hidden=false;setTimeout(()=>{if(k.textContent===s.name)k.hidden=true;},900);}
     }
     if(u.dragon&&s.type!=='melee'){}else await faceTo(u,t.w.position,.08);
-    if(s.type==='melee'){
+    const AN=ANIM[u.sp]&&u.inner.userData.play?ANIM[u.sp]:null;
+    if(AN&&u.side==='P'&&s===ultOf(u)&&hasClip(u,'powerup')){u.inner.userData.play('powerup',{speed:1.8,fade:.1});particles(tmpV.copy(u.w.position).setY(1),0x9fe8ff,24,1.4,.06,1.2,.9);await wait(650);}
+    if(s.type==='melee'&&AN){
+      const ls=AN.s1; await clipStrike(u,ls[Math.floor(Math.random()*ls.length)],1.35,()=>{if(t.alive){dealHit(u,t,s);hitStop();}});
+    } else if(s.type==='melee'){
       await strike(u,Math.random()<.5?0:1,()=>{if(t.alive)dealHit(u,t,s);});
     } else if(s.type==='melee3'){
-      if(u.inner.userData.play)await strikeCombo(u,()=>{if(t.alive)dealHit(u,t,s);});
+      if(AN)await clipStrike(u,AN.s2,1.25,()=>{if(t.alive)dealHit(u,t,s);},true);
+      else if(u.inner.userData.play)await strikeCombo(u,()=>{if(t.alive)dealHit(u,t,s);});
       else for(let i=0;i<3&&t.alive;i++)await strike(u,i,()=>dealHit(u,t,s));
     } else if(s.type==='ranged'&&u.dragon){
       const fs=near(t.w.position,4.5); await faceTo(u,t.w.position,.2);
@@ -82,7 +98,7 @@ async function rtUse(u,s,t){
       else{
         const dir=u.side==='P'?1:-1, land=c.clone(); land.x-=dir*(t.rad+u.reach*.6);
         const A=u.inner.userData;
-        if(A.play){const inf=A.clipInfo('leap'),sp=1.15,from=u.w.position.clone();A.play('leap',{speed:sp,fade:.08});
+        if(A.play){const nm=AN&&hasClip(u,AN.s3)?AN.s3:'leap',inf=A.clipInfo(nm),sp=1.15,from=u.w.position.clone();A.play(nm,{speed:sp,fade:.08});
           await tween(inf.main/sp,k=>{u.w.position.lerpVectors(from,land,k);u.w.position.y=Math.sin(k*Math.PI)*.6;},easeIO); u.w.position.y=0;}
         else await hop(u,land,.5,2.2);
         shockRing(c,0xd8f7ff); shake=Math.max(shake,.2); particles(tmpV.copy(c).setY(.1),0xb8a888,20,1.8,.3,-.2,.5);
@@ -98,6 +114,13 @@ async function rtUse(u,s,t){
     if(s.cd)u.skT[s.id]=s.cd*2.3;
   }
 }
+// เลือดเหลือน้อย: ตีลังกาถอยหลังตั้งหลักครั้งเดียว
+async function rtDodge(u,t){
+  u.busy=true; const A=u.inner.userData, from=u.w.position.clone(), away=from.clone().sub(t.w.position).setY(0).normalize().multiplyScalar(2).add(from);
+  popNum(u,'ถอยตั้งหลัก','info'); await faceTo(u,t.w.position,.06); A.play('dodge',{speed:1.6,fade:.08});
+  await wait(.35/1.6*1000); await tween(.55,k=>{u.w.position.lerpVectors(from,away,k);},easeOut); await wait(250);
+  A.play('idle',{loop:true,fade:.2}); u.busy=false;
+}
 function rtSpawn(wv){
   const n=wv.length;
   wv.forEach((d,i)=>{
@@ -109,7 +132,7 @@ function rtSpawn(wv){
 async function rtBattle(st,opts){
   stage=st; OPTS=opts||{}; running=true; RT={manual:!!OPTS.manual};
   UNITS.forEach(removeUnit); UNITS=[]; PICKU=[]; RIGS=[]; clearTrails();
-  TEAM.forEach((d,i)=>rtInit(makeUnit('P',d,i)));
+  TEAM.forEach((d,i)=>{const u=rtInit(makeUnit('P',d,i));if(hasClip(u,'battlecry')&&(OPTS.banner||OPTS.manual)){u.holdT=1.3;setTimeout(()=>u.alive&&u.inner.userData.play('battlecry',{speed:1.7,fade:.15}),150);}});
   document.body.classList.add('rt'); camMode={type:'wide'}; camK=1.6; actRing.visible=tgtRing.visible=false;
   if(RT.manual)ultButtons(true);
   let won=null;

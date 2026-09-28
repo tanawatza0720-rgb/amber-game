@@ -1755,7 +1755,9 @@ function addAgent(data,at,pop){
 function agentUpdate(ag,dt){
   const w=ag.w, rig=ag.inner.userData.rig, A=ag.inner.userData;
   if(ag.fly){ag.ang+=dt*.22;const x=Math.cos(ag.ang)*ag.r,z=Math.sin(ag.ang)*ag.r*.8;w.position.set(x,4.2+Math.sin(ag.ang*3)*.6,z);w.rotation.y=Math.atan2(-Math.sin(ag.ang)*ag.r,Math.cos(ag.ang)*ag.r*.8);w.rotation.z=-.18;return;}
-  if(A.clipW)A.clipW(ag.state==='walk'?0:1);
+  const MC=!!(A.play&&A.clipInfo&&A.clipInfo('walk'));
+  if(MC){if(ag.state==='walk'&&!ag.walking){ag.walking=1;A.play('walk',{loop:true,fade:.25});}else if(ag.state!=='walk'&&ag.walking){ag.walking=0;A.play('idle',{loop:true,fade:.3});}}
+  else if(A.clipW)A.clipW(ag.state==='walk'?0:1);
   if(ag.state==='idle'){ag.wait-=dt;if(ag.wait<=0){
     for(let k=0;k<14;k++){const [tx,tz]=freePoint(.6);if(Math.hypot(tx-w.position.x,tz-w.position.z)>2&&!blockedSeg(w.position.x,w.position.z,tx,tz,.35)){ag.tx=tx;ag.tz=tz;ag.state='walk';break;}}
     if(ag.state!=='walk')ag.wait=1;}
@@ -1763,11 +1765,12 @@ function agentUpdate(ag,dt){
   const dx=ag.tx-w.position.x,dz=ag.tz-w.position.z,d=Math.hypot(dx,dz);
   if(d<.15){ag.state='idle';ag.wait=2+Math.random()*5;ag.inner.rotation.z=0;poseTo(rig.base,.45);return;}
   const want=Math.atan2(dx,dz);let diff=want-ag.yaw;diff=Math.atan2(Math.sin(diff),Math.cos(diff));ag.yaw+=diff*Math.min(1,dt*6);w.rotation.y=ag.yaw;
-  const sp=ag.speed*(Math.abs(diff)>1?.3:1);
+  const sp=ag.speed*(MC?.8:1)*(Math.abs(diff)>1?.3:1);
   w.position.x+=Math.sin(ag.yaw)*sp*dt; w.position.z+=Math.cos(ag.yaw)*sp*dt;
   ag.ph+=dt*(ag.evo?6.5:9);
   const s=Math.sin(ag.ph), c=Math.cos(ag.ph);
-  if(ag.evo){
+  if(MC){}
+  else if(ag.evo){
     const [l0,l1]=rig.legs;
     channel(l0.th.rotation,'x').t=-.06-s*.5; channel(l1.th.rotation,'x').t=.06+s*.5;
     channel(l0.kn.rotation,'x').t=.1+Math.max(0,c)*.75; channel(l1.kn.rotation,'x').t=.06+Math.max(0,-c)*.75;
