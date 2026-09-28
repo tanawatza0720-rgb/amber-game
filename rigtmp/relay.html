@@ -1,0 +1,4 @@
+<!doctype html><meta charset="utf-8"><body>relay<script>
+const f=new URLSearchParams(location.search).get('f');
+fetch(f).then(r=>r.arrayBuffer()).then(b=>{const n=b.byteLength;(window.opener||parent).postMessage({relay:f,buf:b},'*',[b]);document.body.textContent='sent '+f+' '+n;}).catch(e=>document.body.textContent='err '+e);
+</script>
