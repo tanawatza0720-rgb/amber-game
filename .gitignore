@@ -1,0 +1,7 @@
+src/*.html
+!src/farm_shell.html
+!src/battle_shell.html
+!src/kazemaru.html
+src/farm.js
+src/battle.js
+src/__pycache__/

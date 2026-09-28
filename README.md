@@ -1,6 +1,8 @@
 # ตำนานป่าอัมพร
 
-เกม RPG 3D บนมือถือ มีฟาร์มส่วนตัว ฟักไข่ เลี้ยงมอนสเตอร์ และต่อสู้แบบผลัดกันเล่น
+เกม RPG 3D บนมือถือ มีฟาร์มส่วนตัว ฟักไข่ เลี้ยงมอนสเตอร์ และต่อสู้แบบเรียลไทม์ + ดันด่านอัตโนมัติ (idle)
+
+> รายละเอียดสำหรับนักพัฒนา/AI ที่มาช่วย ดู **[AGENTS.md](AGENTS.md)**
 
 - เล่นได้ที่ https://tanawatza0720-rgb.github.io/amber-game/
 - ด่านทดสอบการต่อสู้ 1-1 ถึง 1-3: https://tanawatza0720-rgb.github.io/amber-game/battle.html
@@ -11,7 +13,7 @@
 |---|---|
 | `index.html` | ตัวเกมหลัก (ฟาร์ม + คลังมอนสเตอร์) ไฟล์นี้สร้างจาก `src/` |
 | `battle.html` | ด่านต่อสู้ ไฟล์นี้สร้างจาก `src/` |
-| `kzr/` `drg/` | โมเดล 3D ของคาเซะคิริและมังกรอามาเทรุ รวมท่าทางจาก Mixamo |
+| `kzr/` `krg/` `hkn/` `mrh/` `drg/` | โมเดล 3D (คาเซะคิริ + ท่าทาง Mixamo, คุโรกะ, ฮาคุเนโกะ, โมริฮิเมะ, มังกรอามาเทรุ) |
 | `src/` | โค้ดต้นฉบับ แก้ที่นี่แล้วค่อย build |
 | `server/setup_v2.sql` | ตาราง กฎสิทธิ์ และฟังก์ชันเกมบน Supabase |
 | `server/คู่มือเซิร์ฟเวอร์_v2.md` | วิธีตั้งค่า Supabase และกติกาเกมฝั่งเซิร์ฟเวอร์ |
@@ -22,8 +24,8 @@
 
 ```bash
 cd src
-python3 build_farm.py      # สร้าง farm.html แล้วคัดลอกไปเป็น ../index.html
-python3 build_battle.py    # สร้าง battle.html แล้วคัดลอกไปเป็น ../battle.html
+python3 build_farm.py   && cp farm.html   ../index.html
+python3 build_battle.py && cp battle.html ../battle.html
 ```
 
 ## ระบบเซิร์ฟเวอร์

@@ -1,0 +1,131 @@
+# AGENTS.md — คู่มือโปรเจกต์ "ตำนานป่าอัมพร" สำหรับ AI/นักพัฒนาที่มาช่วย
+
+เกม 3D บนมือถือ (เว็บ): ฟาร์ม · ฟักไข่ · เลี้ยงมอนสเตอร์ · ต่อสู้แบบเรียลไทม์ + ระบบ idle (ดันด่านเอง รางวัลตอนไม่อยู่ 8 ชม.)
+
+- เว็บจริง: https://tanawatza0720-rgb.github.io/amber-game/ (ฟาร์ม) · `/battle.html` (สนามรบ)
+- Deploy: **GitHub Pages จาก branch `main` โฟลเดอร์ราก** — push เข้า main แล้วเว็บอัปเดตเองใน 1–2 นาที
+- ข้อความในเกมและคอมเมนต์ในโค้ดเป็น **ภาษาไทย** ให้คงแบบนี้
+
+---
+
+## 1. เทคโนโลยี (ไม่มี bundler / ไม่มี npm ในตัวเกม)
+
+| ส่วน | ใช้อะไร |
+|---|---|
+| 3D | **three.js r128** จาก CDN (global `THREE`) + `GLTFLoader`, `SkeletonUtils`, `RoomEnvironment` (examples/js ของ r128) — **ห้ามใช้ API ของ three รุ่นใหม่กว่า r128** (เช่น `material.skinning` ยังต้องตั้งเอง) |
+| Build | Python 3 สคริปต์ต่อไฟล์ (string concat) → ได้ HTML ไฟล์เดียว |
+| Backend | **Supabase** (Postgres + RPC functions + Auth: Google / anonymous guest) |
+| โมเดลตัวละคร | Meshy / Tripo (สร้าง) → Mixamo (ใส่กระดูก+ท่า) → แปลงเป็น glTF JSON |
+
+## 2. แผนที่ไฟล์
+
+```
+index.html        ← ผลลัพธ์ build ของหน้าฟาร์ม (ห้ามแก้ตรง)
+battle.html       ← ผลลัพธ์ build ของหน้าสนามรบ (ห้ามแก้ตรง)
+src/              ← โค้ดต้นฉบับ แก้ที่นี่เท่านั้น
+server/           ← SQL ของ Supabase + คู่มือเซิร์ฟเวอร์
+kzr/ krg/ hkn/ mrh/ drg/   ← โมเดล 3D + texture (ดูข้อ 5)
+legacy/           ← เกมเวอร์ชันแรก ไม่ใช้แล้ว
+privacy.html
+```
+
+### src/ แต่ละไฟล์ทำอะไร
+
+| ไฟล์ | หน้าที่ |
+|---|---|
+| `kazemaru.html` | ไฟล์ต้นทางของ **ตัวช่วยร่วม** (texture ที่วาดเอง, ฟังก์ชันสร้างรูปทรง `P()` `J()` `glow()` `particles()` `tween()` `katana()` `buildMonster()` ฯลฯ) build จะ "ตัด" ช่วงโค้ดตาม **คอมเมนต์มาร์กเกอร์** ภาษาไทย — ห้ามแก้/ลบบรรทัดมาร์กเกอร์ `/* ---------- ตัวช่วยสร้างรูปทรง ---------- */` เป็นต้น |
+| `trail_patch.py` | แพตช์แสงแนวดาบ (trail) ใส่ในตัวช่วยร่วมตอน build |
+| `farm_shell.html` | HTML/CSS ของหน้าฟาร์ม + ช่องว่าง `/*__SHARED__*/ /*__WORLD__*/ /*__UI__*/ /*__BOX__*/` |
+| `net.js` | เชื่อม Supabase ฝั่งฟาร์ม (`api()`, `act()` เรียก RPC) + **LocalServer ออฟไลน์** (`LOCAL`, ตาราง `SPS`) ที่กติกาเหมือนเซิร์ฟเวอร์ |
+| `farm_world.js` | ฉากฟาร์ม 3D, สิ่งก่อสร้าง, มอนสเตอร์เดินเล่น (agents), `applyState()` |
+| `farm_ui.js` | HUD, แผ่นข้อมูลอาคาร (`INFO.hatch/dojo/...`), ฟักไข่, รายวัน, ภารกิจ, จดหมาย |
+| `monbox.js` | คลังมอนสเตอร์: ข้อมูลสายพันธุ์ `SPEC`, ระดับ `TIER`, รูปหน้า `makeThumb/FACE`, อัปเลเวล/วิวัฒน์/จัดทีม (สูงสุด 6) |
+| `battle_shell.html` | HTML/CSS หน้าสนามรบ + ช่อง `/*__SHARED__*/ /*__WORLD__*/ /*__UI__*/` |
+| `meshy_rig.js` | โหลดโมเดลมนุษย์ที่มีกระดูก Mixamo (`RIG_URLS`) + **retarget ท่า Mixamo** (`MXA` จาก `kzr/kazekiri_anims.json`) + ดาบในมือ (`gripFix`, `makeFist`) + อาวุธเดิมของโมเดล (`weapon_prop`) |
+| `dragon.js` | มังกรอามาเทรุ: สร้างกระดูก 30 ชิ้นเองตอนโหลด, สปริงทุกข้อ, ท่า `dragonBite/Breath/Dive/Roar/Claw/Tail/Swoop/Strafe/Gust/Victory` |
+| `battle_world.js` | ข้อมูลตัวละครในสนามรบ `SPECIES` (ค่าพลัง+สกิล), สร้างยูนิต `makeUnit`, ตำแหน่งทีม `P_SLOTS`, แทรก `battle_map.js` ตรง `/*__MAP__*/` |
+| `battle_map.js` | แผนที่ใหญ่: กำแพงเมือง หอคอยคู่ เมือง ค่ายศัตรู เครื่องยิงหิน ระเบิด ไฟ ควัน, ธง `BIG` `LOW` `FXK` (ลดเอฟเฟกต์บนมือถือ), `mapTick()` |
+| `battle_net.js` | เชื่อม Supabase ฝั่งสนามรบ (`brpc()`), โหลดทีมจริง `bnApply()` |
+| `battle_rt.js` | เอนจินต่อสู้เรียลไทม์: `rtTick` (AI เดิน/ตี), `rtUse` (ใช้สกิล), ตาราง `ANIM` (ท่า Mixamo ของแต่ละตัว) |
+| `battle_ui.js` | ลูป idle (`idleLoop`), บอส, กล้อง RTS (ลาก/ซูม), ปุ่ม ult, หน้าผลลัพธ์ |
+| `mx_pre.js` | (เครื่องมือ) แปลงท่า Mixamo `.glb` → `kzr/kazekiri_anims.json` |
+
+## 3. Build (ต้องทำทุกครั้งที่แก้ src/)
+
+```bash
+cd src
+python3 build_farm.py   && cp farm.html   ../index.html
+python3 build_battle.py && cp battle.html ../battle.html
+```
+- build จะสร้างไฟล์ทดสอบ `*_local.html`, `farm.js`, `battle.js` ใน src/ ด้วย (ไม่ต้อง commit — อยู่ใน `.gitignore`)
+- ถ้า `assert` ใน build พัง แปลว่าข้อความที่ build ใช้ค้นหา/แทนที่ใน `kazemaru.html` ถูกแก้ไป → ต้องแก้ build ให้ตรง
+
+## 4. ทดสอบ
+
+- เปิดเซิร์ฟเวอร์ไฟล์ที่ราก repo: `python3 -m http.server 8000` แล้วเปิด `http://localhost:8000/index.html` และ `/battle.html`
+- ⚠️ **ปุ่ม "เล่นแบบผู้เยี่ยมชม" ต่อกับ Supabase จริง** (สร้างผู้ใช้ anonymous ในฐานข้อมูลจริง) — ทดสอบได้แต่อย่าสแปม
+- ถ้าต่อเซิร์ฟเวอร์ไม่ได้ เกมจะเข้า **โหมดออฟไลน์** (`LOCAL` ใน net.js เก็บใน localStorage)
+- หน้าสนามรบโดยไม่ล็อกอิน = "โหมดทดลอง" (ทีมตัวอย่าง `TEAM` ใน battle_world.js)
+- ทดสอบบนมือถือจริงเสมอเมื่อแตะเรื่องกราฟิก/ประสิทธิภาพ
+
+## 5. ตัวละครและโมเดล
+
+ระดับ (`rar`): **1 ทั่วไป < 2 หายาก < 3 ตำนาน < 4 เทพเจ้า** (ตาราง `TIER` ใน monbox.js)
+
+| sp (id) | ชื่อ | ระดับ | โมเดล | วิธีสร้างกระดูก |
+|---|---|---|---|---|
+| `kazemaru` | คาเซะมารุ | ทั่วไป | สร้างด้วยโค้ด (`buildMonster(0)`) | โค้ด |
+| `kazekiri` | คาเซะคิริ | หายาก (วิวัฒน์จากคาเซะมารุ) | `kzr/kazekiri_rig.json` | Meshy rig |
+| `kuroga` | คุโรกะ | ตำนาน | `krg/kuroga_rig.json` | Meshy rig |
+| `hakuneko` | ฮาคุเนโกะ (นักดาบแมว) | ตำนาน | `hkn/hakuneko_rig.json` | Mixamo auto-rig |
+| `morihime` | โมริฮิเมะ (เอลฟ์ถือหอก) | ตำนาน | `mrh/morihime_rig.json` | rig เอง (heat-diffusion weights) |
+| `amateru` | อามาเทรุ (มังกร) | เทพเจ้า | `drg/dragon.json` | กระดูกสร้างในโค้ด (dragon.js) |
+
+- ไฟล์ `*_rig.json` = glTF JSON (buffer ฝังเป็น base64) + `baseColor*.jpg` ในโฟลเดอร์เดียวกัน, ชื่อกระดูกแบบ **Mixamo** (`mixamorig:Hips`, `...RightHand`, `...RightHandMiddle4` ใช้บอกทิศมือ, `...HeadTop_End`)
+- ท่าทางทั้งหมด (idle, slash, combo, leap, hit, death, victory, run, walk, dizzy, powerup, spin, jumpatk, dodge, battlecry) อยู่ใน **`kzr/kazekiri_anims.json`** แล้ว retarget ให้ทุกโมเดลมนุษย์อัตโนมัติ
+- ถ้าโมเดลมี node ชื่อ **`weapon_prop`** (อาวุธเดิมของโมเดล) จะถูกติดกับมือขวาตามตำแหน่งท่าต้นฉบับ แทนดาบคาตานะ
+
+### เพิ่มตัวละครมนุษย์ใหม่ ต้องแก้ 6 ที่ให้ตรงกัน
+1. `meshy_rig.js` → `RIG_URLS` + `loadMeshy()` (โหลดล่วงหน้า)
+2. `monbox.js` → `SPEC` (ชื่อ, ฉายา, rar, ธาตุ, ค่าพลัง, lore, สกิล) + `FACE` (กรอบรูปหน้า)
+3. `battle_world.js` → `SPECIES` (ค่าพลัง + สกิล `type: melee/melee3/ranged/leap`)
+4. `battle_rt.js` → `ANIM` (ท่าที่ใช้ตอน s1/s2/s3) · `battle_ui.js` → ชื่อย่อในแถบลำดับ
+5. `net.js` → `SPS` (โหมดออฟไลน์)
+6. **เซิร์ฟเวอร์**: `insert into public.species (sp,name,rar,max_lv,...)` + ตั้ง `pow` (= hp + atk×4 + def×3 + spd×2) — การฟักไข่สุ่มตาม `rar` เอง ไม่ต้องแก้ฟังก์ชัน
+
+## 6. เซิร์ฟเวอร์ (Supabase)
+
+- Project URL และ **publishable key** อยู่ใน `net.js` / `battle_net.js` — **ห้ามใส่ secret / service_role key ในโค้ดเด็ดขาด**
+- **เซิร์ฟเวอร์เป็นผู้ตัดสินทุกอย่าง** (เหรียญ อัมพร พลังงาน สุ่มไข่ เลเวล ดันด่าน บอส) หน้าเว็บแค่เรียก RPC แล้วแสดงผล
+- RPC ที่ใช้: `game_state, set_name, hatch_egg, level_up, evolve_monster, set_team, claim_daily, collect_amber, claim_quest, buy_energy, idle_claim, idle_push, boss_start, boss_finish`
+- `server/setup_v2.sql` = สคริปต์รวมทั้งหมด (รันซ้ำได้) · `server/migrate_*.sql` = การเปลี่ยนแปลงทีละเรื่อง (ถูกต่อท้ายเข้า setup_v2.sql แล้ว)
+- **การรัน SQL บนเซิร์ฟเวอร์จริงให้เจ้าของโปรเจกต์ทำ/อนุมัติเท่านั้น** (Supabase > SQL Editor) — ถ้าแก้ฝั่งเซิร์ฟเวอร์ ให้เขียนเป็นไฟล์ `server/migrate_xxx.sql` ใหม่ที่รันซ้ำได้ แล้วแจ้งเจ้าของ
+- ลำดับ deploy ที่ปลอดภัย: push หน้าเว็บที่รองรับของใหม่ก่อน → แล้วค่อยรัน SQL
+
+อัตราฟักไข่ปัจจุบัน: ไข่ป่า (100 เหรียญ) 82/13/4/1% · ไข่ทองคำ (30 อัมพร) 45/33/16/6% · ไข่ทองคำครบ 30 ใบการันตีเทพเจ้า
+
+## 7. กฎเรื่องประสิทธิภาพ (มือถือเคยกระตุกหนัก ห้ามถอยหลัง)
+
+- **ห้ามสร้าง/ลบ PointLight ระหว่างเล่น** (ทำให้ shader คอมไพล์ใหม่ = กระตุก) → ใช้ `takeLight()/freeLight()` จากคลังไฟ `LPOOL` ใน dragon.js
+- ห้ามใส่ไฟต่อยูนิต; วัตถุนิ่งให้ merge ตาม material (ดู `mergeRigid`, static merge ใน battle_map.js)
+- เอฟเฟกต์ต้องคูณ `FXK` และเคารพธง `LOW` (มือถือ) ; จำนวนศัตรูบนมือถือถูกจำกัด
+- อย่าสร้าง material/geometry ใหม่ทุกเฟรม; ใช้ cache
+- โมเดลใหม่ควร ≤ ~25k สามเหลี่ยม, texture 1k
+
+## 8. ข้อตกลงการทำงาน
+
+- ทำงานบน branch แยก แล้วเปิด Pull Request เข้า `main` (หรือ commit ตรงถ้าเจ้าของอนุญาต) — **commit ทั้ง `src/` และไฟล์ที่ build แล้ว (`index.html`, `battle.html`) ไปพร้อมกัน**
+- เขียนข้อความ UI เป็นภาษาไทย, สไตล์โค้ดกระชับแบบที่มีอยู่
+- อย่าแก้ไฟล์โมเดลใน `kzr/ krg/ hkn/ mrh/ drg/` ด้วยมือ
+- โมเดลของฮาคุเนโกะ/โมริฮิเมะมาจากชุมชน Tripo (ผู้สร้างคนอื่น) — เจ้าของโปรเจกต์ต้องตรวจสิทธิ์การใช้งานก่อนเปิดเกมสาธารณะ
+
+## 9. สถานะ ณ ล่าสุด และงานที่ค้าง/ไอเดีย
+
+เสร็จแล้ว: ระบบ idle+บอส, สู้เรียลไทม์, ทีม 6 ตัว, แผนที่เมืองใหญ่, มังกรพร้อมท่าหลายแบบ, มือกำดาบ, ระดับ 4 ขั้น, ตัวละครตำนานใหม่ 2 ตัว
+
+ค้าง/น่าทำต่อ:
+- ปรับสมดุล `_req(n)` (พลังที่ด่านต้องการ) สำหรับทีม 6 ตัว
+- เก็บดาว/คะแนนด่านบนเซิร์ฟเวอร์
+- ตรวจความเนียนของผิวโมริฮิเมะตอนขยับ (rig ทำเองไม่ผ่าน Mixamo)
+- ท่าเฉพาะของหอก (ตอนนี้โมริฮิเมะใช้ท่าดาบ)
+- ทดสอบความลื่นบนมือถือรุ่นล่าง
