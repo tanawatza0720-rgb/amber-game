@@ -843,8 +843,9 @@ function buildMeshyEvo(m,key){
     if(o.material.emissive)o.material.emissive.set(0x000000);}});
   // อาวุธเดิมของโมเดล: ติดกับมือขวา และปรับมุมหอกของโมริฮิเมะรอบจุดจับ
   let prop=null; root.traverse(o=>{if(!prop&&o.name==='weapon_prop')prop=o;});
+  let spearGrip=null;
   if(prop&&B.rHand){B.rHand.attach(prop);
-    if(key==='morihime'){const grip=new THREE.Group();B.rHand.add(grip);grip.attach(prop);grip.rotation.z=-.1;}
+    if(key==='morihime'){spearGrip=new THREE.Group();B.rHand.add(spearGrip);spearGrip.attach(prop);}
     const P=prop.geometry.attributes.position, hp=B.rHand.getWorldPosition(new THREE.Vector3()), inv=new THREE.Matrix4().copy(prop.matrixWorld).invert(), hl=hp.applyMatrix4(inv), v=new THREE.Vector3(), tip=new THREE.Vector3(); let best=-1;
     for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i);const d=v.distanceTo(hl);if(d>best){best=d;tip.copy(v);}}
     const mk=q=>{const o=new THREE.Object3D();o.position.copy(q);prop.add(o);return o;};
@@ -997,12 +998,19 @@ function buildMeshyEvo(m,key){
   if(!gripFix(B.lHand,'L',swL))B.lHand.attach(swL);
   makeFist(root,[[B.rHand,swR,'R'],[B.lHand,swL,'L']]);}
   if(CS){play('idle',{loop:true,from:Math.random()*2});CS.w=CS.wT=1;}
+  const alignSpear=()=>{m.updateMatrixWorld(true);
+    const P=prop.geometry.attributes.position,v=new THREE.Vector3(),lo=new THREE.Vector3(),hi=new THREE.Vector3();let min=Infinity,max=-Infinity;
+    for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i).applyMatrix4(prop.matrixWorld);if(v.y<min){min=v.y;lo.copy(v);}if(v.y>max){max=v.y;hi.copy(v);}}
+    const up=new THREE.Vector3(0,1,0).applyQuaternion(m.getWorldQuaternion(new THREE.Quaternion()));
+    const turn=new THREE.Quaternion().setFromUnitVectors(hi.sub(lo).normalize(),up),handQ=B.rHand.getWorldQuaternion(new THREE.Quaternion());
+    spearGrip.quaternion.premultiply(handQ.clone().invert().multiply(turn).multiply(handQ));};
   m.userData.idle=T=>{
     if(CS){const dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}
     breath=Math.sin(T*2)*.025;
     m.position.y+=Math.sin(T*2)*.008; m.position.x+=Math.sin(T*.9)*.012;
     head.rotation.z=Math.sin(T*.7)*.03;
     feet(); retarget();
+    if(spearGrip){alignSpear();spearGrip=null;}
   };
 }
 
