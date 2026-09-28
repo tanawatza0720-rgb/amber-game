@@ -192,7 +192,7 @@ async function idleLoop(){
       catch(e){if(e.code!=='too_fast')bMsg(BERR[e.code]||BERR.network);if(e.code==='session')BN.online=false;farm();label='ฟาร์มอยู่';}
     }
     if(MODE!=='idle')continue;
-    $('#stTitle').textContent='ด่าน '+stLabel(n)+' · ป่าไผ่สนธยา';
+    $('#stTitle').textContent='ด่าน '+stLabel(n)+' · หน้าประตูนครอัมพร';
     CUR=rtBattle(idleStage(n,E),{idle:true,label,banner:push?'ด่าน '+stLabel(n):null});
     const vis=await CUR; CUR=null;
     if(push&&vis!==undefined&&vis!==won)console.warn('visual result differs from server',vis,won);

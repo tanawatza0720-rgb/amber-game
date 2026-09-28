@@ -47,7 +47,7 @@ function idleStage(n,E){
   const M='kazemaru',K='kazekiri', mk=(nm,nk)=>{const a=Array(nm).fill(M);for(let i=0;i<nk;i++)a.splice(Math.floor((i+.5)*a.length/(nk+.001)),0,K);return a;};
   const pool=n<4?[mk(6,0),mk(7,1),mk(8,1)]:n<10?[mk(8,1),mk(9,2),mk(10,2)]:[mk(9,2),mk(10,3),mk(11,3)];
   const cap=typeof LOW!=='undefined'&&LOW?7:99;
-  return {id:stLabel(n),name:'ป่าไผ่สนธยา',waves:pool.map(k=>makeWave(k.slice(0,cap).map(sp=>({sp,show:n})),E))};
+  return {id:stLabel(n),name:'หน้าประตูนครอัมพร',waves:pool.map(k=>makeWave(k.slice(0,cap).map(sp=>({sp,show:n})),E))};
 }
 function bossStage(n){
   const R=REQ(n);
