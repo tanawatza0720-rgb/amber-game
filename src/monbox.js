@@ -44,7 +44,7 @@ function boxModel(sp){
   const S2=SPEC[sp];
   if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}
   let w;
-  if(S2.dragon&&DRAGON){w=buildDragon();w.scale.setScalar(1.25);}
+  if(S2.dragon&&DRAGON){w=buildDragon();w.scale.setScalar(.72);}
   else{w=buildMonster(S2.rig||(S2.evo?1:0));w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
   w.traverse(o=>{if(o.isMesh){o.castShadow=true;}});
   w.userData.sp=sp; bScene.add(w); BOX.model=w; BOX.spin=0;

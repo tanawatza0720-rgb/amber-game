@@ -297,6 +297,7 @@ function camUpdate(){
   } else {
     if(port){CAMt.set(-12,9,.5);LOOKt.set(.5,.3,-.3);} else {CAMt.set(.6,5.2,10.2);LOOKt.set(0,1,0);}
     if(RT){const us=UNITS.filter(u=>u.alive);if(us.length){let cx=0,cz=0;us.forEach(u=>{cx+=u.w.position.x;cz+=u.w.position.z;});cx=Math.max(-3,Math.min(4,cx/us.length));cz/=us.length;CAMt.x+=cx*.7;LOOKt.x+=cx*.7;CAMt.z+=cz*.3;LOOKt.z+=cz*.3;}}
+    if(UNITS.some(u=>u.dragon&&u.alive)){LOOKt.y+=.7;CAMt.sub(LOOKt).multiplyScalar(port?1.18:1.3).add(LOOKt);}
   }
 }
 function layout(){const w=view.clientWidth,h=view.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;const a=camera.aspect;

@@ -1,5 +1,6 @@
 /* ================= อามาเทรุ มังกรอัมพรเพลิง (โมเดล Meshy + โครงกระดูกที่สร้างเอง) ================= */
 let DRAGON=null;
+const WING_X=2.1, WING_Z=1.35, DRAGON_S=2.6; // ปีกยาวขึ้น 2.1 เท่า กว้างขึ้น 1.35 เท่า ตัวใหญ่ 2.2
 const DRAGON_URL='drg/dragon.json';
 function loadDragon(){
   return new Promise(res=>{
@@ -30,6 +31,16 @@ function loadDragon(){
         const idx=w.map((v,k)=>[v,k]).sort((a,b)=>b[0]-a[0]).slice(0,4); const sum=idx.reduce((a,b)=>a+b[0],0)||1;
         idx.forEach(([v,k],j)=>{SI[i*4+j]=k;SW[i*4+j]=v/sum;});
       }
+      // ขยายปีกให้กางกว้าง: ยืดส่วนปีกออกจากโคนปีก (ยิ่งไกลโคนยิ่งยืดมาก)
+      for(let i=0;i<n;i++){
+        const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),ax=Math.abs(x);
+        const wing=ss(.17,.32,ax)*ss(-.38,-.12,y); if(wing<=0)continue;
+        const sx=Math.sign(x)||1, rx=.19, ex=Math.max(0,ax-rx);
+        pos.setX(i,sx*(rx+ex*(1+(WING_X-1)*wing)));
+        pos.setZ(i,.26+(z-.26)*(1+(WING_Z-1)*wing*ss(.2,.5,ax)));
+        pos.setY(i,y+ex*(WING_X-1)*wing*.12);
+      }
+      pos.needsUpdate=true; geo.computeVertexNormals(); geo.computeBoundingBox();
       geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(SI,4));
       geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(SW,4));
       const mat=mesh.material.clone(); mat.skinning=true; if(ENV){mat.envMap=ENV;mat.envMapIntensity=.5;}
@@ -44,10 +55,10 @@ function buildDragon(){
   const hover=new THREE.Group(); m.add(hover);
   const B=[]; const mk=(p,x,y,z)=>{const b=new THREE.Bone();b.position.set(x,y,z);B.push(b);if(p)p.add(b);return b;};
   const body=mk(null,0,0,0), neck=mk(body,0,.02,.34), head=mk(neck,0,-.04,.26), tail1=mk(body,0,-.12,-.22), tail2=mk(tail1,0,-.14,-.36),
-        wl1=mk(body,-.19,.14,.26), wl2=mk(wl1,-.36,.12,0), wr1=mk(body,.19,.14,.26), wr2=mk(wr1,.36,.12,0);
+        wl1=mk(body,-.19,.14,.26), wl2=mk(wl1,-.36*WING_X,.12+.36*(WING_X-1)*.12,0), wr1=mk(body,.19,.14,.26), wr2=mk(wr1,.36*WING_X,.12+.36*(WING_X-1)*.12,0);
   const mesh=new THREE.SkinnedMesh(DRAGON.geo,DRAGON.mat.clone()); mesh.material.skinning=true;
   mesh.add(body); mesh.updateMatrixWorld(true); mesh.bind(new THREE.Skeleton(B)); mesh.castShadow=true; mesh.receiveShadow=true; mesh.frustumCulled=false;
-  const S=1.5; hover.scale.setScalar(S); hover.add(mesh);
+  const S=DRAGON_S; hover.scale.setScalar(S); hover.add(mesh);
   const baseY=-DRAGON.minY*S; // ให้ตีนแตะพื้นเมื่อ hover=0
   m.userData.dragon=true; m.userData.mats=[mesh.material];
   // ท่าทาง (ควบคุมด้วยค่าเป้าหมาย + สปริงของระบบ rig เดิม)
@@ -62,7 +73,7 @@ function buildDragon(){
     ph+=gdt*(5.2*st.flapSpd);
     // จังหวะกระพือ: ตีลงเร็ว ยกขึ้นช้า
     const sp=ph+.45*Math.sin(ph), fl=Math.sin(sp), vel=Math.cos(sp);
-    const amp=st.flapAmp*(1-st.fold), open=.12-st.fold*1.1+st.spread*.35;
+    const amp=st.flapAmp*(1-st.fold), open=.38-st.fold*1.3+st.spread*.3;
     const up=Math.max(0,-vel); // ช่วงยกปีกขึ้น ปลายปีกพับ
     wl1.rotation.z=-(open+fl*amp); wr1.rotation.z=(open+fl*amp);
     const tip=Math.sin(sp-1.1)*amp*.8+up*amp*.5-st.fold*.9;
