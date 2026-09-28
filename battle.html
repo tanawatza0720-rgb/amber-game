@@ -994,7 +994,10 @@ function buildMeshyEvo(m,key){
     const G=MXA.grip.R,bladeDir=new THREE.Vector3(...G.blade),edge=new THREE.Vector3(...G.edge);
     const x=new THREE.Vector3().crossVectors(bladeDir,edge),Qs=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,bladeDir,edge));
     const drawQ=Fi.clone().multiply(Qs).multiply(new THREE.Quaternion().setFromUnitVectors(blade,new THREE.Vector3(0,1,0)));
-    const drawP=new THREE.Vector3(...G.off).multiplyScalar(CS.hs*.72).applyQuaternion(Fi);
+    // offset ของ Mixamo อยู่ในพื้นที่โมเดล ต้องแปลงกลับเป็นพื้นที่กระดูกมือก่อน
+    const handQ=wq(B.rHand),toNow=handQ.clone().multiply(Fi);
+    const offM=new THREE.Vector3(...G.off).multiplyScalar(CS.hs*.72).applyQuaternion(toNow);
+    const drawP=B.rHand.worldToLocal(m.localToWorld(posM(B.rHand).add(offM)));
     drawP.sub(hilt.clone().multiply(prop.scale).applyQuaternion(drawQ));
     swordPose={restP:prop.position.clone(),restQ:prop.quaternion.clone(),drawP,drawQ,blend:0};
   }
