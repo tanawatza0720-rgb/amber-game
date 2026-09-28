@@ -52,13 +52,17 @@ function loadDragon(){
         const legF=ss(-.2,-.3,y)*ss(.22,.28,z)*(1-ss(.64,.7,z))*Math.max(ss(.03,.07,ax),ss(-.38,-.44,y))*(1-ss(.26,.32,ax))*r; // นิ้วเท้าด้านในชิดกลางตัวก็เป็นของขาด้วย
         const kB=ss(-.38,-.48,y), kF=ss(-.34,-.42,y), sd=L?'L':'R';
         add(LG['B'+sd],legB*(1-kB)); add(LG['B'+sd+'k'],legB*kB); add(LG['F'+sd],legF*(1-kF)); add(LG['F'+sd+'k'],legF*kF); r-=legB+legF;
+        // บริเวณโคนขา: ส่วนลำตัวที่เหลือยึดกับอก/สะโพก ไม่ให้คอหรือหางดึงขาไปด้วย (กันไหล่ฉีก)
+        const zF=ss(-.1,-.24,y)*ss(.18,.26,z)*(1-ss(.62,.72,z))*(1-ss(.24,.34,ax)), zB=ss(-.12,-.26,y)*ss(-.38,-.28,z)*(1-ss(.12,.2,z))*(1-ss(.24,.34,ax));
         // แกนลำตัว: ถ่วงแบบเส้นตรงระหว่างกระดูกสองชิ้นที่ใกล้ที่สุด ทำให้โค้งเนียน
         let k=0; while(k<AXB.length-1&&z>AXB[k+1][1])k++;
         let ia,ib,t;
         if(z<=AXB[0][1]){ia=ib=AXB[0][0];t=0;} else if(k>=AXB.length-1){ia=ib=AXB[AXB.length-1][0];t=0;}
         else{ia=AXB[k][0];ib=AXB[k+1][0];t=(z-AXB[k][1])/(AXB[k+1][1]-AXB[k][1]);}
         const jw=ss(.74,.8,z)*ss(-.17,-.24,y);
-        const put=(bi,v)=>{if(bi===AXI.head){add(AXI.jaw,v*jw);add(AXI.head,v*(1-jw));}else add(bi,v);};
+        const NECK=[AXI.n1,AXI.n2,AXI.n3,AXI.n4,AXI.head], TL=[AXI.t1,AXI.t2,AXI.t3,AXI.sp];
+        const put=(bi,v)=>{if(NECK.includes(bi)&&zF>0){add(AXI.chest,v*zF);v*=1-zF;} if(TL.includes(bi)&&zB>0){add(AXI.hips,v*zB);v*=1-zB;}
+          if(bi===AXI.head){add(AXI.jaw,v*jw);add(AXI.head,v*(1-jw));}else add(bi,v);};
         put(ia,r*(1-t)); put(ib,r*t);
         const idx=Object.entries(w).map(([k2,v])=>[v,+k2]).sort((a,b)=>b[0]-a[0]).slice(0,4); const sum=idx.reduce((a,b)=>a+b[0],0)||1;
         idx.forEach(([v,k2],jj)=>{SI[i*4+jj]=k2;SW[i*4+jj]=v/sum;});
@@ -70,7 +74,7 @@ function loadDragon(){
         for(let i=0;i<n;i++){if(cnt[grp[i]])continue;cnt[grp[i]]=1;for(let j=0;j<4;j++)Wd[grp[i]*NB+SI[i*4+j]]+=SW[i*4+j];}
         const nb=Array.from({length:G},()=>new Set()), ix=geo.index;
         if(ix)for(let t=0;t<ix.count;t+=3){const A=grp[ix.getX(t)],Bq=grp[ix.getX(t+1)],C=grp[ix.getX(t+2)];nb[A].add(Bq).add(C);nb[Bq].add(A).add(C);nb[C].add(A).add(Bq);}
-        for(let it=0;it<3;it++){const Wn=new Float32Array(G*NB);
+        for(let it=0;it<4;it++){const Wn=new Float32Array(G*NB);
           for(let q=0;q<G;q++){const S=nb[q],k=S.size?.5/S.size:0;for(let b=0;b<NB;b++)Wn[q*NB+b]=Wd[q*NB+b]*(S.size?.5:1);S.forEach(o=>{for(let b=0;b<NB;b++)Wn[q*NB+b]+=Wd[o*NB+b]*k;});}
           Wd=Wn;}
         // ขาซ้าย/ขวาห้ามแชร์น้ำหนักกัน (เท้าหน้าสองข้างแตะกันในโมเดลต้นฉบับ)
@@ -84,6 +88,11 @@ function loadDragon(){
           geo.setIndex(keep);}
         for(let i=0;i<n;i++){const o=grp[i]*NB,l=[];for(let b=0;b<NB;b++)if(Wd[o+b]>.004)l.push([Wd[o+b],b]);l.sort((x,y)=>y[0]-x[0]);const top=l.slice(0,4),sm=top.reduce((x,y)=>x+y[0],0)||1;
           for(let j=0;j<4;j++){SI[i*4+j]=top[j]?top[j][1]:0;SW[i*4+j]=top[j]?top[j][0]/sm:0;}} }
+      // ย่อขาหน้าในตัวโมเดลเลย (ไม่ย่อที่กระดูก ซึ่งทำให้ผิวรอยต่อหัวไหล่ถูกบีบจนดูขาด)
+      { const FS=.62; ['L','R'].forEach(sd=>{const a=LG['F'+sd],k=LG['F'+sd+'k'],pv=RIG[a].p;
+          for(let i=0;i<n;i++){let w=0;for(let j=0;j<4;j++){const b=SI[i*4+j];if(b===a||b===k)w+=SW[i*4+j];}if(w<=0)continue;
+            const f=1-(1-FS)*Math.min(1,w*1.25);pos.setXYZ(i,pv[0]+(pos.getX(i)-pv[0])*f,pv[1]+(pos.getY(i)-pv[1])*f,pv[2]+(pos.getZ(i)-pv[2])*f);}
+          RIG[k].p=RIG[k].p.map((c,q)=>pv[q]+(c-pv[q])*FS);}); }
       // ขยายปีกให้กางกว้าง (ยืดจากโคนปีก)
       const stretch=(x,y,z,wg)=>{const ax=Math.abs(x),sx=Math.sign(x)||1,rx=.19,ex=Math.max(0,ax-rx);
         return [sx*(rx+ex*(1+(WING_X-1)*wg)), y+ex*(WING_X-1)*wg*.12, .26+(z-.26)*(1+(WING_Z-1)*wg*ss(.2,.5,ax))];};
@@ -113,7 +122,6 @@ function buildDragon(){
   const st={fly:1,flapAmp:.55,flapSpd:1,rear:0,lunge:0,fold:0,breath:0,headDown:0,dead:0,spread:0,rise:0,jaw:0,
     legF:0,clawL:0,clawR:0,tailWhip:0,roar:0,droop:0,bank:0,look:0,recoil:0,alt:0,pitch:0};
   const neck=[N.n1,N.n2,N.n3,N.n4], tail=[N.t1,N.t2,N.t3,N.t4,N.t5,N.t6], WL=[N.wL1,N.wL2,N.wL3,N.wL4], WR=[N.wR1,N.wR2,N.wR3,N.wR4];
-  [N.FL,N.FR].forEach(b=>b.scale.setScalar(.62));
   const R={body:N.hips,chest:N.chest,neck:N.n1,neck1:N.n1,neck2:N.n3,head:N.head,jaw:N.jaw,tail1:N.t1,wl1:N.wL1,wr1:N.wR1,st,tg:Object.assign({},st),rate:{}};
   m.userData.rig=R;
   { const g=glow(N.head,0xffa040,.7,[0,-.05,.16],0); g.material.opacity=0; m.userData.mouthGlow=g; }
@@ -194,8 +202,9 @@ function buildDragon(){
     const pad=Math.sin(sp*.5), pad2=Math.sin(sp*.5+Math.PI);
     const tuck=Math.min(1,Math.max(0,lean*2.2))*(1-st.legF);
     [['L',st.clawL,pad,-1],['R',st.clawR,pad2,1]].forEach(([sd,cl,pd,sx])=>{
-      T3(N['F'+sd],-.05+pd*.3*calm+st.legF*1.1+cl*1.3-tuck*.9+st.rear*.5-st.droop*.3+st.roar*.4, 0, sx*(.12+cl*.45+st.roar*.25));
-      T3(N['F'+sd+'k'],.15+pd*.35*calm-st.legF*.6-cl*.8+tuck*.6+st.roar*-.3+st.droop*.3,0,0);});
+      const cx=(v,a,b)=>Math.max(a,Math.min(b,v));
+      T3(N['F'+sd],cx(-.05+pd*.3*calm+st.legF*.9+cl*1.0-tuck*.7+st.rear*.4-st.droop*.3+st.roar*.35,-.8,1.35), 0, sx*cx(.12+cl*.3+st.roar*.2,-.2,.5));
+      T3(N['F'+sd+'k'],cx(.15+pd*.35*calm-st.legF*.5-cl*.7+tuck*.6-st.roar*.3+st.droop*.3,-1.1,1.0),0,0);});
     // ขาหลัง: ห้อยแกว่งสลับกัน / ลากไปด้านหลังตอนพุ่ง / ยื่นลงตอนจะลงพื้น
     [['L',0,-1],['R',Math.PI*.7,1]].forEach(([sd,o,sx])=>{
       const sw=Math.sin(T*1.4+o)*.22*calm+Math.sin(sp*.5+o)*.12;
