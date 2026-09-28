@@ -115,7 +115,7 @@ function makeUnit(side,def,slot){
 const BLOBTEX=canvasTex(128,(x,s)=>{const g=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,'rgba(0,0,0,.85)');g.addColorStop(.45,'rgba(0,0,0,.45)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,s,s);});
 function addBlob(u){const r=u.evo?(u.boss?.95:.72):.62;const b=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:BLOBTEX,transparent:true,depthWrite:false,opacity:.6,fog:false}));b.rotation.x=-Math.PI/2;b.renderOrder=1;scene.add(b);u.blob=b;}
 function blobUpdate(){UNITS.forEach(u=>{if(!u.blob)return;const w=u.w;u.blob.visible=w.visible;u.blob.position.set(w.position.x,.025,w.position.z);const h=Math.max(0,w.position.y);u.blob.material.opacity=.6*Math.max(0,1-h/2.2);u.blob.scale.setScalar(1-Math.min(.4,h*.12));});}
-function removeUnit(u){scene.remove(u.w);u.bar.remove();if(u.blob){scene.remove(u.blob);u.blob.geometry.dispose();u.blob.material.dispose();}}
+function removeUnit(u){scene.remove(u.w);u.bar.remove();if(u.row)u.row.remove();if(u.blob){scene.remove(u.blob);u.blob.geometry.dispose();u.blob.material.dispose();}}
 
 /* ================= แอนิเมชันต่อสู้ ================= */
 const tmpV=new THREE.Vector3();
@@ -184,7 +184,7 @@ async function react(u,fromX){
   else{tween(.12,t=>u.inner.rotation.x=-.35*t).then(()=>tween(.3,t=>u.inner.rotation.x=-.35*(1-t)));}
 }
 async function die(u){
-  u.alive=false; u.bar.hidden=true;
+  u.alive=false; u.bar.hidden=true; rowGone(u);
   const A=u.inner.userData;
   if(u.dragon){await dragonDie(u);}
   else if(u.spider){await spiderDie(u);}

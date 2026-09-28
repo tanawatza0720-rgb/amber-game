@@ -1,11 +1,29 @@
 /* ================= แถบพลังชีวิตและตัวเลข ================= */
 const ov=$('#ov');
+// เหนือหัว: แสดงเฉพาะบัพ/ดีบัพ · เลือดอยู่ในแผงข้าง (ทีมเรา = ซ้าย, ศัตรู = ขวา)
 function makeBar(u){
-  const b=document.createElement('div'); b.className='ubar '+(u.side==='P'?'p':'e')+(u.boss?' boss':'');
-  b.innerHTML='<div class="un"><span class="lv"></span><span class="el"></span><span class="nm"></span><span class="st" hidden>มึน</span></div><div class="hp"><i></i><em></em></div><div class="atb"><i></i></div>';
-  b.querySelector('.lv').textContent=u.lv; b.querySelector('.nm').textContent=u.name; {const e=b.querySelector('.el'),E=ELEM[u.el];if(E){e.textContent=E.i;e.title='ธาตุ'+u.el;}else e.remove();} ov.appendChild(b); u.barEl=b; setTimeout(()=>updateBar(u),0); return b;
+  const b=document.createElement('div'); b.className='ubar '+(u.side==='P'?'p':'e')+(u.boss?' boss':''); b.hidden=true; ov.appendChild(b); u.barEl=b; u.stSig='';
+  const r=document.createElement('div'); r.className='hrow2 '+(u.side==='P'?'p':'e')+(u.boss?' boss':'');
+  r.innerHTML='<div class="rt"><span class="el"></span><span class="nm"></span><span class="lv"></span></div><div class="hp"><i></i><em></em></div>';
+  const E=ELEM[u.el]; if(E){r.querySelector('.el').textContent=E.i;r.title='ธาตุ'+u.el;} else r.querySelector('.el').remove();
+  r.querySelector('.nm').textContent=u.name; r.querySelector('.lv').textContent='Lv'+u.lv+(u.stars?' ★'+u.stars:'');
+  const box=$(u.side==='P'?'#hpL':'#hpR'); if(u.boss)box.prepend(r); else box.appendChild(r); u.row=r;
+  setTimeout(()=>updateBar(u),0); return b;
 }
-function updateBar(u){const b=u.barEl;if(!b)return;b.querySelector('.hp i').style.width=(u.hp/u.maxHp*100)+'%';b.querySelector('.hp em').textContent=u.hp+'/'+u.maxHp;b.querySelector('.st').hidden=!u.stun;}
+function updateBar(u){const r=u.row;if(!r)return;const k=Math.max(0,u.hp/u.maxHp);
+  r.querySelector('.hp i').style.width=(k*100)+'%'; r.querySelector('.hp em').textContent=u.hp+'/'+u.maxHp;
+  r.classList.toggle('low',k>0&&k<.3); r.classList.toggle('dead',!u.alive||u.hp<=0);}
+function rowGone(u){const r=u.row;if(!r)return;r.classList.add('dead');if(u.side==='E')setTimeout(()=>{r.classList.add('out');setTimeout(()=>r.remove(),400);},500);}
+// บัพ/ดีบัพที่ตัวละครได้รับ (คืนค่าเป็นรายการ [ไอคอน, คลาส, คำอธิบาย])
+function statusOf(u){const L=[];
+  if(u.stun||u.stunT>0)L.push(['💫','bad','มึน']);
+  const ta=teamAtkOf(u.side); if(ta)L.push(['⚔️','good','โจมตี +'+Math.round(ta*100)+'%']);
+  const p=u.pas||{}; if(p.dr)L.push(['🛡️','good','รับดาเมจ −'+Math.round(p.dr*100)+'%']);
+  if(p.revive&&!u.revived)L.push(['💖','good','เก้าชีวิต (ยังไม่ใช้)']);
+  if(p.dmgLow)L.push(['🎯','good','แรงขึ้นใส่ศัตรูเลือดน้อย']);
+  return L;}
+function renderStatus(u){const L=statusOf(u), sig=L.map(x=>x[0]).join('');if(sig===u.stSig)return !!sig;u.stSig=sig;const b=u.barEl;b.innerHTML='';
+  L.forEach(([i,c,t])=>{const s=document.createElement('span');s.className='bf '+c;s.textContent=i;s.title=t;b.appendChild(s);});return !!sig;}
 function popNum(u,text,cls){
   const v=tmpV.copy(u.w.position).setY(u.evo?(u.boss?3.4:2.7):1.7).project(camera);
   const e=document.createElement('div');e.className='num '+cls;e.textContent=text;
@@ -329,9 +347,9 @@ function loop(){
   if(actRing.visible){actRing.material.opacity=.6+.35*Math.sin(T*5);}
   if(tgtRing.visible){tgtRing.material.opacity=.6+.35*Math.sin(T*6);tgtRing.rotation.z+=rdt;}
   // แถบพลังชีวิตตามตัว
-  UNITS.forEach(u=>{if(!u.barEl||u.barEl.hidden)return;const v=tmpV.copy(u.w.position).setY(u.barY||(u.evo?(u.boss?3.25:2.6):1.6)).project(camera);u.barEl.style.visibility=v.z>1||Math.abs(v.x)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
-    u.barEl.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,-100%)`;
-    u.barEl.querySelector('.atb i').style.width=Math.min(100,u.gauge)+'%';});
+  UNITS.forEach(u=>{if(!u.barEl)return;const on=u.alive&&renderStatus(u);u.barEl.hidden=!on;if(!on)return;
+    const v=tmpV.copy(u.w.position).setY(u.barY||(u.evo?(u.boss?3.25:2.6):1.6)).project(camera);u.barEl.style.visibility=v.z>1||Math.abs(v.x)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
+    u.barEl.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,-100%)`;});
   RTS.manual-=rdt; mapTick(T); sunFollow(LOOK); camUpdate(); const ck=1-Math.exp(-rdt*camK); CAM.lerp(CAMt,ck); LOOK.lerp(LOOKt,ck);
   camera.position.copy(CAM).add(tmpV.set(Math.sin(T*.3)*.06,Math.sin(T*.4)*.03,0));
   if(shake>.002){camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake;shake*=.86;}
