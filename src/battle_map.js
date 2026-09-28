@@ -7,7 +7,7 @@ const BIG=true;
 const LOW=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||Math.min(screen.width,screen.height)<700||/[?&]low=1/.test(location.search);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,LOW?1:1.5));
 if(LOW){renderer.shadowMap.enabled=false;} else {renderer.shadowMap.type=THREE.PCFShadowMap;}
-renderer.toneMappingExposure=1.05; camera.far=700; camera.updateProjectionMatrix();
+renderer.toneMappingExposure=1.12; camera.far=700; camera.updateProjectionMatrix();
 const MAP0=scene.children.length;
 const FXK=LOW?.35:.65;
 const MAPK={road:14,smokes:[],fires:[],flags:[],balls:[],nextBall:2};
@@ -17,36 +17,61 @@ const skyM=new THREE.Mesh(new THREE.SphereGeometry(420,32,16),new THREE.MeshBasi
   map:srgb(canvasTex(256,(x,s)=>{const g=x.createLinearGradient(0,0,0,s);g.addColorStop(0,'#2b2f3a');g.addColorStop(.3,'#4b505c');g.addColorStop(.47,'#8a7a6c');g.addColorStop(.52,'#d0875a');g.addColorStop(.58,'#6a5a4c');g.addColorStop(1,'#3a3630');x.fillStyle=g;x.fillRect(0,0,s,s);
     for(let i=0;i<260;i++){const cx=Math.random()*s,cy=Math.random()*s*.45,r=8+Math.random()*30;const gg=x.createRadialGradient(cx,cy,0,cx,cy,r);const d=Math.random()<.5;gg.addColorStop(0,d?'rgba(30,32,40,.35)':'rgba(120,115,120,.25)');gg.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=gg;x.fillRect(0,0,s,s);}}))}));
 scene.add(skyM);
-scene.fog=new THREE.Fog(0x6f6a68,70,230);
-scene.add(new THREE.HemisphereLight(0xc6ccdc,0x3a3428,.85));
-const sun=new THREE.DirectionalLight(0xffc28a,2.0); sun.position.set(40,45,25); sun.castShadow=true;
+scene.fog=new THREE.Fog(0x7d7570,55,250);
+scene.add(new THREE.HemisphereLight(0xb9c2d6,0x3d3226,.8));
+const sun=new THREE.DirectionalLight(0xffb676,2.4); sun.position.set(40,38,25); sun.castShadow=true;
 sun.shadow.mapSize.set(LOW?512:1536,LOW?512:1536); Object.assign(sun.shadow.camera,{left:-34,right:34,top:34,bottom:-34,near:1,far:180}); sun.shadow.bias=-.0006; sun.shadow.normalBias=.04; scene.add(sun); scene.add(sun.target);
 const rimL=new THREE.DirectionalLight(0xff9a5a,.55); rimL.position.set(40,12,-30); scene.add(rimL);
-function sunFollow(c){sun.position.set(c.x+40,45,c.z+25);sun.target.position.set(c.x,0,c.z);}
+function sunFollow(c){sun.position.set(c.x+40,38,c.z+25);sun.target.position.set(c.x,0,c.z);}
 const falling=[], flies=[];
 {
   const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[Math.floor(Math.random()*a.length)];
-  // ---------- พื้น: ทุ่งหญ้าแห้งปนโคลน รอยไหม้ ----------
-  const groundT=srgb(canvasTex(512,(x,s)=>{x.fillStyle='#5d5a3d';x.fillRect(0,0,s,s);
-    for(let i=0;i<70;i++){const cx=Math.random()*s,cy=Math.random()*s,r=20+Math.random()*90,g=x.createRadialGradient(cx,cy,0,cx,cy,r);const c=pick(['110,112,60','72,66,44','95,84,58','62,78,40']);g.addColorStop(0,`rgba(${c},.55)`);g.addColorStop(1,`rgba(${c},0)`);x.fillStyle=g;x.fillRect(0,0,s,s);}
-    for(let i=0;i<9000;i++){const h=50+Math.random()*40,l=20+Math.random()*25;x.fillStyle=`hsla(${h},35%,${l}%,.5)`;x.fillRect(Math.random()*s,Math.random()*s,1.5,3);}},[36,36]));
-  const gr=new THREE.Mesh(new THREE.PlaneGeometry(520,520),SM(0xffffff,{map:groundT,roughness:.98}));gr.rotation.x=-Math.PI/2;gr.receiveShadow=true;scene.add(gr);
-  // สนามรบกลาง: ดินโคลนเข้ม รอยล้อ รอยเท้า
-  const mudT=srgb(canvasTex(512,(x,s)=>{x.clearRect(0,0,s,s);
-    const g=x.createLinearGradient(0,0,0,s);g.addColorStop(0,'rgba(92,76,56,0)');g.addColorStop(.15,'rgba(92,76,56,.92)');g.addColorStop(.85,'rgba(84,70,52,.92)');g.addColorStop(1,'rgba(84,70,52,0)');x.fillStyle=g;x.fillRect(0,0,s,s);
-    for(let i=0;i<7000;i++){const y=s*.1+Math.random()*s*.8;x.fillStyle=`rgba(${50+Math.random()*60|0},${40+Math.random()*45|0},${28+Math.random()*25|0},.5)`;x.fillRect(Math.random()*s,y,2,2);}
-    for(let i=0;i<30;i++){const cx=Math.random()*s,cy=s*(.2+Math.random()*.6),r=8+Math.random()*30,gg=x.createRadialGradient(cx,cy,0,cx,cy,r);gg.addColorStop(0,'rgba(40,32,24,.35)');gg.addColorStop(1,'rgba(40,32,24,0)');x.fillStyle=gg;x.fillRect(0,0,s,s);}},[5,1]));
-  const field=new THREE.Mesh(new THREE.PlaneGeometry(120,56),new THREE.MeshStandardMaterial({map:mudT,transparent:true,roughness:1,depthWrite:false}));
-  field.rotation.x=-Math.PI/2;field.position.set(4,.02,0);field.receiveShadow=true;field.renderOrder=-1;scene.add(field);
+  // ---------- พื้นดิน: ภูมิประเทศลูกคลื่น + สีไล่เนียน (หญ้าแห้ง → ดินโคลนกลางสนาม → รอยไหม้) ----------
+  const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
+  const nz=(x,z)=>Math.sin(x*.045+z*.03)*.55+Math.sin(x*.11-z*.07+1.3)*.3+Math.sin(x*.23+z*.19+2.1)*.15+Math.sin(x*.61-z*.53)*.06;
+  const flat=(x,z)=>{const lane=1-ss(28,44,Math.abs(z))*1; const nearCity=ss(-40,-20,x)*0+(x<-26&&x>-120&&Math.abs(z)<70?1:0); return Math.max(x>-40&&x<62?lane:0,nearCity);};
+  const heightAt=(x,z)=>{const f=flat(x,z);return (1-f)*(nz(x,z)*3.2+ss(60,120,Math.hypot(x/1.2,z))*10);};
+  MAPK.heightAt=heightAt;
+  const detailT=srgb(canvasTex(256,(x,s)=>{x.fillStyle='#b8b8b8';x.fillRect(0,0,s,s);
+    for(let i=0;i<14000;i++){const v=150+Math.random()*90|0;x.fillStyle=`rgba(${v},${v},${v},.55)`;x.fillRect(Math.random()*s,Math.random()*s,1+Math.random()*2,1+Math.random()*3);}
+    for(let i=0;i<40;i++){const cx=Math.random()*s,cy=Math.random()*s,r=6+Math.random()*24,g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(120,120,120,.35)');g.addColorStop(1,'rgba(120,120,120,0)');x.fillStyle=g;x.fillRect(0,0,s,s);}},[70,70]));
+  const SEG=LOW?90:150, gg=new THREE.PlaneGeometry(520,520,SEG,SEG); gg.rotateX(-Math.PI/2);
+  const gp=gg.attributes.position, gc=new Float32Array(gp.count*3), c1=new THREE.Color(), c2=new THREE.Color();
+  const GR=[new THREE.Color(0x6f6b44),new THREE.Color(0x585a36),new THREE.Color(0x7d7250)], MUD=new THREE.Color(0x5e4a36), MUD2=new THREE.Color(0x46382a), ROCKC=new THREE.Color(0x6a655c);
+  MAPK.burns=[];
+  for(let k=0;k<(LOW?8:16);k++)MAPK.burns.push([rnd(-26,40),rnd(-24,24),rnd(1.6,3.4)]);
+  for(let i=0;i<gp.count;i++){const x=gp.getX(i),z=gp.getZ(i);gp.setY(i,heightAt(x,z));
+    const n=nz(x*1.7,z*1.7), n2=nz(x*4.1+13,z*4.1-7);
+    c1.copy(GR[0]).lerp(GR[1],.5+.5*n).lerp(GR[2],Math.max(0,n2)*.6);
+    const mud=(1-ss(20,34,Math.abs(z+n*4)))*ss(-40,-30,x)*(1-ss(52,66,x));
+    c2.copy(MUD).lerp(MUD2,.5+.5*n2); c1.lerp(c2,mud*.92);
+    const road=(1-ss(3,7,Math.abs(z+Math.sin(x*.05)*2)))*(x<-30?1:0)*(x>-110?1:0); c1.lerp(MUD,road*.7);
+    const hi=ss(3,9,gp.getY(i)); c1.lerp(ROCKC,hi*.6);
+    let burn=0; MAPK.burns.forEach(([bx,bz,br])=>{burn=Math.max(burn,1-ss(br*.5,br*1.3,Math.hypot(x-bx,z-bz)));}); c1.multiplyScalar(1-burn*.55);
+    c1.convertSRGBToLinear(); gc[i*3]=c1.r;gc[i*3+1]=c1.g;gc[i*3+2]=c1.b;}
+  gg.setAttribute('color',new THREE.BufferAttribute(gc,3)); gg.computeVertexNormals();
+  const gr=new THREE.Mesh(gg,new THREE.MeshStandardMaterial({map:detailT,vertexColors:true,roughness:.97}));gr.receiveShadow=true;gr.userData.noMerge=true;scene.add(gr);
 
   // ---------- วัสดุ ----------
-  const stoneT=TX.stone;
-  const wallM=SM(0xb9b3a6,{map:stoneT,roughness:.9}), wallD=SM(0x8f897e,{map:stoneT,roughness:.92}), wallL=SM(0xd6d0c2,{map:stoneT,roughness:.88});
-  const slateM=SM(0x3a3f4c,{roughness:.7}), roofR=SM(0x7a3a2a,{roughness:.75}), roofB=SM(0x46505e,{roughness:.7});
+  // ก้อนหินก่อเรียงเป็นแถว มีร่องปูน สีต่างกันเล็กน้อย รอยคราบ
+  const blockCanvas=(bw,bh,base,mort)=>{const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');x.fillStyle=mort;x.fillRect(0,0,512,512);
+    for(let r=0;r<512/bh;r++){const off=(r%2)*bw/2;for(let q=-1;q<512/bw+1;q++){const w=bw*(.8+Math.random()*.4),X=q*bw+off+Math.random()*3,Y=r*bh;
+      const v=base+(Math.random()-.5)*26;x.fillStyle=`rgb(${v+4|0},${v|0},${v-8|0})`;x.fillRect(X+2,Y+2,w-4,bh-4);
+      const g=x.createLinearGradient(0,Y,0,Y+bh);g.addColorStop(0,'rgba(255,255,255,.10)');g.addColorStop(1,'rgba(0,0,0,.16)');x.fillStyle=g;x.fillRect(X+2,Y+2,w-4,bh-4);}}
+    for(let i=0;i<7000;i++){const v=Math.random()<.5?0:255;x.fillStyle=`rgba(${v},${v},${v},.05)`;x.fillRect(Math.random()*512,Math.random()*512,2,2);}
+    for(let i=0;i<22;i++){const X=Math.random()*512,g=x.createLinearGradient(0,0,0,512);g.addColorStop(0,'rgba(40,36,30,0)');g.addColorStop(1,'rgba(40,36,30,.25)');x.fillStyle=g;x.fillRect(X,Math.random()*300,6+Math.random()*14,512);}
+    return c;};
+  const bc=blockCanvas(64,32,178,'#6d675e'); const stoneT=srgb(new THREE.CanvasTexture(bc)); stoneT.wrapS=stoneT.wrapT=THREE.RepeatWrapping; stoneT.anisotropy=4;
+  const stoneB=new THREE.CanvasTexture(bc); stoneB.wrapS=stoneB.wrapT=THREE.RepeatWrapping;
+  const tileC=document.createElement('canvas');tileC.width=tileC.height=256;{const x=tileC.getContext('2d');x.fillStyle='#555';x.fillRect(0,0,256,256);
+    for(let r=0;r<16;r++)for(let q=0;q<16;q++){const v=150+Math.random()*60|0;x.fillStyle=`rgb(${v},${v},${v})`;x.beginPath();x.arc(q*16+(r%2)*8+8,r*16+4,8,0,Math.PI);x.fill();}}
+  const tileT=new THREE.CanvasTexture(tileC);tileT.wrapS=tileT.wrapT=THREE.RepeatWrapping;tileT.repeat.set(1,1);
+  const BUMP=LOW?null:stoneB;  const wallM=SM(0xb0a998,{map:stoneT,bumpMap:BUMP,bumpScale:.04,roughness:.9}), wallD=SM(0x857e72,{map:stoneT,bumpMap:BUMP,bumpScale:.05,roughness:.93}), wallL=SM(0xcac2b2,{map:stoneT,bumpMap:BUMP,bumpScale:.04,roughness:.88}); [wallM,wallD,wallL].forEach(m=>m.userData.uvk=.26);
+  const slateM=SM(0x3c404a,{map:tileT,roughness:.65,metalness:.1}), roofR=SM(0x7d3f2c,{map:tileT,roughness:.75}), roofB=SM(0x4a5361,{map:tileT,roughness:.7}); [slateM,roofR,roofB].forEach(m=>m.userData.uvk=.5);
   const winM=new THREE.MeshStandardMaterial({color:0x2a1a10,emissive:0xffa24a,emissiveIntensity:1.6});
-  const woodM=SM(0x6b4a2e,{map:TX.wood,roughness:.85}), woodD=SM(0x3f2c1c,{map:TX.wood,roughness:.9}), ironM=SM(0x3a3c40,{roughness:.5,metalness:.6});
+  const woodM=SM(0x4e3726,{map:TX.wood,roughness:.88}), woodD=SM(0x33241a,{map:TX.wood,roughness:.92}), ironM=SM(0x3a3c40,{roughness:.5,metalness:.6});
   const flagM=new THREE.MeshStandardMaterial({color:0xd49a3a,side:THREE.DoubleSide,roughness:.7}), flagE=new THREE.MeshStandardMaterial({color:0x8a1c16,side:THREE.DoubleSide,roughness:.7});
-  const rockM=SM(0x6d6a66,{map:stoneT,roughness:.95,flatShading:true}), rockD=SM(0x4d4a48,{map:stoneT,roughness:.95,flatShading:true});
+  const rockM=SM(0x7a7670,{map:TX.stone,roughness:.95,flatShading:true}), rockD=SM(0x57534e,{map:TX.stone,roughness:.95,flatShading:true}); rockM.userData.uvk=rockD.userData.uvk=.12;
   const burnM=SM(0x3a2f22,{roughness:1});
   const O8=new THREE.CylinderGeometry(1,1,1,8), CN8=new THREE.ConeGeometry(1,1,8), CN4=new THREE.ConeGeometry(1,1,4);
   const flag=(parent,x,y,z,m,s)=>{const pole=J(parent,x,y,z);P(pole,Y1,woodM,[0,1.6*(s||1),0],[.1,3.2*(s||1),.1]);const f=new THREE.Mesh(new THREE.PlaneGeometry(2.4*(s||1),1.3*(s||1),6,1),m||flagM);f.position.set(1.2*(s||1),2.6*(s||1),0);pole.add(f);MAPK.flags.push(f);};
@@ -129,18 +154,18 @@ const falling=[], flies=[];
   // ---------- ภูเขาหินขรุขระล้อมรอบ (ด้านหลังเมืองสูงชัน) ----------
   const peakGeo=(()=>{const g=new THREE.ConeGeometry(1,1,9,6),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),k=.5-y;
       const n=1+(Math.sin(x*9+y*7)+Math.sin(z*11-y*5)+Math.sin((x+z)*6))*.09*(k+.2);p.setXYZ(i,x*n,y+(Math.sin(x*13+z*7)*.03),z*n);}g.computeVertexNormals();return g;})();
-  const peak=(x,z,r,h,m)=>{const o=new THREE.Mesh(peakGeo,m||rockM);o.position.set(x,h/2-1,z);o.scale.set(r,h,r*rnd(.8,1.2));o.rotation.y=rnd(0,6);o.receiveShadow=true;scene.add(o);};
+  const peak=(x,z,r,h,m)=>{const o=new THREE.Mesh(peakGeo,m||rockM);o.position.set(x,h/2-1+MAPK.heightAt(x,z)*.6,z);o.scale.set(r,h,r*rnd(.8,1.2));o.rotation.y=rnd(0,6);o.receiveShadow=true;scene.add(o);};
   for(let i=0;i<34;i++){const a=Math.PI*.5+i/33*Math.PI, R=rnd(118,150);peak(Math.cos(a)*R-20,Math.sin(a)*R*.9,rnd(18,30),rnd(45,95),i%2?rockM:rockD);}
   for(let i=0;i<26;i++){const a=-Math.PI*.5+i/25*Math.PI, R=rnd(125,160);peak(Math.cos(a)*R+10,Math.sin(a)*R*.9,rnd(18,32),rnd(30,70),i%2?rockM:rockD);}
   // หน้าผาหินข้างสนาม
   const rockGeo=(()=>{const g=new THREE.IcosahedronGeometry(1,1),p=g.attributes.position;for(let i=0;i<p.count;i++){const v=new THREE.Vector3().fromBufferAttribute(p,i);v.multiplyScalar(1+(Math.sin(v.x*5.1)+Math.sin(v.y*4.3+1)+Math.sin(v.z*6.2+2))*.08);p.setXYZ(i,v.x,v.y,v.z);}g.computeVertexNormals();return g;})();
-  const rock=(x,z,sx,sy,sz,m)=>{const r=new THREE.Mesh(rockGeo,m||rockM);r.position.set(x,sy*.3,z);r.scale.set(sx,sy,sz);r.rotation.set(rnd(-.2,.2),rnd(0,6),rnd(-.2,.2));r.receiveShadow=true;scene.add(r);};
+  const rock=(x,z,sx,sy,sz,m)=>{const r=new THREE.Mesh(rockGeo,m||rockM);r.position.set(x,sy*.3+MAPK.heightAt(x,z),z);r.scale.set(sx,sy,sz);r.rotation.set(rnd(-.2,.2),rnd(0,6),rnd(-.2,.2));r.receiveShadow=true;scene.add(r);};
   [[0,36],[16,40],[-14,38],[30,35],[6,-36],[-12,-38],[24,-37],[44,32],[44,-34]].forEach(([x,z],i)=>{rock(x,z,rnd(6,10),rnd(6,12),rnd(5,8),i%2?rockM:rockD);rock(x+rnd(-5,5),z+Math.sign(z)*rnd(4,7),rnd(5,8),rnd(9,16),rnd(5,7),rockD);});
   for(let i=0;i<(LOW?25:60);i++){const x=rnd(-28,60),z=(Math.random()<.5?-1:1)*rnd(12,32);rock(x,z,rnd(.5,1.4),rnd(.4,1),rnd(.5,1.4));}
 
   // ---------- ซากสนามรบ: หลุมไหม้ หอกปัก โล่ เกวียนพัง หลักแหลม ----------
-  for(let i=0;i<(LOW?8:16);i++){const x=rnd(-26,40),z=rnd(-24,24);const r=rnd(1.2,3);const c=new THREE.Mesh(new THREE.CircleGeometry(r,10),burnM);c.rotation.x=-Math.PI/2;c.position.set(x,.03,z);scene.add(c);
-    for(let k=0;k<5;k++){const a=k/5*Math.PI*2;P(scene,B1,rockD,[x+Math.cos(a)*r,.12,z+Math.sin(a)*r],[rnd(.4,.8),rnd(.2,.4),rnd(.4,.8)],[0,a,0]);}}
+  MAPK.burns.forEach(([x,z,r])=>{r*=.8;
+    for(let k=0;k<6;k++){const a=k/6*Math.PI*2+rnd(-.3,.3);P(scene,B1,rockD,[x+Math.cos(a)*r,.1,z+Math.sin(a)*r],[rnd(.3,.7),rnd(.15,.35),rnd(.3,.7)],[rnd(-.3,.3),a,rnd(-.3,.3)]);}});
   for(let i=0;i<(LOW?30:70);i++){const x=rnd(-28,42),z=rnd(-26,26);P(scene,Y1,woodD,[x,.9,z],[.05,2,.05],[rnd(-.5,.5),0,rnd(-.5,.5)]);}
   for(let i=0;i<(LOW?12:30);i++){const x=rnd(-28,42),z=rnd(-26,26);P(scene,Y1,Math.random()<.5?woodM:ironM,[x,.08,z],[.45,.06,.45],[rnd(-.4,.4),0,rnd(-.4,.4)]);}
   for(let i=0;i<(LOW?3:7);i++){const g=J(scene,rnd(-20,35),0,rnd(-22,22));g.rotation.set(rnd(-.2,.2),rnd(0,6),rnd(-.3,.3));
@@ -177,19 +202,47 @@ const falling=[], flies=[];
   const okSpot=(x,z)=>!(Math.abs(z)<34&&x>FX-4&&x<EX+32)&&!(Math.hypot(x-CX,z-CZ)<40)&&!(x<FX+4&&x>FX-30&&Math.abs(z)<60);
   for(let i=0;i<4000&&nt<NT;i++){const x=rnd(-110,100),z=rnd(-100,100);if(!okSpot(x,z)||Math.hypot(x/1.2,z)>105)continue;
     const s=rnd(.9,1.7);q.setFromEuler(new THREE.Euler(0,rnd(0,6),0));
-    mm.compose(ps.set(x,s,z),q,sc.set(s,s,s));trunk.setMatrixAt(nt,mm);mm.compose(ps.set(x,s*3,z),q,sc.set(s,s,s));pine.setMatrixAt(nt,mm);
+    const hy=MAPK.heightAt(x,z);mm.compose(ps.set(x,hy+s,z),q,sc.set(s,s,s));trunk.setMatrixAt(nt,mm);mm.compose(ps.set(x,hy+s*3,z),q,sc.set(s,s,s));pine.setMatrixAt(nt,mm);
     pine.setColorAt(nt,col.setHSL(.26+rnd(-.04,.05),.22+rnd(0,.12),.14+rnd(0,.08)).convertSRGBToLinear());nt++;}
   trunk.count=pine.count=nt;
   [trunk,pine].forEach(o=>{o.castShadow=false;o.receiveShadow=true;o.instanceMatrix.needsUpdate=true;if(o.instanceColor)o.instanceColor.needsUpdate=true;scene.add(o);});
 
+  // ---------- หญ้าแห้งและพุ่มไม้ (instanced) ----------
+  { const tuftG=new THREE.ConeGeometry(.14,.6,4), NG=LOW?500:1400, tuft=new THREE.InstancedMesh(tuftG,SM(0xffffff),NG); let ng=0;
+    for(let i=0;i<6000&&ng<NG;i++){const x=rnd(-90,90),z=rnd(-80,80);const lane=Math.abs(z)<22&&x>-30&&x<60;if(lane&&Math.random()<.85)continue;if(Math.hypot(x-CX,z-CZ)<35)continue;
+      q.setFromEuler(new THREE.Euler(rnd(-.35,.35),rnd(0,6),rnd(-.35,.35)));const s=rnd(.6,1.5);mm.compose(ps.set(x,MAPK.heightAt(x,z)+.22*s,z),q,sc.set(s,s*rnd(.8,1.4),s));tuft.setMatrixAt(ng,mm);
+      tuft.setColorAt(ng,col.setHSL(rnd(.1,.2),rnd(.25,.45),rnd(.22,.36)).convertSRGBToLinear());ng++;}
+    tuft.count=ng;tuft.instanceMatrix.needsUpdate=true;tuft.instanceColor.needsUpdate=true;tuft.receiveShadow=true;scene.add(tuft); }
+  // ---------- คบเพลิงบนกำแพง (จุดแสง 1 ครั้งวาด) ----------
+  const glowTex=canvasTex(64,(x,s)=>{const g=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,'rgba(255,240,200,1)');g.addColorStop(.25,'rgba(255,170,80,.8)');g.addColorStop(1,'rgba(255,120,40,0)');x.fillStyle=g;x.fillRect(0,0,s,s);});
+  { const pts=[]; for(let i=0;i<wpts.length;i++){if(!wpts[i]||!wpts[i+1])continue;const [x0,z0]=wpts[i],[x1,z1]=wpts[i+1];const L=Math.hypot(x1-x0,z1-z0);for(let t=4;t<L;t+=7){const k=t/L;pts.push(x0+(x1-x0)*k+2.6,WH+1.6,z0+(z1-z0)*k);}}
+    [[FX+2.8,WH*.55,-GATE+.5],[FX+2.8,WH*.55,GATE-.5],[FX+2.8,WH+5,-3],[FX+2.8,WH+5,3]].forEach(p=>pts.push(...p));
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+    const m=new THREE.PointsMaterial({map:glowTex,size:3.2,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,color:0xffb060});
+    const t=new THREE.Points(g,m);scene.add(t);MAPK.torch=m; }
+  // ---------- ประกายไฟลอยขึ้น + เถ้าถ่านลอยทั่วสนาม ----------
+  { const NE=LOW?90:260, ep=new Float32Array(NE*3), ev=[]; const src=[...MAPK.burns.map(b=>[b[0],b[1]]),[-60,-14],[-88,10],[-52,22],[EX+18,-22],[EX+6,20],[FX,0]];
+    for(let i=0;i<NE;i++){const s0=pick(src);ep[i*3]=s0[0]+rnd(-2,2);ep[i*3+1]=rnd(0,14);ep[i*3+2]=s0[1]+rnd(-2,2);ev.push({s:s0,v:rnd(1,3),w:rnd(0,6)});}
+    const eg=new THREE.BufferGeometry();eg.setAttribute('position',new THREE.BufferAttribute(ep,3));
+    const em=new THREE.PointsMaterial({map:glowTex,size:.55,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,color:0xff9040});
+    scene.add(new THREE.Points(eg,em)); MAPK.embers={g:eg,v:ev};
+    const NA=LOW?120:320, ap=new Float32Array(NA*3); for(let i=0;i<NA;i++){ap[i*3]=rnd(-40,60);ap[i*3+1]=rnd(0,26);ap[i*3+2]=rnd(-35,35);}
+    const ag=new THREE.BufferGeometry();ag.setAttribute('position',new THREE.BufferAttribute(ap,3));
+    const am=new THREE.PointsMaterial({color:0x8f8a86,size:.22,transparent:true,opacity:.7,depthWrite:false});
+    scene.add(new THREE.Points(ag,am)); MAPK.ash=ag; }
+  // ---------- เมฆต่ำลอยช้า ----------
+  { const cT=canvasTex(128,(x,s)=>{x.clearRect(0,0,s,s);for(let i=0;i<26;i++){const cx=s*.2+Math.random()*s*.6,cy=s*.35+Math.random()*s*.3,r=12+Math.random()*30,g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(90,88,92,.5)');g.addColorStop(1,'rgba(90,88,92,0)');x.fillStyle=g;x.fillRect(0,0,s,s);}});
+    MAPK.clouds=[]; for(let i=0;i<(LOW?4:9);i++){const m=new THREE.SpriteMaterial({map:cT,transparent:true,depthWrite:false,opacity:.55});const c=new THREE.Sprite(m);const w=rnd(60,110);c.scale.set(w,w*.45,1);c.position.set(rnd(-140,120),rnd(55,80),rnd(-120,60));scene.add(c);MAPK.clouds.push(c);} }
   // ---------- ควันไฟลอยขึ้นฟ้า (เสาควันเลื่อนพื้นผิวขึ้น) ----------
-  const smokeT=canvasTex(128,(x,s)=>{x.clearRect(0,0,s,s);for(let i=0;i<60;i++){const cx=s/2+(Math.random()-.5)*s*.35,cy=Math.random()*s,r=10+Math.random()*26,g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(60,56,54,.55)');g.addColorStop(1,'rgba(60,56,54,0)');x.fillStyle=g;x.fillRect(0,0,s,s);}
-    const m=x.createLinearGradient(0,0,s,0);m.addColorStop(0,'rgba(0,0,0,1)');m.addColorStop(.25,'rgba(0,0,0,0)');m.addColorStop(.75,'rgba(0,0,0,0)');m.addColorStop(1,'rgba(0,0,0,1)');x.globalCompositeOperation='destination-out';x.fillStyle=m;x.fillRect(0,0,s,s);
-    const v=x.createLinearGradient(0,0,0,s);v.addColorStop(0,'rgba(0,0,0,1)');v.addColorStop(.3,'rgba(0,0,0,0)');x.fillStyle=v;x.fillRect(0,0,s,s);});
-  smokeT.wrapT=THREE.RepeatWrapping;
+  // ควัน: ลายควันเลื่อนขึ้น (map) + รูปทรงเสาควันนิ่ง ขอบนุ่ม บานออกด้านบน (alphaMap)
+  const smokeT=canvasTex(128,(x,s)=>{x.fillStyle='#3e3a38';x.fillRect(0,0,s,s);for(let i=0;i<90;i++){const cx=Math.random()*s,cy=Math.random()*s,r=8+Math.random()*22,g=x.createRadialGradient(cx,cy,0,cx,cy,r);const v=Math.random()<.5?'95,90,88':'30,28,27';g.addColorStop(0,`rgba(${v},.6)`);g.addColorStop(1,`rgba(${v},0)`);x.fillStyle=g;x.fillRect(0,0,s,s);}});
+  smokeT.wrapS=smokeT.wrapT=THREE.RepeatWrapping;
+  const shapeT=canvasTex(128,(x,s)=>{const img=x.createImageData(s,s);for(let py=0;py<s;py++)for(let px=0;px<s;px++){const v=1-py/s, w=.12+.3*Math.pow(v,.8), d=Math.abs(px/s-.5)/w;
+      const a=Math.exp(-d*d*2.2)*Math.min(1,v*7)*Math.min(1,(1-v)*1.6+.05)*(.75+.25*Math.sin(py*.2+px*.05));const k=(py*s+px)*4;img.data[k]=img.data[k+1]=img.data[k+2]=Math.max(0,Math.min(255,a*400));img.data[k+3]=255;}x.putImageData(img,0,0);});
+  shapeT.wrapS=shapeT.wrapT=THREE.ClampToEdgeWrapping;
   const smokeAt=[[-60,-14],[-88,10],[-52,22],[12,-18],[26,15],[-4,20],[EX+18,-22],[EX+6,20]].slice(0,LOW?4:8);
-  smokeAt.forEach(([x,z],i)=>{const t=smokeT.clone();t.needsUpdate=true;t.wrapT=THREE.RepeatWrapping;
-    const m=new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,opacity:.85,fog:true});const s=new THREE.Sprite(m);const h=rnd(22,36);s.scale.set(h*.35,h,1);s.position.set(x,h/2,z);scene.add(s);
+  smokeAt.forEach(([x,z],i)=>{const t=smokeT.clone();t.needsUpdate=true;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,.6);t.offset.x=Math.random();
+    const m=new THREE.SpriteMaterial({map:t,alphaMap:shapeT,transparent:true,depthWrite:false,opacity:.9,fog:true});const s=new THREE.Sprite(m);const h=rnd(24,38);s.scale.set(h*.55,h,1);s.position.set(x,h/2-.5,z);scene.add(s);
     const fire=glow(scene,0xff7a2a,4,[x,.8,z],.8);MAPK.smokes.push({t,sp:rnd(.05,.09),fire,ph:i});});
 }
 // รวมฉากนิ่งทั้งหมดเป็นก้อนเดียวต่อวัสดุ (ลดการวาดจากหลายร้อยครั้งเหลือหลักสิบ)
@@ -200,20 +253,35 @@ const falling=[], flies=[];
     if(!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||o.isSprite||!o.geometry||!o.material||Array.isArray(o.material))return;
     if(o.material.transparent||o===skyM||MAPK.flags.includes(o))return;
     if(o.geometry.parameters&&o.geometry.parameters.width>=400)return;
+    if(o.userData.noMerge)return;
     let g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone(); g.applyMatrix4(o.matrixWorld);
+    if(o.material.userData.uvk&&g.attributes.normal){const k=o.material.userData.uvk,pa=g.attributes.position,na=g.attributes.normal,ua=g.attributes.uv;
+      for(let i=0;i<pa.count;i+=3){const ax=Math.abs(na.getX(i))+Math.abs(na.getX(i+1)),ay=Math.abs(na.getY(i))+Math.abs(na.getY(i+1)),az=Math.abs(na.getZ(i))+Math.abs(na.getZ(i+1));
+        for(let j=i;j<i+3;j++){const x=pa.getX(j),y=pa.getY(j),z=pa.getZ(j);if(ay>=ax&&ay>=az)ua.setXY(j,x*k,z*k);else if(ax>=az)ua.setXY(j,z*k,y*k);else ua.setXY(j,x*k,y*k);}}}
+    { g.computeBoundingBox(); const y0=g.boundingBox.min.y, hgt=Math.max(.5,g.boundingBox.max.y-y0), tint=.92+Math.random()*.16, pa=g.attributes.position, ca=new Float32Array(pa.count*3);
+      for(let i=0;i<pa.count;i++){const t=(pa.getY(i)-y0), ao=.5+.5*Math.min(1,t/Math.min(3,hgt*.5)), top=1+.08*Math.min(1,t/Math.max(hgt,1)); const v=Math.min(1.2,ao*tint*top); ca[i*3]=v;ca[i*3+1]=v*.99;ca[i*3+2]=v*.97;}
+      g.setAttribute('color',new THREE.BufferAttribute(ca,3)); }
     if(!g.attributes.uv)g.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count*2),2));
     const key=o.material; if(!groups.has(key))groups.set(key,[]); groups.get(key).push(g); kill.push(o);}));
   kill.forEach(o=>o.parent&&o.parent.remove(o));
   groups.forEach((list,mat)=>{let n=0;list.forEach(g=>n+=g.attributes.position.count);
-    const P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2);let o=0;
-    list.forEach(g=>{P.set(g.attributes.position.array,o*3);N.set(g.attributes.normal.array,o*3);U.set(g.attributes.uv.array,o*2);o+=g.attributes.position.count;g.dispose();});
-    const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.BufferAttribute(P,3));G.setAttribute('normal',new THREE.BufferAttribute(N,3));G.setAttribute('uv',new THREE.BufferAttribute(U,2));G.computeBoundingSphere();
+    const P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2),C=new Float32Array(n*3);let o=0;
+    list.forEach(g=>{P.set(g.attributes.position.array,o*3);N.set(g.attributes.normal.array,o*3);U.set(g.attributes.uv.array,o*2);C.set(g.attributes.color.array,o*3);o+=g.attributes.position.count;g.dispose();});
+    const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.BufferAttribute(P,3));G.setAttribute('normal',new THREE.BufferAttribute(N,3));G.setAttribute('uv',new THREE.BufferAttribute(U,2));G.setAttribute('color',new THREE.BufferAttribute(C,3));G.computeBoundingSphere();
+    mat.vertexColors=true; mat.needsUpdate=true;
     const m=new THREE.Mesh(G,mat);m.receiveShadow=!LOW;m.castShadow=false;scene.add(m);});
   scene.children.slice(MAP0).forEach(r=>r.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh)o.castShadow=false;}));
 }
 // ธงสะบัด ควันลอย ไฟกระพริบ ลูกไฟจากเครื่องยิงหิน
 const _bv=new THREE.Vector3();
+let _lastT=null;
 function mapTick(T){
+  const dt=_lastT==null?0:Math.min(.1,T-_lastT); _lastT=T;
+  if(MAPK.torch)MAPK.torch.size=3+Math.sin(T*11)*.25+Math.random()*.2;
+  if(MAPK.embers){const p=MAPK.embers.g.attributes.position;MAPK.embers.v.forEach((e,i)=>{let y=p.getY(i)+e.v*dt;let x=p.getX(i)+Math.sin(T*1.3+e.w)*dt*.6+dt*.4,z=p.getZ(i)+Math.cos(T*1.1+e.w)*dt*.5;
+    if(y>16){y=0;x=e.s[0]+(Math.random()-.5)*4;z=e.s[1]+(Math.random()-.5)*4;}p.setXYZ(i,x,y,z);});p.needsUpdate=true;}
+  if(MAPK.ash){const p=MAPK.ash.attributes.position;for(let i=0;i<p.count;i++){let x=p.getX(i)+dt*(1.2+Math.sin(i)*.4),y=p.getY(i)-dt*(.5+(i%5)*.1),z=p.getZ(i)+Math.sin(T*.7+i)*dt*.3;if(y<0||x>65){y=20+Math.random()*8;x=-40+Math.random()*30;}p.setXYZ(i,x,y,z);}p.needsUpdate=true;}
+  (MAPK.clouds||[]).forEach((c,i)=>{c.position.x+=dt*(1.2+i*.1);if(c.position.x>160)c.position.x=-160;});
   MAPK.flags.forEach((f,i)=>{f.rotation.y=Math.sin(T*2.2+i)*.35;});
   MAPK.fires.forEach((f,i)=>{f.gl.scale.setScalar(f.gl.userData.s0||(f.gl.userData.s0=f.gl.scale.x));f.gl.scale.multiplyScalar(.9+Math.sin(T*9+i*3)*.08+Math.random()*.06);});
   MAPK.smokes.forEach(s=>{s.t.offset.y=-T*s.sp;s.fire.scale.setScalar(3.4+Math.sin(T*8+s.ph)*.5+Math.random()*.4);});
