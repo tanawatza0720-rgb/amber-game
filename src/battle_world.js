@@ -26,6 +26,14 @@ const SPECIES={
     {id:'s1',name:'ฟันเงาจันทร์',desc:'ฟันศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},
     {id:'s2',name:'คมดาบราตรี',desc:'ฟัน 3 ครั้ง ครั้งละ 75% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.75,target:'one'},
     {id:'s3',name:'ดิ่งฟันสังหาร',desc:'กระโดดฟาดศัตรูทุกตัว 90% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.9,target:'all',stun:.3}]},
+  hakuneko:{name:'ฮาคุเนโกะ',evo:1,rig:'hakuneko',base:{hp:104,atk:43,def:12,spd:50},skills:[
+    {id:'s1',name:'ฟันตะวันทอง',desc:'ฟันศัตรู 1 ตัว 125%',cd:0,type:'melee',mult:1.25,target:'one'},
+    {id:'s2',name:'กรงเล็บเก้าชีวิต',desc:'ฟัน 3 ครั้ง ครั้งละ 72% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.72,target:'one'},
+    {id:'s3',name:'ดาบจันทร์เสี้ยว',desc:'กระโดดฟันศัตรูทุกตัว 95% โอกาส 25% ทำให้มึน',cd:4,type:'leap',mult:.95,target:'all',stun:.25}]},
+  morihime:{name:'โมริฮิเมะ',evo:1,rig:'morihime',base:{hp:120,atk:38,def:16,spd:42},skills:[
+    {id:'s1',name:'แทงหอกพงไพร',desc:'แทงศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},
+    {id:'s2',name:'หอกพายุใบไม้',desc:'แทง 3 ครั้ง ครั้งละ 70% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.7,target:'one'},
+    {id:'s3',name:'หอกดิ่งฟ้า',desc:'กระโดดปักหอกใส่ศัตรูทุกตัว 90% โอกาส 35% ทำให้มึน',cd:4,type:'leap',mult:.9,target:'all',stun:.35}]},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42},skills:[
     {id:'s1',name:'ฟันเงา',desc:'ฟันศัตรู 1 ตัว 110%',cd:0,type:'melee',mult:1.1,target:'one'},
     {id:'s2',name:'สามดาบวายุ',desc:'ฟัน 3 ครั้ง ครั้งละ 70% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.7,target:'one'},

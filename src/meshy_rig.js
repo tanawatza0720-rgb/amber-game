@@ -2,7 +2,7 @@
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json',morihime:'mrh/morihime_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -12,7 +12,7 @@ function loadRig(key,onProgress){
 }
 function loadMeshy(onProgress){
   const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
-  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),anims]).then(([g])=>{MESHY=g;return g;});
+  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),anims]).then(([g])=>{MESHY=g;return g;});
 }
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
 /* กำมือ: โมเดลจาก Meshy ไม่มีกระดูกนิ้ว มือจึงแบแข็ง -> ดัดนิ้วของเมชให้งอรอบด้ามดาบ (ทำครั้งเดียวต่อโมเดล)
@@ -73,6 +73,13 @@ function buildMeshyEvo(m,key){
   root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;
     o.material=o.material.clone();if(ENV){o.material.envMap=ENV;o.material.envMapIntensity=.55;}
     if(o.material.emissive)o.material.emissive.set(0x000000);}});
+  // อาวุธเดิมของโมเดล (ถืออยู่ในท่าต้นฉบับ): ติดกับกระดูกมือขวาตามตำแหน่งเดิมเป๊ะ
+  let prop=null; root.traverse(o=>{if(!prop&&o.name==='weapon_prop')prop=o;});
+  if(prop&&B.rHand){B.rHand.attach(prop);
+    const P=prop.geometry.attributes.position, hp=B.rHand.getWorldPosition(new THREE.Vector3()), inv=new THREE.Matrix4().copy(prop.matrixWorld).invert(), hl=hp.applyMatrix4(inv), v=new THREE.Vector3(), tip=new THREE.Vector3(); let best=-1;
+    for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i);const d=v.distanceTo(hl);if(d>best){best=d;tip.copy(v);}}
+    const mk=q=>{const o=new THREE.Object3D();o.position.copy(q);prop.add(o);return o;};
+    prop.userData.base=mk(hl.clone().lerp(tip,.28)); prop.userData.tip=mk(tip); prop.userData.trailK=.32; prop.castShadow=true;}
   // ค่าท่ายืนเริ่มต้น (m-space)
   const mQ=m.getWorldQuaternion(new THREE.Quaternion()), mQi=mQ.clone().invert();
   const wq=b=>mQi.clone().multiply(b.getWorldQuaternion(new THREE.Quaternion()));
@@ -177,9 +184,10 @@ function buildMeshyEvo(m,key){
   }
   // ดาบในมือ (โผล่ตอนสู้)
   const mt=mats();
-  const swR=katana(R.hd,mt); swR.position.set(0,-.04,0); swR.rotation.set(-.35,0,1.95);
-  const swL=katana(L.hd,mt); swL.position.set(0,-.04,0); swL.rotation.set(-.1,0,Math.PI+.1);
-  m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;
+  const swR=prop?null:katana(R.hd,mt); if(swR){swR.position.set(0,-.04,0); swR.rotation.set(-.35,0,1.95);}
+  const swL=prop?null:katana(L.hd,mt); if(swL){swL.position.set(0,-.04,0); swL.rotation.set(-.1,0,Math.PI+.1);}
+  if(prop){m.userData.swords=[prop];prop.visible=false;}
+  else{m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;}
   if(key==='kuroga'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ: ดาบยาวเล่มเดียว
   const base=[
     [hips.position,'y',.88],[hips.rotation,'y',.12],[hips.rotation,'x',0],
@@ -209,9 +217,10 @@ function buildMeshyEvo(m,key){
     const sc=sw.scale.x; sw.parent.remove(sw); m.add(sw);
     sw.position.copy(posM(hand)).add(off); sw.quaternion.copy(toNow.multiply(Qs)); sw.scale.setScalar(sc);
     m.updateMatrixWorld(true); hand.attach(sw); return true;};
+  if(!prop){
   if(!gripFix(B.rHand,'R',swR))B.rHand.attach(swR);
   if(!gripFix(B.lHand,'L',swL))B.lHand.attach(swL);
-  makeFist(root,[[B.rHand,swR,'R'],[B.lHand,swL,'L']]);
+  makeFist(root,[[B.rHand,swR,'R'],[B.lHand,swL,'L']]);}
   if(CS){play('idle',{loop:true,from:Math.random()*2});CS.w=CS.wT=1;}
   m.userData.idle=T=>{
     if(CS){const dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}

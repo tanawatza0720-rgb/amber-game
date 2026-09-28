@@ -28,7 +28,7 @@ function previewOrder(n){
 }
 function renderOrder(cur){
   const o=$('#order');o.innerHTML='';
-  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):({kazekiri:'คิริ',kazemaru:'มารุ',amateru:'มังกร',kuroga:'คุโร'}[u.sp]||'');o.appendChild(c);});
+  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):({kazekiri:'คิริ',kazemaru:'มารุ',amateru:'มังกร',kuroga:'คุโร',hakuneko:'เนโกะ',morihime:'โมริ'}[u.sp]||'');o.appendChild(c);});
 }
 
 /* ================= วงแหวนบอกตัวที่ถึงตาและเป้าหมาย ================= */
