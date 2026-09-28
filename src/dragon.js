@@ -49,7 +49,7 @@ function loadDragon(){
           if(k>=WA.length-1)add(B[k],wing);else{const t=Math.min(1,Math.max(0,(ax-WA[k])/(WA[k+1]-WA[k])));add(B[k],wing*(1-t));add(B[k+1],wing*t);}}
         let r=1-wing;
         const legB=ss(-.2,-.3,y)*ss(-.34,-.26,z)*(1-ss(.1,.16,z))*ss(.04,.08,ax)*(1-ss(.26,.32,ax))*r;
-        const legF=ss(-.2,-.3,y)*ss(.22,.28,z)*(1-ss(.64,.7,z))*ss(.03,.07,ax)*(1-ss(.26,.32,ax))*r;
+        const legF=ss(-.2,-.3,y)*ss(.22,.28,z)*(1-ss(.64,.7,z))*Math.max(ss(.03,.07,ax),ss(-.38,-.44,y))*(1-ss(.26,.32,ax))*r; // นิ้วเท้าด้านในชิดกลางตัวก็เป็นของขาด้วย
         const kB=ss(-.38,-.48,y), kF=ss(-.34,-.42,y), sd=L?'L':'R';
         add(LG['B'+sd],legB*(1-kB)); add(LG['B'+sd+'k'],legB*kB); add(LG['F'+sd],legF*(1-kF)); add(LG['F'+sd+'k'],legF*kF); r-=legB+legF;
         // แกนลำตัว: ถ่วงแบบเส้นตรงระหว่างกระดูกสองชิ้นที่ใกล้ที่สุด ทำให้โค้งเนียน
@@ -63,6 +63,27 @@ function loadDragon(){
         const idx=Object.entries(w).map(([k2,v])=>[v,+k2]).sort((a,b)=>b[0]-a[0]).slice(0,4); const sum=idx.reduce((a,b)=>a+b[0],0)||1;
         idx.forEach(([v,k2],jj)=>{SI[i*4+jj]=k2;SW[i*4+jj]=v/sum;});
       }
+      // เกลี่ยน้ำหนักกับจุดข้างเคียง (รวมจุดที่ตำแหน่งซ้อนกันตามรอยต่อ UV) กันสามเหลี่ยมถูกดึงยืดเป็นแผ่น
+      { const NB=RIG.length, key=new Map(), grp=new Int32Array(n); let G=0;
+        for(let i=0;i<n;i++){const k=Math.round(pos.getX(i)*2e4)+','+Math.round(pos.getY(i)*2e4)+','+Math.round(pos.getZ(i)*2e4);let gi=key.get(k);if(gi==null){gi=G++;key.set(k,gi);}grp[i]=gi;}
+        let Wd=new Float32Array(G*NB), cnt=new Float32Array(G);
+        for(let i=0;i<n;i++){if(cnt[grp[i]])continue;cnt[grp[i]]=1;for(let j=0;j<4;j++)Wd[grp[i]*NB+SI[i*4+j]]+=SW[i*4+j];}
+        const nb=Array.from({length:G},()=>new Set()), ix=geo.index;
+        if(ix)for(let t=0;t<ix.count;t+=3){const A=grp[ix.getX(t)],Bq=grp[ix.getX(t+1)],C=grp[ix.getX(t+2)];nb[A].add(Bq).add(C);nb[Bq].add(A).add(C);nb[C].add(A).add(Bq);}
+        for(let it=0;it<3;it++){const Wn=new Float32Array(G*NB);
+          for(let q=0;q<G;q++){const S=nb[q],k=S.size?.5/S.size:0;for(let b=0;b<NB;b++)Wn[q*NB+b]=Wd[q*NB+b]*(S.size?.5:1);S.forEach(o=>{for(let b=0;b<NB;b++)Wn[q*NB+b]+=Wd[o*NB+b]*k;});}
+          Wd=Wn;}
+        // ขาซ้าย/ขวาห้ามแชร์น้ำหนักกัน (เท้าหน้าสองข้างแตะกันในโมเดลต้นฉบับ)
+        const LR=[['FL','FR'],['FLk','FRk'],['BL','BR'],['BLk','BRk']].map(([l,r])=>[RIG.findIndex(q=>q.name===l),RIG.findIndex(q=>q.name===r)]);
+        const gx=new Float32Array(G); for(let i=0;i<n;i++)gx[grp[i]]=pos.getX(i);
+        for(let q=0;q<G;q++){const R=gx[q]>=0;LR.forEach(([l,r])=>{const o=q*NB;if(R){Wd[o+r]+=Wd[o+l];Wd[o+l]=0;}else{Wd[o+l]+=Wd[o+r];Wd[o+r]=0;}});}
+        // ตัดสามเหลี่ยมที่เชื่อมขาซ้ายกับขาขวา (จะถูกดึงยืดเป็นแผ่นเวลาขาขยับแยกกัน)
+        if(ix){const legSet=new Set(LR.flat()), legW=q=>{let w=0;legSet.forEach(b=>w+=Wd[q*NB+b]);return w;}, keep=[];
+          for(let t=0;t<ix.count;t+=3){const a3=[ix.getX(t),ix.getX(t+1),ix.getX(t+2)],gs=a3.map(i=>grp[i]);
+            const sides=new Set(gs.map(q=>gx[q]>=0)); if(sides.size>1&&gs.some(q=>legW(q)>.5))continue; keep.push(...a3);}
+          geo.setIndex(keep);}
+        for(let i=0;i<n;i++){const o=grp[i]*NB,l=[];for(let b=0;b<NB;b++)if(Wd[o+b]>.004)l.push([Wd[o+b],b]);l.sort((x,y)=>y[0]-x[0]);const top=l.slice(0,4),sm=top.reduce((x,y)=>x+y[0],0)||1;
+          for(let j=0;j<4;j++){SI[i*4+j]=top[j]?top[j][1]:0;SW[i*4+j]=top[j]?top[j][0]/sm:0;}} }
       // ขยายปีกให้กางกว้าง (ยืดจากโคนปีก)
       const stretch=(x,y,z,wg)=>{const ax=Math.abs(x),sx=Math.sign(x)||1,rx=.19,ex=Math.max(0,ax-rx);
         return [sx*(rx+ex*(1+(WING_X-1)*wg)), y+ex*(WING_X-1)*wg*.12, .26+(z-.26)*(1+(WING_Z-1)*wg*ss(.2,.5,ax))];};

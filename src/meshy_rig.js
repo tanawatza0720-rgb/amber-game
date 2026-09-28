@@ -15,6 +15,48 @@ function loadMeshy(onProgress){
   return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),anims]).then(([g])=>{MESHY=g;return g;});
 }
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
+/* กำมือ: โมเดลจาก Meshy ไม่มีกระดูกนิ้ว มือจึงแบแข็ง -> ดัดนิ้วของเมชให้งอรอบด้ามดาบ (ทำครั้งเดียวต่อโมเดล)
+   ในพื้นที่ของกระดูกมือ: แกน Y = ทิศนิ้ว, n = ด้านฝ่ามือ (ทิศคมดาบ), a = แนวด้ามดาบ */
+function makeFist(root,hands){
+  let sm=null; root.traverse(o=>{if(!sm&&o.isSkinnedMesh)sm=o;}); if(!sm)return;
+  const g=sm.geometry, bones=sm.skeleton.bones, U=g.userData.fist||(g.userData.fist={});
+  hands.forEach(([hand,sw,sd])=>{
+    if(!hand||!sw||sw.parent!==hand)return;
+    if(!U[sd]){
+      const hi=bones.indexOf(hand); if(hi<0){U[sd]={shift:[0,0,0]};return;}
+      const M=new THREE.Matrix4().multiplyMatrices(sm.skeleton.boneInverses[hi],sm.bindMatrix), Mi=M.clone().invert();
+      const N3=new THREE.Matrix3().getNormalMatrix(M), N3i=new THREE.Matrix3().getNormalMatrix(Mi);
+      const Y=new THREE.Vector3(0,1,0), a=new THREE.Vector3(0,1,0).applyQuaternion(sw.quaternion); a.addScaledVector(Y,-a.dot(Y)).normalize();
+      const e=new THREE.Vector3(0,0,1).applyQuaternion(sw.quaternion); e.addScaledVector(Y,-e.dot(Y)).addScaledVector(a,-e.dot(a)).normalize();
+      const n=e, ax=new THREE.Vector3().crossVectors(Y,n).normalize();
+      const P=g.attributes.position, NA=g.attributes.normal, SI=g.attributes.skinIndex, SW=g.attributes.skinWeight;
+      const kids=new Set(); hand.traverse(o=>{if(o.isBone&&o!==hand){const k=bones.indexOf(o);if(k>=0)kids.add(k);}});
+      const idx=[], L=[], v=new THREE.Vector3(), nv=new THREE.Vector3(), q=new THREE.Quaternion();
+      for(let i=0;i<P.count;i++){const si=[SI.getX(i),SI.getY(i),SI.getZ(i),SI.getW(i)],wi=[SW.getX(i),SW.getY(i),SW.getZ(i),SW.getW(i)];
+        let w=0;for(let j=0;j<4;j++)if(si[j]===hi||kids.has(si[j]))w+=wi[j]; if(w>.05){idx.push([i,w]);}}
+      const u0=sw.position.y, uk=u0+.02;
+      // ความกว้างฝ่ามือด้านข้าง (ใช้ตัดนิ้วโป้งที่กางออก)
+      idx.forEach(([i])=>{v.fromBufferAttribute(P,i).applyMatrix4(M);if(v.y>0&&v.y<uk)L.push(Math.abs(v.dot(a)-sw.position.dot(a)));});
+      L.sort((x,y)=>x-y); const Wl=L.length?L[Math.floor(L.length*.85)]:.04;
+      const rh=.021*sw.scale.x, Rb=rh+.016, c0=sw.position.dot(n);
+      idx.forEach(([i,w])=>{
+        v.fromBufferAttribute(P,i).applyMatrix4(M);
+        let uu=v.y, vv=v.dot(n)-c0, ll=v.dot(a)-sw.position.dot(a), th=0;
+        // นิ้วโป้งที่กางออกข้าง: พับเข้าหาด้ามดาบ
+        const ex=Math.abs(ll)-Wl; if(ex>0&&uu>-.01){ll=Math.sign(ll)*(Wl+ex*.35);vv+=ex*.55;uu-=ex*.15;}
+        if(uu>uk){const s2=uu-uk, rho=Rb-vv; th=Math.min(3.5,s2/Rb); uu=uk+rho*Math.sin(th); vv=Rb-rho*Math.cos(th);}
+        const out=new THREE.Vector3().addScaledVector(Y,uu).addScaledVector(n,vv+c0).addScaledVector(a,ll+sw.position.dot(a));
+        v.lerp(out,Math.min(1,w*1.15)).applyMatrix4(Mi); P.setXYZ(i,v.x,v.y,v.z);
+        if(NA&&th>0){nv.fromBufferAttribute(NA,i).applyMatrix3(N3).normalize().applyQuaternion(q.setFromAxisAngle(ax,th*Math.min(1,w))).applyMatrix3(N3i).normalize();NA.setXYZ(i,nv.x,nv.y,nv.z);}
+      });
+      P.needsUpdate=true; if(NA)NA.needsUpdate=true;
+      // เลื่อนด้ามดาบไปอยู่ในอุ้งมือ (ศูนย์กลางของนิ้วที่งอ)
+      const sh=new THREE.Vector3().addScaledVector(Y,uk-u0).addScaledVector(n,Rb);
+      U[sd]={shift:sh.toArray()};
+    }
+    sw.position.add(new THREE.Vector3(...U[sd].shift));
+  });
+}
 function buildMeshyEvo(m,key){
   key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
   const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
@@ -169,6 +211,7 @@ function buildMeshyEvo(m,key){
     m.updateMatrixWorld(true); hand.attach(sw); return true;};
   if(!gripFix(B.rHand,'R',swR))B.rHand.attach(swR);
   if(!gripFix(B.lHand,'L',swL))B.lHand.attach(swL);
+  makeFist(root,[[B.rHand,swR,'R'],[B.lHand,swL,'L']]);
   if(CS){play('idle',{loop:true,from:Math.random()*2});CS.w=CS.wT=1;}
   m.userData.idle=T=>{
     if(CS){const dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}
