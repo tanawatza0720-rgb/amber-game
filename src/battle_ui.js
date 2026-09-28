@@ -152,7 +152,7 @@ async function spawnWave(){
   await wait(OPTS.idle?600:900);
 }
 async function finish(win){
-  running=false; {const ps=alive('P');if(win&&ps.length)camOver(ps[0],()=>ps[0].w.position.clone().add(new THREE.Vector3(-4,0,1.2)));else camWide();} actRing.visible=false; tgtRing.visible=false; hideSkills();
+  running=false; {const ps=alive('P');if(!BIG&&win&&ps.length)camOver(ps[0],()=>ps[0].w.position.clone().add(new THREE.Vector3(-4,0,1.2)));else camWide();} actRing.visible=false; tgtRing.visible=false; hideSkills();
   if(win)alive('P').forEach((u,i)=>setTimeout(()=>{if(u.dragon)dragonRoar(u,1600);else if(u.inner.userData.play)u.inner.userData.play('victory',{loop:true,fade:.25});else if(u.evo)poseTo([[u.rig.R.sh.rotation,'z',-2.6],[u.rig.L.sh.rotation,'z',2.6]],.3);else{u.inner.userData.acting=true;poseTo([[u.rig.R.a.rotation,'z',-3],[u.rig.L.a.rotation,'z',2.6]],.3);}particles(tmpV.copy(u.w.position).setY(1.2),0xffd27a,20,2,.05,1.2);},i*150));
   await wait(OPTS.idle?1000:900);
   return win;
@@ -267,8 +267,9 @@ renderer.domElement.addEventListener('pointerdown',e=>{
 /* ================= ลูป ================= */
 let FOCUS=null;
 const CAM=new THREE.Vector3(.6,5.2,10.2), LOOK=new THREE.Vector3(0,1,0), CAMt=CAM.clone(), LOOKt=LOOK.clone();
-let camMode={type:'wide'}, camK=2.5; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
-const camWide=()=>{camMode={type:'wide'};camK=2.2;};
+let camMode={type:'wide'}, camK=2.5;
+const RTS={tgt:new THREE.Vector3(-4,0,0),auto:new THREE.Vector3(),dist:34,base:30,pitch:.95,yaw:.3,manual:0,zoomed:false}; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
+const camWide=()=>{camMode={type:'wide'};camK=3;};
 const camOver=(u,focus,far)=>{camMode={type:'over',u,focus,far:far||0};camK=3.2;};
 const camTrack=(u,c)=>{camMode={type:'track',u,c:c.clone()};camK=3.5;};
 const camSide=(a,t,ex)=>{camMode={type:'side',a,t,ex:ex||0};camK=4;};
@@ -295,9 +296,12 @@ function camUpdate(){
     const span=Math.min(8,a.distanceTo(t)); const ex=m.ex||0, dist=(port?6.5:4.6)+span*(.35+ex*.12)+ex*(port?2.2:1.4);
     CAMt.copy(_cf).addScaledVector(_cr,dist).setY((port?2.6:2.0)+ex*.5); LOOKt.copy(_cf).setY(1.05+ex*.35);
   } else {
-    if(port){CAMt.set(-12,9,.5);LOOKt.set(.5,.3,-.3);} else {CAMt.set(.6,5.2,10.2);LOOKt.set(0,1,0);}
-    if(RT){const us=UNITS.filter(u=>u.alive);if(us.length){let cx=0,cz=0;us.forEach(u=>{cx+=u.w.position.x;cz+=u.w.position.z;});cx=Math.max(-3,Math.min(4,cx/us.length));cz/=us.length;CAMt.x+=cx*.7;LOOKt.x+=cx*.7;CAMt.z+=cz*.3;LOOKt.z+=cz*.3;}}
-    if(UNITS.some(u=>u.dragon&&u.alive)){LOOKt.y+=.7;CAMt.sub(LOOKt).multiplyScalar(port?1.18:1.3).add(LOOKt);}
+    // กล้องมุมสูงแบบเกมวางแผน: ตามกลุ่มที่กำลังสู้ หรือเลื่อน/ซูมเองได้
+    const us=UNITS.filter(u=>u.alive);
+    if(RTS.manual<=0&&us.length){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;us.forEach(u=>{const p=u.w.position;x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);z0=Math.min(z0,p.z);z1=Math.max(z1,p.z);});
+      RTS.auto.set((x0+x1)/2,0,(z0+z1)/2); RTS.tgt.lerp(RTS.auto,.06); if(!RTS.zoomed)RTS.dist+=(Math.max(RTS.base,Math.max(x1-x0,(z1-z0)*1.6)*.95)-RTS.dist)*.03;}
+    const d=RTS.dist*(port?1.45:1), cp=Math.cos(RTS.pitch);
+    CAMt.set(RTS.tgt.x+Math.sin(RTS.yaw)*cp*d, Math.sin(RTS.pitch)*d, RTS.tgt.z+Math.cos(RTS.yaw)*cp*d); LOOKt.copy(RTS.tgt).setY(.8);
   }
 }
 function layout(){const w=view.clientWidth,h=view.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;const a=camera.aspect;
@@ -321,7 +325,7 @@ function loop(){
   UNITS.forEach(u=>{if(!u.barEl||u.barEl.hidden)return;const v=tmpV.copy(u.w.position).setY(u.barY||(u.evo?(u.boss?3.25:2.6):1.6)).project(camera);u.barEl.style.visibility=v.z>1||Math.abs(v.x)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
     u.barEl.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,-100%)`;
     u.barEl.querySelector('.atb i').style.width=Math.min(100,u.gauge)+'%';});
-  camUpdate(); const ck=1-Math.exp(-rdt*camK); CAM.lerp(CAMt,ck); LOOK.lerp(LOOKt,ck);
+  RTS.manual-=rdt; mapTick(T); sunFollow(LOOK); camUpdate(); const ck=1-Math.exp(-rdt*camK); CAM.lerp(CAMt,ck); LOOK.lerp(LOOKt,ck);
   camera.position.copy(CAM).add(tmpV.set(Math.sin(T*.3)*.06,Math.sin(T*.4)*.03,0));
   if(shake>.002){camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake;shake*=.86;}
   camera.lookAt(LOOK);
@@ -340,3 +344,18 @@ Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหล�
   $('#hud').hidden=false; setBossUI(false); idleRender(); showAway(); idleLoop();
 });
 addEventListener('resize',layout);
+
+/* ---------- ควบคุมกล้อง: ลากเพื่อเลื่อน ถ่าง/ล้อเมาส์เพื่อซูม ดับเบิลแตะให้กลับมาตามการต่อสู้ ---------- */
+document.body.classList.add('big');
+{ const el=renderer.domElement, pts=new Map(); let pinch0=0, dist0=0, lastTap=0;
+  const pan=(dx,dy)=>{const k=RTS.dist*(camera.aspect<.9?1.45:1)*1.1/Math.max(300,view.clientHeight), cy=Math.cos(RTS.yaw), sy=Math.sin(RTS.yaw);
+    RTS.tgt.x-=(dx*cy+dy*sy)*k; RTS.tgt.z-=(-dx*sy+dy*cy)*k*1.25; RTS.tgt.x=Math.max(-60,Math.min(70,RTS.tgt.x)); RTS.tgt.z=Math.max(-45,Math.min(45,RTS.tgt.z)); RTS.manual=6;};
+  const zoom=f=>{RTS.dist=Math.max(10,Math.min(80,RTS.dist*f));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);};
+  el.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){const [a,b]=[...pts.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);dist0=RTS.dist;}
+    const now=performance.now(); if(now-lastTap<300){RTS.manual=0;RTS.zoomed=false;} lastTap=now;});
+  el.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p)return;
+    if(pts.size===1){pan(e.clientX-p.x,e.clientY-p.y);} else if(pts.size===2){p.x=e.clientX;p.y=e.clientY;const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0){RTS.dist=Math.max(10,Math.min(80,dist0*pinch0/d));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);}return;}
+    p.x=e.clientX;p.y=e.clientY;});
+  const up=e=>{pts.delete(e.pointerId);pinch0=0;}; el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('pointerleave',up);
+  el.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.12:1/1.12);},{passive:false});
+}

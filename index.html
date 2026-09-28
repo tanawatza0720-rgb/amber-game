@@ -188,7 +188,8 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
 .bTeamBox{flex:none;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
 .bTeamBox>div:first-child{font-size:12px;line-height:1.25}.bTeamBox>div:first-child b{font-family:'Chakra Petch',sans-serif;color:var(--amber);display:block}
 #bTeam{display:flex;gap:6px;margin-left:auto}
-#bTeam .ic{width:46px;border-width:2px}
+#bTeam .ic{width:40px;border-width:2px}
+@media (max-width:520px){#bTeam{gap:3px}#bTeam .ic{width:34px}}
 #bTeam .ic .lv{font-size:11px}#bTeam .ic .st{display:none}
 #bTeam .ic em{position:absolute;top:0;left:0;font-style:normal;font-size:9px;background:var(--amber);color:#2b1808;border-radius:0 0 4px 0;padding:0 3px;font-weight:700}
 .bSortRow{flex:none;display:flex;align-items:center;gap:6px}
@@ -941,7 +942,7 @@ const LOCAL=(()=>{
       if(!src.some(m=>m.sp==='kuroga'))src.push({sp:'kuroga',lv:10});
       src.forEach(m=>D.mons.push({id:D.nid++,sp:m.sp,lv:m.lv}));
       const ord=m=>({kazekiri:1,amateru:2}[m.sp]||3)*100-m.lv;
-      D.team=[...D.mons].sort((a,b)=>ord(a)-ord(b)).slice(0,3).map(m=>m.id);
+      D.team=[...D.mons].sort((a,b)=>ord(a)-ord(b)).slice(0,6).map(m=>m.id);
     }
     return D;
   }
@@ -966,7 +967,7 @@ const LOCAL=(()=>{
       const m={id:D.nid++,sp,lv:1};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
-    set_team:({ids})=>{if(!Array.isArray(ids)||ids.length<1||ids.length>3||new Set(ids).size!==ids.length||!ids.every(i=>D.mons.some(m=>m.id===i)))fail('bad_team');D.team=[...ids];return{};},
+    set_team:({ids})=>{if(!Array.isArray(ids)||ids.length<1||ids.length>6||new Set(ids).size!==ids.length||!ids.every(i=>D.mons.some(m=>m.id===i)))fail('bad_team');D.team=[...ids];return{};},
     claim_daily:()=>{if(D.daily_last===today())fail('already_claimed');const s=D.daily_last===yesterday()?D.daily_streak+1:1;const day=(s-1)%7+1;
       const [kind,amount]=[['coins',200],['amber',5],['coins',300],['coins',400],['amber',10],['coins',500],['amber',30]][day-1];D[kind]+=amount;D.daily_streak=s;D.daily_last=today();return{day,kind,amount};},
     collect_amber:()=>{if(Date.now()<D.amber_at)fail('not_ready');D.amber+=C.amber_yield;D.amber_at=Date.now()+C.amber_sec*1000;qadd('amber');return{amount:C.amber_yield};},
@@ -2314,7 +2315,7 @@ function icon(m,cls){const sp=spOf(m);const c=el('button','ic r'+sp.rar+(cls?' '
   c.title=sp.name+' Lv'+m.lv; return c;}
 function renderTeam(){
   const t=$('#bTeam'); t.innerHTML='';
-  for(let i=0;i<3;i++){const m=S.mons.find(x=>x.uid===S.team[i]);let s;
+  for(let i=0;i<6;i++){const m=S.mons.find(x=>x.uid===S.team[i]);let s;
     if(m){s=icon(m);s.querySelector('.tm')&&s.querySelector('.tm').remove();s.onclick=()=>selectMon(m.uid);}
     else{s=el('button','ic empty');s.innerHTML=PAW;s.onclick=()=>toast('เลือกมอนสเตอร์ แล้วกด "ใส่ทีม"');}
     if(i===0&&m)s.append(el('em',null,'ผู้นำ'));
@@ -2348,7 +2349,7 @@ function renderDetail(){
   }else if(boxTab==='skill'){sp.skills.forEach(([n,d],i)=>{const s=el('div','skr');s.append(el('span','skn',(i+1)+''));const t=el('div');t.append(el('b',null,n));t.append(el('p',null,d));s.append(t);P.append(s);});}
   else P.append(el('p','iLore',sp.lore));
   const inT=S.team.includes(m.uid);
-  $('#mdTeam').innerHTML='';$('#mdTeam').append(el('span',null,inT?'ออกทีม':'ใส่ทีม'));$('#mdTeam').append(el('small',null,inT?'อยู่ในทีม':S.team.length>=3?'สลับตัวที่ 3':'ทีม '+S.team.length+'/3'));
+  $('#mdTeam').innerHTML='';$('#mdTeam').append(el('span',null,inT?'ออกทีม':'ใส่ทีม'));$('#mdTeam').append(el('small',null,inT?'อยู่ในทีม':S.team.length>=6?'สลับตัวที่ 6':'ทีม '+S.team.length+'/6'));
   const maxed=m.lv>=sp.maxLv, cost=lvCost(m);
   $('#mdUp').innerHTML=''; $('#mdUp').append(el('span',null,maxed?'MAX':'อัปเลเวล')); $('#mdUp').append(el('small',null,maxed?'เลเวลเต็ม':fmt(cost)+' เหรียญ'));
   $('#mdUp').disabled=maxed;
@@ -2367,7 +2368,7 @@ function close3d(){BOX.open=false;$('#box').classList.remove('v3d');$('#mdet').h
 $('#md3d').onclick=open3d; $('#mdBack').onclick=close3d;
 $('#mdTeam').onclick=async()=>{const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;const t=[...S.team];const i=t.indexOf(m.uid);let msg;
   if(i>=0){if(t.length<=1)return toast('ทีมต้องมีอย่างน้อย 1 ตัว');t.splice(i,1);msg=spOf(m).name+' ออกจากทีมแล้ว';}
-  else if(t.length>=3){const out=S.mons.find(x=>x.uid===t[2]);t[2]=m.uid;msg='สลับ '+spOf(out).name+' ออก ใส่ '+spOf(m).name+' แทน';}
+  else if(t.length>=6){const out=S.mons.find(x=>x.uid===t[5]);t[5]=m.uid;msg='สลับ '+spOf(out).name+' ออก ใส่ '+spOf(m).name+' แทน';}
   else{t.push(m.uid);msg=spOf(m).name+' เข้าทีมแล้ว';}
   if(await act('set_team',{ids:t})){toast(msg);renderBox();}};
 $('#mdUp').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid===uid);if(!m)return;const sp=spOf(m);if(m.lv>=sp.maxLv)return;

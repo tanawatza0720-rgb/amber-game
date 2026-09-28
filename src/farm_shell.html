@@ -188,7 +188,8 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
 .bTeamBox{flex:none;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
 .bTeamBox>div:first-child{font-size:12px;line-height:1.25}.bTeamBox>div:first-child b{font-family:'Chakra Petch',sans-serif;color:var(--amber);display:block}
 #bTeam{display:flex;gap:6px;margin-left:auto}
-#bTeam .ic{width:46px;border-width:2px}
+#bTeam .ic{width:40px;border-width:2px}
+@media (max-width:520px){#bTeam{gap:3px}#bTeam .ic{width:34px}}
 #bTeam .ic .lv{font-size:11px}#bTeam .ic .st{display:none}
 #bTeam .ic em{position:absolute;top:0;left:0;font-style:normal;font-size:9px;background:var(--amber);color:#2b1808;border-radius:0 0 4px 0;padding:0 3px;font-weight:700}
 .bSortRow{flex:none;display:flex;align-items:center;gap:6px}

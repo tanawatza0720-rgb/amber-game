@@ -120,7 +120,7 @@ function icon(m,cls){const sp=spOf(m);const c=el('button','ic r'+sp.rar+(cls?' '
   c.title=sp.name+' Lv'+m.lv; return c;}
 function renderTeam(){
   const t=$('#bTeam'); t.innerHTML='';
-  for(let i=0;i<3;i++){const m=S.mons.find(x=>x.uid===S.team[i]);let s;
+  for(let i=0;i<6;i++){const m=S.mons.find(x=>x.uid===S.team[i]);let s;
     if(m){s=icon(m);s.querySelector('.tm')&&s.querySelector('.tm').remove();s.onclick=()=>selectMon(m.uid);}
     else{s=el('button','ic empty');s.innerHTML=PAW;s.onclick=()=>toast('เลือกมอนสเตอร์ แล้วกด "ใส่ทีม"');}
     if(i===0&&m)s.append(el('em',null,'ผู้นำ'));
@@ -154,7 +154,7 @@ function renderDetail(){
   }else if(boxTab==='skill'){sp.skills.forEach(([n,d],i)=>{const s=el('div','skr');s.append(el('span','skn',(i+1)+''));const t=el('div');t.append(el('b',null,n));t.append(el('p',null,d));s.append(t);P.append(s);});}
   else P.append(el('p','iLore',sp.lore));
   const inT=S.team.includes(m.uid);
-  $('#mdTeam').innerHTML='';$('#mdTeam').append(el('span',null,inT?'ออกทีม':'ใส่ทีม'));$('#mdTeam').append(el('small',null,inT?'อยู่ในทีม':S.team.length>=3?'สลับตัวที่ 3':'ทีม '+S.team.length+'/3'));
+  $('#mdTeam').innerHTML='';$('#mdTeam').append(el('span',null,inT?'ออกทีม':'ใส่ทีม'));$('#mdTeam').append(el('small',null,inT?'อยู่ในทีม':S.team.length>=6?'สลับตัวที่ 6':'ทีม '+S.team.length+'/6'));
   const maxed=m.lv>=sp.maxLv, cost=lvCost(m);
   $('#mdUp').innerHTML=''; $('#mdUp').append(el('span',null,maxed?'MAX':'อัปเลเวล')); $('#mdUp').append(el('small',null,maxed?'เลเวลเต็ม':fmt(cost)+' เหรียญ'));
   $('#mdUp').disabled=maxed;
@@ -173,7 +173,7 @@ function close3d(){BOX.open=false;$('#box').classList.remove('v3d');$('#mdet').h
 $('#md3d').onclick=open3d; $('#mdBack').onclick=close3d;
 $('#mdTeam').onclick=async()=>{const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;const t=[...S.team];const i=t.indexOf(m.uid);let msg;
   if(i>=0){if(t.length<=1)return toast('ทีมต้องมีอย่างน้อย 1 ตัว');t.splice(i,1);msg=spOf(m).name+' ออกจากทีมแล้ว';}
-  else if(t.length>=3){const out=S.mons.find(x=>x.uid===t[2]);t[2]=m.uid;msg='สลับ '+spOf(out).name+' ออก ใส่ '+spOf(m).name+' แทน';}
+  else if(t.length>=6){const out=S.mons.find(x=>x.uid===t[5]);t[5]=m.uid;msg='สลับ '+spOf(out).name+' ออก ใส่ '+spOf(m).name+' แทน';}
   else{t.push(m.uid);msg=spOf(m).name+' เข้าทีมแล้ว';}
   if(await act('set_team',{ids:t})){toast(msg);renderBox();}};
 $('#mdUp').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid===uid);if(!m)return;const sp=spOf(m);if(m.lv>=sp.maxLv)return;

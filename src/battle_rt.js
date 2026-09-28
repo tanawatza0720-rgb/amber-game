@@ -2,7 +2,7 @@
    ทุกตัววิ่งเข้าหาศัตรูที่ใกล้ที่สุด ตีตามจังหวะความเร็วของตัวเอง ใช้ท่าพิเศษเมื่อคูลดาวน์ครบ
    โหมดบอส: ท่าไม้ตายของทีม (ท่าสุดท้าย) กดเองได้ หรือเปิดออโต้ */
 let RT=null;
-const RT_MOVE=2.8;
+const RT_MOVE=3.4;
 function rtInit(u){
   u.busy=false; u.moving=false; u.stunT=0; u.queued=null; u.dust=0;
   u.atkT=.2+Math.random()*.7; u.skT={};
@@ -128,10 +128,12 @@ async function rtDodge(u,t){
   A.play('idle',{loop:true,fade:.2}); u.busy=false;
 }
 function rtSpawn(wv){
-  const n=wv.length;
+  // ศัตรูมาเป็นแถวทัพ เดินออกจากค่ายทางขวา
+  const n=wv.length, cols=Math.min(5,Math.ceil(Math.sqrt(n*1.6)));
   wv.forEach((d,i)=>{
-    const z=n===1?0:-2.2+4.6*i/(n-1)+(Math.random()-.5)*.4, x=8.5+Math.random()*1.5+(d.boss?1:0);
-    const u=rtInit(makeUnit('E',d,0)); u.w.position.set(x,0,z); u.home.set(x-5,0,z); u.w.rotation.y=-Math.PI/2;
+    const r=Math.floor(i/cols), c=i%cols, cn=Math.min(cols,n-r*cols);
+    const z=(c-(cn-1)/2)*2.4+(Math.random()-.5)*.6, x=21+r*2.6+Math.random()*.8+(d.boss?1.5:0);
+    const u=rtInit(makeUnit('E',d,0)); u.w.position.set(x,0,z); u.home.set(x-9,0,z); u.w.rotation.y=-Math.PI/2;
     smoke(tmpV.set(x,.5,z));
   });
 }

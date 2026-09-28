@@ -15,6 +15,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 #ov{position:fixed;inset:0;pointer-events:none;overflow:hidden}
 #stageMsg{display:none!important}
 body.rt .atb,body.rt #order{display:none}
+body.big .ubar{width:58px;padding:2px 3px 3px;border-radius:5px}body.big .ubar.boss{width:84px}body.big .un .nm{display:none}body.big .hp{height:6px}body.big .hp em{display:none}
+body.big .ubar.e{width:40px;padding:2px}body.big .ubar.e .un{display:none}body.big .ubar.e .hp{margin-top:0;height:5px}
+body.big .num{font-size:15px}body.big .num.crit{font-size:20px}body.big .num.info{font-size:12px}
+#camHint{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top,0px));transform:translateX(-50%);font-size:11px;color:#fff;text-shadow:0 1px 2px #000;opacity:.8;pointer-events:none;white-space:nowrap}
 /* แถบพลังชีวิต */
 .ubar{position:absolute;left:0;top:0;width:96px;padding:3px 4px 4px;border-radius:7px;background:rgba(10,8,6,.62);border:1px solid rgba(255,255,255,.12);will-change:transform}
 .ubar.boss{width:132px;border-color:rgba(255,90,78,.6)}
@@ -166,6 +170,7 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
   </div>
   <div id="order"></div>
 </div>
+<div id="camHint">ลากเพื่อเลื่อนแผนที่ · ถ่างนิ้ว/ล้อเมาส์เพื่อซูม · แตะสองครั้งให้กล้องตามการต่อสู้</div>
 <div id="skname" hidden></div>
 <div id="banner" hidden></div>
 <div id="skwrap"><div id="acthd" hidden></div><div id="skills" hidden></div><div id="skdesc"></div></div>

@@ -99,7 +99,7 @@ const LOCAL=(()=>{
       if(!src.some(m=>m.sp==='kuroga'))src.push({sp:'kuroga',lv:10});
       src.forEach(m=>D.mons.push({id:D.nid++,sp:m.sp,lv:m.lv}));
       const ord=m=>({kazekiri:1,amateru:2}[m.sp]||3)*100-m.lv;
-      D.team=[...D.mons].sort((a,b)=>ord(a)-ord(b)).slice(0,3).map(m=>m.id);
+      D.team=[...D.mons].sort((a,b)=>ord(a)-ord(b)).slice(0,6).map(m=>m.id);
     }
     return D;
   }
@@ -124,7 +124,7 @@ const LOCAL=(()=>{
       const m={id:D.nid++,sp,lv:1};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
-    set_team:({ids})=>{if(!Array.isArray(ids)||ids.length<1||ids.length>3||new Set(ids).size!==ids.length||!ids.every(i=>D.mons.some(m=>m.id===i)))fail('bad_team');D.team=[...ids];return{};},
+    set_team:({ids})=>{if(!Array.isArray(ids)||ids.length<1||ids.length>6||new Set(ids).size!==ids.length||!ids.every(i=>D.mons.some(m=>m.id===i)))fail('bad_team');D.team=[...ids];return{};},
     claim_daily:()=>{if(D.daily_last===today())fail('already_claimed');const s=D.daily_last===yesterday()?D.daily_streak+1:1;const day=(s-1)%7+1;
       const [kind,amount]=[['coins',200],['amber',5],['coins',300],['coins',400],['amber',10],['coins',500],['amber',30]][day-1];D[kind]+=amount;D.daily_streak=s;D.daily_last=today();return{day,kind,amount};},
     collect_amber:()=>{if(Date.now()<D.amber_at)fail('not_ready');D.amber+=C.amber_yield;D.amber_at=Date.now()+C.amber_sec*1000;qadd('amber');return{amount:C.amber_yield};},

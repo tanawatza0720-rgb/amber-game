@@ -12,37 +12,7 @@ const BT={
   sky:srgb(canvasTex(8,(x,s)=>{const g=x.createLinearGradient(0,0,0,s);g.addColorStop(0,'#3b4f7a');g.addColorStop(.4,'#b77a6a');g.addColorStop(.6,'#f2a65e');g.addColorStop(1,'#f6d19a');x.fillStyle=g;x.fillRect(0,0,s,s);})),
   mist:TX.mist,
 };
-scene.background=new THREE.Color(0x2c3450);
-const skyM=new THREE.Mesh(new THREE.SphereGeometry(120,32,16),new THREE.MeshBasicMaterial({map:BT.sky,side:THREE.BackSide,fog:false}));scene.add(skyM);
-scene.fog=new THREE.Fog(0xd99a6a,16,48);
-scene.add(new THREE.HemisphereLight(0xffd9b0,0x3a4a2a,.8));
-const sun=new THREE.DirectionalLight(0xffc88a,2.0); sun.position.set(9,9,6); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:1,far:40}); sun.shadow.bias=-.0005; sun.shadow.normalBias=.03; scene.add(sun);
-const rimL=new THREE.DirectionalLight(0x8fb0ff,.9); rimL.position.set(-6,5,-8); scene.add(rimL);
-{
-  const gr=new THREE.Mesh(new THREE.PlaneGeometry(44,44),SM(0xffffff,{map:BT.ground,roughness:.95}));gr.rotation.x=-Math.PI/2;gr.receiveShadow=true;scene.add(gr);
-  const stoneM=SM(0xa9a397,{map:TX.stone,roughness:.95});
-  for(let i=0;i<26;i++){const s=new THREE.Mesh(new THREE.CylinderGeometry(.32+Math.random()*.12,.36,.07,7),stoneM);s.position.set(-9+i*.72+(Math.random()-.5)*.2,.03,4.6+Math.sin(i*.5)*.4+(Math.random()-.5)*.2);s.rotation.y=Math.random()*3;s.receiveShadow=true;scene.add(s);}
-  const bm=SM(0x5f8f55,{roughness:.6}), nm=SM(0x7aa86a,{roughness:.5}), lm=SM(0x42703f,{side:THREE.DoubleSide});
-  const grove=(cx,cz,n,spread)=>{for(let i=0;i<n;i++){const h=6+Math.random()*4,rad=.07+Math.random()*.05;const g=J(scene,cx+(Math.random()-.5)*spread,0,cz+(Math.random()-.5)*spread);OCC.push(g);
-    P(g,Y1,bm,[0,h/2,0],[rad,h,rad]);for(let y=.8;y<h;y+=.85)P(g,ROPE,nm,[0,y,0],[rad*1.05,rad*1.05,rad*1.05],[Math.PI/2,0,0]);
-    for(let k=0;k<6;k++){const l=new THREE.Mesh(new THREE.PlaneGeometry(.55,.09),lm);l.position.set((Math.random()-.5)*.7,h*(.55+Math.random()*.45),(Math.random()-.5)*.7);l.rotation.set(Math.random(),Math.random()*3,-.4);g.add(l);}g.rotation.z=(Math.random()-.5)*.06;}};
-  grove(-8,-7,14,5); grove(8,-7,14,5); grove(-9,8,12,5); grove(9,8,12,5); grove(-15,4,10,4); grove(15,4,10,4); grove(0,13,14,8); grove(-12,0,10,4); grove(12,-1,10,4); grove(0,-12,16,8);
-  const maple=(x,z,s)=>{const g=J(scene,x,0,z);g.userData.occR=5.2;OCC.push(g);g.scale.setScalar(s);P(g,Y1,SM(0x5b3a24),[0,1,0],[.18,2,.18]);[0xd9482b,0xf07a2a,0xc23a3a,0xe8a33a].forEach((c,i)=>P(g,new THREE.IcosahedronGeometry(1,1),SM(c,{flatShading:true}),[Math.cos(i*1.7)*.6,2.5+Math.sin(i*2.3)*.3,Math.sin(i*1.7)*.5],[1,.85,1]));};
-  maple(-5.5,-5,1.2); maple(5.8,-5.4,1.1); maple(-9.5,4,1); maple(9.8,3.2,1.05); maple(-8.5,11,1.1); maple(9,11.5,1.15);
-  // โทริอิไกล ๆ
-  const tg=J(scene,0,0,-8.5), red=SM(0xb23a2c,{roughness:.6}), blk=SM(0x1f1f22,{roughness:.5});
-  [-1.6,1.6].forEach(x=>P(tg,Y1,red,[x,2.1,0],[.2,4.2,.2]));P(tg,B1,red,[0,3.4,0],[4,.22,.24]);P(tg,B1,blk,[0,4.15,0],[4.9,.26,.4]);
-  // โคมหินสองข้าง
-  const lampM=SM(0xffd9a0,{emissive:0xffa24d,emissiveIntensity:1.8});
-  [[-6.5,-2.5],[6.5,-2.5]].forEach(([x,z])=>{const g=J(scene,x,0,z);g.userData.occR=2.6;OCC.push(g);P(g,Y1,stoneM,[0,.08,0],[.34,.16,.34]);P(g,Y1,stoneM,[0,.55,0],[.11,.8,.11]);P(g,B1,stoneM,[0,1.05,0],[.38,.3,.38]);P(g,B1,lampM,[0,1.05,0],[.3,.2,.4]);P(g,B1,lampM,[0,1.05,0],[.4,.2,.3]);P(g,C1,stoneM,[0,1.35,0],[.42,.3,.42],[0,Math.PI/4,0]);
-    const pl=new THREE.PointLight(0xff9a3d,1.2,6,2);pl.position.set(0,1.05,0);g.add(pl);glow(g,0xffa04a,1.4,[0,1.05,0],.5);});
-  for(let i=0;i<5;i++){const m=new THREE.Mesh(new THREE.PlaneGeometry(14,3),new THREE.MeshBasicMaterial({map:BT.mist,color:0xffd8b0,transparent:true,opacity:.14,depthWrite:false}));m.position.set((Math.random()-.5)*10,.6+Math.random(),-4-i*1.6);scene.add(m);}
-}
-const falling=[];{const lm=[0xd9482b,0xf07a2a,0xe8a33a].map(c=>new THREE.MeshBasicMaterial({map:TX.leaf,color:c,transparent:true,alphaTest:.3,side:THREE.DoubleSide}));
-  for(let i=0;i<26;i++){const l=new THREE.Mesh(new THREE.PlaneGeometry(.2,.2),lm[i%3]);l.position.set((Math.random()-.5)*16,Math.random()*6,-6+Math.random()*10);scene.add(l);falling.push(l);}}
-const flies=[];for(let i=0;i<18;i++){const s=glow(scene,0xffd27a,.14,[(Math.random()-.5)*14,.4+Math.random()*2.5,-5+Math.random()*7],.8);s.userData.p=[Math.random()*6,Math.random()*6,s.position.clone()];flies.push(s);}
-
+/*__MAP__*/
 /* ================= ข้อมูลมอนสเตอร์และด่าน ================= */
 const SPECIES={
   kazemaru:{name:'คาเซะมารุ',evo:0,base:{hp:64,atk:20,def:8,spd:26},skills:[
@@ -61,7 +31,7 @@ const SPECIES={
     {id:'s2',name:'สามดาบวายุ',desc:'ฟัน 3 ครั้ง ครั้งละ 70% ใส่ศัตรู 1 ตัว',cd:3,type:'melee3',mult:.7,target:'one'},
     {id:'s3',name:'กระโดดฟัน',desc:'ฟาดพื้นใส่ศัตรูทุกตัว 85% โอกาส 30% ทำให้มึน',cd:4,type:'leap',mult:.85,target:'all',stun:.3}]},
 };
-const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6}];
+const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6},{sp:'kazemaru',lv:5},{sp:'kazemaru',lv:4},{sp:'kazemaru',lv:4}];
 /* ด่านแบบ idle: ด่านที่ n ต้องการพลังทีม REQ(n) (ตรงกับเซิร์ฟเวอร์ _req) ด่านที่ 10,20,... เป็นบอส */
 const POWB=sp=>{const b=SPECIES[sp].base;return b.hp+b.atk*4+b.def*3+b.spd*2;};
 const REQ=n=>Math.round(1400*Math.pow(1.04,Math.max(1,n)-1));
@@ -74,15 +44,15 @@ function makeWave(defs,E){
   return defs.map(d=>Object.assign({lv,mul},d));
 }
 function idleStage(n,E){
-  const pool=n<4?[['kazemaru','kazemaru','kazemaru'],['kazemaru','kazemaru','kazemaru','kazemaru'],['kazemaru','kazekiri','kazemaru']]
-    :[['kazemaru','kazekiri','kazemaru','kazemaru'],['kazekiri','kazemaru','kazekiri'],['kazemaru','kazekiri','kazemaru','kazekiri']];
+  const M='kazemaru',K='kazekiri', mk=(nm,nk)=>{const a=Array(nm).fill(M);for(let i=0;i<nk;i++)a.splice(Math.floor((i+.5)*a.length/(nk+.001)),0,K);return a;};
+  const pool=n<4?[mk(6,0),mk(7,1),mk(8,1)]:n<10?[mk(8,1),mk(9,2),mk(10,2)]:[mk(9,2),mk(10,3),mk(11,3)];
   return {id:stLabel(n),name:'ป่าไผ่สนธยา',waves:pool.map(k=>makeWave(k.map(sp=>({sp,show:n})),E))};
 }
 function bossStage(n){
   const R=REQ(n);
-  return {id:stLabel(n),name:'ประตูแดงของนินจาชาด',waves:[makeWave([{sp:'kazemaru',show:n},{sp:'kazekiri',show:n},{sp:'kazemaru',show:n}],R*.55),makeWave([{sp:'kazemaru',show:n},{sp:'kazekiri',boss:1,show:n},{sp:'kazemaru',show:n}],R*.85)]};
+  return {id:stLabel(n),name:'ประตูแดงของนินจาชาด',waves:[makeWave(['kazemaru','kazemaru','kazekiri','kazemaru','kazemaru','kazekiri','kazemaru','kazemaru'].map(sp=>({sp,show:n})),R*.55),makeWave(['kazemaru','kazemaru','kazemaru',null,'kazemaru','kazemaru','kazemaru'].map(sp=>sp?{sp,show:n}:{sp:'kazekiri',boss:1,show:n}),R*.85)]};
 }
-const P_SLOTS=[[-2.5,.2],[-4.3,-1.8],[-3.6,2]], E_SLOTS=[[2.5,.2],[4.3,-1.8],[3.6,2]];
+const P_SLOTS=[[-12,0],[-14,-2.6],[-14,2.6],[-16.5,-5],[-16.5,0],[-16.5,5]], E_SLOTS=[[12,0],[14,-2.6],[14,2.6]];
 const FACE_P=Math.PI/2-.35, FACE_E=-Math.PI/2+.35;
 
 /* ================= ยูนิต ================= */
