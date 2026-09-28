@@ -1025,7 +1025,7 @@ function buildMeshyEvo(m,key){
     const turn=new THREE.Quaternion().setFromUnitVectors(hi.sub(lo).normalize(),up),handQ=B.rHand.getWorldQuaternion(new THREE.Quaternion());
     spearGrip.quaternion.premultiply(handQ.clone().invert().multiply(turn).multiply(handQ));};
   m.userData.idle=T=>{
-    if(CS){const dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}
+    let dt=0; if(CS){dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}
     breath=Math.sin(T*2)*.025;
     m.position.y+=Math.sin(T*2)*.008; m.position.x+=Math.sin(T*.9)*.012;
     head.rotation.z=Math.sin(T*.7)*.03;
