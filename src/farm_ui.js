@@ -25,7 +25,9 @@ function para(t){return el('p','ptxt',t);}
 
 const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
-    d.append(rows([['ไข่ป่า · ★5 อามาเทรุ / คุโรกะ','2%'],['ไข่ทองคำ · ★5 อามาเทรุ / คุโรกะ','8%'],['การันตี ★5 (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffb347'],['นอกนั้นได้','★3 คาเซะมารุ']]));
+    const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th></tr>';
+    [[4,'อามาเทรุ','1%','6%'],[3,'คุโรกะ','4%','16%'],[2,'คาเซะคิริ','13%','33%'],[1,'คาเซะมารุ','82%','45%']].forEach(([r,n,a,b])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t,' '+n);tr2.append(td);[a,b].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
+    d.append(T); d.append(rows([['การันตีระดับตำนาน (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
     openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
@@ -36,7 +38,7 @@ const INFO={
     const tm=S.team.map(u=>S.mons.find(m=>m.uid===u)).filter(Boolean).map(m=>spOf(m).name).join(', ');
     openSheet('ผจญภัย','ทีมปัจจุบัน: '+(tm||'-'),d,[['ไปผจญภัย',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
-    const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,'★'.repeat(spOf(m).rar)+' · Lv '+m.lv));list.append(c);});d.append(list);
+    const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,tierOf(spOf(m).rar).n+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},
   shop:()=>{const d=el('div');d.append(para('ของทุกชิ้นซื้อด้วยสกุลเงินในเกม'));
     const items=[['พลังงาน +30','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30');}}],
@@ -76,7 +78,7 @@ function openDaily(){
   openSheet('รางวัลเข้าเกมรายวัน','เข้าเกมต่อเนื่อง '+S.daily+' วัน',d,[[S.dailyClaimed?'รับแล้ววันนี้':'รับรางวัลวันที่ '+(next+1),async()=>{const r=await act('claim_daily');if(r){bumpRes(r.kind);toast('ได้รับ '+r.amount+(r.kind==='coins'?' เหรียญ':' อัมพร'));closeSheet();}},'',S.dailyClaimed]]);
 }
 function openMail(){S.mailRead=true;save();renderHUD();
-  const d=el('div','mail');[['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับ: มังกรอามาเทรุ ★5 อยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
+  const d=el('div','mail');[['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับ: มังกรอามาเทรุ ระดับตำนาน อยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
   openSheet('กล่องจดหมาย','2 ฉบับ',d,[]);}
 
 $('#nBattle').onclick=()=>focusBuilding('dojo');
@@ -95,13 +97,13 @@ async function hatch(kind,name){
   const r=await act('hatch_egg',{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
   bumpRes(kind==='gold'?'amber':'coins');
-  const col={3:0x5fb3ff,4:0xb886ff,5:0xffc94d}[r.rar]||0xdfe5f0;
+  const col=tierOf(r.rar).hx;
   const ep=new THREE.Vector3(0,2.15,3.2);
-  flashBall(ep,col,r.rar>=5?6:4); particles(ep,col,r.rar>=5?120:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
-  if(r.rar>=5){shakeCam=.4;}
+  flashBall(ep,col,r.rar>=4?6:r.rar>=3?5:4); particles(ep,col,r.rar>=4?120:r.rar>=3?85:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
+  if(r.rar>=4){shakeCam=.4;}else if(r.rar>=3){shakeCam=.2;}
   const d=S.mons.find(m=>m.uid===Number(r.mon.id))||{uid:Number(r.mon.id),sp:r.mon.sp,lv:1};
   const ag=addAgent(d,[0,5.9],true); if(!ag.fly){ag.state='idle'; ag.wait=2.5;}
-  toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' '+'★'.repeat(r.rar)+(r.rar>=5?' ระดับตำนาน!!':' เดินออกมาในฟาร์มแล้ว'));
+  toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
   hatching=false;
 }
 let shakeCam=0;
@@ -137,7 +139,7 @@ function tap(cx,cy){
   if(!hit){closeSheet();tagAgent=null;$('#mtag').hidden=true;return;}
   const o=hit.object;
   if(o.userData.agent!=null){const ag=AGENTS[o.userData.agent];tagAgent=ag;const t=$('#mtag');t.hidden=false;
-    $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent='★'.repeat(spOf(ag.data).rar)+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
+    $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent=tierOf(spOf(ag.data).rar).n+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
     const w=ag.w; tween(.3,t=>w.position.y=Math.sin(t*Math.PI)*.4); return;}
   if(o===amberBubble&&amberReady){collectAmber();return;}
   if(o.userData.pick)focusBuilding(o.userData.pick);

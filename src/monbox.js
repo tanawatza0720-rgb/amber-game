@@ -1,19 +1,22 @@
 /* ================= คลังมอนสเตอร์ (ดูมอนสเตอร์ที่มี · อัปเลเวล · วิวัฒนาการ · จัดทีม) ================= */
 const SPEC={
-  kazemaru:{name:'คาเซะมารุ',title:'นินจาฝึกหัดแห่งสายลม',rar:3,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:0,maxLv:20,evolveTo:'kazekiri',
+  kazemaru:{name:'คาเซะมารุ',title:'นินจาฝึกหัดแห่งสายลม',rar:1,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:0,maxLv:20,evolveTo:'kazekiri',
     base:{hp:64,atk:20,def:8,spd:26},lore:'ลูกนินจาตัวจิ๋วที่ฝึกฟันดาบไม้ทุกวัน ดวงตาเรืองแสงกะพริบได้เมื่อตื่นเต้น',
     skills:[['ฟันดาบไม้','ฟันศัตรู 1 ตัว 100%'],['ดาวกระจายจิ๋ว','ขว้างดาวกระจายใส่ศัตรูทุกตัว 55% · คูลดาวน์ 3']]},
-  kazekiri:{name:'คาเซะคิริ',title:'เงาสามดาบ',rar:4,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:1,maxLv:40,
+  kazekiri:{name:'คาเซะคิริ',title:'เงาสามดาบ',rar:2,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:1,maxLv:40,
     base:{hp:102,atk:34,def:13,spd:42},lore:'นินจาเงาผู้ไร้ใบหน้า พกดาบสามเล่ม เคลื่อนไหวเงียบดั่งสายลมยามค่ำ',
     skills:[['ฟันเงา','ฟันศัตรู 1 ตัว 110%'],['สามดาบวายุ','ฟัน 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['กระโดดฟัน','ฟาดพื้นใส่ศัตรูทุกตัว 85% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
-  kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:5,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
+  kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:3,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
     base:{hp:112,atk:40,def:14,spd:44},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า',
     skills:[['ฟันเงาจันทร์','ฟันศัตรู 1 ตัว 120%'],['คมดาบราตรี','ฟัน 3 ครั้ง ครั้งละ 75% · คูลดาวน์ 3'],['ดิ่งฟันสังหาร','กระโดดฟาดศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
-  amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:5,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
+  amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:4,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
     base:{hp:118,atk:36,def:15,spd:38},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ',
     skills:[['กรงเล็บเพลิง','บินโฉบเข้าไปงับศัตรู 1 ตัว 115%'],['ลมหายใจอัมพร','พ่นไฟใส่ศัตรูทุกตัว 70% · คูลดาวน์ 3'],['ดิ่งฟ้าถล่ม','ดิ่งลงกระแทกศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
 };
 const spOf=d=>SPEC[d.sp]||SPEC.kazemaru;
+// ระดับมอนสเตอร์ 4 ขั้น: ทั่วไป < พิเศษ < หายาก < ตำนาน
+const TIER={1:{n:'ทั่วไป',c:'#c9d1dc',hx:0xc9d1dc},2:{n:'พิเศษ',c:'#6fe08a',hx:0x6fe08a},3:{n:'หายาก',c:'#5fb3ff',hx:0x5fb3ff},4:{n:'ตำนาน',c:'#ffc94d',hx:0xffc94d}};
+const tierOf=r=>TIER[r]||TIER[1];
 const statOf=d=>{const s=spOf(d),f=1+.1*(d.lv-1);return{hp:Math.round(s.base.hp*f),atk:Math.round(s.base.atk*f),def:Math.round(s.base.def*f),spd:s.base.spd+d.lv};};
 const power=d=>{const s=statOf(d);return Math.round(s.hp*.6+s.atk*4+s.def*3+s.spd*2);};
 const lvCost=d=>60*d.lv;
@@ -102,7 +105,7 @@ function makeThumb(sp){
 function boxSpark(p,color,n,speed){for(let i=0;i<n;i++){const g=glow(bScene,color,.18,[p.x,p.y,p.z],1);const v=new THREE.Vector3((Math.random()-.5),Math.random()*.9+.2,(Math.random()-.5)).normalize().multiplyScalar(speed*(.4+Math.random()*.8));const p0=g.position.clone();
   tween(.9+Math.random()*.5,k=>{g.position.copy(p0).addScaledVector(v,k*1.2);g.position.y-=k*k*.6;g.material.opacity=1-k;}).then(()=>{bScene.remove(g);g.material.dispose();});}}
 /* ---------- หน้าต่างมอนสเตอร์ ---------- */
-const CAP=30, stars=n=>'★'.repeat(n);
+const CAP=30, stars=n=>tierOf(n).n;
 const FLAG='<svg viewBox="0 0 12 12"><path d="M3 1v10M3 1.5h6l-1.6 2.2L9 6H3" fill="#2b1808" stroke="#2b1808" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 const PAW='<svg viewBox="0 0 24 24" fill="#ffd9a0"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="6" cy="10" r="2.2"/><circle cx="10" cy="6.5" r="2.2"/><circle cx="14" cy="6.5" r="2.2"/><circle cx="18" cy="10" r="2.2"/></svg>';
 let boxSort='power', boxTab='info';
@@ -143,7 +146,7 @@ function renderDetail(){
   const m=S.mons.find(x=>x.uid===BOX.detail), P=$('#bPage'); P.innerHTML='';
   document.querySelectorAll('.bTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===boxTab));
   if(!m)return; const sp=spOf(m), st=statOf(m);
-  const h=el('div','iHead');const e=el('span','iEl',sp.el);e.style.background=sp.elc;h.append(e);h.append(el('b',null,sp.name));h.append(el('span','st',stars(sp.rar)));P.append(h);
+  const h=el('div','iHead');const e=el('span','iEl',sp.el);e.style.background=sp.elc;h.append(e);h.append(el('b',null,sp.name));{const tg=el('span','iTier r'+sp.rar,stars(sp.rar));h.append(tg);}P.append(h);
   P.append(el('div','iSub',sp.title+' · '+sp.role));
   if(boxTab==='info'){
     const x=el('div','iExp');x.append(el('span',null,'LV'));const bar=el('div');const i=el('i');i.style.width=(m.lv/sp.maxLv*100)+'%';bar.append(i);bar.append(el('em',null,m.lv>=sp.maxLv?'MAX':m.lv+' / '+sp.maxLv));x.append(bar);P.append(x);

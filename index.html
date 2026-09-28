@@ -139,10 +139,13 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
 .bLeft{flex:1;min-width:0;overflow:auto;overscroll-behavior:contain;padding:2px}
 #bList{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px}
 .ic{position:relative;aspect-ratio:1;border-radius:9px;padding:0;border:2px solid #8a93a6;background:#221a14;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
-.ic.r4{border-color:#b886ff}.ic.r5{border-color:#ffc94d}
+.ic.r1{border-color:#8a93a6}.ic.r2{border-color:#4fc46e}.ic.r3{border-color:#4f9dff}.ic.r4{border-color:#ffc94d;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 8px rgba(255,201,77,.55)}
 .ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ic .st{position:absolute;top:1px;left:0;right:0;text-align:center;color:#ffd24a;font-size:10px;letter-spacing:-1px;line-height:1;text-shadow:0 0 2px #000,0 1px 1px #000}
-.ic.r4 .st{color:#e3b6ff}.ic.r5 .st{color:#ffe07a}
+.ic .st{font-family:inherit;font-weight:700;letter-spacing:0;font-size:9.5px;top:2px}.ic.r1 .st{color:#dfe5f0}.ic.r2 .st{color:#8ff0a6}.ic.r3 .st{color:#8cc8ff}.ic.r4 .st{color:#ffe07a}
+.iTier,.tierTag{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700;line-height:1.5;color:#1a120a;vertical-align:middle}
+.iTier{margin-left:6px}.iTier.r1,.tierTag.r1{background:#c9d1dc}.iTier.r2,.tierTag.r2{background:#6fe08a}.iTier.r3,.tierTag.r3{background:#5fb3ff}.iTier.r4,.tierTag.r4{background:linear-gradient(90deg,#ffe07a,#ffb030);box-shadow:0 0 8px rgba(255,190,60,.6)}
+.oddsT{width:100%;border-collapse:collapse;margin:6px 0 8px;font-size:13px}.oddsT th{font-weight:600;opacity:.7;text-align:right;padding:3px 4px}.oddsT th:first-child,.oddsT td:first-child{text-align:left}.oddsT td{text-align:right;padding:4px;border-top:1px solid rgba(255,255,255,.08)}
 .ic .lv{position:absolute;right:3px;bottom:1px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;line-height:1.1;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
 .ic .lv.max{color:var(--amber)}
 .ic .tm{position:absolute;left:3px;bottom:3px;width:16px;height:16px;border-radius:4px;background:var(--amber);display:grid;place-items:center}
@@ -262,7 +265,7 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
           </div>
         </div>
         <div class="bTeamBox"><div><b>ทีมต่อสู้</b><span id="bTeamPow"></span></div><div id="bTeam"></div></div>
-        <div class="bSortRow"><span>เรียงตาม</span><select id="bSort"><option value="power">พลังสูงสุด</option><option value="rar">ดาวสูงสุด</option><option value="lv">เลเวลสูงสุด</option><option value="new">ได้มาล่าสุด</option></select></div>
+        <div class="bSortRow"><span>เรียงตาม</span><select id="bSort"><option value="power">พลังสูงสุด</option><option value="rar">ระดับหายากสุด</option><option value="lv">เลเวลสูงสุด</option><option value="new">ได้มาล่าสุด</option></select></div>
       </div>
     </div>
   </div>
@@ -925,7 +928,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
   const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
-  const SPS={kazemaru:{rar:3,max:20,to:'kazekiri',cost:300},kazekiri:{rar:4,max:40},amateru:{rar:5,max:50},kuroga:{rar:5,max:50}};
+  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},kuroga:{rar:3,max:50},amateru:{rar:4,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
@@ -961,9 +964,10 @@ const LOCAL=(()=>{
     game_state:()=>state(),
     set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>24)fail('bad_name');D.name=n;D.named=true;return{};},
     hatch_egg:({kind})=>{if(D.mons.length>=C.slots)fail('box_full');let ch;
-      if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=.02;}
-      else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=.08;}else fail('bad_egg');
-      let sp='kazemaru'; if(Math.random()<ch||(kind==='gold'&&D.pity>=C.pity_max)){sp=Math.random()<.5?'amateru':'kuroga';if(kind==='gold')D.pity=0;}
+      if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=[.82,.13,.04,.01];}
+      else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=[.45,.33,.16,.06];}else fail('bad_egg');
+      const r=Math.random(); let t=(kind==='gold'&&D.pity>=C.pity_max)?4:r<ch[3]?4:r<ch[3]+ch[2]?3:r<ch[3]+ch[2]+ch[1]?2:1;
+      const pool=Object.keys(SPS).filter(k=>SPS[k].rar===t), sp=pool[Math.floor(Math.random()*pool.length)]||'kazemaru'; if(kind==='gold'&&t===4)D.pity=0;
       const m={id:D.nid++,sp,lv:1};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
@@ -2148,7 +2152,9 @@ function para(t){return el('p','ptxt',t);}
 
 const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
-    d.append(rows([['ไข่ป่า · ★5 อามาเทรุ / คุโรกะ','2%'],['ไข่ทองคำ · ★5 อามาเทรุ / คุโรกะ','8%'],['การันตี ★5 (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffb347'],['นอกนั้นได้','★3 คาเซะมารุ']]));
+    const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th></tr>';
+    [[4,'อามาเทรุ','1%','6%'],[3,'คุโรกะ','4%','16%'],[2,'คาเซะคิริ','13%','33%'],[1,'คาเซะมารุ','82%','45%']].forEach(([r,n,a,b])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t,' '+n);tr2.append(td);[a,b].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
+    d.append(T); d.append(rows([['การันตีระดับตำนาน (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
     openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
@@ -2159,7 +2165,7 @@ const INFO={
     const tm=S.team.map(u=>S.mons.find(m=>m.uid===u)).filter(Boolean).map(m=>spOf(m).name).join(', ');
     openSheet('ผจญภัย','ทีมปัจจุบัน: '+(tm||'-'),d,[['ไปผจญภัย',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
-    const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,'★'.repeat(spOf(m).rar)+' · Lv '+m.lv));list.append(c);});d.append(list);
+    const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,tierOf(spOf(m).rar).n+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},
   shop:()=>{const d=el('div');d.append(para('ของทุกชิ้นซื้อด้วยสกุลเงินในเกม'));
     const items=[['พลังงาน +30','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30');}}],
@@ -2199,7 +2205,7 @@ function openDaily(){
   openSheet('รางวัลเข้าเกมรายวัน','เข้าเกมต่อเนื่อง '+S.daily+' วัน',d,[[S.dailyClaimed?'รับแล้ววันนี้':'รับรางวัลวันที่ '+(next+1),async()=>{const r=await act('claim_daily');if(r){bumpRes(r.kind);toast('ได้รับ '+r.amount+(r.kind==='coins'?' เหรียญ':' อัมพร'));closeSheet();}},'',S.dailyClaimed]]);
 }
 function openMail(){S.mailRead=true;save();renderHUD();
-  const d=el('div','mail');[['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับ: มังกรอามาเทรุ ★5 อยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
+  const d=el('div','mail');[['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับ: มังกรอามาเทรุ ระดับตำนาน อยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
   openSheet('กล่องจดหมาย','2 ฉบับ',d,[]);}
 
 $('#nBattle').onclick=()=>focusBuilding('dojo');
@@ -2218,13 +2224,13 @@ async function hatch(kind,name){
   const r=await act('hatch_egg',{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
   bumpRes(kind==='gold'?'amber':'coins');
-  const col={3:0x5fb3ff,4:0xb886ff,5:0xffc94d}[r.rar]||0xdfe5f0;
+  const col=tierOf(r.rar).hx;
   const ep=new THREE.Vector3(0,2.15,3.2);
-  flashBall(ep,col,r.rar>=5?6:4); particles(ep,col,r.rar>=5?120:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
-  if(r.rar>=5){shakeCam=.4;}
+  flashBall(ep,col,r.rar>=4?6:r.rar>=3?5:4); particles(ep,col,r.rar>=4?120:r.rar>=3?85:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
+  if(r.rar>=4){shakeCam=.4;}else if(r.rar>=3){shakeCam=.2;}
   const d=S.mons.find(m=>m.uid===Number(r.mon.id))||{uid:Number(r.mon.id),sp:r.mon.sp,lv:1};
   const ag=addAgent(d,[0,5.9],true); if(!ag.fly){ag.state='idle'; ag.wait=2.5;}
-  toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' '+'★'.repeat(r.rar)+(r.rar>=5?' ระดับตำนาน!!':' เดินออกมาในฟาร์มแล้ว'));
+  toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
   hatching=false;
 }
 let shakeCam=0;
@@ -2260,7 +2266,7 @@ function tap(cx,cy){
   if(!hit){closeSheet();tagAgent=null;$('#mtag').hidden=true;return;}
   const o=hit.object;
   if(o.userData.agent!=null){const ag=AGENTS[o.userData.agent];tagAgent=ag;const t=$('#mtag');t.hidden=false;
-    $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent='★'.repeat(spOf(ag.data).rar)+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
+    $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent=tierOf(spOf(ag.data).rar).n+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
     const w=ag.w; tween(.3,t=>w.position.y=Math.sin(t*Math.PI)*.4); return;}
   if(o===amberBubble&&amberReady){collectAmber();return;}
   if(o.userData.pick)focusBuilding(o.userData.pick);
@@ -2389,20 +2395,23 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=48;
 
 /* ================= คลังมอนสเตอร์ (ดูมอนสเตอร์ที่มี · อัปเลเวล · วิวัฒนาการ · จัดทีม) ================= */
 const SPEC={
-  kazemaru:{name:'คาเซะมารุ',title:'นินจาฝึกหัดแห่งสายลม',rar:3,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:0,maxLv:20,evolveTo:'kazekiri',
+  kazemaru:{name:'คาเซะมารุ',title:'นินจาฝึกหัดแห่งสายลม',rar:1,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:0,maxLv:20,evolveTo:'kazekiri',
     base:{hp:64,atk:20,def:8,spd:26},lore:'ลูกนินจาตัวจิ๋วที่ฝึกฟันดาบไม้ทุกวัน ดวงตาเรืองแสงกะพริบได้เมื่อตื่นเต้น',
     skills:[['ฟันดาบไม้','ฟันศัตรู 1 ตัว 100%'],['ดาวกระจายจิ๋ว','ขว้างดาวกระจายใส่ศัตรูทุกตัว 55% · คูลดาวน์ 3']]},
-  kazekiri:{name:'คาเซะคิริ',title:'เงาสามดาบ',rar:4,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:1,maxLv:40,
+  kazekiri:{name:'คาเซะคิริ',title:'เงาสามดาบ',rar:2,el:'ลม',elc:'#6fe0b0',role:'จู่โจม',evo:1,maxLv:40,
     base:{hp:102,atk:34,def:13,spd:42},lore:'นินจาเงาผู้ไร้ใบหน้า พกดาบสามเล่ม เคลื่อนไหวเงียบดั่งสายลมยามค่ำ',
     skills:[['ฟันเงา','ฟันศัตรู 1 ตัว 110%'],['สามดาบวายุ','ฟัน 3 ครั้ง ครั้งละ 70% · คูลดาวน์ 3'],['กระโดดฟัน','ฟาดพื้นใส่ศัตรูทุกตัว 85% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
-  kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:5,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
+  kuroga:{name:'คุโรกะ',title:'นักล่าผ้าคลุมขาด',rar:3,el:'มืด',elc:'#b48cff',role:'จู่โจม',evo:1,rig:'kuroga',maxLv:50,
     base:{hp:112,atk:40,def:14,spd:44},lore:'นักล่าอสูรผู้เดินทางคนเดียวในยามราตรี ผ้าคลุมที่ขาดวิ่นทุกรอยคือร่องรอยของการต่อสู้ ดาบยาวของเขาไม่เคยพลาดเป้า',
     skills:[['ฟันเงาจันทร์','ฟันศัตรู 1 ตัว 120%'],['คมดาบราตรี','ฟัน 3 ครั้ง ครั้งละ 75% · คูลดาวน์ 3'],['ดิ่งฟันสังหาร','กระโดดฟาดศัตรูทุกตัว 90% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
-  amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:5,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
+  amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:4,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
     base:{hp:118,atk:36,def:15,spd:38},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ',
     skills:[['กรงเล็บเพลิง','บินโฉบเข้าไปงับศัตรู 1 ตัว 115%'],['ลมหายใจอัมพร','พ่นไฟใส่ศัตรูทุกตัว 70% · คูลดาวน์ 3'],['ดิ่งฟ้าถล่ม','ดิ่งลงกระแทกศัตรูทุกตัว 95% มีโอกาสทำให้มึน · คูลดาวน์ 4']]},
 };
 const spOf=d=>SPEC[d.sp]||SPEC.kazemaru;
+// ระดับมอนสเตอร์ 4 ขั้น: ทั่วไป < พิเศษ < หายาก < ตำนาน
+const TIER={1:{n:'ทั่วไป',c:'#c9d1dc',hx:0xc9d1dc},2:{n:'พิเศษ',c:'#6fe08a',hx:0x6fe08a},3:{n:'หายาก',c:'#5fb3ff',hx:0x5fb3ff},4:{n:'ตำนาน',c:'#ffc94d',hx:0xffc94d}};
+const tierOf=r=>TIER[r]||TIER[1];
 const statOf=d=>{const s=spOf(d),f=1+.1*(d.lv-1);return{hp:Math.round(s.base.hp*f),atk:Math.round(s.base.atk*f),def:Math.round(s.base.def*f),spd:s.base.spd+d.lv};};
 const power=d=>{const s=statOf(d);return Math.round(s.hp*.6+s.atk*4+s.def*3+s.spd*2);};
 const lvCost=d=>60*d.lv;
@@ -2491,7 +2500,7 @@ function makeThumb(sp){
 function boxSpark(p,color,n,speed){for(let i=0;i<n;i++){const g=glow(bScene,color,.18,[p.x,p.y,p.z],1);const v=new THREE.Vector3((Math.random()-.5),Math.random()*.9+.2,(Math.random()-.5)).normalize().multiplyScalar(speed*(.4+Math.random()*.8));const p0=g.position.clone();
   tween(.9+Math.random()*.5,k=>{g.position.copy(p0).addScaledVector(v,k*1.2);g.position.y-=k*k*.6;g.material.opacity=1-k;}).then(()=>{bScene.remove(g);g.material.dispose();});}}
 /* ---------- หน้าต่างมอนสเตอร์ ---------- */
-const CAP=30, stars=n=>'★'.repeat(n);
+const CAP=30, stars=n=>tierOf(n).n;
 const FLAG='<svg viewBox="0 0 12 12"><path d="M3 1v10M3 1.5h6l-1.6 2.2L9 6H3" fill="#2b1808" stroke="#2b1808" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 const PAW='<svg viewBox="0 0 24 24" fill="#ffd9a0"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="6" cy="10" r="2.2"/><circle cx="10" cy="6.5" r="2.2"/><circle cx="14" cy="6.5" r="2.2"/><circle cx="18" cy="10" r="2.2"/></svg>';
 let boxSort='power', boxTab='info';
@@ -2532,7 +2541,7 @@ function renderDetail(){
   const m=S.mons.find(x=>x.uid===BOX.detail), P=$('#bPage'); P.innerHTML='';
   document.querySelectorAll('.bTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===boxTab));
   if(!m)return; const sp=spOf(m), st=statOf(m);
-  const h=el('div','iHead');const e=el('span','iEl',sp.el);e.style.background=sp.elc;h.append(e);h.append(el('b',null,sp.name));h.append(el('span','st',stars(sp.rar)));P.append(h);
+  const h=el('div','iHead');const e=el('span','iEl',sp.el);e.style.background=sp.elc;h.append(e);h.append(el('b',null,sp.name));{const tg=el('span','iTier r'+sp.rar,stars(sp.rar));h.append(tg);}P.append(h);
   P.append(el('div','iSub',sp.title+' · '+sp.role));
   if(boxTab==='info'){
     const x=el('div','iExp');x.append(el('span',null,'LV'));const bar=el('div');const i=el('i');i.style.width=(m.lv/sp.maxLv*100)+'%';bar.append(i);bar.append(el('em',null,m.lv>=sp.maxLv?'MAX':m.lv+' / '+sp.maxLv));x.append(bar);P.append(x);
