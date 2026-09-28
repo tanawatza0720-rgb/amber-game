@@ -22,15 +22,20 @@ function turnToward(u,x,z,dt){
 }
 function stepToward(u,x,z,dist,dt,T){
   const p=u.w.position, dx=x-p.x, dz=z-p.z, L=Math.hypot(dx,dz)||1, st=Math.min(dist,RT_MOVE*(u.dragon?1.15:1)*dt);
-  p.x+=dx/L*st; p.z+=dz/L*st; turnToward(u,x,z,dt);
+  if(u.dragon){ // บินแบบมีแรงเฉื่อย: เร่ง/เลี้ยวค่อยเป็นค่อยไป
+    u.vel=u.vel||new THREE.Vector3(); const sp=RT_MOVE*1.25*Math.min(1,dist/3+.3); const des=tmpV.set(dx/L*sp,0,dz/L*sp);
+    u.vel.lerp(des,Math.min(1,dt*2.2)); p.x+=u.vel.x*dt; p.z+=u.vel.z*dt;
+    const vl=u.vel.length(); if(vl>.2){const want=Math.atan2(u.vel.x,u.vel.z);let d=want-u.w.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));u.w.rotation.y+=d*Math.min(1,dt*3.5);u.rig.tg.bank=Math.max(-1,Math.min(1,-d*2.2));}
+    u.rig.tg.pitch=Math.min(.5,vl*.08);
+  } else { p.x+=dx/L*st; p.z+=dz/L*st; turnToward(u,x,z,dt); }
   const A=u.inner.userData, MC=hasClip(u,'run');
   if(!u.moving){if(u.dragon)dragonSet(u,{flapSpd:1.9,flapAmp:.8,lunge:.45,legF:-.3,spread:.3},.15);else if(MC)A.play('run',{loop:true,fade:.15,speed:1.15});}
   u.moving=true;
-  p.y=u.dragon?.25+Math.sin(T*6)*.08:MC?0:Math.abs(Math.sin(T*13))*(u.evo?.1:.14);
+  p.y=u.dragon?0:MC?0:Math.abs(Math.sin(T*13))*(u.evo?.1:.14);
   u.dust-=dt; if(u.dust<=0&&!u.dragon&&!LOW&&u.side==='P'){u.dust=.45;particles(tmpV.copy(p).setY(.08),0xb8a888,2,.6,.18,-.1,.35);}
 }
 const hasClip=(u,n)=>{const A=u.inner.userData;return !!(A.play&&A.clipInfo&&A.clipInfo(n));};
-function stopMove(u,keep){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon)dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0,legF:0,spread:0,bank:0},.3);else if(!keep&&hasClip(u,'run'))u.inner.userData.play('idle',{loop:true,fade:.15});}
+function stopMove(u,keep){if(!u.moving)return;u.moving=false;u.w.position.y=0;if(u.dragon){dragonSet(u,{flapSpd:1,flapAmp:.55,lunge:0,legF:0,spread:0,bank:0,pitch:0},.4);if(u.vel)u.vel.multiplyScalar(.3);}else if(!keep&&hasClip(u,'run'))u.inner.userData.play('idle',{loop:true,fade:.15});}
 // เล่นท่าจาก Mixamo: multi=ตีหลายจังหวะตาม hits, ไม่งั้นตีครั้งเดียวที่จังหวะแรงสุด
 async function clipStrike(u,nm,sp,onHit,multi){
   const A=u.inner.userData,inf=A.clipInfo(nm); A.play(nm,{speed:sp,fade:.1});
@@ -81,7 +86,7 @@ async function rtUse(u,s,t){
     if(u.dragon&&u.side==='P'&&s===ultOf(u))await dragonRoar(u,450);
     if(s.type==='melee'&&u.dragon){
       const r=Math.random(), f=()=>{if(t.alive)dealHit(u,t,s);};
-      if(r<.4)await strike(u,0,f); else if(r<.75)await dragonClaw(u,t,()=>{if(t.alive)dealHit(u,t,{...s,mult:s.mult*.55});}); else await dragonTail(u,t,()=>near(t.w.position,2.6).forEach(o=>dealHit(u,o,{...s,mult:s.mult*.8})));
+      if(r<.3)await dragonSwoop(u,t,f); else if(r<.55)await strike(u,0,f); else if(r<.8)await dragonClaw(u,t,()=>{if(t.alive)dealHit(u,t,{...s,mult:s.mult*.55});}); else await dragonTail(u,t,()=>near(t.w.position,2.6).forEach(o=>dealHit(u,o,{...s,mult:s.mult*.8})));
     } else if(s.type==='melee'&&AN){
       const ls=AN.s1; await clipStrike(u,ls[Math.floor(Math.random()*ls.length)],1.35,()=>{if(t.alive){dealHit(u,t,s);hitStop();}});
     } else if(s.type==='melee'){

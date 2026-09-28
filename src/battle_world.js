@@ -101,7 +101,7 @@ function makeUnit(side,def,slot){
     maxHp:Math.round(sp.base.hp*f*bm), atk:Math.round(sp.base.atk*f*(def.boss?.85:1)), def:Math.round(sp.base.def*f), spd:sp.base.spd+def.lv,
     skills:sp.skills, cds:{}, gauge:Math.random()*30, stun:0, alive:true, w, inner, rig, home:new THREE.Vector3(x,0,z), face:w.rotation.y};
   u.hp=u.maxHp;
-  const DK=sp.dragon?DRAGON_BATTLE_K:1; if(sp.dragon){w.scale.setScalar(DK);}
+  const DK=sp.dragon?DRAGON_BATTLE_K:1; if(sp.dragon){w.scale.setScalar(DK);const R=inner.userData.rig;if(R&&R.st){R.st.alt=R.tg.alt=1.7;}}
   u.rad=sp.dragon?1.55*DK:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=5.2*DK*.78;u.camS=2.1*DK;} u.reach=sp.dragon?1.9*DK:inner.userData.meshy?1.25:u.evo?1.0:.72;
   u.mats=[];w.traverse(o=>{if(o.isMesh){o.userData.unit=u.id;PICKU.push(o);if(o.material&&o.material.emissive&&u.mats.indexOf(o.material)<0)u.mats.push(o.material);}});
   if(sp.dragon){u.dragon=true;u.stance=[];}
