@@ -1,0 +1,53 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ราชันไฮดรา · ตัวอย่างบอสโลก</title>
+<style>
+:root{--ink:#1c1510;--panel:rgba(28,22,16,.82);--line:rgba(255,214,150,.22);--bone:#fbf1dc;--amber:#ffb347}
+html,body{margin:0;height:100%;background:#120d0a;color:var(--bone);font-family:system-ui,'Noto Sans Thai',sans-serif;overflow:hidden}
+#v{position:fixed;inset:0}
+#ui{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:6px;justify-content:center;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+#ui button{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--bone);font-weight:700;font-size:14px}
+#ui button.on{border-color:var(--amber);color:var(--amber)}
+#hd{position:fixed;top:10px;left:12px;right:12px;font-size:13px;opacity:.85}
+#hd b{color:var(--amber);font-size:16px}
+#msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%)}
+</style></head><body>
+<div id="v"></div>
+<div id="hd"><b>ราชันไฮดรา</b> · กระดูก 74 ชิ้น · 24k สามเหลี่ยม · ลากเพื่อหมุน / ซูมด้วยล้อเมาส์หรือสองนิ้ว</div>
+<div id="msg">กำลังโหลด…</div>
+<div id="ui">
+ <button data-a="roar">คำราม</button><button data-a="breath">พ่นพลัง 5 หัว</button><button data-a="slam">ตบกรงเล็บ</button>
+ <button data-a="gust">กระพือปีก</button><button data-a="sweep">กวาดหาง</button><button data-a="hit">โดนตี</button>
+ <button data-a="die">ล้ม</button><button data-a="revive">ฟื้น</button><button id="auto" class="on">เล่นต่อเนื่อง</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>const HYDRA_BASE='./';</script>
+<script src="../src/hydra.js"></script>
+<script>
+const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.outputEncoding=THREE.sRGBEncoding;R.toneMapping=THREE.ACESFilmicToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+document.getElementById('v').append(R.domElement);
+const S=new THREE.Scene();S.background=new THREE.Color(0x1a1410);S.fog=new THREE.Fog(0x1a1410,40,120);
+const cam=new THREE.PerspectiveCamera(40,1,.1,300);
+S.add(new THREE.HemisphereLight(0xffe6c8,0x2a2030,.9));const sun=new THREE.DirectionalLight(0xfff0d8,1.6);sun.position.set(14,26,12);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-16,right:16,top:16,bottom:-16});S.add(sun);
+const rim=new THREE.DirectionalLight(0xff9a50,.8);rim.position.set(-12,8,-14);S.add(rim);
+const ground=new THREE.Mesh(new THREE.CylinderGeometry(16,17,1.2,64),new THREE.MeshStandardMaterial({color:0x4a3a2c,roughness:.95}));ground.position.y=-.6;ground.receiveShadow=true;S.add(ground);
+const man=new THREE.Mesh(new THREE.CylinderGeometry(.35,.35,1.7,12),new THREE.MeshStandardMaterial({color:0x5fe0c0}));man.position.set(9,.85,3);man.castShadow=true;S.add(man);
+let H=null,yaw=.7,pitch=.22,dist=34,auto=true,busy=false;
+function resize(){R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();}addEventListener('resize',resize);resize();
+const ptr=new Map();let pinch=0;
+R.domElement.addEventListener('pointerdown',e=>{R.domElement.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});});
+R.domElement.addEventListener('pointermove',e=>{const p=ptr.get(e.pointerId);if(!p)return;if(ptr.size===1){yaw-=(e.clientX-p.x)*.006;pitch=Math.max(-.05,Math.min(1.2,pitch+(e.clientY-p.y)*.004));}
+  p.x=e.clientX;p.y=e.clientY;if(ptr.size===2){const [a,b]=[...ptr.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch)dist=Math.max(16,Math.min(70,dist*pinch/d));pinch=d;}});
+const up=e=>{ptr.delete(e.pointerId);pinch=0;};R.domElement.addEventListener('pointerup',up);R.domElement.addEventListener('pointercancel',up);
+R.domElement.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(16,Math.min(70,dist*(1+e.deltaY*.001)));},{passive:false});
+async function run(a){if(!H)return;busy=true;document.querySelectorAll('#ui button[data-a]').forEach(b=>b.classList.toggle('on',b.dataset.a===a));await H.play(a);busy=false;}
+document.querySelectorAll('#ui button[data-a]').forEach(b=>b.onclick=()=>{auto=false;document.getElementById('auto').classList.remove('on');run(b.dataset.a);});
+document.getElementById('auto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);};
+const LOOP=['roar','breath','slam','gust','sweep','hit'];let li=0,idleT=0;
+loadHydra(18).then(h=>{H=h;S.add(h.root);document.getElementById('msg').remove();window.__H=h;}).catch(e=>{document.getElementById('msg').textContent='โหลดไม่สำเร็จ: '+e;});
+let last=performance.now();
+(function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(H){H.tick(dt);if(auto&&!busy){idleT+=dt;if(idleT>1.6){idleT=0;run(LOOP[li++%LOOP.length]);}}}
+  const sh=H?H.shakeCam:0;cam.position.set(Math.sin(yaw)*Math.cos(pitch)*dist+(Math.random()-.5)*sh,Math.sin(pitch)*dist+7+(Math.random()-.5)*sh,Math.cos(yaw)*Math.cos(pitch)*dist);cam.lookAt(1.5,6,0);
+  R.render(S,cam);})(last);
+</script></body></html>

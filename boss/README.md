@@ -1,0 +1,17 @@
+# ราชันไฮดรา (บอสโลก) — โมเดล + กระดูก + ท่าทาง
+
+ดูตัวอย่าง: `boss/preview.html` (บนเว็บ: /amber-game/boss/preview.html) — ยังไม่ได้ใส่ในสนามรบจริง
+
+| ไฟล์ | คืออะไร |
+|---|---|
+| `hydra.glb` | โมเดลจาก Tripo ลดจาก 1.91 ล้าน เหลือ 24,000 สามเหลี่ยม, texture 1024 (0.8 MB) |
+| `hydra_rig.json` | กระดูก 74 ชิ้น (ตำแหน่ง+แม่) + น้ำหนักผิว 4 กระดูก/จุด (base64: idx×4, weight×4 เป็น uint8) เรียงตามจุดของ hydra.glb |
+| `../src/hydra.js` | `loadHydra(scale)` → `{root, tick(dt), play(name), P, shakeCam}` · ท่า: roar, breath, slam, gust, sweep, hit, die, revive |
+| `tools/` | สคริปต์สร้าง rig: `sloppy.mjs` (ลดโพลีกอน ถนอม UV) → `dump.mjs` → `hskel.py` (เชื่อมจุด/กราฟผิว) → `hjoints.py` (หาแนวกลางคอ/หาง/ปีก/ขาด้วยเส้นทางบนผิว) → `hrig.py` (น้ำหนักผิวแบบระยะทางบนผิว + เกลี่ย) |
+
+โครงกระดูก: root/hips/chest · หาง 2 เส้น (`tail0-6`, `tailB0-7`) · คอ 5 เส้น (`n_black|gold|red|white|blue` 0-4, ข้อ 4 = หัว) · ปีก (`wL/wR` 0-3 แขนปีก, `mL/mR` แผ่นปีก) · ขาหน้า `aL/aR` · ขาหลัง `lL/lR`
+แกนโมเดล: หน้า +x, ขึ้น +y, ปีกซ้าย +z · ปีก + = ยกขึ้น/หุบเหนือหลัง, − = กางลง
+
+ธาตุของหัว: ดำ=มืด ทอง=แสง แดง=ไฟ ขาว=ลม ฟ้า=น้ำ (`HY_EL`)
+
+⚠️ โมเดลต้นทางมาจากหน้าชุมชน Tripo (ผู้สร้างคนอื่น): https://studio.tripo3d.ai/3d-model/hydra-with-multiple-heads-scaly-body-red-wings-fantasy-creature-a39c41ca-38af-4162-9bd2-d1aa6c9280c3 — ต้องตรวจสิทธิ์การใช้งานก่อนเปิดเกมสาธารณะ
