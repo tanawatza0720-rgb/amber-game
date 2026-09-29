@@ -3041,8 +3041,8 @@ let FOCUS=null;
 const CAM=new THREE.Vector3(.6,5.2,10.2), LOOK=new THREE.Vector3(0,1,0), CAMt=CAM.clone(), LOOKt=LOOK.clone();
 let camMode={type:'wide'}, camK=2.5;
 // ซูมเข้าในสนามรบได้ไม่ใกล้เกินไป (ลดภาระเครื่อง)
-const BT_ZMIN=60, BT_ZMAX=100;
-const RTS={tgt:new THREE.Vector3(-4,0,0),auto:new THREE.Vector3(),dist:72,base:70,pitch:.95,yaw:.3,manual:0,zoomed:false}; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
+const BT_ZMIN=50, BT_ZMAX=80;
+const RTS={tgt:new THREE.Vector3(-4,0,0),auto:new THREE.Vector3(),dist:60,base:60,pitch:.95,yaw:.3,manual:0,zoomed:false}; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
 const camWide=()=>{camMode={type:'wide'};camK=3;};
 const camOver=(u,focus,far)=>{camMode={type:'over',u,focus,far:far||0};camK=3.2;};
 const camTrack=(u,c)=>{camMode={type:'track',u,c:c.clone()};camK=3.5;};
