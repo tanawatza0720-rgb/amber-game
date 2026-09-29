@@ -16,31 +16,32 @@ function raidHud(){
   const left=s.active?s.me.left:0; $('#bRaid').hidden=!left; $('#bRaid').textContent=left||'';
   b.classList.toggle('dead',!s.active);
 }
-// โมเดลไฮดราบินอยู่ข้างเกาะ (โหลดเฉพาะตอนมีการรุกราน)
+// โมเดลไฮดรายืนที่ขอบเกาะ (โหลดเฉพาะตอนมีการรุกราน)
 function raidSpawn(){
   const s=RAID.st;
-  if(!s||!s.active){if(RAID.holder){scene.remove(RAID.holder);RAID.holder=null;RAID.H=null;}return;}
+  if(!s||!s.active){if(RAID.holder){scene.remove(RAID.holder);RAID.holder=null;RAID.H=null;
+      const i=BLOCK.indexOf(RAID.block);if(i>=0)BLOCK.splice(i,1);
+      [...(typeof RACE_DECO!=='undefined'?RACE_DECO.children:[]),...scene.children].forEach(o=>{if(o.userData.hidByRaid){o.visible=true;o.userData.hidByRaid=0;}});}return;}
   if(RAID.H||RAID.loading||typeof loadHydra!=='function')return;
   RAID.loading=true;
-  loadHydra(19).then(H=>{
+  loadHydra(15).then(H=>{
     RAID.loading=false; if(!RAID.st||!RAID.st.active)return;
-    const g=new THREE.Group();
-    // จุดลอยตัว: ให้อยู่มุมขวาบนของจอตอนกล้องมุมปกติ (จอแนวตั้ง/แนวนอนเห็นเหมือนกัน)
-    const cam=camera.clone(); cam.position.set(0,Math.sin(PITCH)*64,.5+Math.cos(PITCH)*64); cam.lookAt(0,0,.5); cam.updateMatrixWorld(true); cam.updateProjectionMatrix();
-    const ray=new THREE.Vector3(camera.aspect<.8?.12:.3,.32,.5).unproject(cam).sub(cam.position).normalize(), k=(5-cam.position.y)/ray.y;
-    RAID.home=cam.position.clone().addScaledVector(ray,k);
-    g.add(H.root); scene.add(g); H.flying=true;
-    H.root.traverse(o=>{if(o.isMesh){o.castShadow=false;o.userData.raid=1;PICK.push(o);if(o.material&&ENV){o.material.envMap=ENV;o.material.envMapIntensity=.35;}}});
+    // ยืนบนพื้นที่ขอบเกาะด้านตะวันออกเฉียงเหนือ (เท้าแตะพื้น y=0) หันหน้าเข้าหากลางเกาะ
+    const g=new THREE.Group(), a=-.72, R=FARM_R-7.5, px=Math.cos(a)*R, pz=Math.sin(a)*R;
+    g.position.set(px,0,pz); g.rotation.y=Math.atan2(pz,-px); RAID.yaw=g.rotation.y;
+    g.add(H.root); scene.add(g); H.flying=false;
+    H.root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.userData.raid=1;PICK.push(o);if(o.material&&ENV){o.material.envMap=ENV;o.material.envMapIntensity=.35;}}});
+    // เว้นพื้นที่รอบตัว: มอนสเตอร์ไม่เดินทะลุ และซ่อนของตกแต่งที่ทับตัวไฮดรา
+    RAID.block={x:px,z:pz,r:6.5}; BLOCK.push(RAID.block);
+    if(typeof RACE_DECO!=='undefined')RACE_DECO.children.forEach(o=>{if(Math.hypot(o.position.x-px,o.position.z-pz)<7.5){o.visible=false;o.userData.hidByRaid=1;}});
+    scene.children.forEach(o=>{if(o.isGroup&&o!==g&&o!==island&&o!==RACE_DECO&&!BUILDINGS.some(b=>b.g===o)&&o.visible&&Math.hypot(o.position.x-px,o.position.z-pz)<6.5){o.visible=false;o.userData.hidByRaid=1;}});
     RAID.H=H; RAID.holder=g; RAID.next=2.5;
   }).catch(e=>{RAID.loading=false;console.warn('hydra',e);});
 }
 function raidTick(dt,T){
   const H=RAID.H; if(!H)return;
   H.tick(dt);
-  // ลอยตัวกระพือปีกข้างเกาะ โยกไปมาเล็กน้อย หันหน้าเข้าหากลางเกาะ
-  const g=RAID.holder, h=RAID.home; g.position.set(h.x+Math.sin(T*.21)*2.5,h.y+Math.sin(T*.45)*1.2,h.z+Math.sin(T*.17)*2);
-  g.rotation.y=Math.atan2(g.position.z,-g.position.x)+Math.sin(T*.3)*.12;
-  RAID.next-=dt; if(RAID.next<=0&&!H.busy()){const L=['roar','taunt','breath','flameSweep','enrage','breathAll','gust'];H.play(L[Math.floor(Math.random()*L.length)]);RAID.next=7+Math.random()*7;}
+  RAID.next-=dt; if(RAID.next<=0&&!H.busy()){const L=['roar','taunt','breath','flameSweep','enrage','breathAll','gust','stomp','sweep','tailStab','bite','biteCombo'];H.play(L[Math.floor(Math.random()*L.length)]);RAID.next=7+Math.random()*7;}
 }
 const raceDmgRows=(s)=>{
   const R=s.races||{}, tot=RACE_ORDER.reduce((a,r)=>a+((R[r]||{}).dmg||0),0)||1;
