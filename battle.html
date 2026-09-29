@@ -1866,7 +1866,7 @@ const skyM=new THREE.Mesh(new THREE.SphereGeometry(420,32,16),new THREE.MeshBasi
   map:srgb(canvasTex(256,(x,s)=>{const g=x.createLinearGradient(0,0,0,s);g.addColorStop(0,'#2b2f3a');g.addColorStop(.3,'#4b505c');g.addColorStop(.47,'#8a7a6c');g.addColorStop(.52,'#d0875a');g.addColorStop(.58,'#6a5a4c');g.addColorStop(1,'#3a3630');x.fillStyle=g;x.fillRect(0,0,s,s);
     for(let i=0;i<260;i++){const cx=Math.random()*s,cy=Math.random()*s*.45,r=8+Math.random()*30;const gg=x.createRadialGradient(cx,cy,0,cx,cy,r);const d=Math.random()<.5;gg.addColorStop(0,d?'rgba(30,32,40,.35)':'rgba(120,115,120,.25)');gg.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=gg;x.fillRect(0,0,s,s);}}))}));
 scene.add(skyM);
-scene.fog=new THREE.Fog(0x7d7570,55,250);
+scene.fog=new THREE.Fog(0x7d7570,110,420);
 scene.add(new THREE.HemisphereLight(0xb9c2d6,0x3d3226,.8));
 const sun=new THREE.DirectionalLight(0xffb676,2.4); sun.position.set(40,38,25); sun.castShadow=true;
 sun.shadow.mapSize.set(LOW?512:1536,LOW?512:1536); Object.assign(sun.shadow.camera,{left:-34,right:34,top:34,bottom:-34,near:1,far:180}); sun.shadow.bias=-.0006; sun.shadow.normalBias=.04; scene.add(sun); scene.add(sun.target);
@@ -3041,8 +3041,8 @@ let FOCUS=null;
 const CAM=new THREE.Vector3(.6,5.2,10.2), LOOK=new THREE.Vector3(0,1,0), CAMt=CAM.clone(), LOOKt=LOOK.clone();
 let camMode={type:'wide'}, camK=2.5;
 // ซูมเข้าในสนามรบได้ไม่ใกล้เกินไป (ลดภาระเครื่อง)
-const BT_ZMIN=44;
-const RTS={tgt:new THREE.Vector3(-4,0,0),auto:new THREE.Vector3(),dist:48,base:46,pitch:.95,yaw:.3,manual:0,zoomed:false}; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
+const BT_ZMIN=88;
+const RTS={tgt:new THREE.Vector3(-4,0,0),auto:new THREE.Vector3(),dist:92,base:90,pitch:.95,yaw:.3,manual:0,zoomed:false}; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
 const camWide=()=>{camMode={type:'wide'};camK=3;};
 const camOver=(u,focus,far)=>{camMode={type:'over',u,focus,far:far||0};camK=3.2;};
 const camTrack=(u,c)=>{camMode={type:'track',u,c:c.clone()};camK=3.5;};
@@ -3124,11 +3124,11 @@ document.body.classList.add('big');
 { const el=renderer.domElement, pts=new Map(); let pinch0=0, dist0=0, lastTap=0;
   const pan=(dx,dy)=>{const k=RTS.dist*(camera.aspect<.9?1.45:1)*1.1/Math.max(300,view.clientHeight), cy=Math.cos(RTS.yaw), sy=Math.sin(RTS.yaw);
     RTS.tgt.x-=(dx*cy+dy*sy)*k; RTS.tgt.z-=(-dx*sy+dy*cy)*k*1.25; RTS.tgt.x=Math.max(-60,Math.min(70,RTS.tgt.x)); RTS.tgt.z=Math.max(-45,Math.min(45,RTS.tgt.z)); RTS.manual=6;};
-  const zoom=f=>{RTS.dist=Math.max(BT_ZMIN,Math.min(110,RTS.dist*f));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);};
+  const zoom=f=>{RTS.dist=Math.max(BT_ZMIN,Math.min(180,RTS.dist*f));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);};
   el.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){const [a,b]=[...pts.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);dist0=RTS.dist;}
     const now=performance.now(); if(now-lastTap<300){RTS.manual=0;RTS.zoomed=false;} lastTap=now;});
   el.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p)return;
-    if(pts.size===1){pan(e.clientX-p.x,e.clientY-p.y);} else if(pts.size===2){p.x=e.clientX;p.y=e.clientY;const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0){RTS.dist=Math.max(BT_ZMIN,Math.min(110,dist0*pinch0/d));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);}return;}
+    if(pts.size===1){pan(e.clientX-p.x,e.clientY-p.y);} else if(pts.size===2){p.x=e.clientX;p.y=e.clientY;const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0){RTS.dist=Math.max(BT_ZMIN,Math.min(180,dist0*pinch0/d));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);}return;}
     p.x=e.clientX;p.y=e.clientY;});
   const up=e=>{pts.delete(e.pointerId);pinch0=0;}; el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('pointerleave',up);
   el.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.12:1/1.12);},{passive:false});

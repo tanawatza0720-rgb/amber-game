@@ -17,7 +17,7 @@ const skyM=new THREE.Mesh(new THREE.SphereGeometry(420,32,16),new THREE.MeshBasi
   map:srgb(canvasTex(256,(x,s)=>{const g=x.createLinearGradient(0,0,0,s);g.addColorStop(0,'#2b2f3a');g.addColorStop(.3,'#4b505c');g.addColorStop(.47,'#8a7a6c');g.addColorStop(.52,'#d0875a');g.addColorStop(.58,'#6a5a4c');g.addColorStop(1,'#3a3630');x.fillStyle=g;x.fillRect(0,0,s,s);
     for(let i=0;i<260;i++){const cx=Math.random()*s,cy=Math.random()*s*.45,r=8+Math.random()*30;const gg=x.createRadialGradient(cx,cy,0,cx,cy,r);const d=Math.random()<.5;gg.addColorStop(0,d?'rgba(30,32,40,.35)':'rgba(120,115,120,.25)');gg.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=gg;x.fillRect(0,0,s,s);}}))}));
 scene.add(skyM);
-scene.fog=new THREE.Fog(0x7d7570,55,250);
+scene.fog=new THREE.Fog(0x7d7570,110,420);
 scene.add(new THREE.HemisphereLight(0xb9c2d6,0x3d3226,.8));
 const sun=new THREE.DirectionalLight(0xffb676,2.4); sun.position.set(40,38,25); sun.castShadow=true;
 sun.shadow.mapSize.set(LOW?512:1536,LOW?512:1536); Object.assign(sun.shadow.camera,{left:-34,right:34,top:34,bottom:-34,near:1,far:180}); sun.shadow.bias=-.0006; sun.shadow.normalBias=.04; scene.add(sun); scene.add(sun.target);
