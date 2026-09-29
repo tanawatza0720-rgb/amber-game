@@ -170,4 +170,4 @@ python3 build_battle.py && cp battle.html ../battle.html
 - รูปไอคอนในคลังแคชตาม `sp|el` (`makeThumb(sp, el)`) และมีป้ายธาตุมุมขวาบน · วัตถุดิบขึ้นดาวใช้ตัวซ้ำคนละธาตุได้
 
 ## กล้อง
-- จำกัดการซูมเข้าเพื่อลดภาระเครื่อง: ฟาร์ม `FARM_ZMIN=56` ถึง `FARM_ZMAX=100` (farm_ui.js, camera.far=400) · สนามรบ `BT_ZMIN=50` ถึง `BT_ZMAX=80` (กล้องอัตโนมัติก็อยู่ในช่วงนี้), ระยะเริ่ม `RTS.base=60` (battle_ui.js), หมอกสนามรบ 110–420 (battle_map.js)
+- จำกัดการซูมเข้าเพื่อลดภาระเครื่อง: ฟาร์ม `FARM_ZMIN=56` ถึง `FARM_ZMAX=100` (farm_ui.js, camera.far=400) · สนามรบ `BT_ZMIN=45` ถึง `BT_ZMAX=75` (กล้องอัตโนมัติก็อยู่ในช่วงนี้), ระยะเริ่ม `RTS.base=55` (battle_ui.js), หมอกสนามรบ 110–420 (battle_map.js)
