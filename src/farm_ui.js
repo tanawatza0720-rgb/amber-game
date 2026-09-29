@@ -54,7 +54,7 @@ const INFO={
 };
 function focusBuilding(id){
   const b=BUILDINGS.find(x=>x.id===id); if(!b)return;
-  camTTo.set(b.x,0,b.z+1.5); distTo=Math.min(distTo,22);
+  camTTo.set(b.x,0,b.z+1.5); distTo=Math.max(FARM_ZMIN,Math.min(distTo,26));
   selRing.visible=true; selRing.position.x=b.x; selRing.position.z=b.z; selRing.scale.setScalar(b.r+.2);
   const g=b.g; tween(.35,t=>g.scale.setScalar(1+Math.sin(t*Math.PI)*.05));
   INFO[id]();
@@ -108,7 +108,7 @@ $('#rEvent').onclick=()=>openSheet('กิจกรรม','',para('กิจก
 /* ---------- ฟักไข่ในฟาร์ม (เซิร์ฟเวอร์สุ่มผล) ---------- */
 let hatching=false;
 async function hatch(kind,name){
-  if(hatching)return; hatching=true; closeSheet(); camTTo.set(0,0,5); distTo=16;
+  if(hatching)return; hatching=true; closeSheet(); camTTo.set(0,0,5); distTo=FARM_ZMIN;
   const shake=tween(1.4,t=>{hatchEggMat.emissiveIntensity=.25+t*2.5;hatchEgg.rotation.y+=.2+t*.6;hatchEgg.position.y=2.15+Math.sin(t*40)*.03*t;});
   const r=await act('hatch_egg',{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
@@ -136,6 +136,8 @@ async function collectAmber(){
 }
 
 /* ---------- แตะ / ลาก / ซูม ---------- */
+// ซูมเข้าได้ไม่ใกล้เกินไป (ลดภาระเครื่อง ภาพไม่กระตุก)
+const FARM_ZMIN=28;
 const camT=new THREE.Vector3(0,0,.5), camTTo=camT.clone(); let dist=44, distTo=40;
 const PITCH=.92;
 const ptrs=new Map(); let downAt=null, moved=0, pinch0=0;
@@ -144,10 +146,10 @@ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set
 cv.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;
   if(ptrs.size===1){const dx=e.clientX-p.x,dy=e.clientY-p.y;moved+=Math.abs(dx)+Math.abs(dy);const k=dist*.0017;camTTo.x-=dx*k;camTTo.z-=dy*k/Math.cos(PITCH)*.7;const r=Math.hypot(camTTo.x,camTTo.z);if(r>14)camTTo.multiplyScalar(14/r);}
   p.x=e.clientX;p.y=e.clientY;
-  if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0){distTo=Math.max(12,Math.min(58,distTo*pinch0/d));}pinch0=d;moved=99;}});
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0){distTo=Math.max(FARM_ZMIN,Math.min(58,distTo*pinch0/d));}pinch0=d;moved=99;}});
 const endPtr=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;if(ptrs.size===0&&downAt&&moved<8)tap(e.clientX,e.clientY);if(ptrs.size===0)downAt=null;};
 cv.addEventListener('pointerup',endPtr); cv.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);downAt=null;});
-cv.addEventListener('wheel',e=>{e.preventDefault();distTo=Math.max(12,Math.min(58,distTo*(1+e.deltaY*.0012)));},{passive:false});
+cv.addEventListener('wheel',e=>{e.preventDefault();distTo=Math.max(FARM_ZMIN,Math.min(58,distTo*(1+e.deltaY*.0012)));},{passive:false});
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
 let tagAgent=null;
 function tap(cx,cy){
