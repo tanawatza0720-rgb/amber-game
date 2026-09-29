@@ -4,7 +4,7 @@ function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.a
 function renderHUD(){
   $('#pname').textContent=S.name; $('#plv').textContent='Lv '+S.lv; $('#pxp').style.width=Math.min(100,S.xp)+'%'; $('#netDot').className=NET.mode; $('#netDot').title=NET.mode==='online'?'ออนไลน์ · เซฟบนเซิร์ฟเวอร์':'ออฟไลน์ · เซฟในเครื่องนี้'; $('#avaT').textContent=S.name.slice(0,1);
   $('#rEnergy').textContent=S.energy+'/'+S.energyMax; $('#rCoin').textContent=fmt(S.coins); $('#rAmber').textContent=fmt(S.amber);
-  $('#bDaily').hidden=S.dailyClaimed; $('#bMail').hidden=S.mailRead;
+  $('#bDaily').hidden=S.dailyClaimed; $('#bMail').hidden=!S.mailNew; $('#bMail').textContent=S.mailNew||'';
   const qDone=questList().filter(q=>q.cur>=q.need&&!q.claimed).length; $('#bQuest').hidden=!qDone; $('#bQuest').textContent=qDone;
 }
 let toastT; function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600);}
@@ -77,9 +77,25 @@ function openDaily(){
   DAILY.forEach(([k,a],i)=>{const c=el('div','day'+(i<done?' got':i===next&&!S.dailyClaimed?' now':''));c.append(el('span',null,'วัน '+(i+1)));c.append(el('b',null,a+(k==='coins'?' เหรียญ':' อัมพร')));d.append(c);});
   openSheet('รางวัลเข้าเกมรายวัน','เข้าเกมต่อเนื่อง '+S.daily+' วัน',d,[[S.dailyClaimed?'รับแล้ววันนี้':'รับรางวัลวันที่ '+(next+1),async()=>{const r=await act('claim_daily');if(r){bumpRes(r.kind);toast('ได้รับ '+r.amount+(r.kind==='coins'?' เหรียญ':' อัมพร'));closeSheet();}},'',S.dailyClaimed]]);
 }
-function openMail(){S.mailRead=true;save();renderHUD();
-  const d=el('div','mail');[['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับ: มังกรอามาเทรุ ระดับเทพเจ้า อยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
-  openSheet('กล่องจดหมาย','2 ฉบับ',d,[]);}
+// กล่องจดหมาย: ของแจกจากเซิร์ฟเวอร์ (กดรับได้คนละ 1 ครั้ง) + ข่าวในเกม
+async function openMail(){
+  const d=el('div','mail'); d.append(el('p','ptxt','กำลังโหลดจดหมาย…'));
+  openSheet('กล่องจดหมาย','',d,[]);
+  const list=await act('mail_list'); d.innerHTML='';
+  const L=Array.isArray(list)?list:[];
+  const fmtD=t=>{const x=new Date(t);return x.getDate()+'/'+(x.getMonth()+1)+'/'+x.getFullYear();};
+  L.forEach(m=>{const it=el('div','mitem gift'+(m.claimed?' done':''));it.append(el('b',null,m.title));if(m.body)it.append(el('span',null,m.body));
+    const rw=el('div','mrow');const chips=el('div','mchips');
+    if(m.amber)chips.append(el('span','mchip amber','💎 '+fmt(m.amber)+' อัมพร'));if(m.coins)chips.append(el('span','mchip coin','🪙 '+fmt(m.coins)+' เหรียญ'));
+    rw.append(chips);const bt=el('button','mget',m.claimed?'รับแล้ว':'รับ');bt.disabled=m.claimed;
+    bt.onclick=async()=>{bt.disabled=true;const r=await act('claim_mail',{mail_id:m.id});
+      if(r){if(r.amber)bumpRes('amber');if(r.coins)bumpRes('coins');toast('ได้รับ'+(r.amber?' '+fmt(r.amber)+' อัมพร':'')+(r.coins?' '+fmt(r.coins)+' เหรียญ':''));it.classList.add('done');bt.textContent='รับแล้ว';m.claimed=true;{const n=L.filter(x=>!x.claimed).length;$('#shSub').textContent=n?'ของรอรับ '+n+' ฉบับ':'รับของครบแล้ว';}}
+      else bt.disabled=false;};
+    rw.append(bt);it.append(rw);if(!m.claimed)it.append(el('small',null,'รับได้ถึง '+fmtD(m.expires_at)));d.append(it);});
+  if(!L.length)d.append(el('p','ptxt','ไม่มีของแจกในตอนนี้'));
+  [['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับอยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
+  const n=L.filter(m=>!m.claimed).length; $('#shSub')&&($('#shSub').textContent=n?'ของรอรับ '+n+' ฉบับ':'รับของครบแล้ว');
+}
 
 $('#nBattle').onclick=()=>focusBuilding('dojo');
 $('#nMons').onclick=()=>focusBuilding('archive');

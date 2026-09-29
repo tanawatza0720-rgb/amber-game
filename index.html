@@ -69,7 +69,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .day{background:rgba(255,255,255,.05);border:1px solid transparent;border-radius:10px;padding:8px 6px;text-align:center;display:grid;gap:2px}
 .day span{font-size:11px;color:var(--muted)}.day b{font-size:12px}
 .day.got{opacity:.45}.day.now{border-color:var(--amber);background:rgba(255,179,71,.14)}
-.mail{display:grid;gap:6px}.mitem{background:rgba(255,255,255,.05);border-radius:10px;padding:10px 12px;display:grid;gap:2px}.mitem span{font-size:12px;color:var(--muted)}
+.mail{display:grid;gap:6px}.mitem.gift{background:linear-gradient(135deg,rgba(255,179,71,.14),rgba(255,255,255,.04));border:1px solid rgba(255,200,120,.3)}.mitem.done{opacity:.55}.mitem small{font-size:11px;color:var(--muted)}.mrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}.mchips{display:flex;gap:6px;flex-wrap:wrap}.mchip{font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.3)}.mchip.amber{color:#ffc27a}.mchip.coin{color:#ffe28a}.mget{min-width:64px;height:32px;border-radius:9px;border:1px solid #ffd9a0;background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;font-weight:700}.mget:disabled{background:rgba(255,255,255,.08);border-color:var(--line);color:var(--muted)}.mitem{background:rgba(255,255,255,.05);border-radius:10px;padding:10px 12px;display:grid;gap:2px}.mitem span{font-size:12px;color:var(--muted)}
 /* ป้ายมอนสเตอร์ */
 #mtag{position:fixed;transform:translate(-50%,-100%);background:rgba(28,22,16,.9);border:1px solid var(--line);border-radius:10px;padding:5px 10px;text-align:center;pointer-events:none;white-space:nowrap}
 #mtName{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px}
@@ -939,7 +939,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–24 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -1061,6 +1061,8 @@ const LOCAL=(()=>{
       if(!Array.isArray(mat_ids)||mat_ids.length!==need||new Set(mat_ids).size!==need)fail('bad_material');
       const xs=mat_ids.map(id=>mon(id));if(xs.some(x=>x.id===m.id||x.sp!==m.sp))fail('not_same_species');if(xs.some(x=>D.team.includes(x.id)))fail('material_in_team');
       D.mons=D.mons.filter(x=>!mat_ids.includes(x.id));m.stars=st+1;return{stars:m.stars};},
+    mail_list:()=>[],
+    claim_mail:()=>fail('no_mail'),
     set_team:({ids})=>{if(!Array.isArray(ids)||ids.length<1||ids.length>6||new Set(ids).size!==ids.length||!ids.every(i=>D.mons.some(m=>m.id===i)))fail('bad_team');D.team=[...ids];return{};},
     claim_daily:()=>{if(D.daily_last===today())fail('already_claimed');const s=D.daily_last===yesterday()?D.daily_streak+1:1;const day=(s-1)%7+1;
       const [kind,amount]=[['coins',200],['amber',5],['coins',300],['coins',400],['amber',10],['coins',500],['amber',30]][day-1];D[kind]+=amount;D.daily_streak=s;D.daily_last=today();return{day,kind,amount};},
@@ -2381,7 +2383,7 @@ const save=()=>{SafeStore.setItem('amber_mail_read',S.mailRead?'1':'0');};
 function applyState(st){
   if(!st||!st.player)return; const p=st.player;
   Object.assign(S,{name:p.name,lv:p.lv,xp:p.xp,coins:p.coins,amber:p.amber,energy:p.energy,energyMax:p.energy_max,energyNext:p.energy_next,energySec:p.energy_sec,
-    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now()});
+    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now(),mailNew:p.mail_new||0});
   S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0}));
   if(typeof renderHUD==='function')renderHUD();
 }
@@ -2393,7 +2395,7 @@ function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.a
 function renderHUD(){
   $('#pname').textContent=S.name; $('#plv').textContent='Lv '+S.lv; $('#pxp').style.width=Math.min(100,S.xp)+'%'; $('#netDot').className=NET.mode; $('#netDot').title=NET.mode==='online'?'ออนไลน์ · เซฟบนเซิร์ฟเวอร์':'ออฟไลน์ · เซฟในเครื่องนี้'; $('#avaT').textContent=S.name.slice(0,1);
   $('#rEnergy').textContent=S.energy+'/'+S.energyMax; $('#rCoin').textContent=fmt(S.coins); $('#rAmber').textContent=fmt(S.amber);
-  $('#bDaily').hidden=S.dailyClaimed; $('#bMail').hidden=S.mailRead;
+  $('#bDaily').hidden=S.dailyClaimed; $('#bMail').hidden=!S.mailNew; $('#bMail').textContent=S.mailNew||'';
   const qDone=questList().filter(q=>q.cur>=q.need&&!q.claimed).length; $('#bQuest').hidden=!qDone; $('#bQuest').textContent=qDone;
 }
 let toastT; function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600);}
@@ -2466,9 +2468,25 @@ function openDaily(){
   DAILY.forEach(([k,a],i)=>{const c=el('div','day'+(i<done?' got':i===next&&!S.dailyClaimed?' now':''));c.append(el('span',null,'วัน '+(i+1)));c.append(el('b',null,a+(k==='coins'?' เหรียญ':' อัมพร')));d.append(c);});
   openSheet('รางวัลเข้าเกมรายวัน','เข้าเกมต่อเนื่อง '+S.daily+' วัน',d,[[S.dailyClaimed?'รับแล้ววันนี้':'รับรางวัลวันที่ '+(next+1),async()=>{const r=await act('claim_daily');if(r){bumpRes(r.kind);toast('ได้รับ '+r.amount+(r.kind==='coins'?' เหรียญ':' อัมพร'));closeSheet();}},'',S.dailyClaimed]]);
 }
-function openMail(){S.mailRead=true;save();renderHUD();
-  const d=el('div','mail');[['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับ: มังกรอามาเทรุ ระดับเทพเจ้า อยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
-  openSheet('กล่องจดหมาย','2 ฉบับ',d,[]);}
+// กล่องจดหมาย: ของแจกจากเซิร์ฟเวอร์ (กดรับได้คนละ 1 ครั้ง) + ข่าวในเกม
+async function openMail(){
+  const d=el('div','mail'); d.append(el('p','ptxt','กำลังโหลดจดหมาย…'));
+  openSheet('กล่องจดหมาย','',d,[]);
+  const list=await act('mail_list'); d.innerHTML='';
+  const L=Array.isArray(list)?list:[];
+  const fmtD=t=>{const x=new Date(t);return x.getDate()+'/'+(x.getMonth()+1)+'/'+x.getFullYear();};
+  L.forEach(m=>{const it=el('div','mitem gift'+(m.claimed?' done':''));it.append(el('b',null,m.title));if(m.body)it.append(el('span',null,m.body));
+    const rw=el('div','mrow');const chips=el('div','mchips');
+    if(m.amber)chips.append(el('span','mchip amber','💎 '+fmt(m.amber)+' อัมพร'));if(m.coins)chips.append(el('span','mchip coin','🪙 '+fmt(m.coins)+' เหรียญ'));
+    rw.append(chips);const bt=el('button','mget',m.claimed?'รับแล้ว':'รับ');bt.disabled=m.claimed;
+    bt.onclick=async()=>{bt.disabled=true;const r=await act('claim_mail',{mail_id:m.id});
+      if(r){if(r.amber)bumpRes('amber');if(r.coins)bumpRes('coins');toast('ได้รับ'+(r.amber?' '+fmt(r.amber)+' อัมพร':'')+(r.coins?' '+fmt(r.coins)+' เหรียญ':''));it.classList.add('done');bt.textContent='รับแล้ว';m.claimed=true;{const n=L.filter(x=>!x.claimed).length;$('#shSub').textContent=n?'ของรอรับ '+n+' ฉบับ':'รับของครบแล้ว';}}
+      else bt.disabled=false;};
+    rw.append(bt);it.append(rw);if(!m.claimed)it.append(el('small',null,'รับได้ถึง '+fmtD(m.expires_at)));d.append(it);});
+  if(!L.length)d.append(el('p','ptxt','ไม่มีของแจกในตอนนี้'));
+  [['ยินดีต้อนรับสู่ป่าอัมพร!','ของขวัญต้อนรับอยู่ในคลังมอนสเตอร์แล้ว'],['อัปเดตเกม','เซฟบนเซิร์ฟเวอร์แล้ว เล่นต่อได้ทุกครั้งที่เปิด']].forEach(([a,b])=>{const m=el('div','mitem');m.append(el('b',null,a));m.append(el('span',null,b));d.append(m);});
+  const n=L.filter(m=>!m.claimed).length; $('#shSub')&&($('#shSub').textContent=n?'ของรอรับ '+n+' ฉบับ':'รับของครบแล้ว');
+}
 
 $('#nBattle').onclick=()=>focusBuilding('dojo');
 $('#nMons').onclick=()=>focusBuilding('archive');

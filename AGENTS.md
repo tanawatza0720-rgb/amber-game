@@ -157,3 +157,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 - แผง `#hpL` (ทีมเรา ซ้าย) และ `#hpR` (ศัตรู ขวา) สร้างใน `makeBar(u)` → `u.row` · อัปเดตด้วย `updateBar(u)` · ตาย → `rowGone(u)` (ศัตรูหายจากรายการ ทีมเราเป็นสีจาง)
 - เหนือหัวแสดงเฉพาะบัพ/ดีบัพจาก `statusOf(u)`: 💫 มึน · ⚔️ บัพโจมตีทีม · 🛡️ ลดดาเมจ · 💖 เก้าชีวิตยังไม่ใช้ · 🎯 นักล่า (ซ่อนถ้าไม่มีสถานะ)
 - จอแนวนอนโหมดบอส: ปุ่มไม้ตายย้ายไปมุมขวาล่าง และจำกัดความสูงแผงศัตรูไม่ให้ทับ
+
+## กล่องจดหมายแจกของ (server/migrate_mail.sql)
+- ตาราง `public.mail` (จดหมายถึงผู้เล่นทุกคน) + `public.mail_claims` (ใครรับแล้ว) · RPC `mail_list()`, `claim_mail(mail_id)` · `_state.player.mail_new` = จำนวนที่ยังไม่รับ (ตัวเลขบนปุ่มจดหมาย)
+- **ส่งของแจกใหม่** (รันใน Supabase SQL Editor): `insert into public.mail (code, title, body, amber, coins, expires_at) values ('ชื่อไม่ซ้ำ', 'หัวข้อ', 'ข้อความ', 300, 0, now() + interval '30 days') on conflict (code) do nothing;` — ผู้เล่นทุกคน (รวมคนที่สมัครทีหลังก่อนหมดเขต) กดรับได้คนละ 1 ครั้ง
