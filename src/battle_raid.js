@@ -47,7 +47,7 @@ function raidTick(dt){
   if(RB.t>=RAID_T||!alive('P').length)raidEnd();
 }
 async function raidStart(){
-  MODE='raid'; setBossUI(true); $('#hud').hidden=false; $('#bExit').textContent='ถอย';
+  MODE='raid'; setBossUI(true); if(typeof useRealm==='function')useRealm(null); $('#hud').hidden=false; $('#bExit').textContent='ถอย';
   $('#stTitle').textContent='การรุกรานของไฮดรา'; $('#wave').textContent='กำลังเตรียมการต่อสู้…';
   let H,res;
   try{
