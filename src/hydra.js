@@ -9,8 +9,8 @@ const HY_HEADS=['black','gold','red','white','blue','grey'];
 const HY_EL={black:0x8a4dff,gold:0xffe27a,red:0xff5a1f,white:0xbff3ff,blue:0x3fb6ff,grey:0xc89a5a}; // มืด แสง ไฟ ลม น้ำ ดิน
 function loadHydra(scale){
   scale=scale||10;
-  const gl=new Promise((res,rej)=>new THREE.GLTFLoader().load(HYDRA_URL,res,undefined,rej));
-  const rj=fetch(HYDRA_RIG).then(r=>r.json());
+  const gl=new Promise((res,rej)=>new THREE.GLTFLoader().load(HYDRA_URL+'?v=1',res,undefined,rej));
+  const rj=fetch(HYDRA_RIG+'?v=80b',{cache:'no-cache'}).then(r=>r.json());
   return Promise.all([gl,rj]).then(([g,rig])=>{
     let mesh=null; g.scene.traverse(o=>{if(o.isMesh&&!mesh)mesh=o;});
     const geo=mesh.geometry, n=geo.attributes.position.count;
