@@ -1,12 +1,12 @@
 /* ================= ราชันไฮดรา (บอสโลก) =================
-   โมเดล Tripo ลดเหลือ 24k สามเหลี่ยม (boss/hydra.glb) + โครงกระดูก 74 ชิ้น (boss/hydra_rig.json)
-   กระดูก/น้ำหนักผิวคำนวณจากรูปทรงโมเดล: ลำตัว 3 · หาง 2 เส้น · คอ 5 เส้น (เส้นละ 4 ข้อ + หัว) · ปีก 2 ข้าง (แขนปีก + แผ่นปีก) · ขา 4
+   โมเดล Tripo ลดเหลือ 24k สามเหลี่ยม (boss/hydra.glb) + โครงกระดูก 80 ชิ้น (boss/hydra_rig.json)
+   กระดูก/น้ำหนักผิวคำนวณจากรูปทรงโมเดล: ลำตัว 3 · หาง 2 เส้น · คอ 6 เส้น (เส้นละ 4 ข้อ + หัว) · ปีก 2 ข้าง (แขนปีก + แผ่นปีก) · ขา 4
    ท่าทางทั้งหมดคำนวณสด: ทุกข้อมีสปริง ข้อที่อยู่ปลายตามช้ากว่า (คอ/หาง/ปีกเหวี่ยงตามแรงเฉื่อย)
    ใช้: const H=await loadHydra(); scene.add(H.root); ทุกเฟรม H.tick(dt); ท่า H.play(ชื่อ) ดูรายชื่อใน HY_MOVES
    แกนโมเดล: หน้า +x, ขึ้น +y, ปีกซ้าย +z */
 const HYDRA_BASE_=(typeof HYDRA_BASE!=='undefined'?HYDRA_BASE:'boss/'), HYDRA_URL=HYDRA_BASE_+'hydra.glb', HYDRA_RIG=HYDRA_BASE_+'hydra_rig.json';
-const HY_HEADS=['black','gold','red','white','blue'];
-const HY_EL={black:0x8a4dff,gold:0xffe27a,red:0xff5a1f,white:0xbff3ff,blue:0x3fb6ff}; // มืด แสง ไฟ ลม น้ำ
+const HY_HEADS=['black','gold','red','white','blue','grey'];
+const HY_EL={black:0x8a4dff,gold:0xffe27a,red:0xff5a1f,white:0xbff3ff,blue:0x3fb6ff,grey:0xc89a5a}; // มืด แสง ไฟ ลม น้ำ ดิน
 function loadHydra(scale){
   scale=scale||10;
   const gl=new Promise((res,rej)=>new THREE.GLTFLoader().load(HYDRA_URL,res,undefined,rej));
@@ -34,7 +34,7 @@ function loadHydra(scale){
 /* ---------- ระบบท่า: แต่ละท่าเป็นเส้นเวลา (keyframe โค้งนุ่ม) ใช้เวลาเกม dt ไม่ใช่ setTimeout ----------
    ท่า = {D:ระยะเวลา, f(t,o,e): ใส่ค่าพารามิเตอร์ ณ เวลา t ลงใน o, ev:[[เวลา,ฟังก์ชัน]], hold:ค้างท่าสุดท้าย}
    ค่าที่ได้ -> สปริงวิกฤต (ไม่เด้งเกิน) -> หมุนกระดูก -> กระดูกปลายตามช้ากว่า (แรงเฉื่อย) */
-const HY_MOVES=[['roar','คำราม'],['taunt','ขู่'],['breath','พ่นพลัง 5 หัว'],['breathAll','ห้าหัวพ่นรวม'],['flameSweep','ไฟกวาด'],['bite','งับ'],['biteCombo','งับต่อเนื่อง'],
+const HY_MOVES=[['roar','คำราม'],['taunt','ขู่'],['breath','พ่นพลัง 6 หัว'],['breathAll','หกหัวพ่นรวม'],['flameSweep','ไฟกวาด'],['bite','งับ'],['biteCombo','งับต่อเนื่อง'],
   ['slam','ตบกรงเล็บ'],['stomp','กระทืบ'],['gust','กระพือปีก'],['jump','กระโดดกระแทก'],['sweep','กวาดหาง'],['spin','หมุนหวดหาง'],['tailStab','แทงหาง'],
   ['charge','พุ่งชน'],['meteor','เรียกอุกกาบาต'],['enrage','คลั่ง'],['walk','เดิน'],['hit','โดนตี'],['die','ล้ม'],['revive','ฟื้น']];
 function makeHydra(root,pivot,body,sm,B,S){
@@ -79,25 +79,25 @@ function makeHydra(root,pivot,body,sm,B,S){
   // ---------- ท่าทั้งหมด ----------
   const ACT={
     roar:{D:2.6,f(t,o){o.rear=kf(t,[[0,0],[.5,.2],[1.1,.14],[2.1,.1],[2.6,0]]);o.crouch=kf(t,[[0,0],[.45,-.025],[.9,.01],[2.6,0]]);
-        HH(o,'P',i=>kf(t,[[0,0],[.5,.5+i*.05],[.95,-.2],[2.1,-.12],[2.6,0]]));HH(o,'Y',i=>kf(t,[[0,0],[.5,(i-2)*.14],[2.6,0]]));HH(o,'X',i=>kf(t,[[0,0],[.5,-.25],[.95,.55],[2.1,.45],[2.6,0]]));
+        HH(o,'P',i=>kf(t,[[0,0],[.5,.5+i*.05],[.95,-.2],[2.1,-.12],[2.6,0]]));HH(o,'Y',i=>kf(t,[[0,0],[.5,(i-2.5)*.14],[2.6,0]]));HH(o,'X',i=>kf(t,[[0,0],[.5,-.25],[.95,.55],[2.1,.45],[2.6,0]]));
         o.wingL=o.wingR=kf(t,[[0,0],[.5,.35],[1,-.35],[2.1,-.3],[2.6,0]]);o.tailUp=kf(t,[[0,0],[.95,.35],[2.6,0]]);},
       ev:[[.95,()=>{ring(.4*S,0,0xffc070,S*1.1,1);ring(.4*S,0,0xff8040,S*.7,.8);shake.a=.6;}],[1.3,()=>ring(.4*S,0,0xffc070,S*1.4,1.1)]]},
     taunt:{D:3.2,f(t,o){HH(o,'Y',i=>Math.sin(t*3.2+i*1.3)*.45*pulse(t,0,.4,2.7,3.2));HH(o,'P',i=>Math.sin(t*2.1+i)*.18*pulse(t,0,.4,2.7,3.2)+.12*pulse(t,0,.4,2.7,3.2));
         HH(o,'X',i=>Math.max(0,Math.sin(t*4+i*1.9))*.35*pulse(t,.2,.6,2.6,3.1));o.crouch=-.02*pulse(t,0,.5,2.7,3.2);o.tailSw=Math.sin(t*2.4)*.6*pulse(t,0,.5,2.6,3.2);o.wingL=o.wingR=.15*pulse(t,0,.5,2.7,3.2);}},
-    breath:{D:4.6,f(t,o){HY_HEADS.forEach((h,i)=>{const t0=.2+i*.75;o[h+'P']+=kf(t-t0,[[0,0],[.35,.45],[.55,-.15],[1.2,-.1],[1.5,0]]);o[h+'X']+=kf(t-t0,[[0,0],[.35,-.35],[.55,.6],[1.2,.5],[1.5,0]]);});
-        o.crouch=-.015*pulse(t,0,.5,4,4.6);o.wingL=o.wingR=.12*pulse(t,0,.5,4,4.6);},
+    breath:{D:5.3,f(t,o){HY_HEADS.forEach((h,i)=>{const t0=.2+i*.75;o[h+'P']+=kf(t-t0,[[0,0],[.35,.45],[.55,-.15],[1.2,-.1],[1.5,0]]);o[h+'X']+=kf(t-t0,[[0,0],[.35,-.35],[.55,.6],[1.2,.5],[1.5,0]]);});
+        o.crouch=-.015*pulse(t,0,.5,4.7,5.3);o.wingL=o.wingR=.12*pulse(t,0,.5,4.7,5.3);},
       ev:HY_HEADS.map((h,i)=>[.2+i*.75+.52,()=>breathe(h,.7)])},
     breathAll:{D:4.2,f(t,o){const up=pulse(t,0,1.1,1.3,1.5), fire=pulse(t,1.4,1.6,3.3,3.9);o.rear=.22*up+.05*fire;o.crouch=-.04*fire;
-        HH(o,'P',i=>.6*up-.12*fire);HH(o,'Y',i=>(i-2)*.18*up-(i-2)*.1*fire);HH(o,'X',i=>-.4*up+.6*fire);o.wingL=o.wingR=.5*up-.35*fire;o.glow=up+fire*.6;},
+        HH(o,'P',i=>.6*up-.12*fire);HH(o,'Y',i=>(i-2.5)*.18*up-(i-2.5)*.1*fire);HH(o,'X',i=>-.4*up+.6*fire);o.wingL=o.wingR=.5*up-.35*fire;o.glow=up+fire*.6;},
       ev:[[1.5,()=>{HY_HEADS.forEach(h=>breathe(h,2.2,1.2));shake.a=.35;}]]},
     flameSweep:{D:3.6,f(t,o){const on=pulse(t,.1,.6,3,3.6);o.redP=kf(t,[[0,0],[.5,.35],[.8,-.1],[3,-.1],[3.6,0]]);o.redX=.55*pulse(t,.5,.8,2.9,3.4);o.redY=kf(t,[[0,0],[.8,.6],[2.9,-.7],[3.6,0]]);
-        o.yaw=kf(t,[[0,0],[.8,.15],[2.9,-.2],[3.6,0]]);HH(o,'Y',i=>i===2?0:(i<2?.3:-.3)*on);o.crouch=-.02*on;},
+        o.yaw=kf(t,[[0,0],[.8,.15],[2.9,-.2],[3.6,0]]);HH(o,'Y',i=>i===2?0:(i<2||i===5?.3:-.3)*on);o.crouch=-.02*on;},
       ev:[[.8,()=>breathe('red',2.1,.9)]]},
     bite:{D:1.8,f(t,o){o.redP=kf(t,[[0,0],[.35,.4],[.55,-.35],[.9,-.3],[1.8,0]]);o.redX=kf(t,[[0,0],[.35,-.45],[.55,.8],[.9,.7],[1.8,0]]);o.fwd=kf(t,[[0,0],[.35,-.02],[.55,.05],[1.8,0]]);o.crouch=kf(t,[[0,0],[.55,-.035],[1.8,0]]);
-        HH(o,'Y',i=>i===2?0:(i-2)*.1*pulse(t,0,.4,1.2,1.8));},ev:[[.55,()=>{shake.a=.25;const p=worldPt('n_red4',.08);for(let k=0;k<14;k++)emit(p,V3((Math.random()-.5)*S*.5,Math.random()*S*.4,(Math.random()-.5)*S*.5),0xffd9a0,S*.03,.4);}]]},
-    biteCombo:{D:4.2,f(t,o){const ord=[2,4,1,3,0];ord.forEach((hi,k)=>{const h=HY_HEADS[hi],t0=.15+k*.62;o[h+'P']+=kf(t-t0,[[0,0],[.25,.35],[.42,-.35],[.7,-.25],[1,0]]);o[h+'X']+=kf(t-t0,[[0,0],[.25,-.4],[.42,.75],[.7,.6],[1,0]]);});
+        HH(o,'Y',i=>i===2?0:(i-2.5)*.1*pulse(t,0,.4,1.2,1.8));},ev:[[.55,()=>{shake.a=.25;const p=worldPt('n_red4',.08);for(let k=0;k<14;k++)emit(p,V3((Math.random()-.5)*S*.5,Math.random()*S*.4,(Math.random()-.5)*S*.5),0xffd9a0,S*.03,.4);}]]},
+    biteCombo:{D:4.8,f(t,o){const ord=[2,4,5,1,3,0];ord.forEach((hi,k)=>{const h=HY_HEADS[hi],t0=.15+k*.62;o[h+'P']+=kf(t-t0,[[0,0],[.25,.35],[.42,-.35],[.7,-.25],[1,0]]);o[h+'X']+=kf(t-t0,[[0,0],[.25,-.4],[.42,.75],[.7,.6],[1,0]]);});
         o.fwd=Math.sin(t*6)*.012*pulse(t,0,.3,3.5,4.2);o.crouch=-.03*pulse(t,0,.3,3.6,4.2);o.yaw=Math.sin(t*3)*.06*pulse(t,0,.3,3.5,4.2);},
-      ev:[0,1,2,3,4].map(k=>[.15+k*.62+.42,()=>{shake.a=.18;}])},
+      ev:[0,1,2,3,4,5].map(k=>[.15+k*.62+.42,()=>{shake.a=.18;}])},
     slam:{D:2.8,f(t,o){o.rear=kf(t,[[0,0],[.8,.62],[1.05,.66],[1.3,-.08],[1.9,-.04],[2.8,0]]);o.armL=o.armR=kf(t,[[0,0],[.8,1],[1.05,1.05],[1.3,-.3],[2,-.1],[2.8,0]]);
         o.wingL=o.wingR=kf(t,[[0,0],[.8,.45],[1.3,-.45],[2,-.2],[2.8,0]]);o.tailUp=kf(t,[[0,0],[.8,-.3],[1.3,.25],[2.8,0]]);o.crouch=kf(t,[[0,0],[1.2,0],[1.35,-.06],[2,-.03],[2.8,0]]);
         HH(o,'P',i=>kf(t,[[0,0],[.8,.35],[1.3,-.3],[2,-.15],[2.8,0]]));HH(o,'X',i=>kf(t,[[0,0],[.8,-.15],[1.3,.45],[2,.2],[2.8,0]]));},
@@ -118,18 +118,18 @@ function makeHydra(root,pivot,body,sm,B,S){
         o.wingL=o.wingR=-.3*pulse(t,.4,.8,2,2.6);HH(o,'Y',i=>kf(t,[[0,0],[.5,.3],[1.2,-.35],[2.4,0]]));o.lift=.03*pulse(t,.6,1,1.6,2);},
       ev:[[1.2,()=>{ring(0,0,0xffb070,S*1.5,1);shake.a=.5;}],[2.1,()=>dust(0,0,20)]],after(){P.spin.v-=Math.PI*2;}},
     tailStab:{D:2.6,f(t,o){o.tailUp=kf(t,[[0,0],[.8,1.25],[1.1,1.5],[1.3,.9],[1.8,.8],[2.6,0]]);o.tailSw=kf(t,[[0,0],[.8,.2],[2.6,0]]);o.rear=kf(t,[[0,0],[.8,-.08],[1.1,.06],[2.6,0]]);o.crouch=-.04*pulse(t,0,.6,1.9,2.6);
-        HH(o,'P',i=>-.15*pulse(t,.2,.7,1.9,2.6));HH(o,'Y',i=>(i-2)*.15*pulse(t,.2,.7,1.9,2.6));},ev:[[1.25,()=>{shake.a=.45;ring(.6*S,0,0xff70c0,S*.7,.6);}]]},
+        HH(o,'P',i=>-.15*pulse(t,.2,.7,1.9,2.6));HH(o,'Y',i=>(i-2.5)*.15*pulse(t,.2,.7,1.9,2.6));},ev:[[1.25,()=>{shake.a=.45;ring(.6*S,0,0xff70c0,S*.7,.6);}]]},
     charge:{D:3,f(t,o){o.fwd=kf(t,[[0,0],[.55,-.08],[1.05,.45],[1.35,.42],[2.4,0],[3,0]]);o.crouch=kf(t,[[0,0],[.55,-.06],[1.05,-.02],[2.4,0]]);o.rear=kf(t,[[0,0],[.55,-.1],[1.05,-.12],[1.3,.1],[2.4,0]]);
         o.walk=pulse(t,.5,.6,1.1,1.3)*3;o.wingL=o.wingR=kf(t,[[0,0],[.55,.3],[1,-.4],[2.4,0]]);HH(o,'P',i=>kf(t,[[0,0],[.55,-.2],[1.05,-.3],[1.35,.2],[2.4,0]]));HH(o,'X',i=>.4*pulse(t,.6,1,1.4,2));},
       ev:[[1.05,()=>{shake.a=.9;ring(.95*S,0,0xffd08a,S*1,.8);dust(.9*S,0,24);if(API.onHit)API.onHit('charge');}]]},
-    meteor:{D:4.6,f(t,o){const up=pulse(t,0,.9,3.4,4.2);o.rear=.28*up;HH(o,'P',i=>.85*up+Math.sin(t*5+i)*.05*up);HH(o,'Y',i=>(i-2)*.22*up);o.wingL=o.wingR=.5*up;o.glow=up;o.armL=o.armR=.3*up;},
+    meteor:{D:4.6,f(t,o){const up=pulse(t,0,.9,3.4,4.2);o.rear=.28*up;HH(o,'P',i=>.85*up+Math.sin(t*5+i)*.05*up);HH(o,'Y',i=>(i-2.5)*.22*up);o.wingL=o.wingR=.5*up;o.glow=up;o.armL=o.armR=.3*up;},
       ev:[[1,()=>{for(let k=0;k<7;k++)meteors.push({t:-k*.28,x:(Math.random()*1.4+.5)*S,z:(Math.random()-.5)*1.6*S});}]]},
     enrage:{D:3.6,f(t,o){const on=pulse(t,0,.4,3,3.6);HH(o,'P',i=>(Math.sin(t*9+i*2.1)*.3+.2)*on);HH(o,'Y',i=>Math.sin(t*7+i*1.4)*.4*on);HH(o,'X',i=>Math.max(0,Math.sin(t*8+i))*.3*on);
         o.wingL=o.wingR=(Math.sin(t*8)*.3+.1)*on;o.glow=1.4*on;o.crouch=-.03*on;o.rear=(.1+Math.sin(t*4)*.04)*on;o.tailSw=Math.sin(t*5)*.8*on;o.tailSw2=-o.tailSw;},
       ev:[[.5,()=>{shake.a=.5;ring(0,0,0xff3a2a,S*1.4,1.2);}],[1.6,()=>ring(0,0,0xff3a2a,S*1.6,1.2)]]},
     walk:{D:4.2,f(t,o){const on=pulse(t,0,.4,3.7,4.2);o.walk=2.6*on;o.fwd=Math.sin(t*1.5)*.04*on;HH(o,'Y',i=>Math.sin(t*1.5+i)*.12*on);o.tailSw=Math.sin(t*2.6)*.35*on;}},
     hit:{D:1,f(t,o){const k=kf(t,[[0,0],[.08,1],[.35,.5],[1,0]]);o.rear=-.08*k;o.fwd=-.04*k;o.crouch=-.02*k;HH(o,'P',i=>.25*k);HH(o,'X',i=>-.4*k);HH(o,'Y',i=>(i%2?1:-1)*.25*k);o.wingL=o.wingR=.2*k;},ev:[[0,()=>shake.a=.3]]},
-    die:{D:3.6,hold:true,f(t,o){HY_HEADS.forEach((h,i)=>{const t0=.3+i*.35;o[h+'P']+=kf(t-t0,[[0,0],[.25,.45],[.7,-.4]]);o[h+'Y']+=kf(t-t0,[[0,0],[.7,(i-2)*.14]]);});
+    die:{D:3.6,hold:true,f(t,o){HY_HEADS.forEach((h,i)=>{const t0=.3+i*.35;o[h+'P']+=kf(t-t0,[[0,0],[.25,.45],[.7,-.4]]);o[h+'Y']+=kf(t-t0,[[0,0],[.7,(i-2.5)*.14]]);});
         o.dead=kf(t,[[0,0],[1.8,0],[2.6,1]]);o.crouch=kf(t,[[0,0],[1.8,0],[2.6,-.05]]);o.wingL=kf(t,[[0,0],[1,.3],[2.6,-.35]]);o.wingR=kf(t,[[0,0],[1,.3],[2.6,-.3]]);o.foldL=o.foldR=kf(t,[[0,0],[2.6,.25]]);o.tailUp=kf(t,[[0,0],[2.6,-.2]]);},
       ev:[[2.6,()=>{shake.a=.7;dust(0,0,40);}]]},
     revive:{D:0,f(){}}

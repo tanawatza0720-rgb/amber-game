@@ -33,5 +33,6 @@ for s in [1,-1]:
     c,_=centerline([-0.14,-0.14,0.1*s],[-0.159,-0.438,0.18*s],3,0.05); J['legH%+d'%s]=c.tolist()
 for s,low in [(1,[0.021,-0.289,0.401]),(-1,[-0.16,-0.3,-0.399])]:
     c,L=centerline(J['wing%+d'%s][1],low,3,0.035); J['memb%+d'%s]=c.tolist(); print('memb',s,round(L,3))
+J['neck_grey']=[[0.266,-0.042,0.147],[0.275,0.039,0.149],[0.279,0.102,0.137],[0.332,0.152,0.135],[0.34,0.165,0.15],[0.41,0.15,0.14]]  # หัวที่ 6 (เทาเขาแพะ) หาจากสีผิว
 json.dump(J,open('hyd_joints.json','w'))
 for k,v in J.items(): print(k,np.round(v,2).tolist())

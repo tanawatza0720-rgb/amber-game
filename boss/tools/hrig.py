@@ -15,8 +15,8 @@ def chain(pre,par,pts,tipExt=0.0):
     add(f'{pre}{len(pts)-1}',prev,end,end,end+d*tipExt)
 chain('tail','hips',J['tail'],0.02)
 chain('tailB','hips',J['tail2'],0.02)
-for k in ['black','gold','red','white','blue']:
-    chain('n_'+k,'chest',J['neck_'+k],0.07)
+for k in ['black','gold','red','white','blue','grey']:
+    chain('n_'+k,'chest',J['neck_'+k],0.0 if k=='grey' else 0.07)
 for sgn,nm in [(1,'L'),(-1,'R')]:
     w=J['wing%+d'%sgn]; chain('w'+nm,'chest',w,0.0)
     chain('m'+nm,'w'+nm+'0',J['memb%+d'%sgn],0.0)
