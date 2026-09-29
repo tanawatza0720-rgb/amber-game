@@ -772,6 +772,9 @@ begin
   select count(*) into n from public.monsters x
     where x.id = any(mat_ids) and x.user_id = u and x.sp = m.sp;
   if n <> need then raise exception 'not_same_species'; end if;
+  -- ห้ามใช้ตัวที่ดาวมากกว่าตัวหลักเป็นวัตถุดิบ
+  if exists (select 1 from public.monsters x where x.id = any(mat_ids) and x.user_id = u and x.stars > m.stars)
+    then raise exception 'material_stronger'; end if;
   delete from public.monsters x where x.id = any(mat_ids) and x.user_id = u;
   update public.monsters set stars = stars + 1 where id = m.id;
   update public.players set updated_at = now() where user_id = u;

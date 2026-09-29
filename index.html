@@ -221,7 +221,7 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
 .skr.pas{background:rgba(255,106,176,.08);border:1px solid rgba(255,138,196,.25)}.skr.pas .skn{width:auto;padding:0 6px;background:rgba(255,106,176,.2);color:#ff9ccc;font-size:10px}.skNote{font-size:11px;color:var(--muted);margin:8px 2px 0}td.adv{color:#ffb35a}td.weak{color:#9aa7b8}
 .skr b{font-size:13px}.skr p{margin:2px 0 0;font-size:12px;color:var(--muted)}
 .iLore{font-size:13px;color:var(--muted);line-height:1.7;margin:4px 0}
-.bActs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;border-top:1px solid var(--line)}
+.bActs{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;border-top:1px solid var(--line)}
 .bActs button{min-height:46px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;padding:2px}
 .bActs button small{font-family:'Bai Jamjuree',sans-serif;font-weight:400;font-size:10px;color:var(--muted)}
 .bActs .main{background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;border-color:#ffd9a0}.bActs .main small{color:#5a3410}
@@ -254,6 +254,33 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
   .bRight{width:auto;flex:1}
 }
 @media (prefers-reduced-motion:reduce){#sheet{animation:none}.bump{animation:none}}
+/* หน้าเลือกอาหารวิวัฒนาการ */
+#toast{z-index:8}
+#evo{position:fixed;inset:0;z-index:7;background:rgba(8,4,16,.62);display:flex;align-items:center;justify-content:center;padding:12px}
+#evo[hidden]{display:none}
+.evCard{position:relative;width:min(400px,100%);max-height:calc(100vh - 24px);overflow:auto;border-radius:18px;padding:16px 14px 14px;
+  background:radial-gradient(120% 70% at 50% 0%,#4a2d86 0%,#2a1a52 45%,#170f30 100%);border:1px solid rgba(190,160,255,.35);box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 0 40px rgba(140,100,255,.15)}
+.evX{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(220,200,255,.35);background:rgba(0,0,0,.3);color:#efe6ff;font-size:16px}
+.evTop{position:relative;display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
+.evRing{position:relative;width:132px;height:132px;display:grid;place-items:center}
+.evRing::before{content:'';position:absolute;inset:0;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:linear-gradient(160deg,rgba(210,185,255,.55),rgba(110,70,200,.25));}
+.evRing::after{content:'';position:absolute;inset:6px;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:radial-gradient(circle,#3b2572,#1d1340)}
+.evRing .ic{position:relative;z-index:1;width:70px!important}
+.evName{margin-top:6px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;color:#fff}
+.evStars{font-size:14px;letter-spacing:1px;color:#ffd35a;text-shadow:0 0 6px rgba(255,200,80,.6)}.evStars .to{color:#8ff0c4}
+.evGain{font-size:11px;color:#cbbcf0;text-align:center;margin-top:2px}
+.evBar{margin:12px 0 8px;display:flex;align-items:center;gap:8px}
+.evBar b{flex:1;text-align:center;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,rgba(0,0,0,.1),rgba(0,0,0,.55),rgba(0,0,0,.1));border:1px solid rgba(220,200,255,.3);font-family:'Chakra Petch',sans-serif;font-size:14px;color:#fff}
+.evBar button{width:34px;height:34px;border-radius:50%;border:1px solid rgba(220,200,255,.4);background:rgba(0,0,0,.35);color:#efe6ff;font-size:16px}
+.evPicked{display:flex;justify-content:center;gap:8px;min-height:56px;padding:6px;border-radius:12px;border:1px dashed rgba(220,200,255,.35);background:rgba(0,0,0,.2)}
+.evPicked .ic{width:48px!important}.evPicked .slot{width:48px;aspect-ratio:1;border-radius:9px;border:1px dashed rgba(220,200,255,.35)}
+.evHint{font-size:11px;color:#b9a9e0;margin:8px 2px 6px}
+.evList{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:6px;max-height:170px;overflow:auto;padding:2px}
+.evList .ic{width:auto!important}.evList .ic.on{outline:3px solid #8ff0c4;outline-offset:1px}.evList .ic.on::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,80,60,.45);color:#fff;font-size:20px;font-weight:700}
+.evList .ic.no{opacity:.35;filter:grayscale(.7)}
+.evEmpty{grid-column:1/-1;font-size:12px;color:#b9a9e0;text-align:center;padding:10px}
+.evGo{margin-top:12px;width:100%;min-height:46px;border-radius:12px;border:1px solid #bff5e0;background:linear-gradient(180deg,#8ff0c4,#3aa88a);color:#0e2a22;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px}
+.evGo:disabled{opacity:.4}
 </style>
 
 <div id="view"></div>
@@ -309,7 +336,7 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
         <div class="bInfo">
           <div class="bTabs"><button data-t="info" class="on">ข้อมูล</button><button data-t="skill">สกิล</button><button data-t="lore">ตำนาน</button></div>
           <div class="bPage"><div class="bPageIn" id="bPage"></div>
-            <div class="bActs"><button id="mdUp" class="main"></button><button id="mdEvo"></button><button id="mdTeam"></button><button id="md3d">ดู 3D<small>หมุนดูตัว</small></button></div>
+            <div class="bActs"><button id="mdUp" class="main"></button><button id="mdEvo"></button><button id="mdTeam"></button></div>
           </div>
         </div>
         <div class="bTeamBox"><div><b>ทีมต่อสู้</b><span id="bTeamPow"></span></div><div id="bTeam"></div></div>
@@ -317,6 +344,15 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
       </div>
     </div>
   </div>
+  <section id="evo" hidden><div class="evCard">
+    <button class="evX" id="evX" aria-label="ปิด">✕</button>
+    <div class="evTop"><div class="evRing" id="evMain"></div><div class="evName" id="evName"></div><div class="evStars" id="evStars"></div><div class="evGain" id="evGain"></div></div>
+    <div class="evBar"><b id="evCount"></b><button id="evAuto" title="เลือกอัตโนมัติ">↻</button></div>
+    <div class="evPicked" id="evPicked"></div>
+    <div class="evHint">เลือกตัวซ้ำที่จะใช้เป็นอาหาร · ใช้ได้เฉพาะตัวที่ดาวไม่มากกว่าตัวหลัก และไม่อยู่ในทีม</div>
+    <div class="evList" id="evList"></div>
+    <button class="evGo" id="evGo">วิวัฒนาการ</button>
+  </div></section>
   <section id="mdet" hidden>
     <div class="mdNav"><button class="bBtn" id="mdBack">‹ กลับ</button><b id="md3Name"></b></div>
     <div class="dragHint">ลากเพื่อหมุนดูรอบตัว</div>
@@ -1104,7 +1140,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -1224,7 +1260,7 @@ const LOCAL=(()=>{
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
     star_up:({mon_id,mat_ids})=>{const m=mon(mon_id);const st=m.stars||0;if(st>=STAR_MAX)fail('max_stars');const need=starCost(st+1);
       if(!Array.isArray(mat_ids)||mat_ids.length!==need||new Set(mat_ids).size!==need)fail('bad_material');
-      const xs=mat_ids.map(id=>mon(id));if(xs.some(x=>x.id===m.id||x.sp!==m.sp))fail('not_same_species');if(xs.some(x=>D.team.includes(x.id)))fail('material_in_team');
+      const xs=mat_ids.map(id=>mon(id));if(xs.some(x=>x.id===m.id||x.sp!==m.sp))fail('not_same_species');if(xs.some(x=>D.team.includes(x.id)))fail('material_in_team');if(xs.some(x=>(x.stars||0)>st))fail('material_stronger');
       D.mons=D.mons.filter(x=>!mat_ids.includes(x.id));m.stars=st+1;return{stars:m.stars};},
     set_race:({r})=>{if(!RACES[r])fail('bad_race');if(D.race)fail('race_locked');D.race=r;return{race:r};},
     mail_list:()=>[],
@@ -3609,9 +3645,10 @@ function icon(m,cls){const sp=spOf(m);const c=el('button','ic r'+sp.rar+(cls?' '
   if(sp.evolveTo&&m.lv>=sp.maxLv){const e=el('span','ev','↑');e.title='เปลี่ยนร่างได้';c.append(e);}
   else if(canStar(m)){const e=el('span','ev','★');e.title='วิวัฒน์ (ขึ้นดาว) ได้';c.append(e);}
   {const me=elOfMon(m);const b=el('span','elb',ELEM[me].i);b.style.background=ELEM[me].c;c.append(b);c.title=sp.name+' ธาตุ'+me+' Lv'+m.lv+(m.stars?' ★'+m.stars:'');} return c;}
-// วัตถุดิบขึ้นดาว: ตัวซ้ำสายพันธุ์เดียวกันที่ไม่อยู่ในทีม เลือกตัวดาว/เลเวลต่ำสุดก่อน
+// วัตถุดิบขึ้นดาว: ตัวซ้ำสายพันธุ์เดียวกันที่ไม่อยู่ในทีม และดาวไม่มากกว่าตัวหลัก เลือกตัวดาว/เลเวลต่ำสุดก่อน
+const isMat=(m,x)=>x.sp===m.sp&&x.uid!==m.uid&&!S.team.includes(x.uid)&&(x.stars||0)<=(m.stars||0);
 function starMats(m){const need=starCost((m.stars||0)+1);
-  const L=S.mons.filter(x=>x.sp===m.sp&&x.uid!==m.uid&&!S.team.includes(x.uid)).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
+  const L=S.mons.filter(x=>isMat(m,x)).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
   return {need,list:L.slice(0,need),have:L.length};}
 const canStar=m=>(m.stars||0)<STAR_MAX&&starMats(m).have>=starMats(m).need;
 const starStr=n=>'★'.repeat(n)+'☆'.repeat(STAR_MAX-n);
@@ -3667,8 +3704,8 @@ function renderDetail(){
   const canEvo=sp.evolveTo&&maxed, nst=m.stars||0, SM=starMats(m);
   $('#mdEvo').innerHTML='';
   if(canEvo){$('#mdEvo').disabled=false;$('#mdEvo').append(el('span',null,'เปลี่ยนร่าง'));$('#mdEvo').append(el('small',null,'300 เหรียญ'));}
-  else{$('#mdEvo').disabled=nst>=STAR_MAX||SM.have<SM.need;$('#mdEvo').append(el('span',null,'วิวัฒน์'));
-    $('#mdEvo').append(el('small',null,nst>=STAR_MAX?'ดาวเต็มแล้ว':'ใช้ตัวซ้ำ '+SM.need+' ตัว ('+Math.min(SM.have,99)+'/'+SM.need+')'));}
+  else{$('#mdEvo').disabled=nst>=STAR_MAX;$('#mdEvo').append(el('span',null,'วิวัฒน์'));
+    $('#mdEvo').append(el('small',null,nst>=STAR_MAX?'ดาวเต็มแล้ว':'อาหาร '+Math.min(SM.have,SM.need)+'/'+SM.need));}
 }
 document.querySelectorAll('.bTabs button').forEach(b=>b.onclick=()=>{boxTab=b.dataset.t;renderDetail();});
 $('#bSort').onchange=e=>{boxSort=e.target.value;renderBox();};
@@ -3680,7 +3717,7 @@ function open3d(){const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;
   if(spOf(m).spider){const R=A.rig;spiderSet({rig:R},{rear:1,cast:1},.35);setTimeout(()=>spiderSet({rig:R},{rear:0,cast:0},.5),1400);}
   if(spOf(m).dragon)dragonSet({rig:A.rig},{rear:1,spread:1,breath:1},.4),setTimeout(()=>BOX.model&&dragonSet({rig:BOX.model.userData.inner.userData.rig},{rear:0,spread:0,breath:0},.6),1300);}
 function close3d(){BOX.open=false;$('#box').classList.remove('v3d');$('#mdet').hidden=true;if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}renderBox();}
-$('#md3d').onclick=open3d; $('#mdBack').onclick=close3d;
+$('#mdBack').onclick=close3d;
 $('#mdTeam').onclick=async()=>{const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;const t=[...S.team];const i=t.indexOf(m.uid);let msg;
   if(i>=0){if(t.length<=1)return toast('ทีมต้องมีอย่างน้อย 1 ตัว');t.splice(i,1);msg=spOf(m).name+' ออกจากทีมแล้ว';}
   else if(t.length>=6){const out=S.mons.find(x=>x.uid===t[5]);t[5]=m.uid;msg='สลับ '+spOf(out).name+' ออก ใส่ '+spOf(m).name+' แทน';}
@@ -3702,20 +3739,46 @@ $('#mdEvo').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid=
   boxModel(r.sp,elOfMon(m)); $('#md3Name').textContent=SPEC[r.sp].name+' Lv1';
   boxSpark(p,0xffc94d,40,2); const A=BOX.model.userData.inner.userData; if(A.play)A.play('victory',{fade:.1});
   $('#mdBack').disabled=false; toast('เปลี่ยนร่างสำเร็จ! กลายเป็น '+SPEC[r.sp].name);};
-// วิวัฒนาการ (ขึ้นดาว): กดครั้งแรกบอกว่าจะใช้ตัวไหน กดซ้ำภายใน 6 วินาทีเพื่อยืนยัน
-async function starUp(m){
-  const sp=spOf(m), st=m.stars||0, SM=starMats(m);
-  if(st>=STAR_MAX){toast('ดาวเต็มแล้ว');return;}
-  if(SM.have<SM.need){toast('ต้องมี '+sp.name+' ซ้ำที่ไม่อยู่ในทีมอีก '+(SM.need-SM.have)+' ตัว');return;}
-  const A=BOX.starArm; if(!A||A.uid!==m.uid||A.st!==st||Date.now()-A.t>6000){BOX.starArm={uid:m.uid,st,t:Date.now()};
-    toast('แตะอีกครั้งเพื่อยืนยัน: ใช้ '+SM.list.map(x=>sp.name+' '+ELEM[elOfMon(x)].i+' Lv'+x.lv+(x.stars?' ★'+x.stars:'')).join(' + ')+' เป็นวัตถุดิบ');return;}
-  BOX.starArm=null; const before=skillLvs(m.sp,st), pw0=power(m);
-  const r=await act('star_up',{mon_id:m.uid,mat_ids:SM.list.map(x=>x.uid)}); if(!r)return;
-  const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=spOf(m).skills[i];
+// วิวัฒนาการ (ขึ้นดาว): เปิดหน้าเลือกอาหาร (ตัวซ้ำ) เอง แล้วกดยืนยัน
+const EVO={m:null,sel:[]};
+function starUp(m){
+  const st=m.stars||0; if(st>=STAR_MAX){toast('ดาวเต็มแล้ว');return;}
+  EVO.m=m; EVO.sel=starMats(m).list.map(x=>x.uid); $('#evo').hidden=false; renderEvo();}
+function closeEvo(){$('#evo').hidden=true;EVO.m=null;EVO.sel=[];}
+function renderEvo(){
+  const m=EVO.m; if(!m)return; const sp=spOf(m), st=m.stars||0, need=starCost(st+1);
+  const main=$('#evMain'); main.innerHTML=''; main.append(icon(m));
+  $('#evName').textContent=sp.name+' Lv'+m.lv;
+  const ss=$('#evStars'); ss.innerHTML=''; ss.append(document.createTextNode('★'.repeat(st)+'☆'.repeat(STAR_MAX-st)+'  →  ')); ss.append(el('span','to','★'.repeat(st+1)+'☆'.repeat(STAR_MAX-st-1)));
+  const before=skillLvs(m.sp,st), after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=sp.skills[i];
+  $('#evGain').textContent='พลังรบ +'+Math.round(STAR_POW*100)+'%'+(sk?' · '+sk.name+' Lv'+after[i]:'');
+  EVO.sel=EVO.sel.filter(u=>S.mons.some(x=>x.uid===u&&isMat(m,x))).slice(0,need);
+  $('#evCount').textContent='อาหารวิวัฒนาการ ('+EVO.sel.length+'/'+need+')';
+  const pk=$('#evPicked'); pk.innerHTML='';
+  for(let k=0;k<need;k++){const x=S.mons.find(y=>y.uid===EVO.sel[k]);
+    if(x){const c=icon(x);c.onclick=()=>{EVO.sel=EVO.sel.filter(u=>u!==x.uid);renderEvo();};pk.append(c);}else pk.append(el('div','slot'));}
+  const L=$('#evList'); L.innerHTML='';
+  const same=S.mons.filter(x=>x.sp===m.sp&&x.uid!==m.uid).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
+  if(!same.length)L.append(el('div','evEmpty','ยังไม่มี'+sp.name+'ตัวซ้ำ · ฟักไข่เพื่อหาตัวซ้ำมาใช้เป็นอาหาร'));
+  same.forEach(x=>{const c=icon(x), ok=isMat(m,x), on=EVO.sel.includes(x.uid); if(on)c.classList.add('on');
+    if(!ok){c.classList.add('no');c.title=S.team.includes(x.uid)?'อยู่ในทีม ใช้เป็นอาหารไม่ได้':'ดาวมากกว่าตัวหลัก ใช้เป็นอาหารไม่ได้';}
+    c.onclick=()=>{if(!ok){toast(c.title);return;}
+      if(on)EVO.sel=EVO.sel.filter(u=>u!==x.uid);else if(EVO.sel.length<need)EVO.sel.push(x.uid);else{EVO.sel.shift();EVO.sel.push(x.uid);}
+      renderEvo();};
+    L.append(c);});
+  $('#evGo').disabled=EVO.sel.length!==need;
+}
+$('#evX').onclick=closeEvo;
+$('#evo').addEventListener('pointerdown',e=>{if(e.target.id==='evo')closeEvo();});
+$('#evAuto').onclick=()=>{if(!EVO.m)return;const L=starMats(EVO.m).list.map(x=>x.uid);EVO.sel=EVO.sel.length===L.length&&EVO.sel.every(u=>L.includes(u))?[]:L;renderEvo();};
+$('#evGo').onclick=async()=>{const m=EVO.m;if(!m)return;const st=m.stars||0,need=starCost(st+1);if(EVO.sel.length!==need)return;
+  const sp=spOf(m),before=skillLvs(m.sp,st),pw0=power(m);$('#evGo').disabled=true;
+  const r=await act('star_up',{mon_id:m.uid,mat_ids:EVO.sel.slice()}); if(!r){renderEvo();return;}
+  closeEvo();
+  const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=sp.skills[i];
   renderBox(); const ic=$('#bList .ic.sel'); if(ic)ic.classList.add('pop');
   const nm=S.mons.find(x=>x.uid===m.uid), pw1=nm?power(nm):pw0;
-  toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:'')+(pw1>pw0?' · พลังรบ +'+fmt(pw1-pw0):''));
-}
+  toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:'')+(pw1>pw0?' · พลังรบ +'+fmt(pw1-pw0):''));};
 // หมุนโมเดลด้วยการลาก (มุมมอง 3D)
 addEventListener('pointerdown',e=>{if(!BOX.open||e.target.closest('button'))return;BOX.drag={x:e.clientX,s:BOX.spin};});
 addEventListener('pointermove',e=>{if(BOX.drag)BOX.spin=BOX.drag.s+(e.clientX-BOX.drag.x)*.012;});

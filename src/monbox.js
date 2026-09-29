@@ -128,9 +128,10 @@ function icon(m,cls){const sp=spOf(m);const c=el('button','ic r'+sp.rar+(cls?' '
   if(sp.evolveTo&&m.lv>=sp.maxLv){const e=el('span','ev','↑');e.title='เปลี่ยนร่างได้';c.append(e);}
   else if(canStar(m)){const e=el('span','ev','★');e.title='วิวัฒน์ (ขึ้นดาว) ได้';c.append(e);}
   {const me=elOfMon(m);const b=el('span','elb',ELEM[me].i);b.style.background=ELEM[me].c;c.append(b);c.title=sp.name+' ธาตุ'+me+' Lv'+m.lv+(m.stars?' ★'+m.stars:'');} return c;}
-// วัตถุดิบขึ้นดาว: ตัวซ้ำสายพันธุ์เดียวกันที่ไม่อยู่ในทีม เลือกตัวดาว/เลเวลต่ำสุดก่อน
+// วัตถุดิบขึ้นดาว: ตัวซ้ำสายพันธุ์เดียวกันที่ไม่อยู่ในทีม และดาวไม่มากกว่าตัวหลัก เลือกตัวดาว/เลเวลต่ำสุดก่อน
+const isMat=(m,x)=>x.sp===m.sp&&x.uid!==m.uid&&!S.team.includes(x.uid)&&(x.stars||0)<=(m.stars||0);
 function starMats(m){const need=starCost((m.stars||0)+1);
-  const L=S.mons.filter(x=>x.sp===m.sp&&x.uid!==m.uid&&!S.team.includes(x.uid)).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
+  const L=S.mons.filter(x=>isMat(m,x)).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
   return {need,list:L.slice(0,need),have:L.length};}
 const canStar=m=>(m.stars||0)<STAR_MAX&&starMats(m).have>=starMats(m).need;
 const starStr=n=>'★'.repeat(n)+'☆'.repeat(STAR_MAX-n);
@@ -186,8 +187,8 @@ function renderDetail(){
   const canEvo=sp.evolveTo&&maxed, nst=m.stars||0, SM=starMats(m);
   $('#mdEvo').innerHTML='';
   if(canEvo){$('#mdEvo').disabled=false;$('#mdEvo').append(el('span',null,'เปลี่ยนร่าง'));$('#mdEvo').append(el('small',null,'300 เหรียญ'));}
-  else{$('#mdEvo').disabled=nst>=STAR_MAX||SM.have<SM.need;$('#mdEvo').append(el('span',null,'วิวัฒน์'));
-    $('#mdEvo').append(el('small',null,nst>=STAR_MAX?'ดาวเต็มแล้ว':'ใช้ตัวซ้ำ '+SM.need+' ตัว ('+Math.min(SM.have,99)+'/'+SM.need+')'));}
+  else{$('#mdEvo').disabled=nst>=STAR_MAX;$('#mdEvo').append(el('span',null,'วิวัฒน์'));
+    $('#mdEvo').append(el('small',null,nst>=STAR_MAX?'ดาวเต็มแล้ว':'อาหาร '+Math.min(SM.have,SM.need)+'/'+SM.need));}
 }
 document.querySelectorAll('.bTabs button').forEach(b=>b.onclick=()=>{boxTab=b.dataset.t;renderDetail();});
 $('#bSort').onchange=e=>{boxSort=e.target.value;renderBox();};
@@ -199,7 +200,7 @@ function open3d(){const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;
   if(spOf(m).spider){const R=A.rig;spiderSet({rig:R},{rear:1,cast:1},.35);setTimeout(()=>spiderSet({rig:R},{rear:0,cast:0},.5),1400);}
   if(spOf(m).dragon)dragonSet({rig:A.rig},{rear:1,spread:1,breath:1},.4),setTimeout(()=>BOX.model&&dragonSet({rig:BOX.model.userData.inner.userData.rig},{rear:0,spread:0,breath:0},.6),1300);}
 function close3d(){BOX.open=false;$('#box').classList.remove('v3d');$('#mdet').hidden=true;if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}renderBox();}
-$('#md3d').onclick=open3d; $('#mdBack').onclick=close3d;
+$('#mdBack').onclick=close3d;
 $('#mdTeam').onclick=async()=>{const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;const t=[...S.team];const i=t.indexOf(m.uid);let msg;
   if(i>=0){if(t.length<=1)return toast('ทีมต้องมีอย่างน้อย 1 ตัว');t.splice(i,1);msg=spOf(m).name+' ออกจากทีมแล้ว';}
   else if(t.length>=6){const out=S.mons.find(x=>x.uid===t[5]);t[5]=m.uid;msg='สลับ '+spOf(out).name+' ออก ใส่ '+spOf(m).name+' แทน';}
@@ -221,20 +222,46 @@ $('#mdEvo').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid=
   boxModel(r.sp,elOfMon(m)); $('#md3Name').textContent=SPEC[r.sp].name+' Lv1';
   boxSpark(p,0xffc94d,40,2); const A=BOX.model.userData.inner.userData; if(A.play)A.play('victory',{fade:.1});
   $('#mdBack').disabled=false; toast('เปลี่ยนร่างสำเร็จ! กลายเป็น '+SPEC[r.sp].name);};
-// วิวัฒนาการ (ขึ้นดาว): กดครั้งแรกบอกว่าจะใช้ตัวไหน กดซ้ำภายใน 6 วินาทีเพื่อยืนยัน
-async function starUp(m){
-  const sp=spOf(m), st=m.stars||0, SM=starMats(m);
-  if(st>=STAR_MAX){toast('ดาวเต็มแล้ว');return;}
-  if(SM.have<SM.need){toast('ต้องมี '+sp.name+' ซ้ำที่ไม่อยู่ในทีมอีก '+(SM.need-SM.have)+' ตัว');return;}
-  const A=BOX.starArm; if(!A||A.uid!==m.uid||A.st!==st||Date.now()-A.t>6000){BOX.starArm={uid:m.uid,st,t:Date.now()};
-    toast('แตะอีกครั้งเพื่อยืนยัน: ใช้ '+SM.list.map(x=>sp.name+' '+ELEM[elOfMon(x)].i+' Lv'+x.lv+(x.stars?' ★'+x.stars:'')).join(' + ')+' เป็นวัตถุดิบ');return;}
-  BOX.starArm=null; const before=skillLvs(m.sp,st), pw0=power(m);
-  const r=await act('star_up',{mon_id:m.uid,mat_ids:SM.list.map(x=>x.uid)}); if(!r)return;
-  const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=spOf(m).skills[i];
+// วิวัฒนาการ (ขึ้นดาว): เปิดหน้าเลือกอาหาร (ตัวซ้ำ) เอง แล้วกดยืนยัน
+const EVO={m:null,sel:[]};
+function starUp(m){
+  const st=m.stars||0; if(st>=STAR_MAX){toast('ดาวเต็มแล้ว');return;}
+  EVO.m=m; EVO.sel=starMats(m).list.map(x=>x.uid); $('#evo').hidden=false; renderEvo();}
+function closeEvo(){$('#evo').hidden=true;EVO.m=null;EVO.sel=[];}
+function renderEvo(){
+  const m=EVO.m; if(!m)return; const sp=spOf(m), st=m.stars||0, need=starCost(st+1);
+  const main=$('#evMain'); main.innerHTML=''; main.append(icon(m));
+  $('#evName').textContent=sp.name+' Lv'+m.lv;
+  const ss=$('#evStars'); ss.innerHTML=''; ss.append(document.createTextNode('★'.repeat(st)+'☆'.repeat(STAR_MAX-st)+'  →  ')); ss.append(el('span','to','★'.repeat(st+1)+'☆'.repeat(STAR_MAX-st-1)));
+  const before=skillLvs(m.sp,st), after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=sp.skills[i];
+  $('#evGain').textContent='พลังรบ +'+Math.round(STAR_POW*100)+'%'+(sk?' · '+sk.name+' Lv'+after[i]:'');
+  EVO.sel=EVO.sel.filter(u=>S.mons.some(x=>x.uid===u&&isMat(m,x))).slice(0,need);
+  $('#evCount').textContent='อาหารวิวัฒนาการ ('+EVO.sel.length+'/'+need+')';
+  const pk=$('#evPicked'); pk.innerHTML='';
+  for(let k=0;k<need;k++){const x=S.mons.find(y=>y.uid===EVO.sel[k]);
+    if(x){const c=icon(x);c.onclick=()=>{EVO.sel=EVO.sel.filter(u=>u!==x.uid);renderEvo();};pk.append(c);}else pk.append(el('div','slot'));}
+  const L=$('#evList'); L.innerHTML='';
+  const same=S.mons.filter(x=>x.sp===m.sp&&x.uid!==m.uid).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
+  if(!same.length)L.append(el('div','evEmpty','ยังไม่มี'+sp.name+'ตัวซ้ำ · ฟักไข่เพื่อหาตัวซ้ำมาใช้เป็นอาหาร'));
+  same.forEach(x=>{const c=icon(x), ok=isMat(m,x), on=EVO.sel.includes(x.uid); if(on)c.classList.add('on');
+    if(!ok){c.classList.add('no');c.title=S.team.includes(x.uid)?'อยู่ในทีม ใช้เป็นอาหารไม่ได้':'ดาวมากกว่าตัวหลัก ใช้เป็นอาหารไม่ได้';}
+    c.onclick=()=>{if(!ok){toast(c.title);return;}
+      if(on)EVO.sel=EVO.sel.filter(u=>u!==x.uid);else if(EVO.sel.length<need)EVO.sel.push(x.uid);else{EVO.sel.shift();EVO.sel.push(x.uid);}
+      renderEvo();};
+    L.append(c);});
+  $('#evGo').disabled=EVO.sel.length!==need;
+}
+$('#evX').onclick=closeEvo;
+$('#evo').addEventListener('pointerdown',e=>{if(e.target.id==='evo')closeEvo();});
+$('#evAuto').onclick=()=>{if(!EVO.m)return;const L=starMats(EVO.m).list.map(x=>x.uid);EVO.sel=EVO.sel.length===L.length&&EVO.sel.every(u=>L.includes(u))?[]:L;renderEvo();};
+$('#evGo').onclick=async()=>{const m=EVO.m;if(!m)return;const st=m.stars||0,need=starCost(st+1);if(EVO.sel.length!==need)return;
+  const sp=spOf(m),before=skillLvs(m.sp,st),pw0=power(m);$('#evGo').disabled=true;
+  const r=await act('star_up',{mon_id:m.uid,mat_ids:EVO.sel.slice()}); if(!r){renderEvo();return;}
+  closeEvo();
+  const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=sp.skills[i];
   renderBox(); const ic=$('#bList .ic.sel'); if(ic)ic.classList.add('pop');
   const nm=S.mons.find(x=>x.uid===m.uid), pw1=nm?power(nm):pw0;
-  toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:'')+(pw1>pw0?' · พลังรบ +'+fmt(pw1-pw0):''));
-}
+  toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:'')+(pw1>pw0?' · พลังรบ +'+fmt(pw1-pw0):''));};
 // หมุนโมเดลด้วยการลาก (มุมมอง 3D)
 addEventListener('pointerdown',e=>{if(!BOX.open||e.target.closest('button'))return;BOX.drag={x:e.clientX,s:BOX.spin};});
 addEventListener('pointermove',e=>{if(BOX.drag)BOX.spin=BOX.drag.s+(e.clientX-BOX.drag.x)*.012;});

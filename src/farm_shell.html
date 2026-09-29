@@ -221,7 +221,7 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
 .skr.pas{background:rgba(255,106,176,.08);border:1px solid rgba(255,138,196,.25)}.skr.pas .skn{width:auto;padding:0 6px;background:rgba(255,106,176,.2);color:#ff9ccc;font-size:10px}.skNote{font-size:11px;color:var(--muted);margin:8px 2px 0}td.adv{color:#ffb35a}td.weak{color:#9aa7b8}
 .skr b{font-size:13px}.skr p{margin:2px 0 0;font-size:12px;color:var(--muted)}
 .iLore{font-size:13px;color:var(--muted);line-height:1.7;margin:4px 0}
-.bActs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;border-top:1px solid var(--line)}
+.bActs{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;border-top:1px solid var(--line)}
 .bActs button{min-height:46px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;padding:2px}
 .bActs button small{font-family:'Bai Jamjuree',sans-serif;font-weight:400;font-size:10px;color:var(--muted)}
 .bActs .main{background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;border-color:#ffd9a0}.bActs .main small{color:#5a3410}
@@ -254,6 +254,33 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
   .bRight{width:auto;flex:1}
 }
 @media (prefers-reduced-motion:reduce){#sheet{animation:none}.bump{animation:none}}
+/* หน้าเลือกอาหารวิวัฒนาการ */
+#toast{z-index:8}
+#evo{position:fixed;inset:0;z-index:7;background:rgba(8,4,16,.62);display:flex;align-items:center;justify-content:center;padding:12px}
+#evo[hidden]{display:none}
+.evCard{position:relative;width:min(400px,100%);max-height:calc(100vh - 24px);overflow:auto;border-radius:18px;padding:16px 14px 14px;
+  background:radial-gradient(120% 70% at 50% 0%,#4a2d86 0%,#2a1a52 45%,#170f30 100%);border:1px solid rgba(190,160,255,.35);box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 0 40px rgba(140,100,255,.15)}
+.evX{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(220,200,255,.35);background:rgba(0,0,0,.3);color:#efe6ff;font-size:16px}
+.evTop{position:relative;display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
+.evRing{position:relative;width:132px;height:132px;display:grid;place-items:center}
+.evRing::before{content:'';position:absolute;inset:0;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:linear-gradient(160deg,rgba(210,185,255,.55),rgba(110,70,200,.25));}
+.evRing::after{content:'';position:absolute;inset:6px;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:radial-gradient(circle,#3b2572,#1d1340)}
+.evRing .ic{position:relative;z-index:1;width:70px!important}
+.evName{margin-top:6px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;color:#fff}
+.evStars{font-size:14px;letter-spacing:1px;color:#ffd35a;text-shadow:0 0 6px rgba(255,200,80,.6)}.evStars .to{color:#8ff0c4}
+.evGain{font-size:11px;color:#cbbcf0;text-align:center;margin-top:2px}
+.evBar{margin:12px 0 8px;display:flex;align-items:center;gap:8px}
+.evBar b{flex:1;text-align:center;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,rgba(0,0,0,.1),rgba(0,0,0,.55),rgba(0,0,0,.1));border:1px solid rgba(220,200,255,.3);font-family:'Chakra Petch',sans-serif;font-size:14px;color:#fff}
+.evBar button{width:34px;height:34px;border-radius:50%;border:1px solid rgba(220,200,255,.4);background:rgba(0,0,0,.35);color:#efe6ff;font-size:16px}
+.evPicked{display:flex;justify-content:center;gap:8px;min-height:56px;padding:6px;border-radius:12px;border:1px dashed rgba(220,200,255,.35);background:rgba(0,0,0,.2)}
+.evPicked .ic{width:48px!important}.evPicked .slot{width:48px;aspect-ratio:1;border-radius:9px;border:1px dashed rgba(220,200,255,.35)}
+.evHint{font-size:11px;color:#b9a9e0;margin:8px 2px 6px}
+.evList{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:6px;max-height:170px;overflow:auto;padding:2px}
+.evList .ic{width:auto!important}.evList .ic.on{outline:3px solid #8ff0c4;outline-offset:1px}.evList .ic.on::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,80,60,.45);color:#fff;font-size:20px;font-weight:700}
+.evList .ic.no{opacity:.35;filter:grayscale(.7)}
+.evEmpty{grid-column:1/-1;font-size:12px;color:#b9a9e0;text-align:center;padding:10px}
+.evGo{margin-top:12px;width:100%;min-height:46px;border-radius:12px;border:1px solid #bff5e0;background:linear-gradient(180deg,#8ff0c4,#3aa88a);color:#0e2a22;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px}
+.evGo:disabled{opacity:.4}
 </style>
 
 <div id="view"></div>
@@ -309,7 +336,7 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
         <div class="bInfo">
           <div class="bTabs"><button data-t="info" class="on">ข้อมูล</button><button data-t="skill">สกิล</button><button data-t="lore">ตำนาน</button></div>
           <div class="bPage"><div class="bPageIn" id="bPage"></div>
-            <div class="bActs"><button id="mdUp" class="main"></button><button id="mdEvo"></button><button id="mdTeam"></button><button id="md3d">ดู 3D<small>หมุนดูตัว</small></button></div>
+            <div class="bActs"><button id="mdUp" class="main"></button><button id="mdEvo"></button><button id="mdTeam"></button></div>
           </div>
         </div>
         <div class="bTeamBox"><div><b>ทีมต่อสู้</b><span id="bTeamPow"></span></div><div id="bTeam"></div></div>
@@ -317,6 +344,15 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
       </div>
     </div>
   </div>
+  <section id="evo" hidden><div class="evCard">
+    <button class="evX" id="evX" aria-label="ปิด">✕</button>
+    <div class="evTop"><div class="evRing" id="evMain"></div><div class="evName" id="evName"></div><div class="evStars" id="evStars"></div><div class="evGain" id="evGain"></div></div>
+    <div class="evBar"><b id="evCount"></b><button id="evAuto" title="เลือกอัตโนมัติ">↻</button></div>
+    <div class="evPicked" id="evPicked"></div>
+    <div class="evHint">เลือกตัวซ้ำที่จะใช้เป็นอาหาร · ใช้ได้เฉพาะตัวที่ดาวไม่มากกว่าตัวหลัก และไม่อยู่ในทีม</div>
+    <div class="evList" id="evList"></div>
+    <button class="evGo" id="evGo">วิวัฒนาการ</button>
+  </div></section>
   <section id="mdet" hidden>
     <div class="mdNav"><button class="bBtn" id="mdBack">‹ กลับ</button><b id="md3Name"></b></div>
     <div class="dragHint">ลากเพื่อหมุนดูรอบตัว</div>
