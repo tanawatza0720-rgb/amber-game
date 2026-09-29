@@ -22,7 +22,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .xp i{display:block;height:100%;background:linear-gradient(90deg,#8ff0c4,#5fe0c0)}
 .res{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .pill{pointer-events:auto;display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 12px 3px 4px;min-width:110px;justify-content:space-between;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-#rRaid{position:relative}#rRaid .rhp{position:absolute;left:8px;right:8px;bottom:3px;height:3px;border-radius:2px;background:rgba(0,0,0,.45);overflow:hidden}#rRaid .rhp i{display:block;height:100%;background:linear-gradient(90deg,#ff5a3a,#ffb347)}#rRaid.dead{opacity:.75}#rRaid.dead .rhp{display:none}
+#rRaid,#rExp{position:relative}#rExp .rhp{position:absolute;left:8px;right:8px;bottom:3px;height:3px;border-radius:2px;background:rgba(0,0,0,.45);overflow:hidden}#rExp .rhp i{display:block;height:100%;background:linear-gradient(90deg,#5fd0ff,#8ff0c4)}#bExp{background:#2fb87a}#rRaid{position:relative}#rRaid .rhp{position:absolute;left:8px;right:8px;bottom:3px;height:3px;border-radius:2px;background:rgba(0,0,0,.45);overflow:hidden}#rRaid .rhp i{display:block;height:100%;background:linear-gradient(90deg,#ff5a3a,#ffb347)}#rRaid.dead{opacity:.75}#rRaid.dead .rhp{display:none}
 .raid h4{margin:12px 0 6px;font-family:'Chakra Petch',sans-serif;font-size:14px;color:var(--amber)}
 .rdHp{position:relative;height:22px;border-radius:11px;background:rgba(0,0,0,.4);border:1px solid rgba(255,120,90,.4);overflow:hidden}.rdHp i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#b8231c,#ff6a3a 70%,#ffb347)}.rdHp em{position:relative;display:block;text-align:center;line-height:22px;font-style:normal;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000}
 .rdRaces{display:grid;gap:6px}.rdRace{background:rgba(255,255,255,.05);border-radius:10px;padding:7px 10px}.rdRace.mine{outline:1px solid var(--rc)}.rdRow{display:flex;justify-content:space-between;gap:8px;font-size:13px}.rdRow span{color:var(--muted);font-variant-numeric:tabular-nums}.rdBar{height:5px;border-radius:3px;background:rgba(0,0,0,.35);margin:5px 0 2px;overflow:hidden}.rdBar i{display:block;height:100%;background:var(--rc)}.rdRace small{font-size:11px;color:var(--muted)}
@@ -281,6 +281,35 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
 .evEmpty{grid-column:1/-1;font-size:12px;color:#b9a9e0;text-align:center;padding:10px}
 .evGo{margin-top:12px;width:100%;min-height:46px;border-radius:12px;border:1px solid #bff5e0;background:linear-gradient(180deg,#8ff0c4,#3aa88a);color:#0e2a22;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px}
 .evGo:disabled{opacity:.4}
+/* ส่งสำรวจ */
+.exp .ptxt{font-size:12px}
+.exZone{width:100%;display:flex;gap:10px;align-items:center;text-align:left;margin:6px 0;padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--bone);font-family:inherit}
+.exZone:active{transform:scale(.98)}.exZone b{display:block;font-size:14px}.exZone small{display:block;font-size:11px;color:var(--muted)}.exZone .exRw{color:#cfe7c8}
+.exIc{font-size:26px;width:38px;text-align:center;flex:none}
+.exHead{display:flex;gap:10px;align-items:center;margin-bottom:8px}.exHead b{display:block}.exHead small{color:var(--muted);font-size:11px}
+.exSlots{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:6px 0}.exSlots .ic{width:auto!important}
+.exEmpty{aspect-ratio:1;border-radius:9px;border:1px dashed var(--line);display:grid;place-items:center;color:var(--muted);font-size:18px}
+.exRisk{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:700;background:rgba(0,0,0,.65);color:#8ff0c4;text-align:center}.exRisk.mid{color:#ffd36a}.exRisk.hi{color:#ff7a6a}
+.exPow{font-size:12px;color:var(--muted);margin:4px 0}.exPow b{font-size:15px}
+.exWarn{font-size:11px;color:#ffb36a;margin:2px 0}.exHint{font-size:11px;color:var(--muted);margin:8px 0 4px}
+.exList{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:5px;max-height:190px;overflow:auto}.exList .ic{width:auto!important}
+.exList .ic.on{outline:3px solid #8ff0c4;outline-offset:1px}.exList .ic.no{opacity:.35;filter:grayscale(.8)}
+.exProg{height:10px;border-radius:5px;background:rgba(0,0,0,.4);overflow:hidden;margin:4px 0}.exProg i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5fd0ff,#8ff0c4)}
+.exLeft{font-size:12px;color:var(--bone);text-align:center;margin-bottom:4px}
+.ic.away{opacity:.8}.ic.dead{filter:grayscale(1) brightness(.6)}
+.exUp{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:700;background:rgba(20,90,60,.8);color:#bfffe0;text-align:center}
+.exSoulB{position:absolute;left:0;right:0;bottom:0;font-size:10px;background:rgba(40,20,70,.8);color:#e0d4ff;text-align:center}
+.exDeadH{color:#ff9a8a}
+.exSoul{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(150,120,255,.1);border:1px solid rgba(190,170,255,.25);font-size:13px}.exSoul .sbtn{flex:none;padding:6px 10px;font-size:12px;width:auto}
+/* คู่มือผู้เล่นใหม่ */
+#guide{position:fixed;inset:0;z-index:12;pointer-events:none}#guide[hidden]{display:none}
+#gdHole{position:fixed;border-radius:14px;box-shadow:0 0 0 200vmax rgba(10,6,2,.58);outline:2px solid #ffd36a;transition:left .25s,top .25s,width .25s,height .25s;animation:gdPulse 1.4s ease-in-out infinite;pointer-events:none}
+@keyframes gdPulse{50%{outline-color:#fff4c0;outline-offset:3px}}
+#gdTip{position:fixed;pointer-events:auto;background:linear-gradient(180deg,#3a2c1e,#231a12);border:1px solid #ffd36a;border-radius:14px;padding:10px 12px 10px;color:var(--bone);box-shadow:0 12px 40px rgba(0,0,0,.55);transition:left .25s,top .25s}
+#gdStep{font-size:10px;color:var(--muted)}#gdT{display:block;font-family:'Chakra Petch',sans-serif;font-size:15px;color:#ffd36a;margin:2px 0}
+#gdD{margin:0 0 8px;font-size:13px;line-height:1.45}
+#gdBtns{display:flex;justify-content:space-between;gap:8px}#gdBtns button{border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:700;font-size:12px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--muted)}
+#gdNext{background:linear-gradient(180deg,#ffcf7a,#d9822b)!important;color:#2b1808!important;border-color:#ffd9a0!important}#gdNext.ghost{background:rgba(255,255,255,.08)!important;color:var(--bone)!important;border-color:var(--line)!important}
 </style>
 
 <div id="view"></div>
@@ -303,7 +332,9 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
   <button class="rbtn" id="rDaily"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#d9482b"/><rect x="2" y="6" width="20" height="4" rx="1" fill="#f07a2a"/><rect x="10.5" y="6" width="3" height="15" fill="#ffd34d"/><path d="M12 6C9 1 5 4 8 6M12 6c3-5 7-2 4 0" stroke="#ffd34d" stroke-width="2" fill="none"/></svg>รายวัน<span class="badge" id="bDaily">!</span></button>
   <button class="rbtn" id="rMail"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" fill="#e9dcc0"/><path d="m2 6 10 7 10-7" stroke="#8a6a44" stroke-width="2" fill="none"/></svg>จดหมาย<span class="badge" id="bMail">2</span></button>
   <button class="rbtn" id="rRaid" hidden><svg viewBox="0 0 24 24"><path d="M3 15c3-1 5-4 6-8 1 3 3 4 5 4 2-3 5-4 7-4-2 2-3 4-3 7 2 0 3 1 3 3-3-1-6 0-9 2-3-2-6-3-9-4z" fill="#e0503a"/><circle cx="16" cy="10" r="1" fill="#ffd34d"/></svg>ไฮดรา<span class="badge" id="bRaid"></span><i class="rhp"><i id="rRaidHp"></i></i></button>
+  <button class="rbtn" id="rExp" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#2a4a5e" stroke="#9fd8ff" stroke-width="1.5"/><path d="M12 4l2.6 8L12 20l-2.6-8z" fill="#ff6a4a"/><path d="M12 12 14.6 12 12 20 9.4 12z" fill="#e9eef5"/><circle cx="12" cy="12" r="1.4" fill="#ffd34d"/></svg>สำรวจ<span class="badge" id="bExp" hidden></span><i class="rhp"><i id="rExpBar"></i></i></button>
   <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffc94d"/></svg>กิจกรรม</button>
+  <button class="rbtn" id="rGuide"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 1 .2V21a3 3 0 0 0-1-.2H4z" fill="#e9dcc0"/><path d="M20 4h-7a3 3 0 0 0-1 .2V21a3 3 0 0 1 1-.2h7z" fill="#d8c69c"/><path d="M6 8h4M6 11h4M14 8h4M14 11h4" stroke="#8a6a44" stroke-width="1.4"/></svg>คู่มือ</button>
 </div>
 
 <nav id="dock">
@@ -1140,7 +1171,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -3336,7 +3367,7 @@ function enterGame(){
   if(modelsReady){syncAgents(); onboard();}
   else {$('#loadMsg').hidden=false;}
   if(NET.mode!=='online')toast('เล่นแบบออฟไลน์ ความคืบหน้าเก็บในเครื่องนี้');
-  loadRank(true); loadRaid(true);
+  loadRank(true); loadRaid(true); if(typeof loadExp==='function')loadExp(true);
 }
 
 /* ---------- อันดับเผ่า (ใต้เหรียญอัมพร): สมาชิกแต่ละเผ่า + TOP 3 (server/migrate_ranking.sql) ---------- */
@@ -3514,6 +3545,174 @@ function openRaid(refresh){
 $('#rRaid').onclick=()=>openRaid();
 setInterval(()=>{if(entered&&document.visibilityState==='visible')loadRaid();},60000);
 document.addEventListener('visibilitychange',()=>{if(entered&&document.visibilityState==='visible')loadRaid();});
+
+/* ================= ส่งสำรวจ (Expedition) =================
+   ส่งมอนสเตอร์ที่ไม่อยู่ในทีมออกไปสำรวจได้ครั้งละ 6 ตัว · บางตัวอาจไม่กลับมา (หายถาวร ได้วิญญาณชดเชย)
+   ผลสุ่มที่เซิร์ฟเวอร์ (server/migrate_expedition.sql) · หน้านี้คำนวณโอกาสให้ดูด้วยสูตรเดียวกัน */
+var EXP={st:null,at:0,zone:null,sel:[],confirm:false,view:'list',busy:false};
+const EXP_ICON={meadow:'🌾',crystal:'💎',ashen:'🌋',skyruin:'🏛️'};
+const expRisk=(z,party,one,avg)=>Math.min(.6,Math.max(.01,z.risk*Math.pow(z.rec/Math.max(party,1),1.3)*Math.pow(avg/Math.max(one,1),.3)));
+const expPow=m=>{const s=EXP.st;return s&&s.mpow&&s.mpow[m.uid]!=null?s.mpow[m.uid]:power(m);};
+const fmtDur=sec=>{sec=Math.max(0,Math.round(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return h?h+' ชม. '+m+' นาที':m?m+' นาที '+s+' วิ':s+' วินาที';};
+async function loadExp(force){
+  if(NET.mode!=='online'){$('#rExp').hidden=true;return;}
+  $('#rExp').hidden=false;
+  if(EXP.busy||(!force&&Date.now()-EXP.at<30000))return; EXP.busy=true;
+  try{EXP.st=await api('exp_state');EXP.at=Date.now();expHud();}catch(e){console.warn('exp',e);}finally{EXP.busy=false;}
+}
+function expLeft(){const a=EXP.st&&EXP.st.active;if(!a)return null;return Math.max(0,a.left-(Date.now()-EXP.at)/1000);}
+function expHud(){const a=EXP.st&&EXP.st.active,b=$('#bExp');
+  if(!a){b.hidden=true;$('#rExpBar').style.width='0%';return;}
+  const left=expLeft(),tot=(new Date(a.ends_at)-new Date(a.started_at))/1000;
+  $('#rExpBar').style.width=(100*(1-left/Math.max(1,tot)))+'%';
+  b.hidden=left>0; b.textContent='✓';}
+setInterval(()=>{if(!EXP.st||!EXP.st.active)return;expHud();if(!$('#sheet').hidden&&EXP.view==='active'&&$('#shTitle').textContent==='ส่งสำรวจ')expActiveTick();},1000);
+function openExp(){
+  if(NET.mode!=='online'){toast('ส่งสำรวจต้องเข้าสู่ระบบก่อน');return;}
+  if(!EXP.st){loadExp(true).then(()=>EXP.st&&openExp());return;}
+  if(EXP.st.active){EXP.view='active';return renderExpActive();}
+  if(EXP.zone){EXP.view='pick';return renderExpPick();}
+  EXP.view='list';renderExpList();
+}
+function soulRow(){const s=EXP.st,r=el('div','exSoul');
+  r.append(el('span',null,'👻 วิญญาณ '+fmt(s.souls||0)));
+  const b=el('button','sbtn','แลก 10 → 25 อัมพร');b.disabled=(s.souls||0)<10;
+  b.onclick=async()=>{const x=await act('soul_exchange',{sets:1});if(x){EXP.st=x.exp;EXP.at=Date.now();toast('ได้รับ 25 อัมพร');openExp();}};
+  r.append(b);return r;}
+function renderExpList(){
+  const s=EXP.st,d=el('div','exp');
+  d.append(para('ส่งมอนสเตอร์ที่ไม่อยู่ในทีม (สูงสุด 6 ตัว) ออกไปสำรวจ ได้เหรียญ อัมพร และเลเวลเมื่อกลับมา · ยิ่งพื้นที่ยาก ยิ่งเสี่ยงที่บางตัวจะไม่กลับมา'));
+  s.zones.forEach(z=>{const c=el('button','exZone');
+    c.append(el('span','exIc',EXP_ICON[z.id]||'🧭'));
+    const t=el('div');t.append(el('b',null,z.name));t.append(el('small',null,'พลังแนะนำ '+fmt(z.rec)+' · '+fmtDur(z.min*60)));
+    t.append(el('small','exRw','🪙 '+fmt(z.coins)+' · 🔶 '+z.amber+' · เลเวล +'+z.lv+' · เสี่ยงพื้นฐาน '+Math.round(z.risk*100)+'%'));c.append(t);
+    c.onclick=()=>{EXP.zone=z.id;EXP.sel=[];EXP.confirm=false;EXP.view='pick';renderExpPick();};d.append(c);});
+  d.append(soulRow());
+  openSheet('ส่งสำรวจ','เลือกพื้นที่',d,[]);
+}
+function expParty(){return EXP.sel.map(u=>S.mons.find(m=>m.uid===u)).filter(Boolean);}
+function renderExpPick(){
+  const s=EXP.st,z=s.zones.find(x=>x.id===EXP.zone); if(!z){EXP.zone=null;return renderExpList();}
+  EXP.sel=EXP.sel.filter(u=>S.mons.some(m=>m.uid===u&&!S.team.includes(u)));
+  const party=expParty(),P=party.reduce((a,m)=>a+expPow(m),0),avg=party.length?P/party.length:1;
+  const d=el('div','exp');
+  const hd=el('div','exHead');hd.append(el('span','exIc',EXP_ICON[z.id]||'🧭'));const t=el('div');t.append(el('b',null,z.name));t.append(el('small',null,'พลังแนะนำ '+fmt(z.rec)+' · '+fmtDur(z.min*60)));hd.append(t);d.append(hd);
+  // ทีมสำรวจ 6 ช่อง
+  const slots=el('div','exSlots');
+  for(let i=0;i<6;i++){const m=party[i];if(m){const c=icon(m);const r=expRisk(z,P,expPow(m),avg);c.append(el('span','exRisk'+(r>.15?' hi':r>.06?' mid':''),Math.round(r*100)+'%'));c.onclick=()=>{EXP.sel=EXP.sel.filter(u=>u!==m.uid);EXP.confirm=false;renderExpPick();};slots.append(c);}
+    else slots.append(el('div','exEmpty','+'));}
+  d.append(slots);
+  const all=party.reduce((a,m)=>a*(1-expRisk(z,P,expPow(m),avg)),1);
+  const pw=el('div','exPow');pw.append(el('span',null,'พลังทีมสำรวจ '));const pb=el('b',null,fmt(P));pb.style.color=P>=z.rec?'#8ff0c4':'#ffb36a';pw.append(pb);
+  pw.append(el('span',null,party.length?' · โอกาสกลับครบ '+Math.round(all*100)+'%':''));d.append(pw);
+  if(party.length&&P<z.rec)d.append(el('p','exWarn','พลังต่ำกว่าที่แนะนำ ความเสี่ยงจะสูงขึ้นมาก'));
+  // ตัวเลือก (ไม่อยู่ในทีม)
+  const L=el('div','exList'),cands=[...S.mons].sort((a,b)=>expPow(b)-expPow(a));
+  cands.forEach(m=>{const c=icon(m),inT=S.team.includes(m.uid),on=EXP.sel.includes(m.uid);if(on)c.classList.add('on');if(inT)c.classList.add('no');
+    c.onclick=()=>{if(inT){toast('ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้');return;}
+      if(on)EXP.sel=EXP.sel.filter(u=>u!==m.uid);else if(EXP.sel.length<6)EXP.sel.push(m.uid);else{toast('ส่งได้สูงสุด 6 ตัว');return;}
+      EXP.confirm=false;renderExpPick();};L.append(c);});
+  if(!cands.some(m=>!S.team.includes(m.uid)))L.append(el('div','evEmpty','ไม่มีมอนสเตอร์นอกทีม · ฟักไข่เพิ่มก่อนนะ'));
+  d.append(el('div','exHint','เลือกได้เฉพาะตัวที่ไม่อยู่ในทีม · ตัวเลข % คือโอกาสที่ตัวนั้นจะไม่กลับมา'));d.append(L);
+  const rare=party.filter(m=>(m.stars||0)>0||spOf(m).rar>=4);
+  const acts=[['‹ พื้นที่อื่น',()=>{EXP.zone=null;EXP.sel=[];renderExpList();},''],
+    [EXP.confirm?'ยืนยันส่ง ('+rare.length+' ตัวหายาก/มีดาว)':'ส่งสำรวจ '+party.length+' ตัว',async()=>{
+      if(rare.length&&!EXP.confirm){EXP.confirm=true;toast('มี '+rare.map(m=>spOf(m).name+((m.stars||0)?' ★'+m.stars:'')).join(', ')+' ในทีมสำรวจ อาจไม่กลับมา · กดอีกครั้งเพื่อยืนยัน');renderExpPick();return;}
+      const r=await act('exp_start',{zone:z.id,mon_ids:EXP.sel.slice()});if(!r)return;
+      EXP.st=r.exp;EXP.at=Date.now();EXP.zone=null;EXP.sel=[];EXP.confirm=false;expHud();if(typeof syncAgents==='function')try{syncAgents();}catch(e){}
+      toast('ออกเดินทางแล้ว! กลับมาใน '+fmtDur(EXP.st.active.left));EXP.view='active';renderExpActive();},'main',!party.length]];
+  openSheet('ส่งสำรวจ','วิญญาณ '+fmt(s.souls||0),d,acts);
+}
+function expActiveTick(){const a=EXP.st.active,left=expLeft(),tot=(new Date(a.ends_at)-new Date(a.started_at))/1000;
+  const bar=$('#exBar'),tx=$('#exLeft');if(!bar)return;bar.style.width=(100*(1-left/Math.max(1,tot)))+'%';tx.textContent=left>0?'เหลือ '+fmtDur(left):'กลับมาแล้ว! กดรับผล';
+  const go=[...$('#shActs').children].find(b=>b.dataset.claim);if(go)go.disabled=left>0;}
+function renderExpActive(){
+  const s=EXP.st,a=s.active,z=s.zones.find(x=>x.id===a.zone)||{name:a.zone},d=el('div','exp');
+  const hd=el('div','exHead');hd.append(el('span','exIc',EXP_ICON[a.zone]||'🧭'));const t=el('div');t.append(el('b',null,z.name));t.append(el('small',null,'พลังทีมสำรวจ '+fmt(a.power)));hd.append(t);d.append(hd);
+  const pr=el('div','exProg');const i=el('i');i.id='exBar';pr.append(i);d.append(pr);d.append(el('div','exLeft'));d.lastChild.id='exLeft';
+  const slots=el('div','exSlots');a.mons.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.classList.add('away');slots.append(c);});d.append(slots);
+  d.append(para('ระหว่างสำรวจ มอนสเตอร์ที่ส่งไปจะไม่อยู่ในคลัง · เรียกกลับก่อนเวลาได้ ทุกตัวกลับมาครบแต่ไม่ได้รางวัล'));
+  d.append(soulRow());
+  const left=expLeft();
+  const acts=[['เรียกกลับ',async function(){if(!this.dataset.arm){this.dataset.arm=1;this.textContent='แตะอีกครั้งเพื่อเรียกกลับ';return;}
+      const r=await act('exp_recall',{});if(!r)return;EXP.st=r.exp;EXP.at=Date.now();expHud();if(typeof syncAgents==='function')try{syncAgents();}catch(e){}toast('ทีมสำรวจกลับมาครบแล้ว');openExp();},'',left<=0],
+    ['รับผลการสำรวจ',async()=>{const r=await act('exp_claim',{});if(!r)return;EXP.st=r.exp;EXP.at=Date.now();expHud();if(typeof syncAgents==='function')try{syncAgents();}catch(e){}if(typeof bumpRes==='function')bumpRes('coins');renderExpResult(r.result);},'main',left>0]];
+  openSheet('ส่งสำรวจ',left>0?'กำลังสำรวจ':'กลับมาแล้ว',d,acts);
+  [...$('#shActs').children].forEach((b,k)=>{if(k===1)b.dataset.claim=1;if(k===0)b.onclick=acts[0][1].bind(b);});
+  expActiveTick();
+}
+function renderExpResult(res){
+  const z=EXP.st.zones.find(x=>x.id===res.zone)||{name:res.zone},d=el('div','exp');
+  const dead=res.dead||[],alive=res.alive||[];
+  d.append(el('h4',null,dead.length?'กลับมา '+alive.length+' จาก '+(alive.length+dead.length)+' ตัว':'กลับมาครบทุกตัว! 🎉'));
+  const ok=el('div','exSlots');alive.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv_new,stars:m.stars||0,el:m.el||null});if(m.lv_new>m.lv)c.append(el('span','exUp','+'+(m.lv_new-m.lv)));ok.append(c);});d.append(ok);
+  if(dead.length){d.append(el('h4','exDeadH','ไม่ได้กลับมา'));const ds=el('div','exSlots');dead.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.classList.add('dead');c.append(el('span','exSoulB','👻'+m.souls));ds.append(c);});d.append(ds);
+    d.append(para(dead.map(m=>spOf(m).name).join(', ')+' หลงหายใน'+z.name+' · ได้รับวิญญาณ '+res.souls));}
+  d.append(rows([['เหรียญ','+'+fmt(res.coins),'#ffd34d'],['อัมพร','+'+fmt(res.amber),'#ffb347'],['วิญญาณ','+'+fmt(res.souls||0),'#c9b8ff']]));
+  openSheet('ผลการสำรวจ',z.name,d,[['ส่งสำรวจอีกครั้ง',()=>{EXP.view='list';openExp();},'main']]);
+}
+$('#rExp').onclick=()=>openExp();
+
+/* ================= คู่มือผู้เล่นใหม่ (ป๊อปอัปแนะนำทีละขั้น) =================
+   เริ่มเองครั้งแรกหลังเลือกเผ่า · ทำตามได้ (แตะจุดที่ไฮไลต์) หรือกดข้าม · เปิดซ้ำได้จากปุ่ม "คู่มือ" */
+const GUIDE_KEY='amber_guide_v1';
+const GUIDE_STEPS=[
+  {t:'ยินดีต้อนรับสู่ป่าอัมพร! 🌳',d:'ให้พาทัวร์สั้น ๆ ไหม? ใช้เวลาไม่ถึงนาที ทำตามจุดที่เรืองแสงได้เลย หรือกดข้ามก็ได้',center:1,btn:'เริ่มเลย'},
+  {sel:'#pCoin',t:'เหรียญ 🪙',d:'ได้จากการผจญภัยและภารกิจ ใช้อัปเลเวลมอนสเตอร์และฟักไข่ป่า'},
+  {sel:'#pAmber',t:'อัมพร 🔶',d:'ต้นอัมพรกลางฟาร์มออกผลเรื่อย ๆ แตะเก็บได้ ใช้ฟักไข่ทองคำที่มีโอกาสได้ตัวหายาก'},
+  {sel:'#nHatch',t:'ลองฟักไข่',d:'แตะ "ฟักไข่" เพื่อไปที่ศาลฟักไข่',click:1},
+  {sel:'#shActs',t:'เลือกไข่',d:'ไข่ป่าใช้เหรียญ ไข่ทองคำใช้อัมพร แตะเพื่อฟักได้เลย (หรือกดถัดไป)',click:'#shActs button',opt:1},
+  {sel:'#nMons',t:'มอนสเตอร์ของคุณ',d:'แตะเพื่อเปิดคลังมอนสเตอร์',click:1},
+  {sel:'#bTeam',t:'ทีมต่อสู้ 6 ตัว',d:'ทีมนี้ใช้ในทุกการต่อสู้ แตะมอนสเตอร์ในคลัง แล้วกด "ใส่ทีม" เพื่อจัดทีม',opt:1},
+  {sel:'#mdUp',t:'อัปเลเวล',d:'ใช้เหรียญเพิ่มเลเวล พลังรบจะสูงขึ้นทันที',opt:1},
+  {sel:'#mdEvo',t:'วิวัฒน์',d:'ใช้ตัวซ้ำเป็นอาหารเพื่อขึ้นดาว สกิลแรงขึ้น และพลังรบ +5% ต่อดาว',opt:1},
+  {sel:'#bClose',t:'ปิดคลัง',d:'แตะกากบาทเพื่อกลับฟาร์ม',click:1,opt:1},
+  {sel:'#nQuest',t:'ภารกิจรายวัน',d:'ทำภารกิจง่าย ๆ ทุกวันเพื่อรับเหรียญและอัมพร'},
+  {sel:'#rDaily',t:'รางวัลเข้าเกมรายวัน',d:'เข้าเกมทุกวันรับของฟรี ยิ่งต่อเนื่องยิ่งได้เยอะ'},
+  {sel:'#rExp',t:'ส่งสำรวจ 🧭',d:'ส่งมอนสเตอร์นอกทีมออกไปสำรวจ ได้ของและเลเวลกลับมา แต่ระวัง บางตัวอาจไม่กลับมา!',opt:1},
+  {sel:'#rRaid',t:'การรุกรานของไฮดรา',d:'บอสโลกบุกทุกวันจันทร์ ทั้งเซิร์ฟเวอร์ช่วยกันตี รางวัลสุ่มตามดาเมจ',opt:1},
+  {sel:'#rankBox',t:'อันดับเผ่า',d:'ดูจำนวนสมาชิกและ 3 อันดับแรกของแต่ละเผ่า',opt:1},
+  {sel:'#nBattle',t:'ผจญภัย ⚔️',d:'ทีมของคุณดันด่านเองตลอดเวลา ทุก 10 ด่านมีบอสให้ท้า และแต่ละบทจะพาไปสู้ในดินแดนต่าง ๆ พร้อมแล้วก็ลุยเลย!',last:1},
+];
+var GD={i:-1,on:false,tm:null,wait:null};
+function guideDone(){try{return localStorage.getItem(GUIDE_KEY)==='1';}catch(e){return false;}}
+function guideMark(){try{localStorage.setItem(GUIDE_KEY,'1');}catch(e){}}
+function guideEl(){let g=$('#guide');if(g)return g;g=document.createElement('div');g.id='guide';
+  g.innerHTML='<div id="gdHole"></div><div id="gdTip" role="dialog" aria-live="polite"><div id="gdStep"></div><b id="gdT"></b><p id="gdD"></p><div id="gdBtns"><button id="gdSkip">ข้ามคู่มือ</button><button id="gdNext">ถัดไป</button></div></div>';
+  document.body.append(g);$('#gdSkip').onclick=()=>guideEnd(true);$('#gdNext').onclick=()=>guideGo(GD.i+1);return g;}
+function guideVisible(e){if(!e||e.hidden)return false;const r=e.getBoundingClientRect();if(r.width<2||r.height<2)return false;const cs=getComputedStyle(e);return cs.visibility!=='hidden'&&cs.display!=='none'&&cs.opacity!=='0';}
+function guideStart(force){if(GD.on||(!force&&guideDone()))return;GD.on=true;guideEl().hidden=false;document.body.classList.add('guideOn');guideGo(0);}
+function guideEnd(skip){GD.on=false;clearInterval(GD.tm);GD.tm=null;GD.wait=null;const g=$('#guide');if(g)g.hidden=true;document.body.classList.remove('guideOn');guideMark();
+  if(skip)toast('ปิดคู่มือแล้ว · เปิดซ้ำได้จากปุ่ม "คู่มือ"');}
+function guideGo(i){
+  if(i>=GUIDE_STEPS.length){guideEnd(false);toast('จบคู่มือแล้ว ขอให้สนุกกับป่าอัมพร! 🌳');return;}
+  GD.i=i;const s=GUIDE_STEPS[i];clearInterval(GD.tm);
+  let tries=0;const find=()=>s.sel?document.querySelector(s.sel):null;
+  // รอให้จุดที่ต้องชี้ปรากฏ (เช่น หน้าต่างกำลังเปิด) ถ้าไม่มีภายใน ~1.5 วิ ข้ามไปขั้นถัดไป
+  const show=()=>{const e=find();
+    if(s.sel&&!guideVisible(e)){if(++tries>5){guideGo(i+1);}return false;}
+    $('#gdStep').textContent=(i+1)+'/'+GUIDE_STEPS.length;$('#gdT').textContent=s.t;$('#gdD').textContent=s.d;
+    $('#gdNext').textContent=s.btn||(s.last?'จบคู่มือ':'ถัดไป');$('#gdNext').hidden=!!s.click&&!s.opt;$('#gdNext').classList.toggle('ghost',!!s.click);
+    GD.wait=s.click?(typeof s.click==='string'?s.click:s.sel):null;guidePlace();return true;};
+  if(!show()){GD.tm=setInterval(()=>{if(show()){clearInterval(GD.tm);GD.tm=setInterval(guidePlace,300);}},300);}
+  else GD.tm=setInterval(guidePlace,300);
+}
+function guidePlace(){if(!GD.on)return;const s=GUIDE_STEPS[GD.i],hole=$('#gdHole'),tip=$('#gdTip');
+  const W=innerWidth,H=innerHeight;let r=null;
+  if(s.sel){const e=document.querySelector(s.sel);if(!guideVisible(e)){if(s.click&&GD.wait)return;return;}r=e.getBoundingClientRect();}
+  if(!r){hole.style.cssText=`left:${W/2}px;top:${H/2}px;width:0;height:0`;tip.style.left=Math.max(12,(W-Math.min(300,W-24))/2)+'px';tip.style.top=Math.max(12,H/2-80)+'px';return;}
+  const p=6;hole.style.cssText=`left:${r.left-p}px;top:${r.top-p}px;width:${r.width+p*2}px;height:${r.height+p*2}px`;
+  const tw=Math.min(300,W-24),th=tip.offsetHeight||120;let x=Math.min(W-tw-12,Math.max(12,r.left+r.width/2-tw/2)),y=r.bottom+14;
+  if(y+th>H-10)y=Math.max(10,r.top-th-14);
+  tip.style.left=x+'px';tip.style.top=y+'px';tip.style.width=tw+'px';}
+// ผู้เล่นแตะจุดที่ไฮไลต์: ไปขั้นถัดไป (ไม่ขวางการกดจริง)
+document.addEventListener('click',e=>{if(!GD.on||!GD.wait)return;if(e.target.closest('#guide'))return;if(e.target.closest(GD.wait)){GD.wait=null;const n=GD.i+1;setTimeout(()=>GD.on&&GD.i===n-1&&guideGo(n),450);}},true);
+addEventListener('resize',()=>GD.on&&guidePlace());
+// เริ่มเองครั้งแรก: หลังเข้าเกมและเลือกเผ่าแล้ว ไม่มีหน้าต่างอื่นเปิดอยู่
+setInterval(()=>{if(GD.on||guideDone()||typeof entered==='undefined'||!entered||!S.race)return;
+  if(document.body.classList.contains('raceOpen')||document.body.classList.contains('boxOpen')||document.body.classList.contains('preLogin'))return;
+  if(!$('#sheet').hidden||!$('#login').hidden)return;guideStart(false);},1500);
+$('#rGuide').onclick=()=>{closeSheet();guideStart(true);};
 
 /* ================= คลังมอนสเตอร์ (ดูมอนสเตอร์ที่มี · อัปเลเวล · วิวัฒนาการ · จัดทีม) ================= */
 const SPEC={

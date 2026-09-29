@@ -22,7 +22,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .xp i{display:block;height:100%;background:linear-gradient(90deg,#8ff0c4,#5fe0c0)}
 .res{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .pill{pointer-events:auto;display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 12px 3px 4px;min-width:110px;justify-content:space-between;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-#rRaid{position:relative}#rRaid .rhp{position:absolute;left:8px;right:8px;bottom:3px;height:3px;border-radius:2px;background:rgba(0,0,0,.45);overflow:hidden}#rRaid .rhp i{display:block;height:100%;background:linear-gradient(90deg,#ff5a3a,#ffb347)}#rRaid.dead{opacity:.75}#rRaid.dead .rhp{display:none}
+#rRaid,#rExp{position:relative}#rExp .rhp{position:absolute;left:8px;right:8px;bottom:3px;height:3px;border-radius:2px;background:rgba(0,0,0,.45);overflow:hidden}#rExp .rhp i{display:block;height:100%;background:linear-gradient(90deg,#5fd0ff,#8ff0c4)}#bExp{background:#2fb87a}#rRaid{position:relative}#rRaid .rhp{position:absolute;left:8px;right:8px;bottom:3px;height:3px;border-radius:2px;background:rgba(0,0,0,.45);overflow:hidden}#rRaid .rhp i{display:block;height:100%;background:linear-gradient(90deg,#ff5a3a,#ffb347)}#rRaid.dead{opacity:.75}#rRaid.dead .rhp{display:none}
 .raid h4{margin:12px 0 6px;font-family:'Chakra Petch',sans-serif;font-size:14px;color:var(--amber)}
 .rdHp{position:relative;height:22px;border-radius:11px;background:rgba(0,0,0,.4);border:1px solid rgba(255,120,90,.4);overflow:hidden}.rdHp i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#b8231c,#ff6a3a 70%,#ffb347)}.rdHp em{position:relative;display:block;text-align:center;line-height:22px;font-style:normal;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000}
 .rdRaces{display:grid;gap:6px}.rdRace{background:rgba(255,255,255,.05);border-radius:10px;padding:7px 10px}.rdRace.mine{outline:1px solid var(--rc)}.rdRow{display:flex;justify-content:space-between;gap:8px;font-size:13px}.rdRow span{color:var(--muted);font-variant-numeric:tabular-nums}.rdBar{height:5px;border-radius:3px;background:rgba(0,0,0,.35);margin:5px 0 2px;overflow:hidden}.rdBar i{display:block;height:100%;background:var(--rc)}.rdRace small{font-size:11px;color:var(--muted)}
@@ -281,6 +281,35 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
 .evEmpty{grid-column:1/-1;font-size:12px;color:#b9a9e0;text-align:center;padding:10px}
 .evGo{margin-top:12px;width:100%;min-height:46px;border-radius:12px;border:1px solid #bff5e0;background:linear-gradient(180deg,#8ff0c4,#3aa88a);color:#0e2a22;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px}
 .evGo:disabled{opacity:.4}
+/* ส่งสำรวจ */
+.exp .ptxt{font-size:12px}
+.exZone{width:100%;display:flex;gap:10px;align-items:center;text-align:left;margin:6px 0;padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--bone);font-family:inherit}
+.exZone:active{transform:scale(.98)}.exZone b{display:block;font-size:14px}.exZone small{display:block;font-size:11px;color:var(--muted)}.exZone .exRw{color:#cfe7c8}
+.exIc{font-size:26px;width:38px;text-align:center;flex:none}
+.exHead{display:flex;gap:10px;align-items:center;margin-bottom:8px}.exHead b{display:block}.exHead small{color:var(--muted);font-size:11px}
+.exSlots{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:6px 0}.exSlots .ic{width:auto!important}
+.exEmpty{aspect-ratio:1;border-radius:9px;border:1px dashed var(--line);display:grid;place-items:center;color:var(--muted);font-size:18px}
+.exRisk{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:700;background:rgba(0,0,0,.65);color:#8ff0c4;text-align:center}.exRisk.mid{color:#ffd36a}.exRisk.hi{color:#ff7a6a}
+.exPow{font-size:12px;color:var(--muted);margin:4px 0}.exPow b{font-size:15px}
+.exWarn{font-size:11px;color:#ffb36a;margin:2px 0}.exHint{font-size:11px;color:var(--muted);margin:8px 0 4px}
+.exList{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:5px;max-height:190px;overflow:auto}.exList .ic{width:auto!important}
+.exList .ic.on{outline:3px solid #8ff0c4;outline-offset:1px}.exList .ic.no{opacity:.35;filter:grayscale(.8)}
+.exProg{height:10px;border-radius:5px;background:rgba(0,0,0,.4);overflow:hidden;margin:4px 0}.exProg i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5fd0ff,#8ff0c4)}
+.exLeft{font-size:12px;color:var(--bone);text-align:center;margin-bottom:4px}
+.ic.away{opacity:.8}.ic.dead{filter:grayscale(1) brightness(.6)}
+.exUp{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:700;background:rgba(20,90,60,.8);color:#bfffe0;text-align:center}
+.exSoulB{position:absolute;left:0;right:0;bottom:0;font-size:10px;background:rgba(40,20,70,.8);color:#e0d4ff;text-align:center}
+.exDeadH{color:#ff9a8a}
+.exSoul{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(150,120,255,.1);border:1px solid rgba(190,170,255,.25);font-size:13px}.exSoul .sbtn{flex:none;padding:6px 10px;font-size:12px;width:auto}
+/* คู่มือผู้เล่นใหม่ */
+#guide{position:fixed;inset:0;z-index:12;pointer-events:none}#guide[hidden]{display:none}
+#gdHole{position:fixed;border-radius:14px;box-shadow:0 0 0 200vmax rgba(10,6,2,.58);outline:2px solid #ffd36a;transition:left .25s,top .25s,width .25s,height .25s;animation:gdPulse 1.4s ease-in-out infinite;pointer-events:none}
+@keyframes gdPulse{50%{outline-color:#fff4c0;outline-offset:3px}}
+#gdTip{position:fixed;pointer-events:auto;background:linear-gradient(180deg,#3a2c1e,#231a12);border:1px solid #ffd36a;border-radius:14px;padding:10px 12px 10px;color:var(--bone);box-shadow:0 12px 40px rgba(0,0,0,.55);transition:left .25s,top .25s}
+#gdStep{font-size:10px;color:var(--muted)}#gdT{display:block;font-family:'Chakra Petch',sans-serif;font-size:15px;color:#ffd36a;margin:2px 0}
+#gdD{margin:0 0 8px;font-size:13px;line-height:1.45}
+#gdBtns{display:flex;justify-content:space-between;gap:8px}#gdBtns button{border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:700;font-size:12px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--muted)}
+#gdNext{background:linear-gradient(180deg,#ffcf7a,#d9822b)!important;color:#2b1808!important;border-color:#ffd9a0!important}#gdNext.ghost{background:rgba(255,255,255,.08)!important;color:var(--bone)!important;border-color:var(--line)!important}
 </style>
 
 <div id="view"></div>
@@ -303,7 +332,9 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
   <button class="rbtn" id="rDaily"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#d9482b"/><rect x="2" y="6" width="20" height="4" rx="1" fill="#f07a2a"/><rect x="10.5" y="6" width="3" height="15" fill="#ffd34d"/><path d="M12 6C9 1 5 4 8 6M12 6c3-5 7-2 4 0" stroke="#ffd34d" stroke-width="2" fill="none"/></svg>รายวัน<span class="badge" id="bDaily">!</span></button>
   <button class="rbtn" id="rMail"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" fill="#e9dcc0"/><path d="m2 6 10 7 10-7" stroke="#8a6a44" stroke-width="2" fill="none"/></svg>จดหมาย<span class="badge" id="bMail">2</span></button>
   <button class="rbtn" id="rRaid" hidden><svg viewBox="0 0 24 24"><path d="M3 15c3-1 5-4 6-8 1 3 3 4 5 4 2-3 5-4 7-4-2 2-3 4-3 7 2 0 3 1 3 3-3-1-6 0-9 2-3-2-6-3-9-4z" fill="#e0503a"/><circle cx="16" cy="10" r="1" fill="#ffd34d"/></svg>ไฮดรา<span class="badge" id="bRaid"></span><i class="rhp"><i id="rRaidHp"></i></i></button>
+  <button class="rbtn" id="rExp" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#2a4a5e" stroke="#9fd8ff" stroke-width="1.5"/><path d="M12 4l2.6 8L12 20l-2.6-8z" fill="#ff6a4a"/><path d="M12 12 14.6 12 12 20 9.4 12z" fill="#e9eef5"/><circle cx="12" cy="12" r="1.4" fill="#ffd34d"/></svg>สำรวจ<span class="badge" id="bExp" hidden></span><i class="rhp"><i id="rExpBar"></i></i></button>
   <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffc94d"/></svg>กิจกรรม</button>
+  <button class="rbtn" id="rGuide"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 1 .2V21a3 3 0 0 0-1-.2H4z" fill="#e9dcc0"/><path d="M20 4h-7a3 3 0 0 0-1 .2V21a3 3 0 0 1 1-.2h7z" fill="#d8c69c"/><path d="M6 8h4M6 11h4M14 8h4M14 11h4" stroke="#8a6a44" stroke-width="1.4"/></svg>คู่มือ</button>
 </div>
 
 <nav id="dock">
