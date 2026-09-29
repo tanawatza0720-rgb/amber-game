@@ -818,20 +818,22 @@ const AURA={
   'ไฟ':{c:0xe0100a,e:0xff5a1a,add:1},  'น้ำ':{c:0x1f6bff,e:0x8fd8ff,add:1}, 'ลม':{c:0x1fd070,e:0xb0ffd0,add:1},
   'แสง':{c:0xffe9a8,e:0xffffff,add:1}, 'ดิน':{c:0x6b4420,e:0xc08a4a,add:0}, 'มืด':{c:0x0c0418,e:0x8a40ff,add:0}};
 const AURA_T={value:0};
+const AURA_WISP=false; // ควันลอย (ปิดไว้ให้ออร่าเนียนสะอาด)
 const AURA_VS=`#include <common>
 #include <skinning_pars_vertex>
+attribute vec3 auraN;
 uniform float uTime,uThick,uRise,uPush; varying float vRim; varying vec3 vW;
 void main(){
-#include <beginnormal_vertex>
+  vec3 objectNormal=auraN;
 #include <skinbase_vertex>
 #include <skinnormal_vertex>
 #include <defaultnormal_vertex>
 #include <begin_vertex>
 #include <skinning_vertex>
   vec3 wp=(modelMatrix*vec4(transformed,1.)).xyz;
-  float f=sin(wp.y*9.-uTime*7.+wp.x*5.)*.5+.5, g=sin(wp.y*5.3-uTime*4.3+wp.z*6.1)*.5+.5;
-  transformed+=objectNormal*uThick*(.55+f*.9);
-  vec4 wq=modelMatrix*vec4(transformed,1.); wq.y+=uRise*pow(f*g,2.)*clamp(normalize(mat3(modelMatrix)*objectNormal).y+.6,0.,1.);
+  float f=sin(wp.y*3.2-uTime*2.6+wp.x*1.7)*.5+.5, g=sin(wp.y*2.1-uTime*1.9+wp.z*2.3)*.5+.5;
+  transformed+=objectNormal*uThick*(.85+f*.3);
+  vec4 wq=modelMatrix*vec4(transformed,1.); wq.y+=uRise*f*g*clamp(normalize(mat3(modelMatrix)*objectNormal).y+.5,0.,1.);
   vec4 mvPosition=viewMatrix*wq; vec3 mvRim=mvPosition.xyz; mvPosition.xyz+=normalize(mvPosition.xyz)*uPush; gl_Position=projectionMatrix*mvPosition;
   vec3 N=normalize(transformedNormal); vRim=1.-abs(dot(N,normalize(-mvRim))); vW=wq.xyz;
 }`;
@@ -839,13 +841,18 @@ const AURA_FS=`uniform vec3 uCol,uEdge; uniform float uTime,uAlpha,uAdd; varying
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
 void main(){
-  vec2 q=vec2(vW.x*2.3+vW.z*2.1,vW.y*2.6-uTime*2.2);
-  float fl=n2(q)*.65+n2(q*2.3+3.1)*.35;
-  float inner=pow(1.-vRim,.85);
-  float a=inner*smoothstep(.2,.78,fl+inner*.25)*uAlpha;
-  vec3 col=mix(uCol,uEdge,uAdd>.5?inner*fl:inner*.85);
+  vec2 q=vec2(vW.x*1.3+vW.z*1.2,vW.y*1.5-uTime*1.1);
+  float fl=n2(q)*.6+n2(q*1.9+3.1)*.4;
+  float inner=pow(1.-vRim,1.25);
+  float a=inner*(.5+.5*smoothstep(.15,.9,fl))*uAlpha;
+  vec3 col=mix(uCol,uEdge,uAdd>.5?inner*(.4+.6*fl):inner*.85);
   gl_FragColor=vec4(col*(uAdd>.5?1.4:1.),clamp(a,0.,1.));
 }`;
+// รวมทิศพื้นผิวของจุดที่ซ้อนกัน (ตะเข็บโมเดล) ให้เปลือกออร่าต่อกันเป็นผืนเดียว ไม่แตกเป็นเสี่ยง
+function auraNormals(geo){if(geo.attributes.auraN)return;const P=geo.attributes.position,N=geo.attributes.normal,n=P.count,key=new Array(n),acc=new Map();
+  for(let i=0;i<n;i++){const k=Math.round(P.getX(i)*2e3)+','+Math.round(P.getY(i)*2e3)+','+Math.round(P.getZ(i)*2e3);key[i]=k;let a=acc.get(k);if(!a){a=[0,0,0];acc.set(k,a);}a[0]+=N.getX(i);a[1]+=N.getY(i);a[2]+=N.getZ(i);}
+  const out=new Float32Array(n*3);for(let i=0;i<n;i++){const a=acc.get(key[i]),l=Math.hypot(a[0],a[1],a[2])||1;out[i*3]=a[0]/l;out[i*3+1]=a[1]/l;out[i*3+2]=a[2]/l;}
+  geo.setAttribute('auraN',new THREE.BufferAttribute(out,3));}
 let WISPTEX=null;
 function wispTex(){if(WISPTEX)return WISPTEX;const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);
   g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.4,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);
@@ -861,10 +868,10 @@ function addAura(w,sp,el){
       blending:A.add?THREE.AdditiveBlending:THREE.NormalBlending,side:THREE.BackSide,
       uniforms:{uTime:AURA_T,uThick:{value:thick},uRise:{value:rise},uPush:{value:push},uAlpha:{value:alpha},uAdd:{value:A.add?1:0},uCol:{value:new THREE.Color(A.c)},uEdge:{value:new THREE.Color(A.e)}}});return m;};
   const meshes=[];w.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!o.userData.aura&&o.geometry&&o.visible&&o.geometry.attributes.normal)meshes.push(o);});
-  meshes.forEach(o=>{
+  meshes.forEach(o=>{ auraNormals(o.geometry);
     // ความหนาคิดจากขนาดตัวจริงบนจอ แปลงกลับเป็นหน่วยของโมเดลนั้น
     const ws=new THREE.Vector3();o.getWorldScale(ws);const wsc=Math.max(1e-4,(ws.x+ws.y+ws.z)/3);
-    [[.035,.1,A.add?1:1.2],[.1,.34,A.add?.62:.85]].forEach(([t,r,a],li)=>{if(low&&li)return;
+    [[.02,.05,A.add?.85:1.05],[.05,.16,A.add?.45:.6]].forEach(([t,r,a],li)=>{if(low&&li)return;
       const th=H*t/wsc, mat=mk(o.isSkinnedMesh,o.geometry,th,H*r,a);
       const s=o.isSkinnedMesh?new THREE.SkinnedMesh(o.geometry,mat):new THREE.Mesh(o.geometry,mat);
       if(o.isSkinnedMesh){s.bind(o.skeleton,o.bindMatrix);s.bindMode=o.bindMode;}
@@ -878,13 +885,13 @@ function addAura(w,sp,el){
   const anchor=new THREE.Object3D(); w.add(anchor); shells.push(anchor);
   const spawn=t=>{auraPrune(t);if(AURA_LIVE.length>(low?40:110))return;
     const m=new THREE.SpriteMaterial({map:wispTex(),color:Math.random()<.5?A.c:A.e,transparent:true,depthWrite:false,opacity:0,blending:A.add?THREE.AdditiveBlending:THREE.NormalBlending});
-    const sp2=new THREE.Sprite(m), a=Math.random()*6.283, r=R*(.45+Math.random()*.55), y0=base.y+Hl*(.02+Math.random()*.75), t0=t, life=.9+Math.random()*.8, sz=Hl*(.16+Math.random()*.16);
+    const sp2=new THREE.Sprite(m), a=Math.random()*6.283, r=R*(.45+Math.random()*.55), y0=base.y+Hl*(.02+Math.random()*.75), t0=t, life=.9+Math.random()*.8, sz=Hl*(.09+Math.random()*.09);
     sp2.position.set(base.x+Math.cos(a)*r,y0,base.z+Math.sin(a)*r); sp2.renderOrder=7; w.add(sp2); AURA_LIVE.push({s:sp2,m,w,end:t0+life});
     sp2.onBeforeRender=()=>{const k=Math.min(1,(AURA_T.value-t0)/life);
-      sp2.position.y=y0+Hl*.35*k; sp2.position.x+=Math.sin(AURA_T.value*3+a)*.002*Hl; const s=sz*(1-k*.5); sp2.scale.set(s*.7,s,1); m.opacity=Math.sin(k*Math.PI)*(A.add?.55:.7);};};
+      sp2.position.y=y0+Hl*.35*k; sp2.position.x+=Math.sin(AURA_T.value*3+a)*.002*Hl; const s=sz*(1-k*.5); sp2.scale.set(s*.7,s,1); m.opacity=Math.sin(k*Math.PI)*(A.add?.32:.45);};};
   // เวลาของออร่าเดินจากนาฬิกาจริง (ใช้ได้ทุกฉาก: ฟาร์ม คลัง สนามรบ)
   if(shells[0])shells[0].onBeforeRender=()=>{const t=performance.now()/1000;AURA_T.value=t;
-    if(anchor.visible&&t-last>(low?.2:.08)){last=t;spawn(t);}};
+    if(AURA_WISP&&anchor.visible&&t-last>(low?.3:.14)){last=t;spawn(t);}};
   const g={shells,set visible(v){shells.forEach(s=>s.visible=v);},get visible(){return shells[0]?shells[0].visible:false;}};
   w.userData.aura=g; return g;
 }
