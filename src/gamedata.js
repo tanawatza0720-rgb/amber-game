@@ -1,9 +1,16 @@
 /* ================= ข้อมูลเกมที่ใช้ร่วมกัน (ฟาร์ม + สนามรบ) =================
    ธาตุ 6 ธาตุ + ตารางแพ้ทาง และสกิลของทุกสายพันธุ์ (แก้ที่นี่ที่เดียว)
    ระดับ: ทั่วไป 2 สกิล · หายาก 3 สกิล · ตำนาน/เทพเจ้า 3 สกิล + สกิลติดตัว (type:'passive') */
+// c = สีป้าย/ย้อมตัว · fx = สีเอฟเฟกต์สกิล · pal = ไล่สีเปลวของท่าพ่น (สว่าง → มืด)
 const ELEM={
-  'ดิน':{c:'#c8a26a',i:'🪨'}, 'น้ำ':{c:'#5fb3ff',i:'💧'}, 'ลม':{c:'#6fe0b0',i:'🌪️'},
-  'ไฟ':{c:'#ff8a3a',i:'🔥'}, 'แสง':{c:'#ffd36a',i:'☀️'}, 'มืด':{c:'#b48cff',i:'🌙'}};
+  'ดิน':{c:'#c8a26a',i:'🪨',fx:0xe0b870,pal:[0xfff0c8,0xe8c47a,0xb8893e,0x7a5424,0x2e2014]},
+  'น้ำ':{c:'#5fb3ff',i:'💧',fx:0x5fc8ff,pal:[0xeaffff,0x8fe4ff,0x3aa8ff,0x1a5ad8,0x0e1e4a]},
+  'ลม':{c:'#6fe0b0',i:'🌪️',fx:0x8ff0c8,pal:[0xf0fff6,0xaaf5d0,0x5fdca8,0x2a9a78,0x123a30]},
+  'ไฟ':{c:'#ff8a3a',i:'🔥',fx:0xff8a3a,pal:[0xffd88a,0xffb030,0xff7a1a,0xd8380e,0x4a2014]},
+  'แสง':{c:'#ffd36a',i:'☀️',fx:0xfff0a0,pal:[0xffffff,0xfff6c0,0xffe07a,0xe8b840,0x4a3a14]},
+  'มืด':{c:'#b48cff',i:'🌙',fx:0xb070ff,pal:[0xf0d8ff,0xc890ff,0x9a4dff,0x5a1ab8,0x1a0a30]}};
+const EL_LIST=Object.keys(ELEM);
+const elFx=u=>{const e=ELEM[u&&u.el];return e?e.fx:0xe8f0ff;};
 // วงจรธาตุพื้นฐาน: น้ำ > ไฟ > ลม > ดิน > น้ำ (ตัวหน้าชนะตัวถัดไป)
 const EL_CYCLE=['น้ำ','ไฟ','ลม','ดิน'];
 const EL_ADV=1.3, EL_WEAK=.8, EL_LD=1.5, EL_LD_OVER=1.15, EL_LD_UNDER=.9;
@@ -19,7 +26,26 @@ function elInfo(e){
   const all=Object.keys(ELEM), strong=all.filter(d=>elMul(e,d)>1), weak=all.filter(d=>elMul(d,e)>1&&elMul(e,d)<=1);
   return {strong,weak};
 }
+// ธาตุประจำตัว (ภาพหลักของตัวละคร) · ตัวที่ฟักได้สุ่มธาตุได้ทั้ง 6 ธาตุ (เก็บใน monsters.el; ว่าง = ธาตุประจำตัว)
 const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ'};
+const elOfMon=m=>(m&&m.el&&ELEM[m.el])?m.el:EL_OF[m&&m.sp];
+// ย้อมสีตัวละครตามธาตุ (ธาตุประจำตัว = สีเดิม) ไม่ต้องใช้ไฟล์โมเดลเพิ่ม
+// ทำใน shader: แปลงสีผิวเป็นความสว่าง แล้วลงสีธาตุ (ทุกธาตุใช้ shader ตัวเดียวกัน ไม่ต้องคอมไพล์ใหม่)
+function elColorize(sh){sh.uniforms.uElCol=this.userData.uElCol;sh.uniforms.uElAmt=this.userData.uElAmt;
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uElCol;\nuniform float uElAmt;')
+    .replace('#include <map_fragment>','#include <map_fragment>\n{float l=dot(diffuseColor.rgb,vec3(.299,.587,.114));diffuseColor.rgb=mix(diffuseColor.rgb,uElCol*(.25+l*1.5),uElAmt);}');}
+function tintByEl(w,sp,el){
+  if(!w||!el||!ELEM[el]||el===EL_OF[sp])return; const col=new THREE.Color(ELEM[el].c), inner=w.userData.inner, spider=inner&&inner.userData.spider;
+  const dragon=inner&&inner.userData.dragon;
+  w.userData.el=el;
+  w.traverse(o=>{if(!o.isMesh||o.userData.outline)return;
+    if(!o.isSkinnedMesh&&!spider&&!o.userData.elOwn){o.material=o.material.clone();o.userData.elOwn=1;}
+    const m=o.material; if(!m||!m.color||m.onBeforeCompile===elColorize)return;
+    m.userData.uElCol={value:col.clone()}; m.userData.uElAmt={value:dragon?.72:.6};
+    m.onBeforeCompile=elColorize;
+    if(m.emissive){m.emissive.copy(col); if(spider)m.userData.elBase=.1; else if(!dragon)m.emissiveIntensity=.08;}
+    m.needsUpdate=true;});
+}
 
 /* สกิล: mult = คูณพลังโจมตี · cd = คูลดาวน์ (เทิร์น; เรียลไทม์ ×2.3 วินาที) · stun = โอกาสทำให้มึน
    passive: dmgLow (แรงขึ้นใส่ศัตรูเลือด<50%) · crit (เพิ่มโอกาสคริ) · revive (รอดตาย 1 ครั้ง คืนเลือด %) · teamAtk (ทั้งทีมแรงขึ้น) · dr (รับดาเมจลดลง) */

@@ -62,7 +62,7 @@ function buildSpider(){
       q.setFromAxisAngle(up,yaw); q2.setFromAxisAngle(L.ax,-liftA); L.a.quaternion.copy(q).multiply(q2);
       L.b.quaternion.setFromAxisAngle(L.ax,knee); if(L.c)L.c.quaternion.setFromAxisAngle(L.ax,-knee*.5+st.dead*.6);
     });
-    mats.forEach(mt=>{mt.emissiveIntensity=st.cast*.55*(.8+.2*Math.sin(T*14))+Math.max(0,Math.sin(T*2.1))*.05;});
+    mats.forEach(mt=>{mt.emissiveIntensity=(mt.userData.elBase||0)+st.cast*.55*(.8+.2*Math.sin(T*14))+Math.max(0,Math.sin(T*2.1))*.05;});
   };
   w.userData.k=1; w.userData.inner=m;
   return w;
@@ -75,7 +75,7 @@ async function spiderStrike(u,t,onHit){
   spiderSet(u,{rear:1,stab:0},.18); await wait(260);
   spiderSet(u,{rear:0,stab:1},.07);
   await tween(.12,k=>u.w.position.copy(home).addScaledVector(dir,.45*K*k),easeIn);
-  const hp=t.w.position.clone().setY(.9); hitArc(hp,-.9,0xc58cff,1.2); particles(hp,0xb070ff,14,1.6,.07,.4,.9);
+  const hp=t.w.position.clone().setY(.9); hitArc(hp,-.9,elFx(u),1.2); particles(hp,elFx(u),14,1.6,.07,.4,.9);
   onHit(); shake=Math.max(shake,.14); await wait(170);
   spiderSet(u,{stab:0},.25); await tween(.3,k=>u.w.position.copy(home).addScaledVector(dir,.45*K*(1-k)),easeOut);
 }
@@ -83,14 +83,14 @@ async function spiderStrike(u,t,onHit){
 async function spiderCast(u,foes,onHitOne){
   spiderSet(u,{cast:1,rear:.4},.25);
   const orbs=[]; const hR=spiderHand(u,'R'), hL=spiderHand(u,'L');
-  [hR,hL].forEach(h=>{const g=glow(scene,0xb070ff,.35,[h.x,h.y,h.z],1);orbs.push(g);});
+  [hR,hL].forEach(h=>{const g=glow(scene,elFx(u),.35,[h.x,h.y,h.z],1);orbs.push(g);});
   await tween(.45,k=>{orbs.forEach((g,i)=>{const h=spiderHand(u,i?'L':'R');g.position.copy(h);g.scale.setScalar(.2+k*.9);});});
   orbs.forEach(g=>{scene.remove(g);g.material.dispose();});
   shake=Math.max(shake,.08);
   await Promise.all(foes.map((f,i)=>new Promise(res=>setTimeout(async()=>{
-    const from=spiderHand(u,i%2?'L':'R'), g=glow(scene,0xc58cff,.5,[from.x,from.y,from.z],1), to=f.w.position.clone().setY(.9), mid=from.clone().lerp(to,.5).add(new THREE.Vector3(0,1.2,0));
-    await tween(.42,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));if(Math.random()<.6)particles(g.position,0x9a4dff,1,.3,.05,.2,.6);},t=>t);
-    scene.remove(g);g.material.dispose();particles(to,0xb070ff,16,2,.08,.3,.9);particles(to,0x2a0a3a,8,1.2,.12,-.2,.7);
+    const from=spiderHand(u,i%2?'L':'R'), g=glow(scene,elFx(u),.5,[from.x,from.y,from.z],1), to=f.w.position.clone().setY(.9), mid=from.clone().lerp(to,.5).add(new THREE.Vector3(0,1.2,0));
+    await tween(.42,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));if(Math.random()<.6)particles(g.position,elFx(u),1,.3,.05,.2,.6);},t=>t);
+    scene.remove(g);g.material.dispose();particles(to,elFx(u),16,2,.08,.3,.9);particles(to,0x2a0a3a,8,1.2,.12,-.2,.7);
     if(f.alive)onHitOne(f); res();},i*110/SPEED))));
   spiderSet(u,{cast:0,rear:0},.35); await wait(200);
 }
@@ -102,11 +102,11 @@ async function spiderLeap(u,c,foes,onHit){
   spiderSet(u,{crouch:0,rear:.3},.08); particles(tmpV.copy(from).setY(.1),0xb8a888,18,2,.3,-.2,.5);
   await tween(.55,k=>{u.w.position.lerpVectors(from,land,k);u.w.position.y=Math.sin(k*Math.PI)*1.8*K;},easeIO);
   u.w.position.y=0; spiderSet(u,{crouch:.8,rear:0},.06); shake=Math.max(shake,.24);
-  shockRing(c,0xb070ff); if(typeof scorch==='function')scorch(c,1.4); particles(tmpV.copy(c).setY(.1),0xb8a888,26,2.4,.35,-.2,.55); particles(tmpV.copy(c).setY(.4),0x9a4dff,20,2,.08,.4,.9);
+  shockRing(c,elFx(u)); if(typeof scorch==='function')scorch(c,1.4); particles(tmpV.copy(c).setY(.1),0xb8a888,26,2.4,.35,-.2,.55); particles(tmpV.copy(c).setY(.4),elFx(u),20,2,.08,.4,.9);
   onHit(); await wait(260); spiderSet(u,{crouch:0},.3);
   await tween(.5,k=>u.w.position.lerpVectors(land,from,k),easeIO);
 }
 function spiderReact(u){spiderSet(u,{recoil:1},.06);setTimeout(()=>spiderSet(u,{recoil:0},.3),170/SPEED);}
 async function spiderDie(u){spiderSet(u,{rear:.8},.1);await wait(220);spiderSet(u,{rear:0,dead:1,cast:0,stab:0},.45);await wait(520);shake=Math.max(shake,.12);
-  particles(tmpV.copy(u.w.position).setY(.3),0x9a4dff,22,1.6,.08,.3,.8);}
+  particles(tmpV.copy(u.w.position).setY(.3),elFx(u),22,1.6,.08,.3,.8);}
 async function spiderVictory(u){if(!u.alive)return;u.busy=true;spiderSet(u,{rear:1,cast:1},.3);await wait(1200);spiderSet(u,{rear:0,cast:0},.4);u.busy=false;}

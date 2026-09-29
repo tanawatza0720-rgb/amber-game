@@ -375,16 +375,16 @@ function blockedSeg(ax,az,bx,bz,pad){for(const b of BLOCK){const vx=bx-ax,vz=bz-
 function freePoint(pad){for(let k=0;k<200;k++){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*14.2,x=Math.cos(a)*r,z=Math.sin(a)*r;if(onIsland(x,z,1.5)&&!BLOCK.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+pad))return[x,z];}return[0,7];}
 function addAgent(data,at,pop){
   const spc=SPEC[data.sp]||SPEC.kazemaru;
-  if(spc.dragon&&DRAGON){const w=buildDragon();w.scale.setScalar(1.7);scene.add(w);
+  if(spc.dragon&&DRAGON){const w=buildDragon();w.scale.setScalar(1.7);tintByEl(w,data.sp,data.el);scene.add(w);
     w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
     const ag={w,inner:w.userData.inner,data,evo:1,fly:true,ang:Math.random()*6.28,r:8.5+Math.random()*1.5,state:'fly'};AGENTS.push(ag);
     if(pop){w.scale.setScalar(.001);tween(.8,t=>w.scale.setScalar(Math.max(.001,1.7*t)),easeBack);}return ag;}
-  if(spc.spider&&SPIDER){const w=buildSpider();w.scale.setScalar(1.3);scene.add(w);
+  if(spc.spider&&SPIDER){const w=buildSpider();w.scale.setScalar(1.3);tintByEl(w,data.sp,data.el);scene.add(w);
     const [x,z]=at||freePoint(1); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
     w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
     const ag={w,inner:w.userData.inner,data,evo:1,spider:true,state:'idle',wait:1+Math.random()*3,tx:x,tz:z,ph:0,yaw:w.rotation.y,speed:1.1};AGENTS.push(ag);
     if(pop){w.scale.setScalar(.001);tween(.6,t=>w.scale.setScalar(Math.max(.001,1.3*t)),easeBack);}return ag;}
-  const w=buildMonster(spc.rig||(spc.evo?1:0)); w.userData.k*=1.5; w.scale.setScalar(w.userData.k); scene.add(w);
+  const w=buildMonster(spc.rig||(spc.evo?1:0)); w.userData.k*=1.5; w.scale.setScalar(w.userData.k); tintByEl(w,data.sp,data.el); scene.add(w);
   const [x,z]=at||freePoint(.8); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
   const inner=w.userData.inner;
   w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
@@ -438,7 +438,7 @@ function applyState(st){
   if(!st||!st.player)return; const p=st.player;
   Object.assign(S,{name:p.name,lv:p.lv,xp:p.xp,coins:p.coins,amber:p.amber,energy:p.energy,energyMax:p.energy_max,energyNext:p.energy_next,energySec:p.energy_sec,
     amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now(),mailNew:p.mail_new||0});
-  S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0}));
+  S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null}));
   if(typeof renderHUD==='function')renderHUD();
 }
 function syncAgents(){AGENTS.forEach(a=>{scene.remove(a.w);});AGENTS.length=0;PICK.splice(0,PICK.length,...PICK.filter(o=>o.userData.agent==null));S.mons.forEach(d=>addAgent(d));}

@@ -117,9 +117,10 @@ async function hatch(kind,name){
   const ep=new THREE.Vector3(0,2.15,3.2);
   flashBall(ep,col,r.rar>=4?6:r.rar>=3?5:4); particles(ep,col,r.rar>=4?120:r.rar>=3?85:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
   if(r.rar>=4){shakeCam=.4;}else if(r.rar>=3){shakeCam=.2;}
-  const d=S.mons.find(m=>m.uid===Number(r.mon.id))||{uid:Number(r.mon.id),sp:r.mon.sp,lv:1};
+  const d=S.mons.find(m=>m.uid===Number(r.mon.id))||{uid:Number(r.mon.id),sp:r.mon.sp,lv:1,el:r.mon.el||null}; const hel=elOfMon(d);
+  particles(ep,ELEM[hel]?ELEM[hel].fx:col,40,2.6,.06,1.2);
   const ag=addAgent(d,[0,5.9],true); if(!ag.fly){ag.state='idle'; ag.wait=2.5;}
-  toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
+  toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' '+ELEM[hel].i+'ธาตุ'+hel+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
   hatching=false;
 }
 let shakeCam=0;

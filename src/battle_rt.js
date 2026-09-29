@@ -127,8 +127,8 @@ async function rtUse(u,s,t){
         if(A.play){const nm=AN&&hasClip(u,AN.s3)?AN.s3:'leap',inf=A.clipInfo(nm),sp=1.15,from=u.w.position.clone();A.play(nm,{speed:sp,fade:.08});
           await tween(inf.main/sp,k=>{u.w.position.lerpVectors(from,land,k);u.w.position.y=Math.sin(k*Math.PI)*.6;},easeIO); u.w.position.y=0;}
         else await hop(u,land,.5,2.2);
-        shockRing(c,0xd8f7ff); shake=Math.max(shake,.2); particles(tmpV.copy(c).setY(.1),0xb8a888,20,1.8,.3,-.2,.5);
-        hitArc(tmpV.copy(c).setY(1),Math.PI/2,0xe8f0ff,1.5);
+        shockRing(c,elFx(u)); shake=Math.max(shake,.2); particles(tmpV.copy(c).setY(.1),0xb8a888,20,1.8,.3,-.2,.5); particles(tmpV.copy(c).setY(.6),elFx(u),16,1.6,.07,.4,.8);
+        hitArc(tmpV.copy(c).setY(1),Math.PI/2,elFx(u),1.5);
         hitAll(fs)(); await wait(380);
       }
     }

@@ -149,6 +149,7 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
 .oddsT{width:100%;border-collapse:collapse;margin:6px 0 8px;font-size:13px}.oddsT th{font-weight:600;opacity:.7;text-align:right;padding:3px 4px}.oddsT th:first-child,.oddsT td:first-child{text-align:left}.oddsT td{text-align:right;padding:4px;border-top:1px solid rgba(255,255,255,.08)}
 .ic .lv{position:absolute;right:3px;bottom:1px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;line-height:1.1;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
 .ic .lv.max{color:var(--amber)}
+.ic .elb{position:absolute;right:2px;top:2px;width:15px;height:15px;border-radius:50%;display:grid;place-items:center;font-size:9px;line-height:1;box-shadow:0 0 0 1px rgba(0,0,0,.6);z-index:1}
 .ic .sr{position:absolute;left:0;right:0;bottom:0;height:11px;display:flex;align-items:center;justify-content:center;font-size:8.5px;letter-spacing:-.5px;line-height:1;color:#ffd24a;background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.35));text-shadow:0 0 2px #000}.ic .sr.full{color:#ff9ccc;text-shadow:0 0 4px rgba(255,106,176,.9)}.ic.hs .lv{bottom:10px}.ic.hs .tm{bottom:12px}
 .iStars{display:flex;align-items:center;gap:8px;margin:2px 0 4px}.iStars .ss{color:#ffd24a;letter-spacing:1px;font-size:14px}.iStars small{color:var(--muted);font-size:11px}
 .skLv{margin-left:6px;font-size:10px;padding:0 5px;border-radius:4px;background:rgba(255,255,255,.1);color:var(--muted);vertical-align:middle}.skLv.up{background:rgba(255,210,74,.2);color:#ffd24a}.skNx{margin-left:6px;font-size:10px;color:#8fe0b0;font-weight:400}.skBon{color:#ffd24a!important;font-size:11px!important}.skBon.dim{color:var(--muted)!important}
@@ -852,9 +853,16 @@ function stageMsg(t){const el=$('#stageMsg');el.hidden=!t;el.textContent=t||'';}
 /* ================= ข้อมูลเกมที่ใช้ร่วมกัน (ฟาร์ม + สนามรบ) =================
    ธาตุ 6 ธาตุ + ตารางแพ้ทาง และสกิลของทุกสายพันธุ์ (แก้ที่นี่ที่เดียว)
    ระดับ: ทั่วไป 2 สกิล · หายาก 3 สกิล · ตำนาน/เทพเจ้า 3 สกิล + สกิลติดตัว (type:'passive') */
+// c = สีป้าย/ย้อมตัว · fx = สีเอฟเฟกต์สกิล · pal = ไล่สีเปลวของท่าพ่น (สว่าง → มืด)
 const ELEM={
-  'ดิน':{c:'#c8a26a',i:'🪨'}, 'น้ำ':{c:'#5fb3ff',i:'💧'}, 'ลม':{c:'#6fe0b0',i:'🌪️'},
-  'ไฟ':{c:'#ff8a3a',i:'🔥'}, 'แสง':{c:'#ffd36a',i:'☀️'}, 'มืด':{c:'#b48cff',i:'🌙'}};
+  'ดิน':{c:'#c8a26a',i:'🪨',fx:0xe0b870,pal:[0xfff0c8,0xe8c47a,0xb8893e,0x7a5424,0x2e2014]},
+  'น้ำ':{c:'#5fb3ff',i:'💧',fx:0x5fc8ff,pal:[0xeaffff,0x8fe4ff,0x3aa8ff,0x1a5ad8,0x0e1e4a]},
+  'ลม':{c:'#6fe0b0',i:'🌪️',fx:0x8ff0c8,pal:[0xf0fff6,0xaaf5d0,0x5fdca8,0x2a9a78,0x123a30]},
+  'ไฟ':{c:'#ff8a3a',i:'🔥',fx:0xff8a3a,pal:[0xffd88a,0xffb030,0xff7a1a,0xd8380e,0x4a2014]},
+  'แสง':{c:'#ffd36a',i:'☀️',fx:0xfff0a0,pal:[0xffffff,0xfff6c0,0xffe07a,0xe8b840,0x4a3a14]},
+  'มืด':{c:'#b48cff',i:'🌙',fx:0xb070ff,pal:[0xf0d8ff,0xc890ff,0x9a4dff,0x5a1ab8,0x1a0a30]}};
+const EL_LIST=Object.keys(ELEM);
+const elFx=u=>{const e=ELEM[u&&u.el];return e?e.fx:0xe8f0ff;};
 // วงจรธาตุพื้นฐาน: น้ำ > ไฟ > ลม > ดิน > น้ำ (ตัวหน้าชนะตัวถัดไป)
 const EL_CYCLE=['น้ำ','ไฟ','ลม','ดิน'];
 const EL_ADV=1.3, EL_WEAK=.8, EL_LD=1.5, EL_LD_OVER=1.15, EL_LD_UNDER=.9;
@@ -870,7 +878,26 @@ function elInfo(e){
   const all=Object.keys(ELEM), strong=all.filter(d=>elMul(e,d)>1), weak=all.filter(d=>elMul(d,e)>1&&elMul(e,d)<=1);
   return {strong,weak};
 }
+// ธาตุประจำตัว (ภาพหลักของตัวละคร) · ตัวที่ฟักได้สุ่มธาตุได้ทั้ง 6 ธาตุ (เก็บใน monsters.el; ว่าง = ธาตุประจำตัว)
 const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ'};
+const elOfMon=m=>(m&&m.el&&ELEM[m.el])?m.el:EL_OF[m&&m.sp];
+// ย้อมสีตัวละครตามธาตุ (ธาตุประจำตัว = สีเดิม) ไม่ต้องใช้ไฟล์โมเดลเพิ่ม
+// ทำใน shader: แปลงสีผิวเป็นความสว่าง แล้วลงสีธาตุ (ทุกธาตุใช้ shader ตัวเดียวกัน ไม่ต้องคอมไพล์ใหม่)
+function elColorize(sh){sh.uniforms.uElCol=this.userData.uElCol;sh.uniforms.uElAmt=this.userData.uElAmt;
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uElCol;\nuniform float uElAmt;')
+    .replace('#include <map_fragment>','#include <map_fragment>\n{float l=dot(diffuseColor.rgb,vec3(.299,.587,.114));diffuseColor.rgb=mix(diffuseColor.rgb,uElCol*(.25+l*1.5),uElAmt);}');}
+function tintByEl(w,sp,el){
+  if(!w||!el||!ELEM[el]||el===EL_OF[sp])return; const col=new THREE.Color(ELEM[el].c), inner=w.userData.inner, spider=inner&&inner.userData.spider;
+  const dragon=inner&&inner.userData.dragon;
+  w.userData.el=el;
+  w.traverse(o=>{if(!o.isMesh||o.userData.outline)return;
+    if(!o.isSkinnedMesh&&!spider&&!o.userData.elOwn){o.material=o.material.clone();o.userData.elOwn=1;}
+    const m=o.material; if(!m||!m.color||m.onBeforeCompile===elColorize)return;
+    m.userData.uElCol={value:col.clone()}; m.userData.uElAmt={value:dragon?.72:.6};
+    m.onBeforeCompile=elColorize;
+    if(m.emissive){m.emissive.copy(col); if(spider)m.userData.elBase=.1; else if(!dragon)m.emissiveIntensity=.08;}
+    m.needsUpdate=true;});
+}
 
 /* สกิล: mult = คูณพลังโจมตี · cd = คูลดาวน์ (เทิร์น; เรียลไทม์ ×2.3 วินาที) · stun = โอกาสทำให้มึน
    passive: dmgLow (แรงขึ้นใส่ศัตรูเลือด<50%) · crit (เพิ่มโอกาสคริ) · revive (รอดตาย 1 ครั้ง คืนเลือด %) · teamAtk (ทั้งทีมแรงขึ้น) · dr (รับดาเมจลดลง) */
@@ -1054,7 +1081,7 @@ const LOCAL=(()=>{
       else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=[.575,.32,.10,.005];}else fail('bad_egg');
       const r=Math.random(); let t=r<ch[3]?4:r<ch[3]+ch[2]?3:r<ch[3]+ch[2]+ch[1]?2:1; if(kind==='gold'&&t<3&&D.pity>=C.pity_max)t=3;
       const pool=Object.keys(SPS).filter(k=>SPS[k].rar===t), sp=pool[Math.floor(Math.random()*pool.length)]||'kazemaru'; if(kind==='gold'&&t>=3)D.pity=0;
-      const m={id:D.nid++,sp,lv:1,stars:0};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
+      const m={id:D.nid++,sp,lv:1,stars:0,el:EL_LIST[Math.floor(Math.random()*EL_LIST.length)]};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
     star_up:({mon_id,mat_ids})=>{const m=mon(mon_id);const st=m.stars||0;if(st>=STAR_MAX)fail('max_stars');const need=starCost(st+1);
@@ -1576,18 +1603,21 @@ function dragonDir(u){return new THREE.Vector3(Math.sin(u.w.rotation.y),0,Math.c
 
 /* ---------- เอฟเฟกต์ไฟ ---------- */
 const FIRE_COL=[0xffd88a,0xffb030,0xff7a1a,0xd8380e,0x4a2014];
+// สีเปลวตามธาตุของมังกรตัวที่กำลังใช้ท่า (เรียก firePal(u) ตอนเริ่มท่า)
+let FIRE_PAL=FIRE_COL;
+function firePal(u){const e=typeof ELEM!=='undefined'&&ELEM[u&&u.el];FIRE_PAL=e&&e.pal?e.pal:FIRE_COL;}
 const FLAMETEX=canvasTex(64,(x,s)=>{const g=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,255,255,.85)');g.addColorStop(.7,'rgba(255,255,255,.3)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,s,s);});
 function fireSprite(pos,vel,life,size,opts){
   opts=opts||{}; if(typeof FXK!=='undefined'&&Math.random()>FXK*1.2)return Promise.resolve();
   const add=!opts.smoke&&Math.random()<.35;
   const m=new THREE.SpriteMaterial({map:FLAMETEX,color:0xffffff,transparent:true,opacity:1,blending:add?THREE.AdditiveBlending:THREE.NormalBlending,depthWrite:false,fog:false});
   const s=new THREE.Sprite(m); s.position.copy(pos); s.scale.setScalar(size*.4); scene.add(s);
-  const c=new THREE.Color(), p0=pos.clone(), g=opts.grav==null?.6:opts.grav, grow=opts.grow||2.6, rot=(Math.random()-.5)*2;
+  const PAL=FIRE_PAL, c=new THREE.Color(), p0=pos.clone(), g=opts.grav==null?.6:opts.grav, grow=opts.grow||2.6, rot=(Math.random()-.5)*2;
   return tween(life,k=>{
     s.position.copy(p0).addScaledVector(vel,k*life); s.position.y+=g*k*k*life;
     const sc=size*(.4+k*grow); s.scale.set(sc,sc,1); m.rotation+=rot*.02;
     if(opts.smoke){c.setHex(0x3a2e28);m.opacity=(1-k)*.35;}
-    else{const f=Math.min(FIRE_COL.length-1.001,k*(FIRE_COL.length-1));const i=Math.floor(f);c.setHex(FIRE_COL[i]).lerp(new THREE.Color(FIRE_COL[i+1]),f-i);m.opacity=Math.min(.95,(1-k)*1.8)*(add?.8:1);}
+    else{const f=Math.min(PAL.length-1.001,k*(PAL.length-1));const i=Math.floor(f);c.setHex(PAL[i]).lerp(new THREE.Color(PAL[i+1]),f-i);m.opacity=Math.min(.95,(1-k)*1.8)*(add?.8:1);}
     m.color.copy(c);
   },t=>t).then(()=>{scene.remove(s);m.dispose();});
 }
@@ -1595,7 +1625,7 @@ function fireSprite(pos,vel,life,size,opts){
 const LPOOL=[0,1].map(()=>{const l=new THREE.PointLight(0xff8a3a,0,9,2);l.userData.busy=0;scene.add(l);return l;});
 function takeLight(col,dist){const l=LPOOL.find(x=>!x.userData.busy)||LPOOL.reduce((a,b)=>a.userData.busy<b.userData.busy?a:b);l.userData.busy=performance.now();l.color.set(col);l.distance=dist;return l;}
 function freeLight(l){l.intensity=0;l.userData.busy=0;}
-function fireLight(pos,intensity,dur){const l=takeLight(0xff8a3a,9);l.position.copy(pos);
+function fireLight(pos,intensity,dur){const l=takeLight(FIRE_PAL[2],9);l.position.copy(pos);
   return tween(dur,k=>{l.intensity=intensity*Math.sin(Math.min(1,k*1.4)*Math.PI*.5)*(1-k*k)*(.8+.2*Math.random());}).then(()=>freeLight(l));}
 function scorch(pos,r){const m=new THREE.Mesh(new THREE.CircleGeometry(r,32),new THREE.MeshBasicMaterial({map:BLOBTEX,color:0x1a0c06,transparent:true,opacity:0,depthWrite:false}));
   m.rotation.x=-Math.PI/2;m.position.copy(pos).setY(.03);scene.add(m);
@@ -1619,7 +1649,7 @@ async function dragonFly(u,to,dur,h){
 }
 
 /* ---------- กรงเล็บเพลิง: ง้าง - พุ่งงับ - ตะปบ ---------- */
-async function dragonBite(u,t,onHit){
+async function dragonBite(u,t,onHit){firePal(u);
   const dir=dragonDir(u), home=u.w.position.clone();
   // ง้าง: ยืดตัวขึ้น กางปีกค้าง หัวเงย
   const altB=u.rig.st.alt; dragonSet(u,{rear:1,spread:1,flapAmp:.25,flapSpd:.6,rise:.35,jaw:1,alt:Math.min(altB,.6)},.22); await wait(300);
@@ -1639,7 +1669,7 @@ async function dragonBite(u,t,onHit){
 }
 
 /* ---------- ลมหายใจอัมพร: ชาร์จ - พ่นเป็นกรวยไฟต่อเนื่อง ---------- */
-async function dragonBreath(u,foes,onHit){
+async function dragonBreath(u,foes,onHit){firePal(u);
   const c=new THREE.Vector3();foes.forEach(f=>c.add(f.w.position));c.divideScalar(foes.length);
   // ชาร์จ: ยกตัว กางปีก ไฟในตัวสว่างขึ้น ประกายไฟถูกดูดเข้าปาก
   dragonSet(u,{rear:1,spread:1,rise:.2,breath:1,flapAmp:.35,flapSpd:.8,jaw:.6},.35);
@@ -1667,7 +1697,7 @@ async function dragonBreath(u,foes,onHit){
 }
 
 /* ---------- ดิ่งฟ้าถล่ม: ทะยานขึ้น - หุบปีกดิ่ง - ระเบิดไฟ ---------- */
-async function dragonDive(u,c,foes,onHit){
+async function dragonDive(u,c,foes,onHit){firePal(u);
   const from=u.w.position.clone(), dir=c.clone().sub(from).setY(0).normalize(); faceTo(u,c,.2);
   // ทะยาน: ตีปีกแรง ฝุ่นฟุ้ง
   dragonSet(u,{flapSpd:2.6,flapAmp:.95,rear:.6,spread:.5},.15);
@@ -1697,7 +1727,7 @@ async function dragonDive(u,c,foes,onHit){
 }
 function dragonReact(u){dragonSet(u,{recoil:1,spread:.6,jaw:.5,flapSpd:2},.06);setTimeout(()=>dragonSet(u,{recoil:0,spread:0,jaw:0,flapSpd:1},.35),180/SPEED);}
 /* ---------- คำราม: ยืดตัว กางปีกเต็ม อ้าปาก สั่นหัว ---------- */
-async function dragonRoar(u,dur){
+async function dragonRoar(u,dur){firePal(u);
   dragonSet(u,{rear:.8,spread:1,roar:1,flapAmp:.3,flapSpd:.7,rise:.25},.25); await wait(200);
   const mo=dragonMouth(u); shockRing(u.w.position.clone().setY(.05),0xffb050); shake=Math.max(shake,.15);
   for(let i=0;i<12;i++)fireSprite(mo,new THREE.Vector3((Math.random()-.5)*1.6,Math.random()*1.4,(Math.random()-.5)*1.6),.45,.25,{grav:0,grow:2});
@@ -1706,7 +1736,7 @@ async function dragonRoar(u,dur){
   dragonSet(u,{rear:0,spread:0,roar:0,flapAmp:.55,flapSpd:1,rise:0},.35);
 }
 /* ---------- ตะปบซ้าย-ขวา ---------- */
-async function dragonClaw(u,t,onHit){
+async function dragonClaw(u,t,onHit){firePal(u);
   const dir=dragonDir(u), home=u.w.position.clone();
   const altC=u.rig.st.alt; dragonSet(u,{legF:.6,lunge:.3,rear:.35,spread:.5,flapAmp:.8,flapSpd:1.6,jaw:.4,alt:Math.min(altC,.5)},.18); await wait(240);
   for(const side of ['clawL','clawR']){
@@ -1722,7 +1752,7 @@ async function dragonClaw(u,t,onHit){
   await tween(.25,k=>u.w.position.copy(home).addScaledVector(dir,.55*(1-k)),easeOut);
 }
 /* ---------- โฉบ: ร่อนต่ำผ่านเป้า กรงเล็บตะปบ แล้วไต่ขึ้นวนกลับ ---------- */
-async function dragonSwoop(u,t,onHit){
+async function dragonSwoop(u,t,onHit){firePal(u);
   const K=u.w.scale.x, from=u.w.position.clone(), tp=t.w.position.clone(), dir=tp.clone().sub(from).setY(0).normalize();
   const side=new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar((Math.random()<.5?-1:1)*3*K);
   const past=tp.clone().addScaledVector(dir,5*K).add(side), back=from.clone().add(side.clone().multiplyScalar(-.3));
@@ -1743,7 +1773,7 @@ async function dragonSwoop(u,t,onHit){
   dragonSet(u,{alt:alt0,pitch:0,lunge:0,spread:0,flapSpd:1,flapAmp:.55,bank:0},.4);
 }
 /* ---------- หมุนตัวฟาดหาง ---------- */
-async function dragonTail(u,t,onHit){
+async function dragonTail(u,t,onHit){firePal(u);
   const y0=u.w.rotation.y, altT=u.rig.st.alt;
   dragonSet(u,{tailWhip:-1,rise:.35,spread:.7,flapSpd:2.2,flapAmp:.8,alt:Math.min(altT,.7)},.2); await wait(300);
   dragonSet(u,{tailWhip:1},.12);
@@ -1761,7 +1791,7 @@ async function dragonDie(u){
 const bez2=(a,b,c,k,o)=>o.copy(a).multiplyScalar((1-k)*(1-k)).addScaledVector(b,2*k*(1-k)).addScaledVector(c,k*k);
 function followPath(u,P,Q,turn,bankK){const yaw=Math.atan2(Q.x-P.x,Q.z-P.z);let d=yaw-u.w.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));u.w.rotation.y+=d*turn;u.rig.tg.bank=Math.max(-1,Math.min(1,-d*bankK));}
 /* ---------- บินพ่นไฟกวาดแนว: ลดระดับบินผ่านกลุ่มศัตรู พ่นไฟลงพื้นเป็นทาง แล้วไต่กลับ ---------- */
-async function dragonStrafe(u,foes,hitOne){
+async function dragonStrafe(u,foes,hitOne){firePal(u);
   const K=u.w.scale.x, from=u.w.position.clone(), c=new THREE.Vector3();
   foes.forEach(f=>c.add(f.w.position)); c.divideScalar(Math.max(1,foes.length)); c.y=0;
   const dir=c.clone().sub(from).setY(0).normalize(), sgn=Math.random()<.5?-1:1, side=new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar(sgn);
@@ -1798,7 +1828,7 @@ async function dragonStrafe(u,foes,hitOne){
   dragonSet(u,{alt:alt0,pitch:0,lunge:0,spread:0,flapSpd:1,flapAmp:.55,bank:0},.5);
 }
 /* ---------- ลมปีกพายุ: ลอยตั้งตัว กระพือปีกหนัก 3 ครั้ง ลมกระแทกศัตรูกระเด็น ---------- */
-async function dragonGust(u,foes,hitOne){
+async function dragonGust(u,foes,hitOne){firePal(u);
   const K=u.w.scale.x, alt0=u.rig.st.alt, home=u.w.position.clone();
   const c=new THREE.Vector3(); foes.forEach(f=>c.add(f.w.position)); c.divideScalar(Math.max(1,foes.length)); c.y=0;
   const dir=c.clone().sub(home).setY(0).normalize();
@@ -1820,7 +1850,7 @@ async function dragonGust(u,foes,hitOne){
   dragonSet(u,{rear:0,spread:0,alt:alt0,flapAmp:.55,flapSpd:1,pitch:0,jaw:0},.45); await wait(250);
 }
 /* ---------- ฉลองชัย: บินวนเป็นวงกว้างไต่ระดับ แล้วคำรามกลางฟ้า ---------- */
-async function dragonVictory(u){
+async function dragonVictory(u){firePal(u);
   if(!u.alive)return; u.busy=true;
   const K=u.w.scale.x, c=u.w.position.clone(), R=2.4*K, a0=Math.random()*Math.PI*2, alt0=u.rig.st.alt, sg=Math.random()<.5?1:-1;
   dragonSet(u,{alt:alt0+1.4,spread:.5,flapSpd:1.9,flapAmp:.85,pitch:-.25},.35);
@@ -1895,7 +1925,7 @@ function buildSpider(){
       q.setFromAxisAngle(up,yaw); q2.setFromAxisAngle(L.ax,-liftA); L.a.quaternion.copy(q).multiply(q2);
       L.b.quaternion.setFromAxisAngle(L.ax,knee); if(L.c)L.c.quaternion.setFromAxisAngle(L.ax,-knee*.5+st.dead*.6);
     });
-    mats.forEach(mt=>{mt.emissiveIntensity=st.cast*.55*(.8+.2*Math.sin(T*14))+Math.max(0,Math.sin(T*2.1))*.05;});
+    mats.forEach(mt=>{mt.emissiveIntensity=(mt.userData.elBase||0)+st.cast*.55*(.8+.2*Math.sin(T*14))+Math.max(0,Math.sin(T*2.1))*.05;});
   };
   w.userData.k=1; w.userData.inner=m;
   return w;
@@ -1908,7 +1938,7 @@ async function spiderStrike(u,t,onHit){
   spiderSet(u,{rear:1,stab:0},.18); await wait(260);
   spiderSet(u,{rear:0,stab:1},.07);
   await tween(.12,k=>u.w.position.copy(home).addScaledVector(dir,.45*K*k),easeIn);
-  const hp=t.w.position.clone().setY(.9); hitArc(hp,-.9,0xc58cff,1.2); particles(hp,0xb070ff,14,1.6,.07,.4,.9);
+  const hp=t.w.position.clone().setY(.9); hitArc(hp,-.9,elFx(u),1.2); particles(hp,elFx(u),14,1.6,.07,.4,.9);
   onHit(); shake=Math.max(shake,.14); await wait(170);
   spiderSet(u,{stab:0},.25); await tween(.3,k=>u.w.position.copy(home).addScaledVector(dir,.45*K*(1-k)),easeOut);
 }
@@ -1916,14 +1946,14 @@ async function spiderStrike(u,t,onHit){
 async function spiderCast(u,foes,onHitOne){
   spiderSet(u,{cast:1,rear:.4},.25);
   const orbs=[]; const hR=spiderHand(u,'R'), hL=spiderHand(u,'L');
-  [hR,hL].forEach(h=>{const g=glow(scene,0xb070ff,.35,[h.x,h.y,h.z],1);orbs.push(g);});
+  [hR,hL].forEach(h=>{const g=glow(scene,elFx(u),.35,[h.x,h.y,h.z],1);orbs.push(g);});
   await tween(.45,k=>{orbs.forEach((g,i)=>{const h=spiderHand(u,i?'L':'R');g.position.copy(h);g.scale.setScalar(.2+k*.9);});});
   orbs.forEach(g=>{scene.remove(g);g.material.dispose();});
   shake=Math.max(shake,.08);
   await Promise.all(foes.map((f,i)=>new Promise(res=>setTimeout(async()=>{
-    const from=spiderHand(u,i%2?'L':'R'), g=glow(scene,0xc58cff,.5,[from.x,from.y,from.z],1), to=f.w.position.clone().setY(.9), mid=from.clone().lerp(to,.5).add(new THREE.Vector3(0,1.2,0));
-    await tween(.42,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));if(Math.random()<.6)particles(g.position,0x9a4dff,1,.3,.05,.2,.6);},t=>t);
-    scene.remove(g);g.material.dispose();particles(to,0xb070ff,16,2,.08,.3,.9);particles(to,0x2a0a3a,8,1.2,.12,-.2,.7);
+    const from=spiderHand(u,i%2?'L':'R'), g=glow(scene,elFx(u),.5,[from.x,from.y,from.z],1), to=f.w.position.clone().setY(.9), mid=from.clone().lerp(to,.5).add(new THREE.Vector3(0,1.2,0));
+    await tween(.42,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));if(Math.random()<.6)particles(g.position,elFx(u),1,.3,.05,.2,.6);},t=>t);
+    scene.remove(g);g.material.dispose();particles(to,elFx(u),16,2,.08,.3,.9);particles(to,0x2a0a3a,8,1.2,.12,-.2,.7);
     if(f.alive)onHitOne(f); res();},i*110/SPEED))));
   spiderSet(u,{cast:0,rear:0},.35); await wait(200);
 }
@@ -1935,13 +1965,13 @@ async function spiderLeap(u,c,foes,onHit){
   spiderSet(u,{crouch:0,rear:.3},.08); particles(tmpV.copy(from).setY(.1),0xb8a888,18,2,.3,-.2,.5);
   await tween(.55,k=>{u.w.position.lerpVectors(from,land,k);u.w.position.y=Math.sin(k*Math.PI)*1.8*K;},easeIO);
   u.w.position.y=0; spiderSet(u,{crouch:.8,rear:0},.06); shake=Math.max(shake,.24);
-  shockRing(c,0xb070ff); if(typeof scorch==='function')scorch(c,1.4); particles(tmpV.copy(c).setY(.1),0xb8a888,26,2.4,.35,-.2,.55); particles(tmpV.copy(c).setY(.4),0x9a4dff,20,2,.08,.4,.9);
+  shockRing(c,elFx(u)); if(typeof scorch==='function')scorch(c,1.4); particles(tmpV.copy(c).setY(.1),0xb8a888,26,2.4,.35,-.2,.55); particles(tmpV.copy(c).setY(.4),elFx(u),20,2,.08,.4,.9);
   onHit(); await wait(260); spiderSet(u,{crouch:0},.3);
   await tween(.5,k=>u.w.position.lerpVectors(land,from,k),easeIO);
 }
 function spiderReact(u){spiderSet(u,{recoil:1},.06);setTimeout(()=>spiderSet(u,{recoil:0},.3),170/SPEED);}
 async function spiderDie(u){spiderSet(u,{rear:.8},.1);await wait(220);spiderSet(u,{rear:0,dead:1,cast:0,stab:0},.45);await wait(520);shake=Math.max(shake,.12);
-  particles(tmpV.copy(u.w.position).setY(.3),0x9a4dff,22,1.6,.08,.3,.8);}
+  particles(tmpV.copy(u.w.position).setY(.3),elFx(u),22,1.6,.08,.3,.8);}
 async function spiderVictory(u){if(!u.alive)return;u.busy=true;spiderSet(u,{rear:1,cast:1},.3);await wait(1200);spiderSet(u,{rear:0,cast:0},.4);u.busy=false;}
 
 /* ================= ฟาร์มของผู้เล่น ================= */
@@ -2321,16 +2351,16 @@ function blockedSeg(ax,az,bx,bz,pad){for(const b of BLOCK){const vx=bx-ax,vz=bz-
 function freePoint(pad){for(let k=0;k<200;k++){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*14.2,x=Math.cos(a)*r,z=Math.sin(a)*r;if(onIsland(x,z,1.5)&&!BLOCK.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+pad))return[x,z];}return[0,7];}
 function addAgent(data,at,pop){
   const spc=SPEC[data.sp]||SPEC.kazemaru;
-  if(spc.dragon&&DRAGON){const w=buildDragon();w.scale.setScalar(1.7);scene.add(w);
+  if(spc.dragon&&DRAGON){const w=buildDragon();w.scale.setScalar(1.7);tintByEl(w,data.sp,data.el);scene.add(w);
     w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
     const ag={w,inner:w.userData.inner,data,evo:1,fly:true,ang:Math.random()*6.28,r:8.5+Math.random()*1.5,state:'fly'};AGENTS.push(ag);
     if(pop){w.scale.setScalar(.001);tween(.8,t=>w.scale.setScalar(Math.max(.001,1.7*t)),easeBack);}return ag;}
-  if(spc.spider&&SPIDER){const w=buildSpider();w.scale.setScalar(1.3);scene.add(w);
+  if(spc.spider&&SPIDER){const w=buildSpider();w.scale.setScalar(1.3);tintByEl(w,data.sp,data.el);scene.add(w);
     const [x,z]=at||freePoint(1); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
     w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
     const ag={w,inner:w.userData.inner,data,evo:1,spider:true,state:'idle',wait:1+Math.random()*3,tx:x,tz:z,ph:0,yaw:w.rotation.y,speed:1.1};AGENTS.push(ag);
     if(pop){w.scale.setScalar(.001);tween(.6,t=>w.scale.setScalar(Math.max(.001,1.3*t)),easeBack);}return ag;}
-  const w=buildMonster(spc.rig||(spc.evo?1:0)); w.userData.k*=1.5; w.scale.setScalar(w.userData.k); scene.add(w);
+  const w=buildMonster(spc.rig||(spc.evo?1:0)); w.userData.k*=1.5; w.scale.setScalar(w.userData.k); tintByEl(w,data.sp,data.el); scene.add(w);
   const [x,z]=at||freePoint(.8); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
   const inner=w.userData.inner;
   w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
@@ -2384,7 +2414,7 @@ function applyState(st){
   if(!st||!st.player)return; const p=st.player;
   Object.assign(S,{name:p.name,lv:p.lv,xp:p.xp,coins:p.coins,amber:p.amber,energy:p.energy,energyMax:p.energy_max,energyNext:p.energy_next,energySec:p.energy_sec,
     amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now(),mailNew:p.mail_new||0});
-  S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0}));
+  S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null}));
   if(typeof renderHUD==='function')renderHUD();
 }
 function syncAgents(){AGENTS.forEach(a=>{scene.remove(a.w);});AGENTS.length=0;PICK.splice(0,PICK.length,...PICK.filter(o=>o.userData.agent==null));S.mons.forEach(d=>addAgent(d));}
@@ -2508,9 +2538,10 @@ async function hatch(kind,name){
   const ep=new THREE.Vector3(0,2.15,3.2);
   flashBall(ep,col,r.rar>=4?6:r.rar>=3?5:4); particles(ep,col,r.rar>=4?120:r.rar>=3?85:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
   if(r.rar>=4){shakeCam=.4;}else if(r.rar>=3){shakeCam=.2;}
-  const d=S.mons.find(m=>m.uid===Number(r.mon.id))||{uid:Number(r.mon.id),sp:r.mon.sp,lv:1};
+  const d=S.mons.find(m=>m.uid===Number(r.mon.id))||{uid:Number(r.mon.id),sp:r.mon.sp,lv:1,el:r.mon.el||null}; const hel=elOfMon(d);
+  particles(ep,ELEM[hel]?ELEM[hel].fx:col,40,2.6,.06,1.2);
   const ag=addAgent(d,[0,5.9],true); if(!ag.fly){ag.state='idle'; ag.wait=2.5;}
-  toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
+  toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' '+ELEM[hel].i+'ธาตุ'+hel+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
   hatching=false;
 }
 let shakeCam=0;
@@ -2721,15 +2752,15 @@ const bScene=new THREE.Scene(), bCam=new THREE.PerspectiveCamera(32,1,.1,100);
   BOX.motes=[]; for(let i=0;i<40;i++){const s=glow(bScene,0xffc070,.12,[(Math.random()-.5)*8,Math.random()*4,(Math.random()-.5)*6-1],.7);s.userData.p=[Math.random()*6,Math.random()*6,s.position.clone()];BOX.motes.push(s);}
   BOX.ring=ring; BOX.deco=[sph,ped,ring,floor,...BOX.motes]; bScene.fog.near0=14;
 }
-function boxModel(sp){
+function boxModel(sp,el){
   const S2=SPEC[sp];
   if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}
   let w;
   if(S2.dragon&&DRAGON){w=buildDragon();w.scale.setScalar(.72);}
   else if(S2.spider&&SPIDER){w=buildSpider();w.scale.setScalar(1.05);}
   else{w=buildMonster(S2.rig||(S2.evo?1:0));w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
-  w.traverse(o=>{if(o.isMesh){o.castShadow=true;}});
-  w.userData.sp=sp; bScene.add(w); BOX.model=w; BOX.spin=0;
+  w.traverse(o=>{if(o.isMesh){o.castShadow=true;}}); tintByEl(w,sp,el);
+  w.userData.sp=sp; w.userData.el=el; bScene.add(w); BOX.model=w; BOX.spin=0;
   const A=w.userData.inner.userData; if(A.clipW)A.clipW(1);
   return w;
 }
@@ -2753,11 +2784,12 @@ function headOf(w,sp){
 }
 // ปรับกรอบหน้าแต่ละสายพันธุ์ (สัดส่วนของความสูงตัว)
 const FACE={yorugumo:{dx:0,dy:.03,r:.16},hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
-function makeThumb(sp){
-  if(THUMB[sp])return THUMB[sp];
+function makeThumb(sp,el){
+  el=el||EL_OF[sp]; const key=sp+'|'+el;
+  if(THUMB[key])return THUMB[key];
   const W=192, rt=new THREE.WebGLRenderTarget(W,W,{encoding:THREE.sRGBEncoding}); rt.texture.encoding=THREE.sRGBEncoding;
-  const prevSp=BOX.model&&BOX.model.userData.sp;
-  const w=boxModel(sp); const A=w.userData.inner.userData;
+  const prevSp=BOX.model&&BOX.model.userData.sp, prevEl=BOX.model&&BOX.model.userData.el;
+  const w=boxModel(sp,el); const A=w.userData.inner.userData;
   if(A.clipW)A.clipW(0); for(let i=0;i<3;i++){A.idle&&A.idle(1+i*.016);} rigUpdate(.016);
   w.rotation.y=SPEC[sp].dragon?-.35:-.3; bScene.updateMatrixWorld(true);
   const f=headOf(w,sp), cam=new THREE.PerspectiveCamera(30,1,.05,100);
@@ -2771,14 +2803,14 @@ function makeThumb(sp){
   const c=document.createElement('canvas'); c.width=c.height=W; const x=c.getContext('2d'), im=x.createImageData(W,W);
   for(let y=0;y<W;y++)im.data.set(px.subarray((W-1-y)*W*4,(W-y)*W*4),y*W*4);
   const fg=document.createElement('canvas'); fg.width=fg.height=W; fg.getContext('2d').putImageData(im,0,0);
-  const col=SPEC[sp].elc, g=x.createRadialGradient(W*.5,W*.42,W*.05,W*.5,W*.5,W*.75);
+  const col=ELEM[el]?ELEM[el].c:SPEC[sp].elc, g=x.createRadialGradient(W*.5,W*.42,W*.05,W*.5,W*.5,W*.75);
   g.addColorStop(0,col); g.addColorStop(.55,'#3a2a1e'); g.addColorStop(1,'#140e0a');
   x.fillStyle=g; x.fillRect(0,0,W,W);
   x.globalAlpha=.18; x.strokeStyle='#fff'; x.lineWidth=2; for(let i=-W;i<W;i+=14){x.beginPath();x.moveTo(i,W);x.lineTo(i+W,0);x.stroke();} x.globalAlpha=1;
   x.drawImage(fg,0,0);
-  THUMB[sp]=c.toDataURL('image/jpeg',.88); rt.dispose();
-  if(prevSp)boxModel(prevSp); else{bScene.remove(BOX.model);BOX.model=null;}
-  return THUMB[sp];
+  THUMB[key]=c.toDataURL('image/jpeg',.88); rt.dispose();
+  if(prevSp)boxModel(prevSp,prevEl); else{bScene.remove(BOX.model);BOX.model=null;}
+  return THUMB[key];
 }
 
 function boxSpark(p,color,n,speed){for(let i=0;i<n;i++){const g=glow(bScene,color,.18,[p.x,p.y,p.z],1);const v=new THREE.Vector3((Math.random()-.5),Math.random()*.9+.2,(Math.random()-.5)).normalize().multiplyScalar(speed*(.4+Math.random()*.8));const p0=g.position.clone();
@@ -2794,14 +2826,14 @@ function openBox(){BOX.win=true;BOX.open=false;$('#box').hidden=false;$('#box').
   renderBox();}
 function closeBox(){BOX.win=false;BOX.open=false;$('#box').hidden=true;document.body.classList.remove('boxOpen');if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}syncAgents();}
 function icon(m,cls){const sp=spOf(m);const c=el('button','ic r'+sp.rar+(cls?' '+cls:''));
-  const img=el('img');img.src=makeThumb(m.sp);img.alt=sp.name;c.append(img);
+  const img=el('img');img.src=makeThumb(m.sp,elOfMon(m));img.alt=sp.name;c.append(img);
   c.append(el('span','st',stars(sp.rar)));
   const lv=el('span','lv'+(m.lv>=sp.maxLv?' max':''),m.lv+'');c.append(lv);
   if(m.stars){c.classList.add('hs');c.append(el('span','sr'+(m.stars>=STAR_MAX?' full':''),'★'.repeat(m.stars)));}
   if(S.team.includes(m.uid)){const t=el('span','tm');t.innerHTML=FLAG;c.append(t);}
   if(sp.evolveTo&&m.lv>=sp.maxLv){const e=el('span','ev','↑');e.title='เปลี่ยนร่างได้';c.append(e);}
   else if(canStar(m)){const e=el('span','ev','★');e.title='วิวัฒน์ (ขึ้นดาว) ได้';c.append(e);}
-  c.title=sp.name+' Lv'+m.lv+(m.stars?' ★'+m.stars:''); return c;}
+  {const me=elOfMon(m);const b=el('span','elb',ELEM[me].i);b.style.background=ELEM[me].c;c.append(b);c.title=sp.name+' ธาตุ'+me+' Lv'+m.lv+(m.stars?' ★'+m.stars:'');} return c;}
 // วัตถุดิบขึ้นดาว: ตัวซ้ำสายพันธุ์เดียวกันที่ไม่อยู่ในทีม เลือกตัวดาว/เลเวลต่ำสุดก่อน
 function starMats(m){const need=starCost((m.stars||0)+1);
   const L=S.mons.filter(x=>x.sp===m.sp&&x.uid!==m.uid&&!S.team.includes(x.uid)).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
@@ -2833,15 +2865,15 @@ function renderDetail(){
   const m=S.mons.find(x=>x.uid===BOX.detail), P=$('#bPage'); P.innerHTML='';
   document.querySelectorAll('.bTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===boxTab));
   if(!m)return; const sp=spOf(m), st=statOf(m);
-  const h=el('div','iHead');const e=el('span','iEl',sp.el);e.style.background=sp.elc;h.append(e);h.append(el('b',null,sp.name));{const tg=el('span','iTier r'+sp.rar,stars(sp.rar));h.append(tg);}P.append(h);
+  const mEl=elOfMon(m); const h=el('div','iHead');const e=el('span','iEl',mEl);e.style.background=ELEM[mEl].c;h.append(e);h.append(el('b',null,sp.name));{const tg=el('span','iTier r'+sp.rar,stars(sp.rar));h.append(tg);}P.append(h);
   {const r=el('div','iStars');r.append(el('span','ss',starStr(m.stars||0)));r.append(el('small',null,(m.stars||0)>=STAR_MAX?'ดาวเต็ม':'ดาว '+(m.stars||0)+'/'+STAR_MAX));P.append(r);}
   P.append(el('div','iSub',sp.title+' · '+sp.role));
   if(boxTab==='info'){
     const x=el('div','iExp');x.append(el('span',null,'LV'));const bar=el('div');const i=el('i');i.style.width=(m.lv/sp.maxLv*100)+'%';bar.append(i);bar.append(el('em',null,m.lv>=sp.maxLv?'MAX':m.lv+' / '+sp.maxLv));x.append(bar);P.append(x);
     const T=el('table','iTbl');
-    {const EI=elInfo(sp.el), nm=l=>l.length?l.map(x=>ELEM[x].i+' '+x).join(' · '):'—';
-    [['เลเวล',m.lv+' / '+sp.maxLv],['พลังชีวิต (HP)',fmt(st.hp*10)],['โจมตี (ATK)',st.atk*10],['ป้องกัน (DEF)',st.def*10],['ความเร็ว (SPD)',st.spd],['ธาตุ',ELEM[sp.el].i+' ธาตุ'+sp.el],['ชนะทาง',nm(EI.strong),'adv'],['แพ้ทาง',nm(EI.weak),'weak'],['พลังรวม',fmt(power(m)),'pw']]
-      .forEach(([k,v,c],j)=>{const r=el('tr',j===5?'sep':'');r.append(el('td',null,k));const td=el('td',c||null,v+'');if(j===5)td.style.color=sp.elc;r.append(td);T.append(r);});}
+    {const EI=elInfo(mEl), nm=l=>l.length?l.map(x=>ELEM[x].i+' '+x).join(' · '):'—';
+    [['เลเวล',m.lv+' / '+sp.maxLv],['พลังชีวิต (HP)',fmt(st.hp*10)],['โจมตี (ATK)',st.atk*10],['ป้องกัน (DEF)',st.def*10],['ความเร็ว (SPD)',st.spd],['ธาตุ',ELEM[mEl].i+' ธาตุ'+mEl+(mEl!==sp.el?' (ธาตุพิเศษ)':'')],['ชนะทาง',nm(EI.strong),'adv'],['แพ้ทาง',nm(EI.weak),'weak'],['พลังรวม',fmt(power(m)),'pw']]
+      .forEach(([k,v,c],j)=>{const r=el('tr',j===5?'sep':'');r.append(el('td',null,k));const td=el('td',c||null,v+'');if(j===5)td.style.color=ELEM[mEl].c;r.append(td);T.append(r);});}
     P.append(T);
   }else if(boxTab==='skill'){{const st=m.stars||0, cur=skillLvs(m.sp,st), nx=st<STAR_MAX?skillLvs(m.sp,st+1):cur;
     sp.skills.forEach((k,i)=>{const pv=k.type==='passive',s=el('div','skr'+(pv?' pas':''));s.append(el('span','skn',pv?'ติดตัว':(i+1)+''));const t=el('div');
@@ -2869,7 +2901,7 @@ $('#bClose').onclick=closeBox;
 $('#box').addEventListener('pointerdown',e=>{if(e.target.id==='box')closeBox();});
 function open3d(){const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;
   BOX.open=true;$('#box').classList.add('v3d');$('#mdet').hidden=false;$('#md3Name').textContent=spOf(m).name+' Lv'+m.lv;
-  boxModel(m.sp);boxLayout();const A=BOX.model.userData.inner.userData;if(A.play)A.play('victory',{fade:.25});
+  boxModel(m.sp,elOfMon(m));boxLayout();const A=BOX.model.userData.inner.userData;if(A.play)A.play('victory',{fade:.25});
   if(spOf(m).spider){const R=A.rig;spiderSet({rig:R},{rear:1,cast:1},.35);setTimeout(()=>spiderSet({rig:R},{rear:0,cast:0},.5),1400);}
   if(spOf(m).dragon)dragonSet({rig:A.rig},{rear:1,spread:1,breath:1},.4),setTimeout(()=>BOX.model&&dragonSet({rig:BOX.model.userData.inner.userData.rig},{rear:0,spread:0,breath:0},.6),1300);}
 function close3d(){BOX.open=false;$('#box').classList.remove('v3d');$('#mdet').hidden=true;if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}renderBox();}
@@ -2889,10 +2921,10 @@ $('#mdEvo').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid=
   const w=BOX.model; const p=new THREE.Vector3(0,1,0);
   const glowT=tween(1.4,t=>{w.rotation.y+=.05+t*.5;w.traverse(o=>{if(o.isMesh&&o.material&&o.material.emissive){o.material.emissive.setHex(0xfff0c0);o.material.emissiveIntensity=t*2;}});});
   const r=await act('evolve_monster',{mon_id:uid}); await glowT;
-  if(!r){boxModel(m.sp);$('#mdBack').disabled=false;return;}
+  if(!r){boxModel(m.sp,elOfMon(m));$('#mdBack').disabled=false;return;}
   bumpRes('coins');
   boxSpark(p,0xffffff,70,3.4);boxSpark(p,0xffc94d,50,2.6);
-  boxModel(r.sp); $('#md3Name').textContent=SPEC[r.sp].name+' Lv1';
+  boxModel(r.sp,elOfMon(m)); $('#md3Name').textContent=SPEC[r.sp].name+' Lv1';
   boxSpark(p,0xffc94d,40,2); const A=BOX.model.userData.inner.userData; if(A.play)A.play('victory',{fade:.1});
   $('#mdBack').disabled=false; toast('เปลี่ยนร่างสำเร็จ! กลายเป็น '+SPEC[r.sp].name);};
 // วิวัฒนาการ (ขึ้นดาว): กดครั้งแรกบอกว่าจะใช้ตัวไหน กดซ้ำภายใน 6 วินาทีเพื่อยืนยัน
@@ -2901,7 +2933,7 @@ async function starUp(m){
   if(st>=STAR_MAX){toast('ดาวเต็มแล้ว');return;}
   if(SM.have<SM.need){toast('ต้องมี '+sp.name+' ซ้ำที่ไม่อยู่ในทีมอีก '+(SM.need-SM.have)+' ตัว');return;}
   const A=BOX.starArm; if(!A||A.uid!==m.uid||A.st!==st||Date.now()-A.t>6000){BOX.starArm={uid:m.uid,st,t:Date.now()};
-    toast('แตะอีกครั้งเพื่อยืนยัน: ใช้ '+SM.list.map(x=>sp.name+' Lv'+x.lv+(x.stars?' ★'+x.stars:'')).join(' + ')+' เป็นวัตถุดิบ');return;}
+    toast('แตะอีกครั้งเพื่อยืนยัน: ใช้ '+SM.list.map(x=>sp.name+' '+ELEM[elOfMon(x)].i+' Lv'+x.lv+(x.stars?' ★'+x.stars:'')).join(' + ')+' เป็นวัตถุดิบ');return;}
   BOX.starArm=null; const before=skillLvs(m.sp,st);
   const r=await act('star_up',{mon_id:m.uid,mat_ids:SM.list.map(x=>x.uid)}); if(!r)return;
   const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=spOf(m).skills[i];

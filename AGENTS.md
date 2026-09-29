@@ -143,7 +143,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 - ท่าไม้ตาย = สกิล active ตัวสุดท้าย (`ultOf` ข้าม passive)
 
 **ธาตุ 6 ธาตุ:** วงจร น้ำ > ไฟ > ลม > ดิน > น้ำ (ชนะทาง ×1.3, แพ้ทาง ×0.8) · แสง ↔ มืด ×1.5 ทั้งสองฝั่ง · แสง/มืด ตีธาตุพื้นฐาน ×1.15 และโดนธาตุพื้นฐานตี ×0.9
-- ศัตรูทุกคลื่นมีธาตุ (`enemyEl(ด่าน, คลื่น)`) แสดงบนแถบ "คลื่น" ด้านบน · ยังไม่มีตัวละครธาตุน้ำ
+- ศัตรูทุกคลื่นมีธาตุ (`enemyEl(ด่าน, คลื่น)`) แสดงบนแถบ "คลื่น" ด้านบน
 
 ## ระบบดาว (วิวัฒน์ด้วยตัวซ้ำ)
 
@@ -161,3 +161,10 @@ python3 build_battle.py && cp battle.html ../battle.html
 ## กล่องจดหมายแจกของ (server/migrate_mail.sql)
 - ตาราง `public.mail` (จดหมายถึงผู้เล่นทุกคน) + `public.mail_claims` (ใครรับแล้ว) · RPC `mail_list()`, `claim_mail(mail_id)` · `_state.player.mail_new` = จำนวนที่ยังไม่รับ (ตัวเลขบนปุ่มจดหมาย)
 - **ส่งของแจกใหม่** (รันใน Supabase SQL Editor): `insert into public.mail (code, title, body, amber, coins, expires_at) values ('ชื่อไม่ซ้ำ', 'หัวข้อ', 'ข้อความ', 300, 0, now() + interval '30 days') on conflict (code) do nothing;` — ผู้เล่นทุกคน (รวมคนที่สมัครทีหลังก่อนหมดเขต) กดรับได้คนละ 1 ครั้ง
+
+## ธาตุต่อตัว (server/migrate_elements.sql)
+- ตัวละครเดียวกันมีได้ทั้ง 6 ธาตุ: `monsters.el` (ว่าง = ธาตุประจำตัว `EL_OF`) · ฝั่งเกมใช้ `elOfMon(m)` เสมอ
+- ฟักไข่สุ่มธาตุตามตาราง `public.el_rates` (ปกติ w=1 เท่ากันทุกธาตุ) · **อีเวนต์ธาตุ**: `update public.el_rates set w = 3 where el = 'น้ำ';` · จบอีเวนต์ `update public.el_rates set w = 1;`
+- หน้าตา: `tintByEl(w, sp, el)` ลงสีธาตุใน shader (`elColorize`, ทุกธาตุใช้ shader เดียวกัน) · ธาตุประจำตัวไม่ย้อมสี · ไม่ต้องมีไฟล์โมเดลเพิ่ม
+- เอฟเฟกต์ตามธาตุ: `elFx(u)` (สีโจมตี/วงแรงกระแทก/ลูกแก้วแมงมุม) · มังกรใช้ `firePal(u)` → `FIRE_PAL` (สีเปลวของ `ELEM[el].pal`)
+- รูปไอคอนในคลังแคชตาม `sp|el` (`makeThumb(sp, el)`) และมีป้ายธาตุมุมขวาบน · วัตถุดิบขึ้นดาวใช้ตัวซ้ำคนละธาตุได้

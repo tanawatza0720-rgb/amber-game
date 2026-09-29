@@ -87,6 +87,7 @@ function makeUnit(side,def,slot){
   const SPD=!!(sp.spider&&SPIDER);
   const inner=w.userData.inner, rig=inner.userData.rig;
   if(def.boss){w.userData.k*=1.3;w.scale.setScalar(w.userData.k);}
+  if(side==='P')tintByEl(w,def.sp,def.el);
   if(side==='E')tintCrimson(w,def.boss);
   if(side==='E'&&(inner.userData.meshy||SPD))w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
   if(sp.evo&&!sp.dragon&&!SPD){(inner.userData.swords||[]).forEach(s=>s.visible=true);
@@ -229,8 +230,8 @@ function dealHit(att,t,skill){
   popNum(t,d+(em>1?' ▲':em<1?' ▼':''),crit?'crit':em>1?'dmg adv':em<1?'dmg weak':'dmg');
   if(em>1&&performance.now()-elTipT>2500){elTipT=performance.now();setTimeout(()=>popNum(t,'แพ้ทางธาตุ!','info adv'),120/SPEED);}
   shake=Math.max(shake,crit?.14:.07);
-  particles(tmpV.copy(t.w.position).setY(t.evo?1.3:.8),crit?0xffd27a:em>1?0xffb070:0xffffff,crit?16:9,2,.05,1.4);
-  hitArc(tmpV.copy(t.w.position).setY(t.evo?1.35:.8).add(new THREE.Vector3(0,0,.3)),(Math.random()-.5)*1.6+(att.side==='P'?.4:-.4)+Math.PI*(Math.random()<.5?0:1),crit?0xffd27a:em>1?0xffa060:0xe8f0ff,t.boss?1.4:1);
+  particles(tmpV.copy(t.w.position).setY(t.evo?1.3:.8),crit?0xffd27a:elFx(att),crit?16:9,2,.05,1.4);
+  hitArc(tmpV.copy(t.w.position).setY(t.evo?1.35:.8).add(new THREE.Vector3(0,0,.3)),(Math.random()-.5)*1.6+(att.side==='P'?.4:-.4)+Math.PI*(Math.random()<.5?0:1),crit?0xffd27a:elFx(att),t.boss?1.4:1);
   if(t.hp<=0&&tp.revive&&!t.revived){ // สกิลติดตัว: รอดตาย 1 ครั้ง
     t.revived=true; t.hp=Math.round(t.maxHp*tp.revive);
     setTimeout(()=>popNum(t,'เก้าชีวิต! +'+t.hp,'heal'),200/SPEED);

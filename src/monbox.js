@@ -46,15 +46,15 @@ const bScene=new THREE.Scene(), bCam=new THREE.PerspectiveCamera(32,1,.1,100);
   BOX.motes=[]; for(let i=0;i<40;i++){const s=glow(bScene,0xffc070,.12,[(Math.random()-.5)*8,Math.random()*4,(Math.random()-.5)*6-1],.7);s.userData.p=[Math.random()*6,Math.random()*6,s.position.clone()];BOX.motes.push(s);}
   BOX.ring=ring; BOX.deco=[sph,ped,ring,floor,...BOX.motes]; bScene.fog.near0=14;
 }
-function boxModel(sp){
+function boxModel(sp,el){
   const S2=SPEC[sp];
   if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}
   let w;
   if(S2.dragon&&DRAGON){w=buildDragon();w.scale.setScalar(.72);}
   else if(S2.spider&&SPIDER){w=buildSpider();w.scale.setScalar(1.05);}
   else{w=buildMonster(S2.rig||(S2.evo?1:0));w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
-  w.traverse(o=>{if(o.isMesh){o.castShadow=true;}});
-  w.userData.sp=sp; bScene.add(w); BOX.model=w; BOX.spin=0;
+  w.traverse(o=>{if(o.isMesh){o.castShadow=true;}}); tintByEl(w,sp,el);
+  w.userData.sp=sp; w.userData.el=el; bScene.add(w); BOX.model=w; BOX.spin=0;
   const A=w.userData.inner.userData; if(A.clipW)A.clipW(1);
   return w;
 }
@@ -78,11 +78,12 @@ function headOf(w,sp){
 }
 // ปรับกรอบหน้าแต่ละสายพันธุ์ (สัดส่วนของความสูงตัว)
 const FACE={yorugumo:{dx:0,dy:.03,r:.16},hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
-function makeThumb(sp){
-  if(THUMB[sp])return THUMB[sp];
+function makeThumb(sp,el){
+  el=el||EL_OF[sp]; const key=sp+'|'+el;
+  if(THUMB[key])return THUMB[key];
   const W=192, rt=new THREE.WebGLRenderTarget(W,W,{encoding:THREE.sRGBEncoding}); rt.texture.encoding=THREE.sRGBEncoding;
-  const prevSp=BOX.model&&BOX.model.userData.sp;
-  const w=boxModel(sp); const A=w.userData.inner.userData;
+  const prevSp=BOX.model&&BOX.model.userData.sp, prevEl=BOX.model&&BOX.model.userData.el;
+  const w=boxModel(sp,el); const A=w.userData.inner.userData;
   if(A.clipW)A.clipW(0); for(let i=0;i<3;i++){A.idle&&A.idle(1+i*.016);} rigUpdate(.016);
   w.rotation.y=SPEC[sp].dragon?-.35:-.3; bScene.updateMatrixWorld(true);
   const f=headOf(w,sp), cam=new THREE.PerspectiveCamera(30,1,.05,100);
@@ -96,14 +97,14 @@ function makeThumb(sp){
   const c=document.createElement('canvas'); c.width=c.height=W; const x=c.getContext('2d'), im=x.createImageData(W,W);
   for(let y=0;y<W;y++)im.data.set(px.subarray((W-1-y)*W*4,(W-y)*W*4),y*W*4);
   const fg=document.createElement('canvas'); fg.width=fg.height=W; fg.getContext('2d').putImageData(im,0,0);
-  const col=SPEC[sp].elc, g=x.createRadialGradient(W*.5,W*.42,W*.05,W*.5,W*.5,W*.75);
+  const col=ELEM[el]?ELEM[el].c:SPEC[sp].elc, g=x.createRadialGradient(W*.5,W*.42,W*.05,W*.5,W*.5,W*.75);
   g.addColorStop(0,col); g.addColorStop(.55,'#3a2a1e'); g.addColorStop(1,'#140e0a');
   x.fillStyle=g; x.fillRect(0,0,W,W);
   x.globalAlpha=.18; x.strokeStyle='#fff'; x.lineWidth=2; for(let i=-W;i<W;i+=14){x.beginPath();x.moveTo(i,W);x.lineTo(i+W,0);x.stroke();} x.globalAlpha=1;
   x.drawImage(fg,0,0);
-  THUMB[sp]=c.toDataURL('image/jpeg',.88); rt.dispose();
-  if(prevSp)boxModel(prevSp); else{bScene.remove(BOX.model);BOX.model=null;}
-  return THUMB[sp];
+  THUMB[key]=c.toDataURL('image/jpeg',.88); rt.dispose();
+  if(prevSp)boxModel(prevSp,prevEl); else{bScene.remove(BOX.model);BOX.model=null;}
+  return THUMB[key];
 }
 
 function boxSpark(p,color,n,speed){for(let i=0;i<n;i++){const g=glow(bScene,color,.18,[p.x,p.y,p.z],1);const v=new THREE.Vector3((Math.random()-.5),Math.random()*.9+.2,(Math.random()-.5)).normalize().multiplyScalar(speed*(.4+Math.random()*.8));const p0=g.position.clone();
@@ -119,14 +120,14 @@ function openBox(){BOX.win=true;BOX.open=false;$('#box').hidden=false;$('#box').
   renderBox();}
 function closeBox(){BOX.win=false;BOX.open=false;$('#box').hidden=true;document.body.classList.remove('boxOpen');if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}syncAgents();}
 function icon(m,cls){const sp=spOf(m);const c=el('button','ic r'+sp.rar+(cls?' '+cls:''));
-  const img=el('img');img.src=makeThumb(m.sp);img.alt=sp.name;c.append(img);
+  const img=el('img');img.src=makeThumb(m.sp,elOfMon(m));img.alt=sp.name;c.append(img);
   c.append(el('span','st',stars(sp.rar)));
   const lv=el('span','lv'+(m.lv>=sp.maxLv?' max':''),m.lv+'');c.append(lv);
   if(m.stars){c.classList.add('hs');c.append(el('span','sr'+(m.stars>=STAR_MAX?' full':''),'★'.repeat(m.stars)));}
   if(S.team.includes(m.uid)){const t=el('span','tm');t.innerHTML=FLAG;c.append(t);}
   if(sp.evolveTo&&m.lv>=sp.maxLv){const e=el('span','ev','↑');e.title='เปลี่ยนร่างได้';c.append(e);}
   else if(canStar(m)){const e=el('span','ev','★');e.title='วิวัฒน์ (ขึ้นดาว) ได้';c.append(e);}
-  c.title=sp.name+' Lv'+m.lv+(m.stars?' ★'+m.stars:''); return c;}
+  {const me=elOfMon(m);const b=el('span','elb',ELEM[me].i);b.style.background=ELEM[me].c;c.append(b);c.title=sp.name+' ธาตุ'+me+' Lv'+m.lv+(m.stars?' ★'+m.stars:'');} return c;}
 // วัตถุดิบขึ้นดาว: ตัวซ้ำสายพันธุ์เดียวกันที่ไม่อยู่ในทีม เลือกตัวดาว/เลเวลต่ำสุดก่อน
 function starMats(m){const need=starCost((m.stars||0)+1);
   const L=S.mons.filter(x=>x.sp===m.sp&&x.uid!==m.uid&&!S.team.includes(x.uid)).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
@@ -158,15 +159,15 @@ function renderDetail(){
   const m=S.mons.find(x=>x.uid===BOX.detail), P=$('#bPage'); P.innerHTML='';
   document.querySelectorAll('.bTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===boxTab));
   if(!m)return; const sp=spOf(m), st=statOf(m);
-  const h=el('div','iHead');const e=el('span','iEl',sp.el);e.style.background=sp.elc;h.append(e);h.append(el('b',null,sp.name));{const tg=el('span','iTier r'+sp.rar,stars(sp.rar));h.append(tg);}P.append(h);
+  const mEl=elOfMon(m); const h=el('div','iHead');const e=el('span','iEl',mEl);e.style.background=ELEM[mEl].c;h.append(e);h.append(el('b',null,sp.name));{const tg=el('span','iTier r'+sp.rar,stars(sp.rar));h.append(tg);}P.append(h);
   {const r=el('div','iStars');r.append(el('span','ss',starStr(m.stars||0)));r.append(el('small',null,(m.stars||0)>=STAR_MAX?'ดาวเต็ม':'ดาว '+(m.stars||0)+'/'+STAR_MAX));P.append(r);}
   P.append(el('div','iSub',sp.title+' · '+sp.role));
   if(boxTab==='info'){
     const x=el('div','iExp');x.append(el('span',null,'LV'));const bar=el('div');const i=el('i');i.style.width=(m.lv/sp.maxLv*100)+'%';bar.append(i);bar.append(el('em',null,m.lv>=sp.maxLv?'MAX':m.lv+' / '+sp.maxLv));x.append(bar);P.append(x);
     const T=el('table','iTbl');
-    {const EI=elInfo(sp.el), nm=l=>l.length?l.map(x=>ELEM[x].i+' '+x).join(' · '):'—';
-    [['เลเวล',m.lv+' / '+sp.maxLv],['พลังชีวิต (HP)',fmt(st.hp*10)],['โจมตี (ATK)',st.atk*10],['ป้องกัน (DEF)',st.def*10],['ความเร็ว (SPD)',st.spd],['ธาตุ',ELEM[sp.el].i+' ธาตุ'+sp.el],['ชนะทาง',nm(EI.strong),'adv'],['แพ้ทาง',nm(EI.weak),'weak'],['พลังรวม',fmt(power(m)),'pw']]
-      .forEach(([k,v,c],j)=>{const r=el('tr',j===5?'sep':'');r.append(el('td',null,k));const td=el('td',c||null,v+'');if(j===5)td.style.color=sp.elc;r.append(td);T.append(r);});}
+    {const EI=elInfo(mEl), nm=l=>l.length?l.map(x=>ELEM[x].i+' '+x).join(' · '):'—';
+    [['เลเวล',m.lv+' / '+sp.maxLv],['พลังชีวิต (HP)',fmt(st.hp*10)],['โจมตี (ATK)',st.atk*10],['ป้องกัน (DEF)',st.def*10],['ความเร็ว (SPD)',st.spd],['ธาตุ',ELEM[mEl].i+' ธาตุ'+mEl+(mEl!==sp.el?' (ธาตุพิเศษ)':'')],['ชนะทาง',nm(EI.strong),'adv'],['แพ้ทาง',nm(EI.weak),'weak'],['พลังรวม',fmt(power(m)),'pw']]
+      .forEach(([k,v,c],j)=>{const r=el('tr',j===5?'sep':'');r.append(el('td',null,k));const td=el('td',c||null,v+'');if(j===5)td.style.color=ELEM[mEl].c;r.append(td);T.append(r);});}
     P.append(T);
   }else if(boxTab==='skill'){{const st=m.stars||0, cur=skillLvs(m.sp,st), nx=st<STAR_MAX?skillLvs(m.sp,st+1):cur;
     sp.skills.forEach((k,i)=>{const pv=k.type==='passive',s=el('div','skr'+(pv?' pas':''));s.append(el('span','skn',pv?'ติดตัว':(i+1)+''));const t=el('div');
@@ -194,7 +195,7 @@ $('#bClose').onclick=closeBox;
 $('#box').addEventListener('pointerdown',e=>{if(e.target.id==='box')closeBox();});
 function open3d(){const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;
   BOX.open=true;$('#box').classList.add('v3d');$('#mdet').hidden=false;$('#md3Name').textContent=spOf(m).name+' Lv'+m.lv;
-  boxModel(m.sp);boxLayout();const A=BOX.model.userData.inner.userData;if(A.play)A.play('victory',{fade:.25});
+  boxModel(m.sp,elOfMon(m));boxLayout();const A=BOX.model.userData.inner.userData;if(A.play)A.play('victory',{fade:.25});
   if(spOf(m).spider){const R=A.rig;spiderSet({rig:R},{rear:1,cast:1},.35);setTimeout(()=>spiderSet({rig:R},{rear:0,cast:0},.5),1400);}
   if(spOf(m).dragon)dragonSet({rig:A.rig},{rear:1,spread:1,breath:1},.4),setTimeout(()=>BOX.model&&dragonSet({rig:BOX.model.userData.inner.userData.rig},{rear:0,spread:0,breath:0},.6),1300);}
 function close3d(){BOX.open=false;$('#box').classList.remove('v3d');$('#mdet').hidden=true;if(BOX.model){bScene.remove(BOX.model);BOX.model=null;}renderBox();}
@@ -214,10 +215,10 @@ $('#mdEvo').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid=
   const w=BOX.model; const p=new THREE.Vector3(0,1,0);
   const glowT=tween(1.4,t=>{w.rotation.y+=.05+t*.5;w.traverse(o=>{if(o.isMesh&&o.material&&o.material.emissive){o.material.emissive.setHex(0xfff0c0);o.material.emissiveIntensity=t*2;}});});
   const r=await act('evolve_monster',{mon_id:uid}); await glowT;
-  if(!r){boxModel(m.sp);$('#mdBack').disabled=false;return;}
+  if(!r){boxModel(m.sp,elOfMon(m));$('#mdBack').disabled=false;return;}
   bumpRes('coins');
   boxSpark(p,0xffffff,70,3.4);boxSpark(p,0xffc94d,50,2.6);
-  boxModel(r.sp); $('#md3Name').textContent=SPEC[r.sp].name+' Lv1';
+  boxModel(r.sp,elOfMon(m)); $('#md3Name').textContent=SPEC[r.sp].name+' Lv1';
   boxSpark(p,0xffc94d,40,2); const A=BOX.model.userData.inner.userData; if(A.play)A.play('victory',{fade:.1});
   $('#mdBack').disabled=false; toast('เปลี่ยนร่างสำเร็จ! กลายเป็น '+SPEC[r.sp].name);};
 // วิวัฒนาการ (ขึ้นดาว): กดครั้งแรกบอกว่าจะใช้ตัวไหน กดซ้ำภายใน 6 วินาทีเพื่อยืนยัน
@@ -226,7 +227,7 @@ async function starUp(m){
   if(st>=STAR_MAX){toast('ดาวเต็มแล้ว');return;}
   if(SM.have<SM.need){toast('ต้องมี '+sp.name+' ซ้ำที่ไม่อยู่ในทีมอีก '+(SM.need-SM.have)+' ตัว');return;}
   const A=BOX.starArm; if(!A||A.uid!==m.uid||A.st!==st||Date.now()-A.t>6000){BOX.starArm={uid:m.uid,st,t:Date.now()};
-    toast('แตะอีกครั้งเพื่อยืนยัน: ใช้ '+SM.list.map(x=>sp.name+' Lv'+x.lv+(x.stars?' ★'+x.stars:'')).join(' + ')+' เป็นวัตถุดิบ');return;}
+    toast('แตะอีกครั้งเพื่อยืนยัน: ใช้ '+SM.list.map(x=>sp.name+' '+ELEM[elOfMon(x)].i+' Lv'+x.lv+(x.stars?' ★'+x.stars:'')).join(' + ')+' เป็นวัตถุดิบ');return;}
   BOX.starArm=null; const before=skillLvs(m.sp,st);
   const r=await act('star_up',{mon_id:m.uid,mat_ids:SM.list.map(x=>x.uid)}); if(!r)return;
   const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=spOf(m).skills[i];
