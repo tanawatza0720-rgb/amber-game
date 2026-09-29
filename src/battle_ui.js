@@ -294,8 +294,8 @@ let FOCUS=null;
 const CAM=new THREE.Vector3(.6,5.2,10.2), LOOK=new THREE.Vector3(0,1,0), CAMt=CAM.clone(), LOOKt=LOOK.clone();
 let camMode={type:'wide'}, camK=2.5;
 // ซูมเข้าในสนามรบได้ไม่ใกล้เกินไป (ลดภาระเครื่อง)
-const BT_ZMIN=88;
-const RTS={tgt:new THREE.Vector3(-4,0,0),auto:new THREE.Vector3(),dist:92,base:90,pitch:.95,yaw:.3,manual:0,zoomed:false}; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
+const BT_ZMIN=60, BT_ZMAX=100;
+const RTS={tgt:new THREE.Vector3(-4,0,0),auto:new THREE.Vector3(),dist:72,base:70,pitch:.95,yaw:.3,manual:0,zoomed:false}; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
 const camWide=()=>{camMode={type:'wide'};camK=3;};
 const camOver=(u,focus,far)=>{camMode={type:'over',u,focus,far:far||0};camK=3.2;};
 const camTrack=(u,c)=>{camMode={type:'track',u,c:c.clone()};camK=3.5;};
@@ -326,7 +326,7 @@ function camUpdate(){
     // กล้องมุมสูงแบบเกมวางแผน: ตามกลุ่มที่กำลังสู้ หรือเลื่อน/ซูมเองได้
     const us=UNITS.filter(u=>u.alive);
     if(RTS.manual<=0&&us.length){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;us.forEach(u=>{const p=u.w.position;x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);z0=Math.min(z0,p.z);z1=Math.max(z1,p.z);});
-      RTS.auto.set((x0+x1)/2,0,(z0+z1)/2); RTS.tgt.lerp(RTS.auto,.06); if(!RTS.zoomed)RTS.dist+=(Math.max(RTS.base,Math.max(x1-x0,(z1-z0)*1.6)*.95)-RTS.dist)*.03;}
+      RTS.auto.set((x0+x1)/2,0,(z0+z1)/2); RTS.tgt.lerp(RTS.auto,.06); if(!RTS.zoomed)RTS.dist+=(Math.min(BT_ZMAX,Math.max(RTS.base,Math.max(x1-x0,(z1-z0)*1.6)*.95))-RTS.dist)*.03;}
     const d=RTS.dist*(port?1.45:1), cp=Math.cos(RTS.pitch);
     CAMt.set(RTS.tgt.x+Math.sin(RTS.yaw)*cp*d, Math.sin(RTS.pitch)*d, RTS.tgt.z+Math.cos(RTS.yaw)*cp*d); LOOKt.copy(RTS.tgt).setY(.8);
   }
@@ -377,11 +377,11 @@ document.body.classList.add('big');
 { const el=renderer.domElement, pts=new Map(); let pinch0=0, dist0=0, lastTap=0;
   const pan=(dx,dy)=>{const k=RTS.dist*(camera.aspect<.9?1.45:1)*1.1/Math.max(300,view.clientHeight), cy=Math.cos(RTS.yaw), sy=Math.sin(RTS.yaw);
     RTS.tgt.x-=(dx*cy+dy*sy)*k; RTS.tgt.z-=(-dx*sy+dy*cy)*k*1.25; RTS.tgt.x=Math.max(-60,Math.min(70,RTS.tgt.x)); RTS.tgt.z=Math.max(-45,Math.min(45,RTS.tgt.z)); RTS.manual=6;};
-  const zoom=f=>{RTS.dist=Math.max(BT_ZMIN,Math.min(180,RTS.dist*f));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);};
+  const zoom=f=>{RTS.dist=Math.max(BT_ZMIN,Math.min(BT_ZMAX,RTS.dist*f));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);};
   el.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){const [a,b]=[...pts.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);dist0=RTS.dist;}
     const now=performance.now(); if(now-lastTap<300){RTS.manual=0;RTS.zoomed=false;} lastTap=now;});
   el.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p)return;
-    if(pts.size===1){pan(e.clientX-p.x,e.clientY-p.y);} else if(pts.size===2){p.x=e.clientX;p.y=e.clientY;const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0){RTS.dist=Math.max(BT_ZMIN,Math.min(180,dist0*pinch0/d));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);}return;}
+    if(pts.size===1){pan(e.clientX-p.x,e.clientY-p.y);} else if(pts.size===2){p.x=e.clientX;p.y=e.clientY;const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0){RTS.dist=Math.max(BT_ZMIN,Math.min(BT_ZMAX,dist0*pinch0/d));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);}return;}
     p.x=e.clientX;p.y=e.clientY;});
   const up=e=>{pts.delete(e.pointerId);pinch0=0;}; el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('pointerleave',up);
   el.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.12:1/1.12);},{passive:false});
