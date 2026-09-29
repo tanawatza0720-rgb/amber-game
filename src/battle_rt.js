@@ -153,7 +153,7 @@ function rtSpawn(wv){
   const n=wv.length, cols=Math.min(5,Math.ceil(Math.sqrt(n*1.6)));
   wv.forEach((d,i)=>{
     const r=Math.floor(i/cols), c=i%cols, cn=Math.min(cols,n-r*cols);
-    const z=(c-(cn-1)/2)*2.4+(Math.random()-.5)*.6, x=21+r*2.6+Math.random()*.8+(d.boss?1.5:0);
+    const z=(c-(cn-1)/2)*2.4+(Math.random()-.5)*.6, x0=21+r*2.6+Math.random()*.8+(d.boss?1.5:0), rx=typeof realmSpawnX==='function'?realmSpawnX(r,Math.random()*.6+(d.boss?1:0)):null, x=rx==null?x0:rx;
     const u=rtInit(makeUnit('E',d,0)); u.w.position.set(x,0,z); u.home.set(x-9,0,z); u.w.rotation.y=-Math.PI/2;
     smoke(tmpV.set(x,.5,z));
   });
