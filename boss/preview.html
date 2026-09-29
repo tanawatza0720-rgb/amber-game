@@ -5,20 +5,16 @@
 html,body{margin:0;height:100%;background:#120d0a;color:var(--bone);font-family:system-ui,'Noto Sans Thai',sans-serif;overflow:hidden}
 #v{position:fixed;inset:0}
 #ui{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:6px;justify-content:center;background:linear-gradient(transparent,rgba(0,0,0,.6))}
-#ui button{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--bone);font-weight:700;font-size:14px}
+#ui{max-height:40vh;overflow:auto}#ui button{min-height:36px;padding:0 11px;font-size:13px!important;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--bone);font-weight:700;font-size:14px}
 #ui button.on{border-color:var(--amber);color:var(--amber)}
 #hd{position:fixed;top:10px;left:12px;right:12px;font-size:13px;opacity:.85}
 #hd b{color:var(--amber);font-size:16px}
 #msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%)}
 </style></head><body>
 <div id="v"></div>
-<div id="hd"><b>ราชันไฮดรา</b> · กระดูก 74 ชิ้น · 24k สามเหลี่ยม · ลากเพื่อหมุน / ซูมด้วยล้อเมาส์หรือสองนิ้ว</div>
+<div id="hd"><b>ราชันไฮดรา</b> · กระดูก 74 ชิ้น · 20 ท่า · ลากเพื่อหมุน / ซูมด้วยล้อเมาส์หรือสองนิ้ว</div>
 <div id="msg">กำลังโหลด…</div>
-<div id="ui">
- <button data-a="roar">คำราม</button><button data-a="breath">พ่นพลัง 5 หัว</button><button data-a="slam">ตบกรงเล็บ</button>
- <button data-a="gust">กระพือปีก</button><button data-a="sweep">กวาดหาง</button><button data-a="hit">โดนตี</button>
- <button data-a="die">ล้ม</button><button data-a="revive">ฟื้น</button><button id="auto" class="on">เล่นต่อเนื่อง</button>
-</div>
+<div id="ui"><button id="auto" class="on">เล่นต่อเนื่อง</button></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>const HYDRA_BASE='./';</script>
@@ -41,13 +37,14 @@ R.domElement.addEventListener('pointermove',e=>{const p=ptr.get(e.pointerId);if(
 const up=e=>{ptr.delete(e.pointerId);pinch=0;};R.domElement.addEventListener('pointerup',up);R.domElement.addEventListener('pointercancel',up);
 R.domElement.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(16,Math.min(70,dist*(1+e.deltaY*.001)));},{passive:false});
 async function run(a){if(!H)return;busy=true;document.querySelectorAll('#ui button[data-a]').forEach(b=>b.classList.toggle('on',b.dataset.a===a));await H.play(a);busy=false;}
+HY_MOVES.forEach(([a,n])=>{const b=document.createElement('button');b.dataset.a=a;b.textContent=n;document.getElementById('ui').insertBefore(b,document.getElementById('auto'));});
 document.querySelectorAll('#ui button[data-a]').forEach(b=>b.onclick=()=>{auto=false;document.getElementById('auto').classList.remove('on');run(b.dataset.a);});
 document.getElementById('auto').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);};
-const LOOP=['roar','breath','slam','gust','sweep','hit'];let li=0,idleT=0;
+const LOOP=HY_MOVES.map(m=>m[0]).filter(a=>!['die','revive','hit'].includes(a));let li=0,idleT=0;
 loadHydra(18).then(h=>{H=h;S.add(h.root);document.getElementById('msg').remove();window.__H=h;}).catch(e=>{document.getElementById('msg').textContent='โหลดไม่สำเร็จ: '+e;});
 let last=performance.now();
 (function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;
-  if(H){H.tick(dt);if(auto&&!busy){idleT+=dt;if(idleT>1.6){idleT=0;run(LOOP[li++%LOOP.length]);}}}
+  if(H){H.tick(dt);if(auto&&!busy){idleT+=dt;if(idleT>.9){idleT=0;run(LOOP[li++%LOOP.length]);}}}
   const sh=H?H.shakeCam:0;cam.position.set(Math.sin(yaw)*Math.cos(pitch)*dist+(Math.random()-.5)*sh,Math.sin(pitch)*dist+7+(Math.random()-.5)*sh,Math.cos(yaw)*Math.cos(pitch)*dist);cam.lookAt(1.5,6,0);
   R.render(S,cam);})(last);
 </script></body></html>
