@@ -10,7 +10,7 @@ function makeBar(u){
   const box=$(u.side==='P'?'#hpL':'#hpR'); if(u.boss)box.prepend(r); else box.appendChild(r); u.row=r;
   setTimeout(()=>updateBar(u),0); return b;
 }
-function updateBar(u){const r=u.row;if(!r)return;const k=Math.max(0,u.hp/u.maxHp);
+function updateBar(u){const r=u.row;if(!r)return;if(u.raidBar){u.raidBar(r);return;}const k=Math.max(0,u.hp/u.maxHp);
   r.querySelector('.hp i').style.width=(k*100)+'%'; r.querySelector('.hp em').textContent=u.hp+'/'+u.maxHp;
   r.classList.toggle('low',k>0&&k<.3); r.classList.toggle('dead',!u.alive||u.hp<=0);}
 function rowGone(u){const r=u.row;if(!r)return;r.classList.add('dead');if(u.side==='E')setTimeout(()=>{r.classList.add('out');setTimeout(()=>r.remove(),400);},500);}
@@ -26,7 +26,7 @@ function statusOf(u){const L=[];
 function renderStatus(u){const L=statusOf(u), sig=L.map(x=>x[0]).join('');if(sig===u.stSig)return !!sig;u.stSig=sig;const b=u.barEl;b.innerHTML='';
   L.forEach(([i,c,t])=>{const s=document.createElement('span');s.className='bf '+c;s.textContent=i;s.title=t;b.appendChild(s);});return !!sig;}
 function popNum(u,text,cls){
-  const v=tmpV.copy(u.w.position).setY(u.evo?(u.boss?3.4:2.7):1.7).project(camera);
+  const v=tmpV.copy(u.w.position).setY(u.popY||(u.evo?(u.boss?3.4:2.7):1.7)).project(camera);
   const e=document.createElement('div');e.className='num '+cls;e.textContent=text;
   e.style.left=((v.x*.5+.5)*view.clientWidth+(Math.random()-.5)*30)+'px';e.style.top=((-v.y*.5+.5)*view.clientHeight)+'px';
   ov.appendChild(e);setTimeout(()=>e.remove(),1100);
@@ -279,7 +279,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&BN.online
 setInterval(()=>{if(!document.hidden&&MODE==='idle')bnRefresh();},60000);
 $('#bAuto').onclick=()=>{AUTO=!AUTO;$('#bAuto').classList.toggle('on',AUTO);$('#bAuto').setAttribute('aria-pressed',AUTO);if(AUTO&&choose){const c=choose;choose=null;hideSkills();const [s]=aiChoose(actor);target=aiChoose(actor)[1];c(s);}};
 $('#bSpeed').onclick=()=>{SPEED=SPEED===1?2:1;$('#bSpeed').textContent='x'+SPEED;$('#bSpeed').classList.toggle('on',SPEED===2);};
-$('#bExit').onclick=()=>{if(MODE!=='boss'||!running)return;running=false;if(choose){const c=choose;choose=null;c(null);}actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;ultButtons(false);};
+$('#bExit').onclick=()=>{if(MODE==='raid'){if(RB&&RB.live)RB.t=RAID_T;return;}if(MODE!=='boss'||!running)return;running=false;if(choose){const c=choose;choose=null;c(null);}actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;ultButtons(false);};
 
 /* ---------- แตะเลือกเป้า ---------- */
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
@@ -342,7 +342,7 @@ function loop(){
   const rdt=Math.min(clock.getDelta(),.1), dt=rdt*SPEED*HS; T+=rdt;
   for(let i=tweens.length-1;i>=0;i--){const tw=tweens[i];tw.t+=dt;const k=Math.min(1,tw.t/tw.d);tw.fn(tw.ease(k));if(k>=1){tweens.splice(i,1);tw.r();}}
   for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.p.position.addScaledVector(q.v,dt);q.v.y-=dt*q.grav;q.v.multiplyScalar(q.grow?.96:1);q.life-=dt*q.decay;q.p.material.opacity=Math.max(0,q.life*q.o);if(q.grow)q.p.scale.multiplyScalar(1+dt*.9);if(q.life<=0){scene.remove(q.p);q.p.material.dispose();parts.splice(i,1);}}
-  rigUpdate(dt); rtTick(dt,T);
+  rigUpdate(dt); rtTick(dt,T); if(typeof raidTick==='function')raidTick(dt);
   UNITS.forEach(u=>{if(u.alive||u.w.visible)u.inner.userData.idle(T);});
   separate(); trailUpdate(); blobUpdate();
   falling.forEach((l,i)=>{l.position.y-=rdt*.35;l.position.x+=Math.sin(T+i)*rdt*.3;l.rotation.x+=rdt*(1.5+i%3);l.rotation.y+=rdt;if(l.position.y<.05)l.position.set((Math.random()-.5)*16,5+Math.random()*2,-6+Math.random()*10);});
@@ -369,6 +369,7 @@ $('#loadMsg').hidden=false;
 Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดโมเดล '+Math.round(p*100)+'%';}),loadDragon(),bnInit(),loadSpider()]).then(([g,dr])=>{
   NO_DRAGON=!dr; if(!dr)TEAM.forEach(d=>{if(d.sp==='amateru')d.sp='kazemaru';});
   $('#loadMsg').hidden=true; if(!g)USE_MESHY=false;
+  if(RAID_MODE){raidStart();return;}
   $('#hud').hidden=false; setBossUI(false); idleRender(); showAway(); idleLoop();
 });
 addEventListener('resize',layout);

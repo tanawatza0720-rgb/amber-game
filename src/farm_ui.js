@@ -161,6 +161,7 @@ function tap(cx,cy){
   if(o.userData.agent!=null){const ag=AGENTS[o.userData.agent];tagAgent=ag;const t=$('#mtag');t.hidden=false;
     $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent=tierOf(spOf(ag.data).rar).n+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
     const w=ag.w; tween(.3,t=>w.position.y=Math.sin(t*Math.PI)*.4); return;}
+  if(o.userData.raid){openRaid();return;}
   if(o===amberBubble&&amberReady){collectAmber();return;}
   if(o.userData.pick)focusBuilding(o.userData.pick);
 }
@@ -284,7 +285,7 @@ function enterGame(){
   if(modelsReady){syncAgents(); onboard();}
   else {$('#loadMsg').hidden=false;}
   if(NET.mode!=='online')toast('เล่นแบบออฟไลน์ ความคืบหน้าเก็บในเครื่องนี้');
-  loadRank(true);
+  loadRank(true); loadRaid(true);
 }
 
 /* ---------- อันดับเผ่า (ใต้เหรียญอัมพร): สมาชิกแต่ละเผ่า + TOP 3 (server/migrate_ranking.sql) ---------- */

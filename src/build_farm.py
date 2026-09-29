@@ -17,7 +17,7 @@ a='(evo?buildEvo:buildBaby)(m);'
 assert helpers.count(a)==1
 helpers=helpers.replace(a,'(evo?(USE_MESHY&&MESHY?(mm=>buildMeshyEvo(mm,evo)):buildEvo):buildBaby)(m);')
 shell=open('farm_shell.html',encoding='utf-8').read()
-out=shell.replace('/*__SHARED__*/',tex+"\n"+helpers).replace('/*__WORLD__*/',open('gamedata.js',encoding='utf-8').read()+'\n'+open('net.js',encoding='utf-8').read()+'\n'+open('meshy_rig.js',encoding='utf-8').read()+'\n'+open('dragon.js',encoding='utf-8').read()+'\n'+open('spider.js',encoding='utf-8').read()+'\n'+open('farm_world.js',encoding='utf-8').read()+'\n'+open('farm_race.js',encoding='utf-8').read()).replace('/*__UI__*/',open('farm_ui.js',encoding='utf-8').read()+'\n'+open('race_pick.js',encoding='utf-8').read()).replace('/*__BOX__*/',open('monbox.js',encoding='utf-8').read())
+out=shell.replace('/*__SHARED__*/',tex+"\n"+helpers).replace('/*__WORLD__*/',open('gamedata.js',encoding='utf-8').read()+'\n'+open('net.js',encoding='utf-8').read()+'\n'+open('meshy_rig.js',encoding='utf-8').read()+'\n'+open('dragon.js',encoding='utf-8').read()+'\n'+open('spider.js',encoding='utf-8').read()+'\n'+open('hydra.js',encoding='utf-8').read()+'\n'+open('farm_world.js',encoding='utf-8').read()+'\n'+open('farm_race.js',encoding='utf-8').read()).replace('/*__UI__*/',open('farm_ui.js',encoding='utf-8').read()+'\n'+open('race_pick.js',encoding='utf-8').read()+'\n'+open('farm_raid.js',encoding='utf-8').read()).replace('/*__BOX__*/',open('monbox.js',encoding='utf-8').read())
 open('farm.html','w',encoding='utf-8').write(out)
 open('farm.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</script>',out,re.S)[-1])
 import os

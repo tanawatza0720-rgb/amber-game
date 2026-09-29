@@ -68,7 +68,7 @@ function makeHydra(root,pivot,body,sm,B,S){
   const breathe=(h,dur,aim)=>beams[h]={t:dur,aim:aim==null?.65:aim};
   const meteors=[];
   const shake={a:0};
-  const API={root,body,bones:B,P,shakeCam:0,onHit:null,moves:HY_MOVES,
+  const API={root,body,bones:B,P,shakeCam:0,onHit:null,moves:HY_MOVES,flying:false,busy:()=>!!cur,
     play(name){const A=ACT[name];if(!A)return Promise.resolve();
       if(name==='revive'){if(cur&&cur.done)cur.done();cur=null;dead=false;return Promise.resolve();}
       if(dead&&name!=='revive')return Promise.resolve();
@@ -148,6 +148,8 @@ function makeHydra(root,pivot,body,sm,B,S){
     // ท่ายืนเฉย (ซ้อนตลอด อ่อนลงเมื่อเล่นท่า)
     const idle=dead?0:1, br=Math.sin(T*1.5);
     HY_HEADS.forEach((h,i)=>{const ph=i*1.9;o[h+'P']+=(Math.sin(T*.7+ph)*.06+Math.sin(T*1.9+ph*2)*.025)*idle;o[h+'Y']+=(Math.sin(T*.45+ph*1.3)*.13+Math.sin(T*1.2+ph)*.04)*idle;});
+    if(API.flying&&!dead){const fb=Math.sin(T*2.3);o.wingL+=fb*.62+.05;o.wingR+=Math.sin(T*2.3+.12)*.62+.05;o.lift+=Math.sin(T*2.3-1.3)*.018+Math.sin(T*.4)*.02;
+      o.armL+=.45;o.armR+=.45;o.rear+=.06+Math.sin(T*.5)*.03;o.tailUp+=-.25;o.roll+=Math.sin(T*.35)*.04;}
     o.tailSw+=Math.sin(T*.9)*.12*idle;o.tailSw2+=Math.sin(T*.9+2)*.12*idle;o.wingL+=Math.sin(T*1.5)*.03*idle;o.wingR+=Math.sin(T*1.5+.3)*.03*idle;
     // สปริงวิกฤต
     for(const k in P){const p=P[k],a=p.k*p.k*(o[k]-p.v)-2*p.k*p.vel;p.vel+=a*dt;p.v+=p.vel*dt;}
@@ -178,7 +180,7 @@ function makeHydra(root,pivot,body,sm,B,S){
       for(let i=0;i<3;i++){const n='m'+sd+i;if(B[n])L(n,target(n,X,-sg*f*.25));}
       const a=v('arm'+sd), wf=Math.sin(walkPh+(sd==='L'?0:Math.PI))*.32*Math.min(1,v('walk')), lift=Math.max(0,Math.sin(walkPh+(sd==='L'?0:Math.PI)))*.3*Math.min(1,v('walk'));
       [0,1,2].forEach(i=>{const n='a'+sd+i;if(B[n])L(n,target(n,Z,[.9,-.5,-.6][i]*a+(i===0?wf:i===1?-lift:0)));});
-      const r=v('rear'), hw=-Math.sin(walkPh+(sd==='L'?0:Math.PI))*.28*Math.min(1,v('walk')), hl=Math.max(0,-Math.sin(walkPh+(sd==='L'?0:Math.PI)))*.25*Math.min(1,v('walk'));
+      const r=v('rear')+(API.flying?.55:0), hw=-Math.sin(walkPh+(sd==='L'?0:Math.PI))*.28*Math.min(1,v('walk')), hl=Math.max(0,-Math.sin(walkPh+(sd==='L'?0:Math.PI)))*.25*Math.min(1,v('walk'));
       [0,1,2].forEach(i=>{const n='l'+sd+i;if(B[n])L(n,target(n,Z,[-r*.5+hw,r*.1+hl,-hl*.6][i]));});});
     // หาง 2 เส้น
     [['tail',v('tailSw'),1],['tailB',v('tailSw2')+v('tailSw')*.5,-1]].forEach(([tn,sw0,sg])=>{for(let i=0;i<8;i++){const n=tn+i;if(!B[n])continue;

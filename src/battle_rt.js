@@ -49,7 +49,7 @@ function rtTick(dt,T){
   if(!RT)return;
   raceTick(dt);
   UNITS.forEach(u=>{
-    if(!u.alive)return;
+    if(!u.alive||u.raid)return;
     if(u.stun&&u.dragon){u.stun=0;u.stunT=1.6;u.dizzy=1;stopMove(u,1);dragonSet(u,{droop:1,flapAmp:.25},.25);}
     if(u.stun&&u.spider){u.stun=0;u.stunT=1.6;u.dizzy=1;stopMove(u,1);spiderSet(u,{crouch:.55,recoil:.4},.2);}
     if(u.stun){u.stun=0;u.stunT=1.6;if(!u.busy&&hasClip(u,'dizzy')){stopMove(u,1);u.inner.userData.play('dizzy',{loop:true,fade:.15});u.dizzy=1;}}

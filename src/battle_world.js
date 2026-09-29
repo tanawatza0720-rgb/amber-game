@@ -173,6 +173,7 @@ function hitStop(){if(RT){shake=Math.max(shake,.08);return;}HS=.08;clearTimeout(
 async function recoverStance(u){if(u.dragon||u.spider){u.inner.userData.acting=false;return;}await poseTo(u.stance,.3);u.inner.userData.acting=false;}
 function flashUnit(u,hex){u.mats.forEach(m=>{if(m.userData.e0==null){m.userData.e0=m.emissive.getHex();m.userData.ei0=m.emissiveIntensity;}m.emissive.setHex(hex);m.emissiveIntensity=.9;});setTimeout(()=>u.mats.forEach(m=>{m.emissive.setHex(m.userData.e0);m.emissiveIntensity=m.userData.ei0;}),110/SPEED);}
 async function react(u,fromX){
+  if(u.raid){flashUnit(u,0xff2a2a);return;} // ไฮดรา: กะพริบอย่างเดียว ท่าโดนตีเล่นจากระบบท่าของไฮดรา
   if(RT){flashUnit(u,0xff2a2a);if(u.dragon)dragonReact(u);else if(u.spider)spiderReact(u);else if(!u.busy&&u.inner.userData.play)u.inner.userData.play('hit',{speed:1.4,fade:.06});
     else if(!u.busy&&!u.evo)tween(.12,t=>u.inner.rotation.x=-.35*t).then(()=>tween(.3,t=>u.inner.rotation.x=-.35*(1-t)));return;}
   const dir=u.w.position.x>fromX?1:-1, p0=u.w.position.x;
@@ -226,6 +227,7 @@ function dealHit(att,t,skill){
   if(ap.dmgLow&&t.hp<t.maxHp*.5)d*=1+ap.dmgLow;
   if(tp.dr)d*=1-tp.dr;
   d=Math.max(1,Math.round(d));
+  if(t.raid&&typeof raidScale==='function')d=raidScale(d); // บอสโลก: ตัวเลขรวมให้ตรงกับดาเมจจริงจากเซิร์ฟเวอร์
   t.hp=Math.max(0,t.hp-d);
   popNum(t,d+(em>1?' ▲':em<1?' ▼':''),crit?'crit':em>1?'dmg adv':em<1?'dmg weak':'dmg');
   if(em>1&&performance.now()-elTipT>2500){elTipT=performance.now();setTimeout(()=>popNum(t,'แพ้ทางธาตุ!','info adv'),120/SPEED);}
