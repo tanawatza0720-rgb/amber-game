@@ -22,6 +22,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 .xp i{display:block;height:100%;background:linear-gradient(90deg,#8ff0c4,#5fe0c0)}
 .res{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .pill{pointer-events:auto;display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 12px 3px 4px;min-width:110px;justify-content:space-between;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#rankBox{pointer-events:auto;width:176px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px 8px 6px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-size:12px;max-height:calc(100vh - 260px);overflow:auto}
+#rkHead{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;width:100%;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:13px;color:var(--amber);padding:3px 0}
+#rkHead:focus-visible{outline:2px solid var(--mint);outline-offset:2px;border-radius:6px}
+#rkArrow{font-style:normal;transition:transform .2s}#rankBox.open #rkArrow{transform:rotate(180deg)}
+.rkRace{border-top:1px solid rgba(255,214,150,.12);padding:4px 0 3px}.rkRace.mine .rkRow b{color:var(--rc)}
+.rkRow{display:flex;justify-content:space-between;align-items:center;gap:6px}.rkRow b{font-weight:700}.rkRow span{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rkRace.mine{background:linear-gradient(90deg,rgba(255,255,255,.06),transparent);border-radius:8px;margin:0 -4px;padding:4px 4px 3px}
+.rkTop{list-style:none;margin:2px 0 0;padding:0;display:none;gap:1px}#rankBox.open .rkTop{display:grid}
+.rkTop li{display:flex;gap:4px;align-items:center;font-size:11.5px}.rkTop li em{font-style:normal;flex:none;width:16px}.rkTop li b{font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rkTop li small{color:var(--amber);font-variant-numeric:tabular-nums}
+.rkTop li.me b{color:var(--mint);font-weight:700}.rkTop li.none{color:var(--muted)}
+.rkMe{display:none;margin-top:4px;font-size:11px;color:var(--mint);text-align:center}#rankBox.open .rkMe{display:block}
+@media (max-width:420px){#rankBox{width:150px}}
 .pill svg{width:24px;height:24px;flex:none}
 .pill small{font-family:'Bai Jamjuree',sans-serif;font-weight:400;font-size:10px;color:var(--muted);margin-left:4px}
 .bump{animation:bump .4s ease}
@@ -248,6 +260,7 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
     <div class="pill" id="pEnergy" title="พลังงาน"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2a2119"/><path d="M13 3 6 13h5l-1 8 7-10h-5z" fill="#ffd34d"/></svg><span><span id="rEnergy"></span><small id="rTimer"></small></span></div>
     <div class="pill" id="pCoin" title="เหรียญ"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffc94d"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#b8862a" stroke-width="2"/><rect x="10.5" y="8" width="3" height="8" rx="1" fill="#b8862a"/></svg><span id="rCoin"></span></div>
     <div class="pill" id="pAmber" title="อัมพร"><svg viewBox="0 0 24 24"><path d="M12 2 20 9l-8 13L4 9z" fill="#ff9a30"/><path d="M12 2 16 9l-4 4-4-4z" fill="#ffd9a0"/></svg><span id="rAmber"></span></div>
+    <div id="rankBox" hidden><button id="rkHead" aria-expanded="false">🏆 อันดับเผ่า<i id="rkArrow">▾</i></button><div id="rkList"></div></div>
   </div>
 </div>
 
@@ -2976,7 +2989,32 @@ function enterGame(){
   if(modelsReady){syncAgents(); onboard();}
   else {$('#loadMsg').hidden=false;}
   if(NET.mode!=='online')toast('เล่นแบบออฟไลน์ ความคืบหน้าเก็บในเครื่องนี้');
+  loadRank(true);
 }
+
+/* ---------- อันดับเผ่า (ใต้เหรียญอัมพร): สมาชิกแต่ละเผ่า + TOP 3 (server/migrate_ranking.sql) ---------- */
+const RK={data:null,at:0,busy:false,open:(()=>{try{const v=localStorage.getItem('amber_rk');if(v)return v==='1';}catch(e){}return innerWidth>=700;})()};
+async function loadRank(force){
+  if(NET.mode!=='online'){$('#rankBox').hidden=true;return;}
+  if(RK.busy||(!force&&Date.now()-RK.at<60000))return; RK.busy=true;
+  try{RK.data=await api('race_ranking');RK.at=Date.now();renderRank();}catch(e){console.warn('ranking',e);}
+  finally{RK.busy=false;}
+}
+function renderRank(){
+  const box=$('#rankBox'),L=$('#rkList'),d=RK.data; if(!d||!d.races){box.hidden=true;return;}
+  box.hidden=false; box.classList.toggle('open',RK.open); $('#rkHead').setAttribute('aria-expanded',RK.open); L.innerHTML='';
+  RACE_ORDER.forEach(r=>{const R=RACES[r],x=d.races[r]||{members:0,top:[]};
+    const w=el('div','rkRace'+(S.race===r?' mine':'')); w.style.setProperty('--rc',R.c);
+    const row=el('div','rkRow'); row.append(el('b',null,R.icon+' '+R.n),el('span',null,fmt(x.members)+' คน')); w.append(row);
+    const ol=el('ol','rkTop');
+    if(!x.top.length)ol.append(el('li','none','ยังไม่มีผู้เล่น'));
+    x.top.forEach((t,i)=>{const li=el('li',t.me?'me':null);li.append(el('em',null,['🥇','🥈','🥉'][i]),el('b',null,t.name),el('small',null,fmt(t.power)));li.title=t.name+' · พลังทีม '+fmt(t.power)+' · ด่าน '+t.stage;ol.append(li);});
+    w.append(ol); L.append(w);});
+  if(d.me&&d.me.rank){const m=el('div','rkMe','คุณอยู่อันดับ '+d.me.rank+' ของ'+RACES[d.me.race].n);L.append(m);}
+}
+$('#rkHead').onclick=()=>{RK.open=!RK.open;try{localStorage.setItem('amber_rk',RK.open?'1':'0');}catch(e){}renderRank();loadRank();};
+setInterval(()=>{if(entered&&document.visibilityState==='visible')loadRank();},90000);
+document.addEventListener('visibilitychange',()=>{if(entered&&document.visibilityState==='visible')loadRank();});
 function startFarm(){renderHUD(); layout(); loop(); distTo=68;
   lgStart();
   Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon(),loadSpider()]).then(()=>{
@@ -3035,7 +3073,7 @@ RACE_ORDER.forEach((k,i)=>{const b=document.createElement('button');b.textConten
 $('#rpOk').onclick=async()=>{
   const k=RACE_ORDER[RP.idx];
   if(!RP.arm||Date.now()-RP.arm>6000){RP.arm=Date.now();rpRender();return;}
-  RP.arm=0; const r=await act('set_race',{r:k}); if(!r){rpRender();return;}
+  RP.arm=0; const r=await act('set_race',{r:k}); if(!r){rpRender();return;} if(typeof loadRank==='function')loadRank(true);
   S.race=k; closeRace(); renderHUD(); toast('ยินดีต้อนรับสู่'+RACES[k].n+'! สกิลเผ่า "'+RACES[k].skill+'" จะช่วยทีมในสนามรบ');
 };
 

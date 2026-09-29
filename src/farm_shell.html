@@ -22,6 +22,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 .xp i{display:block;height:100%;background:linear-gradient(90deg,#8ff0c4,#5fe0c0)}
 .res{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .pill{pointer-events:auto;display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 12px 3px 4px;min-width:110px;justify-content:space-between;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#rankBox{pointer-events:auto;width:176px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px 8px 6px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-size:12px;max-height:calc(100vh - 260px);overflow:auto}
+#rkHead{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;width:100%;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:13px;color:var(--amber);padding:3px 0}
+#rkHead:focus-visible{outline:2px solid var(--mint);outline-offset:2px;border-radius:6px}
+#rkArrow{font-style:normal;transition:transform .2s}#rankBox.open #rkArrow{transform:rotate(180deg)}
+.rkRace{border-top:1px solid rgba(255,214,150,.12);padding:4px 0 3px}.rkRace.mine .rkRow b{color:var(--rc)}
+.rkRow{display:flex;justify-content:space-between;align-items:center;gap:6px}.rkRow b{font-weight:700}.rkRow span{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rkRace.mine{background:linear-gradient(90deg,rgba(255,255,255,.06),transparent);border-radius:8px;margin:0 -4px;padding:4px 4px 3px}
+.rkTop{list-style:none;margin:2px 0 0;padding:0;display:none;gap:1px}#rankBox.open .rkTop{display:grid}
+.rkTop li{display:flex;gap:4px;align-items:center;font-size:11.5px}.rkTop li em{font-style:normal;flex:none;width:16px}.rkTop li b{font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rkTop li small{color:var(--amber);font-variant-numeric:tabular-nums}
+.rkTop li.me b{color:var(--mint);font-weight:700}.rkTop li.none{color:var(--muted)}
+.rkMe{display:none;margin-top:4px;font-size:11px;color:var(--mint);text-align:center}#rankBox.open .rkMe{display:block}
+@media (max-width:420px){#rankBox{width:150px}}
 .pill svg{width:24px;height:24px;flex:none}
 .pill small{font-family:'Bai Jamjuree',sans-serif;font-weight:400;font-size:10px;color:var(--muted);margin-left:4px}
 .bump{animation:bump .4s ease}
@@ -248,6 +260,7 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
     <div class="pill" id="pEnergy" title="พลังงาน"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2a2119"/><path d="M13 3 6 13h5l-1 8 7-10h-5z" fill="#ffd34d"/></svg><span><span id="rEnergy"></span><small id="rTimer"></small></span></div>
     <div class="pill" id="pCoin" title="เหรียญ"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffc94d"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#b8862a" stroke-width="2"/><rect x="10.5" y="8" width="3" height="8" rx="1" fill="#b8862a"/></svg><span id="rCoin"></span></div>
     <div class="pill" id="pAmber" title="อัมพร"><svg viewBox="0 0 24 24"><path d="M12 2 20 9l-8 13L4 9z" fill="#ff9a30"/><path d="M12 2 16 9l-4 4-4-4z" fill="#ffd9a0"/></svg><span id="rAmber"></span></div>
+    <div id="rankBox" hidden><button id="rkHead" aria-expanded="false">🏆 อันดับเผ่า<i id="rkArrow">▾</i></button><div id="rkList"></div></div>
   </div>
 </div>
 

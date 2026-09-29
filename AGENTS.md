@@ -100,7 +100,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 
 - Project URL และ **publishable key** อยู่ใน `net.js` / `battle_net.js` — **ห้ามใส่ secret / service_role key ในโค้ดเด็ดขาด**
 - **เซิร์ฟเวอร์เป็นผู้ตัดสินทุกอย่าง** (เหรียญ อัมพร พลังงาน สุ่มไข่ เลเวล ดันด่าน บอส) หน้าเว็บแค่เรียก RPC แล้วแสดงผล
-- RPC ที่ใช้: `game_state, set_name, hatch_egg, level_up, evolve_monster, set_team, claim_daily, collect_amber, claim_quest, buy_energy, idle_claim, idle_push, boss_start, boss_finish`
+- RPC ที่ใช้: `race_ranking,` `game_state, set_name, hatch_egg, level_up, evolve_monster, set_team, claim_daily, collect_amber, claim_quest, buy_energy, idle_claim, idle_push, boss_start, boss_finish`
 - `server/setup_v2.sql` = สคริปต์รวมทั้งหมด (รันซ้ำได้) · `server/migrate_*.sql` = การเปลี่ยนแปลงทีละเรื่อง (ถูกต่อท้ายเข้า setup_v2.sql แล้ว)
 - **การรัน SQL บนเซิร์ฟเวอร์จริงให้เจ้าของโปรเจกต์ทำ/อนุมัติเท่านั้น** (Supabase > SQL Editor) — ถ้าแก้ฝั่งเซิร์ฟเวอร์ ให้เขียนเป็นไฟล์ `server/migrate_xxx.sql` ใหม่ที่รันซ้ำได้ แล้วแจ้งเจ้าของ
 - ลำดับ deploy ที่ปลอดภัย: push หน้าเว็บที่รองรับของใหม่ก่อน → แล้วค่อยรัน SQL
@@ -194,3 +194,9 @@ python3 build_battle.py && cp battle.html ../battle.html
 ## กลับจากสนามรบไม่ต้องล็อกอินใหม่
 - ลิงก์กลับฟาร์มในสนามรบใช้ `index.html?back=1` · ฟาร์มจำไว้ใน `sessionStorage.amber_in` (id ผู้ใช้) ตอนเข้าเกมออนไลน์ → ถ้ายังล็อกอินบัญชีเดิมอยู่ `lgStart()` เข้าเกมให้อัตโนมัติ (รีโหลดในแท็บเดิมก็เข้าเลย)
 - เปิดแท็บใหม่/ปิดเบราว์เซอร์ หรือกด "เปลี่ยนบัญชี" (`signOutAll` ล้างค่า) จะเห็นหน้าเข้าสู่ระบบตามปกติ
+
+## อันดับเผ่า (server/migrate_ranking.sql · farm_ui.js `loadRank/renderRank`)
+- RPC `race_ranking()` (ผู้ที่ล็อกอินเรียกได้) คืน `{races:{god|undead|beast|human:{members, top:[{name,power,stage,me}]}}, me:{race,rank,power}}`
+- จัดอันดับด้วยพลังทีม (สูตรเดียวกับ `_power`) เสมอกันดูด่าน · นับสมาชิกทุกคนที่เลือกเผ่า · TOP 3 เฉพาะคนที่ตั้งชื่อแล้ว · ไม่ส่งอีเมล/ไอดี
+- กล่อง `#rankBox` ใต้เหรียญอัมพร: แถวละเผ่า (ไอคอน ชื่อ จำนวนคน) กดหัวข้อเพื่อกาง TOP 3 🥇🥈🥉 + อันดับของเรา · จอกว้าง ≥700px กางไว้ก่อน มือถือพับไว้ (จำใน localStorage `amber_rk`)
+- โหลดตอนเข้าเกม/หลังเลือกเผ่า/กลับมาที่แท็บ และทุก 90 วิ (ไม่ถี่กว่า 60 วิ) · โหมดออฟไลน์ซ่อนกล่องนี้

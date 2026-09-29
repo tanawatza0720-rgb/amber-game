@@ -48,6 +48,6 @@ RACE_ORDER.forEach((k,i)=>{const b=document.createElement('button');b.textConten
 $('#rpOk').onclick=async()=>{
   const k=RACE_ORDER[RP.idx];
   if(!RP.arm||Date.now()-RP.arm>6000){RP.arm=Date.now();rpRender();return;}
-  RP.arm=0; const r=await act('set_race',{r:k}); if(!r){rpRender();return;}
+  RP.arm=0; const r=await act('set_race',{r:k}); if(!r){rpRender();return;} if(typeof loadRank==='function')loadRank(true);
   S.race=k; closeRace(); renderHUD(); toast('ยินดีต้อนรับสู่'+RACES[k].n+'! สกิลเผ่า "'+RACES[k].skill+'" จะช่วยทีมในสนามรบ');
 };

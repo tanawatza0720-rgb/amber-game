@@ -284,7 +284,32 @@ function enterGame(){
   if(modelsReady){syncAgents(); onboard();}
   else {$('#loadMsg').hidden=false;}
   if(NET.mode!=='online')toast('เล่นแบบออฟไลน์ ความคืบหน้าเก็บในเครื่องนี้');
+  loadRank(true);
 }
+
+/* ---------- อันดับเผ่า (ใต้เหรียญอัมพร): สมาชิกแต่ละเผ่า + TOP 3 (server/migrate_ranking.sql) ---------- */
+const RK={data:null,at:0,busy:false,open:(()=>{try{const v=localStorage.getItem('amber_rk');if(v)return v==='1';}catch(e){}return innerWidth>=700;})()};
+async function loadRank(force){
+  if(NET.mode!=='online'){$('#rankBox').hidden=true;return;}
+  if(RK.busy||(!force&&Date.now()-RK.at<60000))return; RK.busy=true;
+  try{RK.data=await api('race_ranking');RK.at=Date.now();renderRank();}catch(e){console.warn('ranking',e);}
+  finally{RK.busy=false;}
+}
+function renderRank(){
+  const box=$('#rankBox'),L=$('#rkList'),d=RK.data; if(!d||!d.races){box.hidden=true;return;}
+  box.hidden=false; box.classList.toggle('open',RK.open); $('#rkHead').setAttribute('aria-expanded',RK.open); L.innerHTML='';
+  RACE_ORDER.forEach(r=>{const R=RACES[r],x=d.races[r]||{members:0,top:[]};
+    const w=el('div','rkRace'+(S.race===r?' mine':'')); w.style.setProperty('--rc',R.c);
+    const row=el('div','rkRow'); row.append(el('b',null,R.icon+' '+R.n),el('span',null,fmt(x.members)+' คน')); w.append(row);
+    const ol=el('ol','rkTop');
+    if(!x.top.length)ol.append(el('li','none','ยังไม่มีผู้เล่น'));
+    x.top.forEach((t,i)=>{const li=el('li',t.me?'me':null);li.append(el('em',null,['🥇','🥈','🥉'][i]),el('b',null,t.name),el('small',null,fmt(t.power)));li.title=t.name+' · พลังทีม '+fmt(t.power)+' · ด่าน '+t.stage;ol.append(li);});
+    w.append(ol); L.append(w);});
+  if(d.me&&d.me.rank){const m=el('div','rkMe','คุณอยู่อันดับ '+d.me.rank+' ของ'+RACES[d.me.race].n);L.append(m);}
+}
+$('#rkHead').onclick=()=>{RK.open=!RK.open;try{localStorage.setItem('amber_rk',RK.open?'1':'0');}catch(e){}renderRank();loadRank();};
+setInterval(()=>{if(entered&&document.visibilityState==='visible')loadRank();},90000);
+document.addEventListener('visibilitychange',()=>{if(entered&&document.visibilityState==='visible')loadRank();});
 function startFarm(){renderHUD(); layout(); loop(); distTo=68;
   lgStart();
   Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon(),loadSpider()]).then(()=>{
