@@ -87,12 +87,12 @@ function makeUnit(side,def,slot){
   const SPD=!!(sp.spider&&SPIDER);
   const inner=w.userData.inner, rig=inner.userData.rig;
   if(def.boss){w.userData.k*=1.3;w.scale.setScalar(w.userData.k);}
-  if(side==='P')tintByEl(w,def.sp,def.el);
   if(side==='E')tintCrimson(w,def.boss);
   if(side==='E'&&(inner.userData.meshy||SPD))w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
   if(sp.evo&&!sp.dragon&&!SPD){(inner.userData.swords||[]).forEach(s=>s.visible=true);
     if(side==='E'&&!inner.userData.meshy){const em=new THREE.MeshBasicMaterial({color:0xff4a3a});[-1,1].forEach(sx=>{P(rig.head,B1,em,[sx*.042,.03,.1],[.045,.009,.01],[0,sx*-.25,sx*.35]);glow(rig.head,0xff4030,.08,[sx*.042,.03,.11],.8);});}}
   if(!inner.userData.meshy&&!sp.dragon&&!SPD)mergeRigid(w);
+  if(side==='P')addAura(w,def.sp,def.el);
   const [x,z]=(side==='P'?P_SLOTS:E_SLOTS)[slot];
   w.position.set(x+(def.boss?.6:0),0,z); w.rotation.y=side==='P'?FACE_P:FACE_E; scene.add(w);
   const u={id:UNITS.length,side,sp:def.sp,evo:sp.evo,boss:!!def.boss,lv:def.show||def.lv,
@@ -185,7 +185,7 @@ async function react(u,fromX){
   else{tween(.12,t=>u.inner.rotation.x=-.35*t).then(()=>tween(.3,t=>u.inner.rotation.x=-.35*(1-t)));}
 }
 async function die(u){
-  u.alive=false; u.bar.hidden=true; rowGone(u);
+  u.alive=false; u.bar.hidden=true; rowGone(u); if(u.w.userData.aura)u.w.userData.aura.visible=false;
   const A=u.inner.userData;
   if(u.dragon){await dragonDie(u);}
   else if(u.spider){await spiderDie(u);}
