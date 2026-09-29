@@ -929,7 +929,8 @@ const elOfMon=m=>(m&&m.el&&ELEM[m.el])?m.el:EL_OF[m&&m.sp];
    ทุกธาตุใช้ shader ตัวเดียวกัน (สลับแค่ค่าสี) ไม่ต้องคอมไพล์ใหม่ · ไม่มีไฟล์เพิ่ม */
 const AURA={
   'ไฟ':{c:0xe0100a,e:0xff5a1a,add:1},  'น้ำ':{c:0x1f6bff,e:0x8fd8ff,add:1}, 'ลม':{c:0x1fd070,e:0xb0ffd0,add:1},
-  'แสง':{c:0xffe9a8,e:0xffffff,add:1}, 'ดิน':{c:0x6b4420,e:0xc08a4a,add:0}, 'มืด':{c:0x0c0418,e:0x8a40ff,add:0}};
+  'แสง':{c:0xffe9a8,e:0xffffff,add:1}, 'ดิน':{c:0x6b4420,e:0xc08a4a,add:0}, 'มืด':{c:0x0c0418,e:0x8a40ff,add:0},
+  'ทมิฬ':{c:0x010002,e:0x3a0014,add:0,a:1.3,rise:.4}}; // ทมิฬ = ออร่าดำสนิทขอบแดงเลือดของบอส
 const AURA_T={value:0};
 const AURA_WISP=false; // ควันลอย (ปิดไว้ให้ออร่าเนียนสะอาด)
 const AURA_VS=`#include <common>
@@ -978,20 +979,20 @@ function wispTex(){if(WISPTEX)return WISPTEX;const c=document.createElement('can
   WISPTEX=new THREE.CanvasTexture(c);return WISPTEX;}
 const AURA_LIVE=[];
 function auraPrune(now){for(let i=AURA_LIVE.length-1;i>=0;i--){const L=AURA_LIVE[i];if(L.end<now||!L.w.parent){if(L.s.parent)L.s.parent.remove(L.s);L.m.dispose();AURA_LIVE.splice(i,1);}}}
-function addAura(w,sp,el){
-  el=(el&&AURA[el])?el:EL_OF[sp]; const A=AURA[el]; if(!w||!A||w.userData.aura)return;
+function addAura(w,sp,el,thickK){
+  thickK=thickK||1; el=(el&&AURA[el])?el:EL_OF[sp]; const A=AURA[el]; if(!w||!A||w.userData.aura)return;
   const low=(typeof LOW!=='undefined'&&LOW)||!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
   w.userData.el=el; const shells=[]; w.updateMatrixWorld(true);
   const box=new THREE.Box3().setFromObject(w), H=Math.max(.3,box.max.y-box.min.y);
   const push=H*.18, mk=(skinned,geo,thick,rise,alpha)=>{const m=new THREE.ShaderMaterial({vertexShader:AURA_VS,fragmentShader:AURA_FS,skinning:!!skinned,transparent:true,depthWrite:false,
       blending:A.add?THREE.AdditiveBlending:THREE.NormalBlending,side:THREE.BackSide,
-      uniforms:{uTime:AURA_T,uThick:{value:thick},uRise:{value:rise},uPush:{value:push},uAlpha:{value:alpha},uAdd:{value:A.add?1:0},uCol:{value:new THREE.Color(A.c)},uEdge:{value:new THREE.Color(A.e)}}});return m;};
+      uniforms:{uTime:AURA_T,uThick:{value:thick},uRise:{value:rise},uPush:{value:push},uAlpha:{value:alpha*(A.a||1)},uAdd:{value:A.add?1:0},uCol:{value:new THREE.Color(A.c)},uEdge:{value:new THREE.Color(A.e)}}});return m;};
   const meshes=[];w.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!o.userData.aura&&o.geometry&&o.visible&&o.geometry.attributes.normal)meshes.push(o);});
   meshes.forEach(o=>{ auraNormals(o.geometry);
     // ความหนาคิดจากขนาดตัวจริงบนจอ แปลงกลับเป็นหน่วยของโมเดลนั้น
     const ws=new THREE.Vector3();o.getWorldScale(ws);const wsc=Math.max(1e-4,(ws.x+ws.y+ws.z)/3);
     [[.016,.04,A.add?.8:1],[.036,.14,A.add?.5:.65],[.064,.34,A.add?.32:.42]].forEach(([t,r,a],li)=>{if(low&&li>1)return;
-      const th=H*t/wsc, mat=mk(o.isSkinnedMesh,o.geometry,th,H*r,a);
+      const th=H*t*thickK/wsc, mat=mk(o.isSkinnedMesh,o.geometry,th,H*r*(A.rise||1),a);
       const s=o.isSkinnedMesh?new THREE.SkinnedMesh(o.geometry,mat):new THREE.Mesh(o.geometry,mat);
       if(o.isSkinnedMesh){s.bind(o.skeleton,o.bindMatrix);s.bindMode=o.bindMode;}
       s.position.copy(o.position);s.quaternion.copy(o.quaternion);s.scale.copy(o.scale);
@@ -2190,6 +2191,7 @@ function makeHydra(root,pivot,body,sm,B,S){
       return new Promise(res=>{cur={A,name,t:0,fired:new Set(),done:res,w:0};if(name==='die')dead=true;});},
     tick};
   let cur=null, dead=false, T=0;
+  const hAct={}; HY_HEADS.forEach((h,i)=>hAct[h]={t:-(.5+i*.7),on:0,k:0,d:1,s:1});
   // ---------- ท่าทั้งหมด ----------
   const ACT={
     roar:{D:2.6,f(t,o){o.rear=kf(t,[[0,0],[.5,.2],[1.1,.14],[2.1,.1],[2.6,0]]);o.crouch=kf(t,[[0,0],[.45,-.025],[.9,.01],[2.6,0]]);
@@ -2261,7 +2263,17 @@ function makeHydra(root,pivot,body,sm,B,S){
       if(cur.t>=A.D&&!A.hold){if(A.after)A.after();const d=cur.done;cur=null;if(d)d();}}
     // ท่ายืนเฉย (ซ้อนตลอด อ่อนลงเมื่อเล่นท่า)
     const idle=dead?0:1, br=Math.sin(T*1.5);
-    HY_HEADS.forEach((h,i)=>{const ph=i*1.9;o[h+'P']+=(Math.sin(T*.7+ph)*.06+Math.sin(T*1.9+ph*2)*.025)*idle;o[h+'Y']+=(Math.sin(T*.45+ph*1.3)*.13+Math.sin(T*1.2+ph)*.04)*idle;});
+    HY_HEADS.forEach((h,i)=>{const ph=i*1.9, act=cur?.35:1;o[h+'P']+=(Math.sin(T*.7+ph)*.11+Math.sin(T*1.9+ph*2)*.04)*idle;o[h+'Y']+=(Math.sin(T*.55+ph*1.3)*.24+Math.sin(T*1.3+ph)*.07)*idle;o[h+'X']+=Math.sin(T*.8+ph*1.7)*.08*idle;
+      // แอ็กชันเล็ก ๆ ของแต่ละหัว (สุ่ม ไม่พร้อมกัน): ฉก · ขู่ส่ายหัว · เงยคำราม · หันมองข้าง · ก้มดม (ตอนเล่นท่าใหญ่จะเบาลง)
+      const a=hAct[h]; a.t+=dt;
+      if(a.t>=0&&!a.on&&idle){a.on=1;a.k=Math.floor(Math.random()*5);a.d=[.75,1.4,1.3,1.8,1.5][a.k];a.t=0;a.s=Math.random()<.5?-1:1;}
+      if(a.on){const u=Math.min(1,a.t/a.d), e=Math.sin(u*Math.PI)*act*idle;
+        if(a.k===0){o[h+'X']+=kf(u,[[0,0],[.3,-.35],[.45,.9],[.7,.5],[1,0]])*act*idle;o[h+'P']+=kf(u,[[0,0],[.3,.3],[.45,-.3],[1,0]])*act*idle;}
+        else if(a.k===1){o[h+'Y']+=Math.sin(u*Math.PI*6)*.35*e;o[h+'P']+=.2*e;o[h+'X']+=-.2*e;}
+        else if(a.k===2){o[h+'P']+=.75*e;o[h+'X']+=.25*e;}
+        else if(a.k===3){o[h+'Y']+=a.s*.7*e;o[h+'P']+=.1*e;}
+        else{o[h+'P']+=-.45*e;o[h+'X']+=.35*e;o[h+'Y']+=Math.sin(u*9)*.12*e;}
+        if(u>=1){a.on=0;a.t=-(1+Math.random()*3);}}});
     if(API.flying&&!dead){const fb=Math.sin(T*2.3);o.wingL+=fb*.62+.05;o.wingR+=Math.sin(T*2.3+.12)*.62+.05;o.lift+=Math.sin(T*2.3-1.3)*.018+Math.sin(T*.4)*.02;
       o.armL+=.45;o.armR+=.45;o.rear+=.06+Math.sin(T*.5)*.03;o.tailUp+=-.25;o.roll+=Math.sin(T*.35)*.04;}
     o.tailSw+=Math.sin(T*.9)*.12*idle;o.tailSw2+=Math.sin(T*.9+2)*.12*idle;o.wingL+=Math.sin(T*1.5)*.03*idle;o.wingR+=Math.sin(T*1.5+.3)*.03*idle;
@@ -2310,6 +2322,8 @@ function makeHydra(root,pivot,body,sm,B,S){
     POOL.forEach(s=>{if(!s.visible)return;const u=s.userData;u.life-=dt;if(u.life<=0){s.visible=false;return;}u.v.y+=u.grav*dt;s.position.addScaledVector(u.v,dt);u.v.multiplyScalar(1-dt*1.1);const k=u.life/u.max;s.material.opacity=Math.min(1,k*1.4);s.scale.setScalar(u.size*(1.9-k));});
     for(let i=rings.length-1;i>=0;i--){const r=rings[i];r.t+=dt;const k=r.t/r.dur,e=1-(1-k)*(1-k);r.m.scale.setScalar(r.R*(.15+e));r.m.material.opacity=.85*(1-k);if(k>=1){fx.remove(r.m);r.m.geometry.dispose();r.m.material.dispose();rings.splice(i,1);}}
   }
+  // ออร่าดำทมิฬของบอส (ใช้ระบบออร่าเดียวกับมอนสเตอร์ ถ้ามี gamedata.js)
+  if(typeof addAura==='function')addAura(root,'hydra','ทมิฬ',1.1);
   return API;
 }
 

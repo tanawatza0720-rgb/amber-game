@@ -76,6 +76,7 @@ function makeHydra(root,pivot,body,sm,B,S){
       return new Promise(res=>{cur={A,name,t:0,fired:new Set(),done:res,w:0};if(name==='die')dead=true;});},
     tick};
   let cur=null, dead=false, T=0;
+  const hAct={}; HY_HEADS.forEach((h,i)=>hAct[h]={t:-(.5+i*.7),on:0,k:0,d:1,s:1});
   // ---------- ท่าทั้งหมด ----------
   const ACT={
     roar:{D:2.6,f(t,o){o.rear=kf(t,[[0,0],[.5,.2],[1.1,.14],[2.1,.1],[2.6,0]]);o.crouch=kf(t,[[0,0],[.45,-.025],[.9,.01],[2.6,0]]);
@@ -147,7 +148,17 @@ function makeHydra(root,pivot,body,sm,B,S){
       if(cur.t>=A.D&&!A.hold){if(A.after)A.after();const d=cur.done;cur=null;if(d)d();}}
     // ท่ายืนเฉย (ซ้อนตลอด อ่อนลงเมื่อเล่นท่า)
     const idle=dead?0:1, br=Math.sin(T*1.5);
-    HY_HEADS.forEach((h,i)=>{const ph=i*1.9;o[h+'P']+=(Math.sin(T*.7+ph)*.06+Math.sin(T*1.9+ph*2)*.025)*idle;o[h+'Y']+=(Math.sin(T*.45+ph*1.3)*.13+Math.sin(T*1.2+ph)*.04)*idle;});
+    HY_HEADS.forEach((h,i)=>{const ph=i*1.9, act=cur?.35:1;o[h+'P']+=(Math.sin(T*.7+ph)*.11+Math.sin(T*1.9+ph*2)*.04)*idle;o[h+'Y']+=(Math.sin(T*.55+ph*1.3)*.24+Math.sin(T*1.3+ph)*.07)*idle;o[h+'X']+=Math.sin(T*.8+ph*1.7)*.08*idle;
+      // แอ็กชันเล็ก ๆ ของแต่ละหัว (สุ่ม ไม่พร้อมกัน): ฉก · ขู่ส่ายหัว · เงยคำราม · หันมองข้าง · ก้มดม (ตอนเล่นท่าใหญ่จะเบาลง)
+      const a=hAct[h]; a.t+=dt;
+      if(a.t>=0&&!a.on&&idle){a.on=1;a.k=Math.floor(Math.random()*5);a.d=[.75,1.4,1.3,1.8,1.5][a.k];a.t=0;a.s=Math.random()<.5?-1:1;}
+      if(a.on){const u=Math.min(1,a.t/a.d), e=Math.sin(u*Math.PI)*act*idle;
+        if(a.k===0){o[h+'X']+=kf(u,[[0,0],[.3,-.35],[.45,.9],[.7,.5],[1,0]])*act*idle;o[h+'P']+=kf(u,[[0,0],[.3,.3],[.45,-.3],[1,0]])*act*idle;}
+        else if(a.k===1){o[h+'Y']+=Math.sin(u*Math.PI*6)*.35*e;o[h+'P']+=.2*e;o[h+'X']+=-.2*e;}
+        else if(a.k===2){o[h+'P']+=.75*e;o[h+'X']+=.25*e;}
+        else if(a.k===3){o[h+'Y']+=a.s*.7*e;o[h+'P']+=.1*e;}
+        else{o[h+'P']+=-.45*e;o[h+'X']+=.35*e;o[h+'Y']+=Math.sin(u*9)*.12*e;}
+        if(u>=1){a.on=0;a.t=-(1+Math.random()*3);}}});
     if(API.flying&&!dead){const fb=Math.sin(T*2.3);o.wingL+=fb*.62+.05;o.wingR+=Math.sin(T*2.3+.12)*.62+.05;o.lift+=Math.sin(T*2.3-1.3)*.018+Math.sin(T*.4)*.02;
       o.armL+=.45;o.armR+=.45;o.rear+=.06+Math.sin(T*.5)*.03;o.tailUp+=-.25;o.roll+=Math.sin(T*.35)*.04;}
     o.tailSw+=Math.sin(T*.9)*.12*idle;o.tailSw2+=Math.sin(T*.9+2)*.12*idle;o.wingL+=Math.sin(T*1.5)*.03*idle;o.wingR+=Math.sin(T*1.5+.3)*.03*idle;
@@ -196,5 +207,7 @@ function makeHydra(root,pivot,body,sm,B,S){
     POOL.forEach(s=>{if(!s.visible)return;const u=s.userData;u.life-=dt;if(u.life<=0){s.visible=false;return;}u.v.y+=u.grav*dt;s.position.addScaledVector(u.v,dt);u.v.multiplyScalar(1-dt*1.1);const k=u.life/u.max;s.material.opacity=Math.min(1,k*1.4);s.scale.setScalar(u.size*(1.9-k));});
     for(let i=rings.length-1;i>=0;i--){const r=rings[i];r.t+=dt;const k=r.t/r.dur,e=1-(1-k)*(1-k);r.m.scale.setScalar(r.R*(.15+e));r.m.material.opacity=.85*(1-k);if(k>=1){fx.remove(r.m);r.m.geometry.dispose();r.m.material.dispose();rings.splice(i,1);}}
   }
+  // ออร่าดำทมิฬของบอส (ใช้ระบบออร่าเดียวกับมอนสเตอร์ ถ้ามี gamedata.js)
+  if(typeof addAura==='function')addAura(root,'hydra','ทมิฬ',1.1);
   return API;
 }

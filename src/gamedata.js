@@ -35,7 +35,8 @@ const elOfMon=m=>(m&&m.el&&ELEM[m.el])?m.el:EL_OF[m&&m.sp];
    ทุกธาตุใช้ shader ตัวเดียวกัน (สลับแค่ค่าสี) ไม่ต้องคอมไพล์ใหม่ · ไม่มีไฟล์เพิ่ม */
 const AURA={
   'ไฟ':{c:0xe0100a,e:0xff5a1a,add:1},  'น้ำ':{c:0x1f6bff,e:0x8fd8ff,add:1}, 'ลม':{c:0x1fd070,e:0xb0ffd0,add:1},
-  'แสง':{c:0xffe9a8,e:0xffffff,add:1}, 'ดิน':{c:0x6b4420,e:0xc08a4a,add:0}, 'มืด':{c:0x0c0418,e:0x8a40ff,add:0}};
+  'แสง':{c:0xffe9a8,e:0xffffff,add:1}, 'ดิน':{c:0x6b4420,e:0xc08a4a,add:0}, 'มืด':{c:0x0c0418,e:0x8a40ff,add:0},
+  'ทมิฬ':{c:0x010002,e:0x3a0014,add:0,a:1.3,rise:.4}}; // ทมิฬ = ออร่าดำสนิทขอบแดงเลือดของบอส
 const AURA_T={value:0};
 const AURA_WISP=false; // ควันลอย (ปิดไว้ให้ออร่าเนียนสะอาด)
 const AURA_VS=`#include <common>
@@ -84,20 +85,20 @@ function wispTex(){if(WISPTEX)return WISPTEX;const c=document.createElement('can
   WISPTEX=new THREE.CanvasTexture(c);return WISPTEX;}
 const AURA_LIVE=[];
 function auraPrune(now){for(let i=AURA_LIVE.length-1;i>=0;i--){const L=AURA_LIVE[i];if(L.end<now||!L.w.parent){if(L.s.parent)L.s.parent.remove(L.s);L.m.dispose();AURA_LIVE.splice(i,1);}}}
-function addAura(w,sp,el){
-  el=(el&&AURA[el])?el:EL_OF[sp]; const A=AURA[el]; if(!w||!A||w.userData.aura)return;
+function addAura(w,sp,el,thickK){
+  thickK=thickK||1; el=(el&&AURA[el])?el:EL_OF[sp]; const A=AURA[el]; if(!w||!A||w.userData.aura)return;
   const low=(typeof LOW!=='undefined'&&LOW)||!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
   w.userData.el=el; const shells=[]; w.updateMatrixWorld(true);
   const box=new THREE.Box3().setFromObject(w), H=Math.max(.3,box.max.y-box.min.y);
   const push=H*.18, mk=(skinned,geo,thick,rise,alpha)=>{const m=new THREE.ShaderMaterial({vertexShader:AURA_VS,fragmentShader:AURA_FS,skinning:!!skinned,transparent:true,depthWrite:false,
       blending:A.add?THREE.AdditiveBlending:THREE.NormalBlending,side:THREE.BackSide,
-      uniforms:{uTime:AURA_T,uThick:{value:thick},uRise:{value:rise},uPush:{value:push},uAlpha:{value:alpha},uAdd:{value:A.add?1:0},uCol:{value:new THREE.Color(A.c)},uEdge:{value:new THREE.Color(A.e)}}});return m;};
+      uniforms:{uTime:AURA_T,uThick:{value:thick},uRise:{value:rise},uPush:{value:push},uAlpha:{value:alpha*(A.a||1)},uAdd:{value:A.add?1:0},uCol:{value:new THREE.Color(A.c)},uEdge:{value:new THREE.Color(A.e)}}});return m;};
   const meshes=[];w.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!o.userData.aura&&o.geometry&&o.visible&&o.geometry.attributes.normal)meshes.push(o);});
   meshes.forEach(o=>{ auraNormals(o.geometry);
     // ความหนาคิดจากขนาดตัวจริงบนจอ แปลงกลับเป็นหน่วยของโมเดลนั้น
     const ws=new THREE.Vector3();o.getWorldScale(ws);const wsc=Math.max(1e-4,(ws.x+ws.y+ws.z)/3);
     [[.016,.04,A.add?.8:1],[.036,.14,A.add?.5:.65],[.064,.34,A.add?.32:.42]].forEach(([t,r,a],li)=>{if(low&&li>1)return;
-      const th=H*t/wsc, mat=mk(o.isSkinnedMesh,o.geometry,th,H*r,a);
+      const th=H*t*thickK/wsc, mat=mk(o.isSkinnedMesh,o.geometry,th,H*r*(A.rise||1),a);
       const s=o.isSkinnedMesh?new THREE.SkinnedMesh(o.geometry,mat):new THREE.Mesh(o.geometry,mat);
       if(o.isSkinnedMesh){s.bind(o.skeleton,o.bindMatrix);s.bindMode=o.bindMode;}
       s.position.copy(o.position);s.quaternion.copy(o.quaternion);s.scale.copy(o.scale);

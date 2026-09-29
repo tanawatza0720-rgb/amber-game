@@ -18,7 +18,7 @@ html,body{margin:0;height:100%;background:#120d0a;color:var(--bone);font-family:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>const HYDRA_BASE='./';</script>
-<script>document.write('<script src="../src/hydra.js?v='+Date.now()+'"><\/script>')</script>
+<script>document.write('<script src="../src/gamedata.js?v='+Date.now()+'"><\/script><script src="../src/hydra.js?v='+Date.now()+'"><\/script>')</script>
 <script>
 const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.outputEncoding=THREE.sRGBEncoding;R.toneMapping=THREE.ACESFilmicToneMapping;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
 document.getElementById('v').append(R.domElement);
