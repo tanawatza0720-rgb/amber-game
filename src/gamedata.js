@@ -36,7 +36,7 @@ const elOfMon=m=>(m&&m.el&&ELEM[m.el])?m.el:EL_OF[m&&m.sp];
 const AURA={
   'ไฟ':{c:0xe0100a,e:0xff5a1a,add:1},  'น้ำ':{c:0x1f6bff,e:0x8fd8ff,add:1}, 'ลม':{c:0x1fd070,e:0xb0ffd0,add:1},
   'แสง':{c:0xffe9a8,e:0xffffff,add:1}, 'ดิน':{c:0x6b4420,e:0xc08a4a,add:0}, 'มืด':{c:0x0c0418,e:0x8a40ff,add:0},
-  'ทมิฬ':{c:0x010002,e:0x3a0014,add:0,a:1.3,rise:.4}}; // ทมิฬ = ออร่าดำสนิทขอบแดงเลือดของบอส
+  'ทมิฬ':{c:0x010002,e:0x3a0014,add:0,a:1.3,rise:.8}}; // ทมิฬ = ออร่าดำสนิทขอบแดงเลือดของบอส
 const AURA_T={value:0};
 const AURA_WISP=false; // ควันลอย (ปิดไว้ให้ออร่าเนียนสะอาด)
 const AURA_VS=`#include <common>
