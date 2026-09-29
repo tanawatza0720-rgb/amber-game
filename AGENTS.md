@@ -81,7 +81,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 | `yorugumo` | โยรุกุโมะ (จอมเวทแมงมุม) | หายาก | `spd/spider_rig.json` | rig เอง 8 ขา (spider.js) |
 | `kuroga` | คุโรกะ | ตำนาน | `krg/kuroga_rig.json` | Meshy rig |
 | `hakuneko` | ฮาคุเนโกะ (นักดาบแมว) | ตำนาน | `hkn/hakuneko_rig.json` | rig เอง (heat-diffusion weights) — Mixamo auto-rig เดิมวางกระดูกผิด (ไหล่อยู่กลางตัว ขาไขว้) จึงเลิกใช้ |
-| `morihime` | โมริฮิเมะ (เอลฟ์ถือหอก) | หายาก | `mrh/morihime_rig.json` | rig เอง (heat-diffusion weights) |
+| `morihime` | โมริฮิเมะ (เอลฟ์ถือหอก) | หายาก | `mrh/morihime_rig.json` | rig เอง (heat-diffusion weights) + ผ้า/ผมตามลำตัว + ตัดหน้าที่ยืดเป็นใย (เครื่องมือใน `tools/rig/`) · หอกจับตามแกนการจับของท่า Mixamo |
 | `amateru` | อามาเทรุ (มังกร) | เทพเจ้า | `drg/dragon.json` | กระดูกสร้างในโค้ด (dragon.js) |
 
 - ไฟล์ `*_rig.json` = glTF JSON (buffer ฝังเป็น base64) + `baseColor*.jpg` ในโฟลเดอร์เดียวกัน, ชื่อกระดูกแบบ **Mixamo** (`mixamorig:Hips`, `...RightHand`, `...RightHandMiddle4` ใช้บอกทิศมือ, `...HeadTop_End`)

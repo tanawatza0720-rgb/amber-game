@@ -993,7 +993,7 @@ const RACE_ORDER=['god','undead','beast','human'];
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -1066,9 +1066,7 @@ function buildMeshyEvo(m,key){
     if(o.material.emissive)o.material.emissive.set(0x000000);}});
   // อาวุธเดิมของโมเดล: ติดกับมือขวา และปรับมุมหอกของโมริฮิเมะรอบจุดจับ
   let prop=null; root.traverse(o=>{if(!prop&&o.name==='weapon_prop')prop=o;});
-  let spearGrip=null;
   if(prop&&B.rHand){B.rHand.attach(prop);
-    if(key==='morihime'){spearGrip=new THREE.Group();B.rHand.add(spearGrip);spearGrip.attach(prop);}
     const P=prop.geometry.attributes.position, hp=B.rHand.getWorldPosition(new THREE.Vector3()), inv=new THREE.Matrix4().copy(prop.matrixWorld).invert(), hl=hp.applyMatrix4(inv), v=new THREE.Vector3(), tip=new THREE.Vector3(); let best=-1;
     for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i);const d=v.distanceTo(hl);if(d>best){best=d;tip.copy(v);}}
     const mk=q=>{const o=new THREE.Object3D();o.position.copy(q);prop.add(o);return o;};
@@ -1218,6 +1216,33 @@ function buildMeshyEvo(m,key){
     drawP.sub(hilt.clone().multiply(prop.scale).applyQuaternion(drawQ));
     swordPose={restP:prop.position.clone(),restQ:prop.quaternion.clone(),drawP,drawQ,blend:0};
   }
+  // โมริฮิเมะ: จับหอกตามแกนการจับของท่า Mixamo (หัวหอกออกทางเดียวกับใบดาบ จุดจับเดิมบนด้าม)
+  if(key==='morihime'&&prop&&CS&&MXA.grip&&MXA.grip.R){
+    const P=prop.geometry.attributes.position,n=P.count,v=new THREE.Vector3(),c=new THREE.Vector3();
+    for(let i=0;i<n;i++)c.add(v.fromBufferAttribute(P,i));c.multiplyScalar(1/n);
+    const a=new THREE.Vector3(),b=new THREE.Vector3();let d0=-1;
+    for(let i=0;i<n;i++){v.fromBufferAttribute(P,i);const d=v.distanceToSquared(c);if(d>d0){d0=d;a.copy(v);}}
+    d0=-1;for(let i=0;i<n;i++){v.fromBufferAttribute(P,i);const d=v.distanceToSquared(a);if(d>d0){d0=d;b.copy(v);}}
+    const ax=b.clone().sub(a).normalize(),L=a.distanceTo(b);
+    // ปลายที่กว้างกว่าคือหัวหอก
+    const sp=[0,0],cn=[0,0],w=new THREE.Vector3();
+    for(let i=0;i<n;i++){v.fromBufferAttribute(P,i);const t=v.clone().sub(a).dot(ax)/L;const e=t<.15?0:t>.85?1:-1;if(e<0)continue;
+      w.copy(v).sub(a).addScaledVector(ax,-t*L);sp[e]+=w.length();cn[e]++;}
+    const tipAtB=sp[1]/Math.max(1,cn[1])>sp[0]/Math.max(1,cn[0]);
+    const tipL=tipAtB?b:a, dir=tipAtB?ax.clone():ax.clone().negate();
+    m.updateMatrixWorld(true);
+    const hl=prop.worldToLocal(B.rHand.getWorldPosition(new THREE.Vector3()));
+    const tg=THREE.MathUtils.clamp(hl.clone().sub(a).dot(ax)/L,.2,.8), gripL=a.clone().addScaledVector(ax,tg*L);
+    const bi=MXA.bones.indexOf('RightHand'),Fi=CS.Qal[bi].clone().multiply(B.rHand.userData.W).invert();
+    const G=MXA.grip.R,bladeDir=new THREE.Vector3(...G.blade),edge=new THREE.Vector3(...G.edge);
+    const x=new THREE.Vector3().crossVectors(bladeDir,edge),Qs=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,bladeDir,edge));
+    const q=Fi.clone().multiply(Qs).multiply(new THREE.Quaternion().setFromUnitVectors(dir,new THREE.Vector3(0,1,0)));
+    const toNow=wq(B.rHand).multiply(Fi);
+    const offM=new THREE.Vector3(...G.off).multiplyScalar(CS.hs*.72).applyQuaternion(toNow);
+    const p=B.rHand.worldToLocal(m.localToWorld(posM(B.rHand).add(offM)));
+    prop.quaternion.copy(q); prop.position.copy(p).sub(gripL.clone().multiply(prop.scale).applyQuaternion(q));
+    prop.userData.base.position.copy(gripL.clone().lerp(tipL,.3)); prop.userData.tip.position.copy(tipL);
+  }
   // จัดดาบให้อยู่ในกำมือตามแกนการจับของท่า Mixamo (ใบดาบออกฝั่งนิ้วโป้ง คมหันไปทางนิ้ว)
   const gripFix=(hand,sd,sw)=>{
     if(!CS||!MXA.grip||!MXA.grip[sd])return false;
@@ -1235,12 +1260,6 @@ function buildMeshyEvo(m,key){
   if(!gripFix(B.lHand,'L',swL))B.lHand.attach(swL);
   makeFist(root,[[B.rHand,swR,'R'],[B.lHand,swL,'L']]);}
   if(CS){play('idle',{loop:true,from:Math.random()*2});CS.w=CS.wT=1;}
-  const alignSpear=()=>{m.updateMatrixWorld(true);
-    const P=prop.geometry.attributes.position,v=new THREE.Vector3(),lo=new THREE.Vector3(),hi=new THREE.Vector3();let min=Infinity,max=-Infinity;
-    for(let i=0;i<P.count;i+=3){v.fromBufferAttribute(P,i).applyMatrix4(prop.matrixWorld);if(v.y<min){min=v.y;lo.copy(v);}if(v.y>max){max=v.y;hi.copy(v);}}
-    const up=new THREE.Vector3(0,1,0).applyQuaternion(m.getWorldQuaternion(new THREE.Quaternion()));
-    const turn=new THREE.Quaternion().setFromUnitVectors(hi.sub(lo).normalize(),up),handQ=B.rHand.getWorldQuaternion(new THREE.Quaternion());
-    spearGrip.quaternion.premultiply(handQ.clone().invert().multiply(turn).multiply(handQ));};
   m.userData.idle=T=>{
     let dt=0; if(CS){dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}
     breath=Math.sin(T*2)*.025;
@@ -1251,7 +1270,6 @@ function buildMeshyEvo(m,key){
       swordPose.blend+=(Number(attacking)-swordPose.blend)*Math.min(1,dt*11);
       prop.position.copy(swordPose.restP).lerp(swordPose.drawP,swordPose.blend);
       prop.quaternion.copy(swordPose.restQ).slerp(swordPose.drawQ,swordPose.blend);}
-    if(spearGrip){alignSpear();spearGrip=null;}
   };
 }
 
