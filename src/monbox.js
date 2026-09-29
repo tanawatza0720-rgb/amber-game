@@ -249,13 +249,13 @@ function renderEvo(){
       if(on)EVO.sel=EVO.sel.filter(u=>u!==x.uid);else if(EVO.sel.length<need)EVO.sel.push(x.uid);else{EVO.sel.shift();EVO.sel.push(x.uid);}
       renderEvo();};
     L.append(c);});
-  $('#evGo').disabled=EVO.sel.length!==need;
+  $('#evGo').disabled=EVO.sel.length!==need; $('#evGo').textContent='วิวัฒนาการ';
 }
 $('#evX').onclick=closeEvo;
 $('#evo').addEventListener('pointerdown',e=>{if(e.target.id==='evo')closeEvo();});
 $('#evAuto').onclick=()=>{if(!EVO.m)return;const L=starMats(EVO.m).list.map(x=>x.uid);EVO.sel=EVO.sel.length===L.length&&EVO.sel.every(u=>L.includes(u))?[]:L;renderEvo();};
 $('#evGo').onclick=async()=>{const m=EVO.m;if(!m)return;const st=m.stars||0,need=starCost(st+1);if(EVO.sel.length!==need)return;
-  const sp=spOf(m),before=skillLvs(m.sp,st),pw0=power(m);$('#evGo').disabled=true;
+  const sp=spOf(m),before=skillLvs(m.sp,st),pw0=power(m);$('#evGo').disabled=true;$('#evGo').textContent='กำลังวิวัฒนาการ…';
   const r=await act('star_up',{mon_id:m.uid,mat_ids:EVO.sel.slice()}); if(!r){renderEvo();return;}
   closeEvo();
   const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=sp.skills[i];

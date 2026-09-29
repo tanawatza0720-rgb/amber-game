@@ -260,7 +260,7 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
 #evo[hidden]{display:none}
 .evCard{position:relative;width:min(400px,100%);max-height:calc(100vh - 24px);overflow:auto;border-radius:18px;padding:16px 14px 14px;
   background:radial-gradient(120% 70% at 50% 0%,#4a2d86 0%,#2a1a52 45%,#170f30 100%);border:1px solid rgba(190,160,255,.35);box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 0 40px rgba(140,100,255,.15)}
-.evX{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(220,200,255,.35);background:rgba(0,0,0,.3);color:#efe6ff;font-size:16px}
+.evX{position:absolute;z-index:3;top:8px;right:8px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(220,200,255,.35);background:rgba(0,0,0,.3);color:#efe6ff;font-size:16px}
 .evTop{position:relative;display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
 .evRing{position:relative;width:132px;height:132px;display:grid;place-items:center}
 .evRing::before{content:'';position:absolute;inset:0;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:linear-gradient(160deg,rgba(210,185,255,.55),rgba(110,70,200,.25));}
@@ -3766,13 +3766,13 @@ function renderEvo(){
       if(on)EVO.sel=EVO.sel.filter(u=>u!==x.uid);else if(EVO.sel.length<need)EVO.sel.push(x.uid);else{EVO.sel.shift();EVO.sel.push(x.uid);}
       renderEvo();};
     L.append(c);});
-  $('#evGo').disabled=EVO.sel.length!==need;
+  $('#evGo').disabled=EVO.sel.length!==need; $('#evGo').textContent='วิวัฒนาการ';
 }
 $('#evX').onclick=closeEvo;
 $('#evo').addEventListener('pointerdown',e=>{if(e.target.id==='evo')closeEvo();});
 $('#evAuto').onclick=()=>{if(!EVO.m)return;const L=starMats(EVO.m).list.map(x=>x.uid);EVO.sel=EVO.sel.length===L.length&&EVO.sel.every(u=>L.includes(u))?[]:L;renderEvo();};
 $('#evGo').onclick=async()=>{const m=EVO.m;if(!m)return;const st=m.stars||0,need=starCost(st+1);if(EVO.sel.length!==need)return;
-  const sp=spOf(m),before=skillLvs(m.sp,st),pw0=power(m);$('#evGo').disabled=true;
+  const sp=spOf(m),before=skillLvs(m.sp,st),pw0=power(m);$('#evGo').disabled=true;$('#evGo').textContent='กำลังวิวัฒนาการ…';
   const r=await act('star_up',{mon_id:m.uid,mat_ids:EVO.sel.slice()}); if(!r){renderEvo();return;}
   closeEvo();
   const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=sp.skills[i];
