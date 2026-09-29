@@ -80,7 +80,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 | `kazekiri` | คาเซะคิริ | หายาก (วิวัฒน์จากคาเซะมารุ) | `kzr/kazekiri_rig.json` | Meshy rig |
 | `yorugumo` | โยรุกุโมะ (จอมเวทแมงมุม) | หายาก | `spd/spider_rig.json` | rig เอง 8 ขา (spider.js) |
 | `kuroga` | คุโรกะ | ตำนาน | `krg/kuroga_rig.json` | Meshy rig |
-| `hakuneko` | ฮาคุเนโกะ (นักดาบแมว) | ตำนาน | `hkn/hakuneko_rig.json` | Mixamo auto-rig |
+| `hakuneko` | ฮาคุเนโกะ (นักดาบแมว) | ตำนาน | `hkn/hakuneko_rig.json` | rig เอง (heat-diffusion weights) — Mixamo auto-rig เดิมวางกระดูกผิด (ไหล่อยู่กลางตัว ขาไขว้) จึงเลิกใช้ |
 | `morihime` | โมริฮิเมะ (เอลฟ์ถือหอก) | หายาก | `mrh/morihime_rig.json` | rig เอง (heat-diffusion weights) |
 | `amateru` | อามาเทรุ (มังกร) | เทพเจ้า | `drg/dragon.json` | กระดูกสร้างในโค้ด (dragon.js) |
 
@@ -122,6 +122,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 - ทำงานบน branch แยก แล้วเปิด Pull Request เข้า `main` (หรือ commit ตรงถ้าเจ้าของอนุญาต) — **commit ทั้ง `src/` และไฟล์ที่ build แล้ว (`index.html`, `battle.html`) ไปพร้อมกัน**
 - เขียนข้อความ UI เป็นภาษาไทย, สไตล์โค้ดกระชับแบบที่มีอยู่
 - อย่าแก้ไฟล์โมเดลใน `kzr/ krg/ hkn/ mrh/ drg/ spd/` ด้วยมือ
+- ท่าของทุกตัวใช้ retarget แบบจับทิศกระดูก (`Qal` ใน `buildMeshyEvo`) เหมือนกันหมด ห้ามเพิ่มกรณีพิเศษรายตัวใน `clipW` — ถ้าท่าเบี้ยว ให้แก้ตำแหน่งกระดูก/น้ำหนักผิวของโมเดลแทน (rig ต้องมีกระดูกปลาย HeadTop_End, *HandMiddle4, *Toe_End)
 - โมเดลของฮาคุเนโกะ/โมริฮิเมะมาจากชุมชน Tripo (ผู้สร้างคนอื่น) — เจ้าของโปรเจกต์ต้องตรวจสิทธิ์การใช้งานก่อนเปิดเกมสาธารณะ
 
 ## 9. สถานะ ณ ล่าสุด และงานที่ค้าง/ไอเดีย
