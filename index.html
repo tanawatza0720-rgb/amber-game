@@ -1052,6 +1052,8 @@ const passiveOf=sp=>{const s=(SKILLS[sp]||[]).find(x=>x.type==='passive');return
    ทุกดาวที่ได้ สกิลขึ้น 1 Lv วนตามลำดับ: ท่า 2 → ท่า 3 → ติดตัว → ท่า 2 … (โจมตีปกติไม่อัป) · ค่าพลังไม่เพิ่ม */
 const STAR_MAX=6;
 const starCost=next=>next===3||next===6?2:1;          // ตัวซ้ำที่ต้องใช้เพื่อขึ้นไปดาว next
+const STAR_POW=.05; // ดาวละ +5% พลังรบ (6 ดาว = +30%) ตรงกับ _power บนเซิร์ฟเวอร์ · ค่าสถานะในสนามรบไม่เปลี่ยน
+const starPow=s=>1+STAR_POW*Math.max(0,Math.min(STAR_MAX,s||0));
 const SK_STEP=.1, PAS_STEP=.15;                         // สกิลแรงขึ้นต่อ Lv: ท่าโจมตี +10% · ติดตัว +15%
 function skillLvs(sp,stars){
   const L=SKILLS[sp]||[], up=L.filter(s=>s.id!=='s1'), n=up.length, st=Math.max(0,Math.min(STAR_MAX,stars||0));
@@ -1094,7 +1096,7 @@ const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return
 const NET={mode:'offline',sb:null,user:null,busy:false};
 const ERR={bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
-  quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–24 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
+  quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
 const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
 function errCode(e){const m=(e&&(e.message||e.msg||e.error_description))||'';const k=Object.keys(ERR).find(k=>m.includes(k));return k||'network';}
@@ -1201,7 +1203,7 @@ const LOCAL=(()=>{
   const mon=id=>D.mons.find(m=>m.id===id)||fail('no_monster');
   const F={
     game_state:()=>state(),
-    set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>24)fail('bad_name');D.name=n;D.named=true;return{};},
+    set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>12)fail('bad_name');D.name=n;D.named=true;return{};},
     hatch_egg:({kind})=>{if(D.mons.length>=C.slots)fail('box_full');let ch;
       if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=[.83,.15,.02,0];}
       else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=[.575,.32,.10,.005];}else fail('bad_egg');
@@ -2913,7 +2915,7 @@ function openAccount(){
     ['บัญชี',NET.mode!=='online'?'-':userLabel(NET.user)]]));
   if(NET.mode!=='online')d.append(para('ตอนนี้เชื่อมเซิร์ฟเวอร์ไม่ได้ ความคืบหน้าจะเก็บไว้ในเครื่องนี้ก่อน'));
   else if(NET.user&&NET.user.is_anonymous)d.append(para('บัญชีผู้เยี่ยมชมผูกกับเบราว์เซอร์นี้ ถ้าล้างข้อมูลเว็บจะหาย ผูกกับ Google เพื่อเล่นต่อได้ทุกเครื่อง'));
-  const f=el('div','nameRow'); const inp=el('input'); inp.value=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp);
+  const f=el('div','nameRow'); const inp=el('input'); inp.value=S.name; inp.maxLength=12; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp);
   const sv=el('button','sbtn small','บันทึกชื่อ'); sv.onclick=async()=>{if(await act('set_name',{new_name:inp.value})){toast('เปลี่ยนชื่อแล้ว');closeSheet();}}; f.append(sv); d.append(f);
   const acts=[]; if(NET.mode==='online'&&NET.user&&NET.user.is_anonymous)acts.push(['ผูกบัญชี Google',linkGoogle]);
   acts.push([NET.mode==='online'?'ออกจากระบบ':'กลับหน้าเข้าสู่ระบบ',async()=>{closeSheet();if(NET.mode==='online')await signOutAll();location.replace(redirectTo());},'ghost']);
@@ -2927,7 +2929,7 @@ setInterval(async()=>{if(NET.mode==='online'&&!NET.busy&&!document.hidden){try{a
 function onboard(){if(!S.named&&NET.mode==='online')openWelcome(); else if(!S.race)openRace();}
 function openWelcome(){
   const d=el('div'); d.append(para('ยินดีต้อนรับสู่ป่าอัมพร! นี่คือฟาร์มของคุณเอง ตั้งชื่อนักฝึกมอนสเตอร์ก่อนเริ่มเล่น'));
-  const f=el('div','nameRow'); const inp=el('input'); inp.value=(NET.user&&!NET.user.is_anonymous&&NET.user.user_metadata&&(NET.user.user_metadata.full_name||'').slice(0,24))||''; inp.placeholder=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp); d.append(f);
+  const f=el('div','nameRow'); const inp=el('input'); inp.value=(NET.user&&!NET.user.is_anonymous&&NET.user.user_metadata&&(NET.user.user_metadata.full_name||'').trim().slice(0,12))||''; inp.placeholder=S.name; inp.maxLength=12; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp); d.append(f);
   openSheet('ตั้งชื่อนักฝึก','รหัสผู้เล่น '+(S.uid||'-'),d,[['เริ่มเล่น',async()=>{const n=inp.value.trim()||S.name;if(await act('set_name',{new_name:n})){closeSheet();toast('สวัสดี '+S.name+'! มังกรอามาเทรุรออยู่ในฟาร์มแล้ว');if(!S.race)setTimeout(openRace,700);}}]]);
   setTimeout(()=>inp.focus(),50);
 }
@@ -3100,7 +3102,7 @@ const spOf=d=>SPEC[d.sp]||SPEC.kazemaru;
 const TIER={1:{n:'ทั่วไป',c:'#c9d1dc',hx:0xc9d1dc},2:{n:'หายาก',c:'#5fb3ff',hx:0x5fb3ff},3:{n:'ตำนาน',c:'#ffc94d',hx:0xffc94d},4:{n:'เทพเจ้า',c:'#ff6ab0',hx:0xff6ab0}};
 const tierOf=r=>TIER[r]||TIER[1];
 const statOf=d=>{const s=spOf(d),f=1+.1*(d.lv-1);return{hp:Math.round(s.base.hp*f),atk:Math.round(s.base.atk*f),def:Math.round(s.base.def*f),spd:s.base.spd+d.lv};};
-const power=d=>{const s=statOf(d);return Math.round(s.hp*.6+s.atk*4+s.def*3+s.spd*2);};
+const power=d=>{const s=statOf(d);return Math.round((s.hp*.6+s.atk*4+s.def*3+s.spd*2)*starPow(d.stars));};
 const lvCost=d=>60*d.lv;
 ;
 
@@ -3307,11 +3309,12 @@ async function starUp(m){
   if(SM.have<SM.need){toast('ต้องมี '+sp.name+' ซ้ำที่ไม่อยู่ในทีมอีก '+(SM.need-SM.have)+' ตัว');return;}
   const A=BOX.starArm; if(!A||A.uid!==m.uid||A.st!==st||Date.now()-A.t>6000){BOX.starArm={uid:m.uid,st,t:Date.now()};
     toast('แตะอีกครั้งเพื่อยืนยัน: ใช้ '+SM.list.map(x=>sp.name+' '+ELEM[elOfMon(x)].i+' Lv'+x.lv+(x.stars?' ★'+x.stars:'')).join(' + ')+' เป็นวัตถุดิบ');return;}
-  BOX.starArm=null; const before=skillLvs(m.sp,st);
+  BOX.starArm=null; const before=skillLvs(m.sp,st), pw0=power(m);
   const r=await act('star_up',{mon_id:m.uid,mat_ids:SM.list.map(x=>x.uid)}); if(!r)return;
   const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=spOf(m).skills[i];
   renderBox(); const ic=$('#bList .ic.sel'); if(ic)ic.classList.add('pop');
-  toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:''));
+  const nm=S.mons.find(x=>x.uid===m.uid), pw1=nm?power(nm):pw0;
+  toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:'')+(pw1>pw0?' · พลังรบ +'+fmt(pw1-pw0):''));
 }
 // หมุนโมเดลด้วยการลาก (มุมมอง 3D)
 addEventListener('pointerdown',e=>{if(!BOX.open||e.target.closest('button'))return;BOX.drag={x:e.clientX,s:BOX.spin};});

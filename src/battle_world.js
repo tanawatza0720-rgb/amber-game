@@ -30,7 +30,7 @@ const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6},{sp:'kaz
 const POWB=sp=>{const b=SPECIES[sp].base;return b.hp+b.atk*4+b.def*3+b.spd*2;};
 const REQ=n=>Math.round(1400*Math.pow(1.04,Math.max(1,n)-1));
 const stLabel=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1);
-const teamPow=()=>Math.round(TEAM.reduce((s,d)=>s+POWB(d.sp)*(1+.1*(d.lv-1)),0));
+const teamPow=()=>Math.round(TEAM.reduce((s,d)=>s+POWB(d.sp)*(1+.1*(d.lv-1))*starPow(d.stars),0));
 // จัดศัตรูให้พลังรวมประมาณ E
 // ธาตุของศัตรู: เปลี่ยนไปตามด่านและคลื่น ให้การจัดทีมตามธาตุมีผล
 const EN_ELS=['ลม','ดิน','น้ำ','ไฟ','มืด','แสง'];

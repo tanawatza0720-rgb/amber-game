@@ -167,6 +167,8 @@ const passiveOf=sp=>{const s=(SKILLS[sp]||[]).find(x=>x.type==='passive');return
    ทุกดาวที่ได้ สกิลขึ้น 1 Lv วนตามลำดับ: ท่า 2 → ท่า 3 → ติดตัว → ท่า 2 … (โจมตีปกติไม่อัป) · ค่าพลังไม่เพิ่ม */
 const STAR_MAX=6;
 const starCost=next=>next===3||next===6?2:1;          // ตัวซ้ำที่ต้องใช้เพื่อขึ้นไปดาว next
+const STAR_POW=.05; // ดาวละ +5% พลังรบ (6 ดาว = +30%) ตรงกับ _power บนเซิร์ฟเวอร์ · ค่าสถานะในสนามรบไม่เปลี่ยน
+const starPow=s=>1+STAR_POW*Math.max(0,Math.min(STAR_MAX,s||0));
 const SK_STEP=.1, PAS_STEP=.15;                         // สกิลแรงขึ้นต่อ Lv: ท่าโจมตี +10% · ติดตัว +15%
 function skillLvs(sp,stars){
   const L=SKILLS[sp]||[], up=L.filter(s=>s.id!=='s1'), n=up.length, st=Math.max(0,Math.min(STAR_MAX,stars||0));

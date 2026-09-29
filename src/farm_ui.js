@@ -208,7 +208,7 @@ function openAccount(){
     ['บัญชี',NET.mode!=='online'?'-':userLabel(NET.user)]]));
   if(NET.mode!=='online')d.append(para('ตอนนี้เชื่อมเซิร์ฟเวอร์ไม่ได้ ความคืบหน้าจะเก็บไว้ในเครื่องนี้ก่อน'));
   else if(NET.user&&NET.user.is_anonymous)d.append(para('บัญชีผู้เยี่ยมชมผูกกับเบราว์เซอร์นี้ ถ้าล้างข้อมูลเว็บจะหาย ผูกกับ Google เพื่อเล่นต่อได้ทุกเครื่อง'));
-  const f=el('div','nameRow'); const inp=el('input'); inp.value=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp);
+  const f=el('div','nameRow'); const inp=el('input'); inp.value=S.name; inp.maxLength=12; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp);
   const sv=el('button','sbtn small','บันทึกชื่อ'); sv.onclick=async()=>{if(await act('set_name',{new_name:inp.value})){toast('เปลี่ยนชื่อแล้ว');closeSheet();}}; f.append(sv); d.append(f);
   const acts=[]; if(NET.mode==='online'&&NET.user&&NET.user.is_anonymous)acts.push(['ผูกบัญชี Google',linkGoogle]);
   acts.push([NET.mode==='online'?'ออกจากระบบ':'กลับหน้าเข้าสู่ระบบ',async()=>{closeSheet();if(NET.mode==='online')await signOutAll();location.replace(redirectTo());},'ghost']);
@@ -222,7 +222,7 @@ setInterval(async()=>{if(NET.mode==='online'&&!NET.busy&&!document.hidden){try{a
 function onboard(){if(!S.named&&NET.mode==='online')openWelcome(); else if(!S.race)openRace();}
 function openWelcome(){
   const d=el('div'); d.append(para('ยินดีต้อนรับสู่ป่าอัมพร! นี่คือฟาร์มของคุณเอง ตั้งชื่อนักฝึกมอนสเตอร์ก่อนเริ่มเล่น'));
-  const f=el('div','nameRow'); const inp=el('input'); inp.value=(NET.user&&!NET.user.is_anonymous&&NET.user.user_metadata&&(NET.user.user_metadata.full_name||'').slice(0,24))||''; inp.placeholder=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp); d.append(f);
+  const f=el('div','nameRow'); const inp=el('input'); inp.value=(NET.user&&!NET.user.is_anonymous&&NET.user.user_metadata&&(NET.user.user_metadata.full_name||'').trim().slice(0,12))||''; inp.placeholder=S.name; inp.maxLength=12; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp); d.append(f);
   openSheet('ตั้งชื่อนักฝึก','รหัสผู้เล่น '+(S.uid||'-'),d,[['เริ่มเล่น',async()=>{const n=inp.value.trim()||S.name;if(await act('set_name',{new_name:n})){closeSheet();toast('สวัสดี '+S.name+'! มังกรอามาเทรุรออยู่ในฟาร์มแล้ว');if(!S.race)setTimeout(openRace,700);}}]]);
   setTimeout(()=>inp.focus(),50);
 }

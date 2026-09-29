@@ -21,7 +21,7 @@ const spOf=d=>SPEC[d.sp]||SPEC.kazemaru;
 const TIER={1:{n:'ทั่วไป',c:'#c9d1dc',hx:0xc9d1dc},2:{n:'หายาก',c:'#5fb3ff',hx:0x5fb3ff},3:{n:'ตำนาน',c:'#ffc94d',hx:0xffc94d},4:{n:'เทพเจ้า',c:'#ff6ab0',hx:0xff6ab0}};
 const tierOf=r=>TIER[r]||TIER[1];
 const statOf=d=>{const s=spOf(d),f=1+.1*(d.lv-1);return{hp:Math.round(s.base.hp*f),atk:Math.round(s.base.atk*f),def:Math.round(s.base.def*f),spd:s.base.spd+d.lv};};
-const power=d=>{const s=statOf(d);return Math.round(s.hp*.6+s.atk*4+s.def*3+s.spd*2);};
+const power=d=>{const s=statOf(d);return Math.round((s.hp*.6+s.atk*4+s.def*3+s.spd*2)*starPow(d.stars));};
 const lvCost=d=>60*d.lv;
 ;
 
@@ -228,11 +228,12 @@ async function starUp(m){
   if(SM.have<SM.need){toast('ต้องมี '+sp.name+' ซ้ำที่ไม่อยู่ในทีมอีก '+(SM.need-SM.have)+' ตัว');return;}
   const A=BOX.starArm; if(!A||A.uid!==m.uid||A.st!==st||Date.now()-A.t>6000){BOX.starArm={uid:m.uid,st,t:Date.now()};
     toast('แตะอีกครั้งเพื่อยืนยัน: ใช้ '+SM.list.map(x=>sp.name+' '+ELEM[elOfMon(x)].i+' Lv'+x.lv+(x.stars?' ★'+x.stars:'')).join(' + ')+' เป็นวัตถุดิบ');return;}
-  BOX.starArm=null; const before=skillLvs(m.sp,st);
+  BOX.starArm=null; const before=skillLvs(m.sp,st), pw0=power(m);
   const r=await act('star_up',{mon_id:m.uid,mat_ids:SM.list.map(x=>x.uid)}); if(!r)return;
   const after=skillLvs(m.sp,st+1), i=after.findIndex((v,j)=>v>before[j]), sk=spOf(m).skills[i];
   renderBox(); const ic=$('#bList .ic.sel'); if(ic)ic.classList.add('pop');
-  toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:''));
+  const nm=S.mons.find(x=>x.uid===m.uid), pw1=nm?power(nm):pw0;
+  toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:'')+(pw1>pw0?' · พลังรบ +'+fmt(pw1-pw0):''));
 }
 // หมุนโมเดลด้วยการลาก (มุมมอง 3D)
 addEventListener('pointerdown',e=>{if(!BOX.open||e.target.closest('button'))return;BOX.drag={x:e.clientX,s:BOX.spin};});
