@@ -1,5 +1,5 @@
 /* ================= ฟาร์มของผู้เล่น ================= */
-const FARM_R=17;
+const FARM_R=26, FS=FARM_R/17; // เกาะขยายกว้างขึ้น (เดิม 17) · ตัวเกาะใช้โมเดลเกาะของเผ่า (farm_race.js)
 const SM=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85},o||{}));
 const FT={
   grass:srgb(canvasTex(512,(x,s)=>{x.fillStyle='#5f9d45';x.fillRect(0,0,s,s);
@@ -29,12 +29,12 @@ const FT={
 function textTex(text,w,h,bg,fg,font){return srgb(canvasTex(256,(x,s)=>{x.fillStyle=bg;x.fillRect(0,0,s,s);x.fillStyle=fg;x.font=font||`bold ${s*.26}px "Chakra Petch", sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(text,s/2,s/2);}));}
 
 /* ---------- ท้องฟ้า เมฆ แสง ---------- */
-const sky=new THREE.Mesh(new THREE.SphereGeometry(240,32,16),new THREE.MeshBasicMaterial({map:FT.sky,side:THREE.BackSide,fog:false,toneMapped:false}));scene.add(sky);
+const SKY=new THREE.Mesh(new THREE.SphereGeometry(240,32,16),new THREE.MeshBasicMaterial({map:FT.sky,side:THREE.BackSide,fog:false,toneMapped:false}));scene.add(SKY);
 scene.fog=new THREE.Fog(0xcfe0f3,95,230);
 renderer.toneMappingExposure=.82;
-scene.add(new THREE.HemisphereLight(0xcfe3ff,0x5a7a45,.62));
+const HEMI=new THREE.HemisphereLight(0xcfe3ff,0x5a7a45,.62); scene.add(HEMI);
 const sun=new THREE.DirectionalLight(0xffe6c0,1.9); sun.position.set(18,30,12); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-24,right:24,top:24,bottom:-24,near:1,far:90}); sun.shadow.bias=-.0005; sun.shadow.normalBias=.04;
+sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-FARM_R-6,right:FARM_R+6,top:FARM_R+6,bottom:-FARM_R-6,near:1,far:100}); sun.shadow.bias=-.0005; sun.shadow.normalBias=.04;
 scene.add(sun);
 const bounce=new THREE.DirectionalLight(0xffc89a,.4); bounce.position.set(-14,6,-10); scene.add(bounce);
 { // ดวงอาทิตย์เรือง ๆ บนฟ้า
@@ -47,12 +47,13 @@ function cloudSprite(x,y,z,sz,op,v){const s=new THREE.Sprite(new THREE.SpriteMat
 for(let i=0;i<26;i++){const a=Math.random()*Math.PI*2, r=26+Math.random()*40; cloudSprite(Math.cos(a)*r,-6+Math.random()*14,Math.sin(a)*r,12+Math.random()*16,.85,.2+Math.random()*.3);}
 // ทะเลเมฆใต้เกาะ
 for(let i=0;i<46;i++){const a=Math.random()*Math.PI*2, r=8+Math.random()*80; cloudSprite(Math.cos(a)*r,-20-Math.random()*8,Math.sin(a)*r,26+Math.random()*30,.8,.12+Math.random()*.15);}
-{const g=new THREE.Mesh(new THREE.CircleGeometry(200,48),new THREE.MeshBasicMaterial({color:0x9fc4ee,fog:false,depthWrite:false,toneMapped:false}));g.rotation.x=-Math.PI/2;g.position.y=-26;scene.add(g);}
+const SEA=new THREE.Mesh(new THREE.CircleGeometry(200,48),new THREE.MeshBasicMaterial({color:0x9fc4ee,fog:false,depthWrite:false,toneMapped:false}));SEA.rotation.x=-Math.PI/2;SEA.position.y=-26;scene.add(SEA);
 
 /* ---------- เกาะ ---------- */
 const nz=a=>Math.sin(a*3+1)*.5+Math.sin(a*7+2)*.3+Math.sin(a*13+.5)*.2;
 const coastR=a=>FARM_R+nz(a)*1.3;
 const island=new THREE.Group(); scene.add(island);
+const ISL={}; // วัสดุหลักของเกาะ (ใช้เปลี่ยนธีมตามเผ่า)
 const AMBER_GLOW=[];
 {
   const sh=new THREE.Shape(); for(let i=0;i<=200;i++){const a=i/200*Math.PI*2, r=coastR(a); const x=Math.cos(a)*r, y=Math.sin(a)*r; i?sh.lineTo(x,y):sh.moveTo(x,y);}
@@ -60,20 +61,20 @@ const AMBER_GLOW=[];
   g.rotateX(Math.PI/2);
   const grassT=FT.grassTop.clone(); grassT.needsUpdate=true; grassT.repeat.set(.12,.12);
   const strT=FT.strata.clone(); strT.needsUpdate=true; strT.repeat.set(.06,.9);
-  const top=new THREE.Mesh(g,[SM(0xffffff,{map:grassT,roughness:.95}),SM(0xffffff,{map:strT,roughness:1})]);
+  const top=new THREE.Mesh(g,[SM(0xffffff,{map:grassT,roughness:.95}),SM(0xffffff,{map:strT,roughness:1})]); ISL.top=top.material[0]; ISL.side=top.material[1];
   top.position.y=-.45; top.receiveShadow=true; island.add(top);
   // ฐานหินใต้เกาะ เป็นชั้น ๆ
-  const ug=lathe([[0,-19],[1.4,-16.5],[3.6,-13],[6.4,-9.6],[9.6,-6.4],[12.2,-4],[14.8,-2.4],[16.6,-1.5],[17.4,-1.1]],96);
+  const ug=lathe([[0,-19],[1.4,-16.5],[3.6,-13],[6.4,-9.6],[9.6,-6.4],[12.2,-4],[14.8,-2.4],[16.6,-1.5],[17.4,-1.1]].map(([r,y])=>[r*FS,y*(1+(FS-1)*.6)]),96);
   const p=ug.attributes.position;
   for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),a=Math.atan2(z,x),r=Math.hypot(x,z);const k=coastR(a)/FARM_R;
     const j=1+(Math.sin(a*17+y*.8)*.07+Math.sin(a*5-y*.6)*.09+Math.sin(a*29+y*1.7)*.03);p.setXYZ(i,Math.cos(a)*r*k*j,y+Math.sin(a*9+r)*.4,Math.sin(a)*r*k*j);}
   ug.computeVertexNormals();
   const rockT=FT.strata.clone(); rockT.needsUpdate=true; rockT.repeat.set(5,2.2);
-  const under=new THREE.Mesh(ug,SM(0xb49c84,{map:rockT,roughness:1})); under.position.y=-.5; island.add(under);
+  const under=new THREE.Mesh(ug,SM(0xb49c84,{map:rockT,roughness:1})); under.position.y=-.5; island.add(under); ISL.under=under.material;
   // หินงอกห้อยใต้เกาะ
-  for(let i=0;i<16;i++){const a=Math.random()*6.28,r=3+Math.random()*10;const len=2+Math.random()*4;
+  for(let i=0;i<22;i++){const a=Math.random()*6.28,r=(3+Math.random()*10)*FS;const len=2+Math.random()*4;
     const c=new THREE.Mesh(new THREE.ConeGeometry(.6+Math.random()*.9,len,7),SM(0x8a735e,{map:FT.rock,roughness:1}));
-    c.rotation.x=Math.PI; c.position.set(Math.cos(a)*r,-6-(13-r)*.95-len*.35+Math.random(),Math.sin(a)*r); island.add(c);}
+    c.rotation.x=Math.PI; c.position.set(Math.cos(a)*r,-6-(13*FS-r)*.95-len*.35+Math.random(),Math.sin(a)*r); island.add(c);}
   // รากไม้และเถาวัลย์ห้อยจากขอบเกาะ
   const rootM=SM(0x5a3f2a,{roughness:1}), vineM=SM(0x4f8f3f,{roughness:.9});
   for(let i=0;i<44;i++){const a=i/44*Math.PI*2+Math.random()*.1, r=coastR(a)-.3-Math.random()*1.2, L=2+Math.random()*5, vine=i%3===0;
@@ -82,7 +83,7 @@ const AMBER_GLOW=[];
     if(vine)for(let k=1;k<5;k++){const lf=new THREE.Mesh(new THREE.SphereGeometry(.12,6,4),vineM);lf.position.copy(pts[k]);lf.scale.set(1,.6,1);island.add(lf);}}
   // ผลึกอัมพรเรืองแสงใต้เกาะ
   const crysM=SM(0xffb347,{emissive:0xff7a1a,emissiveIntensity:1.4,roughness:.2,metalness:.1,transparent:true,opacity:.95});
-  for(let i=0;i<14;i++){const a=Math.random()*6.28,t=Math.random(),r=(16.5-t*13)*coastR(a)/FARM_R,y=-2-t*14;
+  for(let i=0;i<14;i++){const a=Math.random()*6.28,t=Math.random(),r=(16.5-t*13)*FS*coastR(a)/FARM_R,y=-2-t*14;
     const g2=new THREE.Group(); g2.position.set(Math.cos(a)*r*.98,y,Math.sin(a)*r*.98); g2.lookAt(Math.cos(a)*r*3,y-4,Math.sin(a)*r*3); island.add(g2);
     for(let k=0;k<3;k++){const c=new THREE.Mesh(new THREE.OctahedronGeometry(.4,0),crysM);c.scale.set(.6,1.6+Math.random(),.6);c.position.set((k-1)*.35,0,.3);c.rotation.z=(k-1)*.4;g2.add(c);}
     AMBER_GLOW.push(glow(g2,0xffa040,3,[0,0,.6],.5));}
@@ -100,6 +101,8 @@ path([[0,16.2],[0,5.6]]); path([[-.8,3.5],[-4.6,.6]]); path([[1,3.5],[5,3.2]]); 
 
 /* ---------- ตัวช่วยอาคาร ---------- */
 const BUILDINGS=[], PICK=[], BLOCK=[];
+// ลานด้านหลังเกาะ เว้นว่างไว้ตั้งวิหาร/ปราสาทของเผ่า (farm_race.js)
+const CASTLE={x:0,z:-(FARM_R-7),r:7};BLOCK.push({x:CASTLE.x,z:CASTLE.z,r:CASTLE.r});
 function roofGeo(w,d,h){const g=lathe([[1,0],[.8,.1],[.62,.28],[.45,.5],[.3,.72],[.15,.9],[0,1]],4);g.rotateY(Math.PI/4);g.scale(w/1.414,h,d/1.414);return g;}
 const woodM=SM(0xffffff,{map:FT.wood}), darkWood=SM(0x3a2518,{roughness:.7}), redM=SM(0xb23a2c,{roughness:.6}), roofM=SM(0xffffff,{map:FT.roof,roughness:.6,metalness:.1}), whiteM=SM(0xf1eadb,{roughness:.9}), goldM=SM(0xd4a84a,{metalness:.9,roughness:.3});
 const warmGlow=SM(0xffd9a0,{emissive:0xffa24d,emissiveIntensity:1.6});
@@ -220,7 +223,7 @@ building('gate','ประตูเยี่ยมเพื่อน',0,10.6,1.6
 const waterfallT=FT.water.clone(); waterfallT.needsUpdate=true; waterfallT.repeat.set(1,2);
 const pondT=FT.pond.clone(); pondT.needsUpdate=true;
 {
-  const cliffM=SM(0x8f8478,{map:FT.rock,flatShading:true,roughness:1}), mossM=SM(0x4f8a3c,{flatShading:true,roughness:1});
+  const cliffM=SM(0x8f8478,{map:FT.rock,flatShading:true,roughness:1}), mossM=SM(0x4f8a3c,{flatShading:true,roughness:1}); ISL.cliff=cliffM; ISL.moss=mossM;
   [[-3.6,-10.6,2.2,5],[-1.4,-11.2,2.4,7],[3.6,-11,2.6,6.2],[5.8,-10,1.9,4.2],[-5.6,-9.8,1.8,3.6],[1.1,-11.8,2,7.8]].forEach(([x,z,r,h])=>{
     const c=new THREE.Mesh(new THREE.DodecahedronGeometry(1,1),cliffM);c.position.set(x,h*.45,z);c.scale.set(r,h*.55,r*.9);c.rotation.y=Math.random()*3;c.castShadow=c.receiveShadow=true;scene.add(c);
     const m=new THREE.Mesh(new THREE.SphereGeometry(1,10,6,0,Math.PI*2,0,Math.PI/2),mossM);m.position.set(x,h*.45+h*.5,z);m.scale.set(r*.8,.35,r*.75);scene.add(m);
@@ -319,21 +322,21 @@ const MIST=[];
 const ISLETS=[];
 {
   const mk=(x,y,z,R,tree)=>{const g=J(scene,x,y,z);
-    P(g,new THREE.CylinderGeometry(R,R*.92,.5,20),SM(0xffffff,{map:FT.grassTop}),[0,0,0]);
+    const itop=P(g,new THREE.CylinderGeometry(R,R*.92,.5,20),SM(0xffffff,{map:FT.grassTop}),[0,0,0]); g.userData.top=itop.material||itop;
     P(g,lathe([[0,-R*2.2],[R*.35,-R*1.6],[R*.7,-R],[R*.95,-.4],[R,-.2]],16),SM(0xb49c84,{map:FT.strata,roughness:1}),[0,0,0]);
     if(tree==='sakura'){sakura(0,0,R*.45,g).position.y=.25;}
     else if(tree==='pine'){const t=J(g,0,.25,0);t.scale.setScalar(R*.4);pineTree(t);}
     else{const cm=SM(0xffb347,{emissive:0xff7a1a,emissiveIntensity:1.4,roughness:.2});for(let k=0;k<4;k++){const c=new THREE.Mesh(new THREE.OctahedronGeometry(.3,0),cm);c.scale.set(.7,1.8+k*.3,.7);c.position.set((k-1.5)*.35,.6,0);c.rotation.z=(k-1.5)*.25;g.add(c);}glow(g,0xffa040,3.5,[0,.9,0],.5);}
     for(let k=0;k<5;k++){const a=Math.random()*6.28;const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.18+Math.random()*.2,0),stoneM);r.position.set(Math.cos(a)*R*.7,.3,Math.sin(a)*R*.7);g.add(r);}
     g.userData.b=[y,Math.random()*6]; ISLETS.push(g); return g;};
-  mk(-27,3,-14,2.6,'sakura'); mk(25,-1,-20,2.1,'pine'); mk(30,5,8,1.6,'amber'); mk(-24,-3,16,1.9,'pine'); mk(-6,8,-34,2.2,'sakura'); mk(12,1,-36,1.5,'amber');
+  const K=1.35; mk(-27*K,3,-14*K,2.6,'sakura'); mk(25*K,-1,-20*K,2.1,'pine'); mk(30*K,5,8*K,1.6,'amber'); mk(-24*K,-3,16*K,1.9,'pine'); mk(-6*K,8,-34*K,2.2,'sakura'); mk(12*K,1,-36*K,1.5,'amber');
 }
 const WIND={value:0};
 { // หญ้าและดอกไม้ (instanced) ไหวตามลม
   const gG=new THREE.ConeGeometry(.05,.42,3); gG.translate(0,.21,0);
   const gMat=SM(0xffffff,{roughness:.9});
   gMat.onBeforeCompile=sh=>{sh.uniforms.uTime=WIND;sh.vertexShader='uniform float uTime;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  vec4 ip=instanceMatrix[3]; float sw=sin(uTime*1.8+ip.x*.55+ip.z*.35)*.5+sin(uTime*3.1+ip.x*1.3)*.25; transformed.x+=sw*position.y*.35; transformed.z+=sw*position.y*.18;');};
-  const NG=5200;
+  const NG=9800;
   const gm=new THREE.InstancedMesh(gG,gMat,NG), fm=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.07,0),SM(0xffffff,{emissive:0x222222}),520);
   const d=new THREE.Object3D(), col=new THREE.Color(); let n=0,f=0,guard=0;
   const blocked=(x,z)=>BLOCK.some(b=>Math.hypot(x-b.x,z-b.z)<b.r*.9);
@@ -341,10 +344,10 @@ const WIND={value:0};
     d.position.set(x,0,z);d.rotation.set((Math.random()-.5)*.4,Math.random()*3,(Math.random()-.5)*.4);d.scale.setScalar(.7+Math.random()*.9);d.updateMatrix();gm.setMatrixAt(n,d.matrix);col.setHSL(.22+Math.random()*.08,.5,.3+Math.random()*.16);gm.setColorAt(n,col);n++;}
   gm.count=n;
   const fc=[0xffffff,0xffd24d,0xff8fb0,0xb58cff,0xff6b5a,0x8fd3ff]; guard=0;
-  while(f<520&&guard++<20000){const cl=Math.random()<.6, a=cl?(f%7)*.9+Math.random()*.25:Math.random()*6.28, r=cl?11+Math.random()*5:Math.sqrt(Math.random())*(FARM_R-.5),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!onIsland(x,z,.5)||blocked(x,z))continue;
+  while(f<520&&guard++<20000){const cl=Math.random()<.6, a=cl?(f%7)*.9+Math.random()*.25:Math.random()*6.28, r=cl?11+Math.random()*9:Math.sqrt(Math.random())*(FARM_R-.5),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!onIsland(x,z,.5)||blocked(x,z))continue;
     d.position.set(x,.3+Math.random()*.12,z);d.rotation.set(0,0,0);d.scale.setScalar(.8+Math.random()*.6);d.updateMatrix();fm.setMatrixAt(f,d.matrix);fm.setColorAt(f,col.setHex(fc[f%6]));f++;}
   fm.count=f;
-  gm.castShadow=false; gm.receiveShadow=true; gm.frustumCulled=false; scene.add(gm); scene.add(fm);
+  gm.castShadow=false; gm.receiveShadow=true; gm.frustumCulled=false; scene.add(gm); scene.add(fm); ISL.grass=gm; ISL.flowers=fm;
 }
 // ละอองเกสรลอยในอากาศ
 const POLLEN=[];for(let i=0;i<40;i++){const s=glow(scene,0xfff6c8,.18,[(Math.random()-.5)*30,.5+Math.random()*4,(Math.random()-.5)*30],.7);s.userData.p=[Math.random()*6,s.position.clone()];POLLEN.push(s);}
@@ -352,7 +355,7 @@ const POLLEN=[];for(let i=0;i<40;i++){const s=glow(scene,0xfff6c8,.18,[(Math.ran
 const BIRDS=[];{const bm=new THREE.MeshBasicMaterial({color:0x2a2a33,side:THREE.DoubleSide});
   for(let i=0;i<7;i++){const g=new THREE.Group();const ws=[-1,1].map(sx=>{const w=new THREE.Mesh(new THREE.PlaneGeometry(.7,.18),bm);w.position.x=sx*.35;g.add(w);return w;});g.userData.w=ws;g.userData.p=[Math.random()*6,26+Math.random()*10,9+Math.random()*5,.12+Math.random()*.06];scene.add(g);BIRDS.push(g);}}
 function worldTick(dt,T){
-  WIND.value=T;
+  WIND.value=T; if(typeof raceWorldTick==='function')raceWorldTick(dt,T);
   streamT.offset.y-=dt*.6; edgeFallT.offset.y+=dt*1.6;
   clouds.forEach(c=>{if(!c.userData.v)return;c.position.x+=c.userData.v*dt;if(c.position.x>90)c.position.x=-90;});
   MIST.forEach(m=>{const [a,p]=m.userData.p;m.position.y=p.y+Math.sin(T*.8+a)*.4;m.material.opacity=.18+.12*Math.sin(T*1.3+a);});
@@ -372,7 +375,7 @@ selRing.rotation.x=-Math.PI/2; selRing.position.y=.08; selRing.visible=false; sc
 /* ================= มอนสเตอร์เดินเล่น ================= */
 const AGENTS=[];
 function blockedSeg(ax,az,bx,bz,pad){for(const b of BLOCK){const vx=bx-ax,vz=bz-az,wx=b.x-ax,wz=b.z-az,L=vx*vx+vz*vz||1;const t=Math.max(0,Math.min(1,(wx*vx+wz*vz)/L));const dx=ax+vx*t-b.x,dz=az+vz*t-b.z;if(Math.hypot(dx,dz)<b.r+pad)return true;}return false;}
-function freePoint(pad){for(let k=0;k<200;k++){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*14.2,x=Math.cos(a)*r,z=Math.sin(a)*r;if(onIsland(x,z,1.5)&&!BLOCK.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+pad))return[x,z];}return[0,7];}
+function freePoint(pad){for(let k=0;k<200;k++){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*(FARM_R-4),x=Math.cos(a)*r,z=Math.sin(a)*r;if(onIsland(x,z,1.5)&&!BLOCK.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+pad))return[x,z];}return[0,7];}
 function addAgent(data,at,pop){
   const spc=SPEC[data.sp]||SPEC.kazemaru;
   if(spc.dragon&&DRAGON){const w=buildDragon();w.scale.setScalar(1.7);tintByEl(w,data.sp,data.el);scene.add(w);
@@ -438,6 +441,7 @@ function applyState(st){
   if(!st||!st.player)return; const p=st.player;
   Object.assign(S,{name:p.name,lv:p.lv,xp:p.xp,coins:p.coins,amber:p.amber,energy:p.energy,energyMax:p.energy_max,energyNext:p.energy_next,energySec:p.energy_sec,
     amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now(),mailNew:p.mail_new||0,race:p.race||null});
+  if(S.race&&typeof applyRaceTheme==='function')applyRaceTheme(S.race);
   S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null}));
   if(typeof renderHUD==='function')renderHUD();
 }

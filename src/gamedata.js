@@ -186,14 +186,14 @@ function skillsAt(sp,stars){
 const RACES={
   god:{n:'เผ่าเทพ',icon:'⚡',c:'#ffe08a',skill:'สายฟ้าพิโรธ',cd:10,hits:3,mult:1,
     desc:'ทุก 10 วินาที สายฟ้าฟาดศัตรูสุ่ม 3 ตัว ตัวละ 100% ของพลังโจมตีเฉลี่ยทีม',
-    lore:'ผู้สืบสายเลือดแห่งวิหารลอยฟ้า ควบคุมสายฟ้าจากเบื้องบน',glb:'race/gods-sky-island.glb'},
+    lore:'ผู้สืบสายเลือดแห่งวิหารลอยฟ้า ควบคุมสายฟ้าจากเบื้องบน',glb:'race/gods-sky-island.glb',statue:'race/statue-god.glb'},
   undead:{n:'อันเดด',icon:'☄️',c:'#b070ff',skill:'อุกกาบาตมรณะ',cd:14,mult:1.1,r:3.5,stun:.2,
     desc:'ทุก 14 วินาที อุกกาบาตตกใส่กลุ่มศัตรูที่หนาแน่นที่สุด 110% ในวงกว้าง โอกาส 20% ทำให้มึน',
-    lore:'ผู้ปลุกพลังจากนครแห่งความตาย เรียกอุกกาบาตทมิฬลงมาจากฟ้า',glb:'race/undead-necropolis-island.glb'},
+    lore:'ผู้ปลุกพลังจากนครแห่งความตาย เรียกอุกกาบาตทมิฬลงมาจากฟ้า',glb:'race/undead-necropolis-island.glb',statue:'race/statue-undead.glb'},
   beast:{n:'กึ่งมนุษย์',icon:'🌿',c:'#7fd46a',skill:'พรแห่งพงไพร',cd:12,heal:.1,
     desc:'ทุก 12 วินาที ฟื้นเลือดให้ทีมทุกตัว 10% ของเลือดสูงสุด',
-    lore:'ชนเผ่าแห่งต้นไม้ยักษ์ พลังของป่าเยียวยาพวกพ้องไม่รู้จบ',glb:'race/half-human-forest-island.glb'},
+    lore:'ชนเผ่าแห่งต้นไม้ยักษ์ พลังของป่าเยียวยาพวกพ้องไม่รู้จบ',glb:'race/half-human-forest-island.glb',statue:'race/statue-beast.glb'},
   human:{n:'มนุษย์',icon:'🚩',c:'#ffb35a',skill:'ธงศึกปลุกใจ',cd:18,atk:.2,dur:8,
     desc:'ทุก 18 วินาที ทั้งทีมโจมตีแรงขึ้น 20% นาน 8 วินาที',
-    lore:'ชาวนครหินผู้ยิ่งใหญ่ ธงศึกของพวกเขาปลุกใจนักรบให้ฮึกเหิม',glb:'race/human-city-island.glb'}};
+    lore:'ชาวนครหินผู้ยิ่งใหญ่ ธงศึกของพวกเขาปลุกใจนักรบให้ฮึกเหิม',glb:'race/human-city-island.glb',statue:'race/statue-human.glb'}};
 const RACE_ORDER=['god','undead','beast','human'];

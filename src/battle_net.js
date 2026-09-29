@@ -37,7 +37,10 @@ async function bnInit(){
     BN.sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storage:BSTORE,persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
     const {data}=await bTimeout(BN.sb.auth.getSession(),10000);
     if(!data||!data.session)return false;
-    const st=await brpc('game_state'); BN.online=true; bnApply(st); return true;
+    const st=await brpc('game_state');
+    // ยังไม่ได้ตั้งชื่อ/เลือกเผ่า -> ต้องกลับไปเลือกที่ฟาร์มก่อน (เล่นไม่ได้ถ้ายังไม่มีเผ่า)
+    if(st&&st.player&&(!st.player.named||!st.player.race)){location.replace('./index.html');return false;}
+    BN.online=true; bnApply(st); return true;
   }catch(e){console.warn('battle net',e);BN.online=false;return false;}
 }
 async function bnRefresh(){if(!BN.online)return;try{bnApply(await brpc('game_state'));}catch(e){}}
