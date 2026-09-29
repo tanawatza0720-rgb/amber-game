@@ -893,7 +893,7 @@ const AURA_WISP=false; // ควันลอย (ปิดไว้ให้อ�
 const AURA_VS=`#include <common>
 #include <skinning_pars_vertex>
 attribute vec3 auraN;
-uniform float uTime,uThick,uRise,uPush; varying float vRim; varying vec3 vW;
+uniform float uTime,uThick,uRise,uPush; varying float vRim,vLift; varying vec3 vW;
 void main(){
   vec3 objectNormal=auraN;
 #include <skinbase_vertex>
@@ -902,22 +902,28 @@ void main(){
 #include <begin_vertex>
 #include <skinning_vertex>
   vec3 wp=(modelMatrix*vec4(transformed,1.)).xyz;
-  float f=sin(wp.y*3.2-uTime*2.6+wp.x*1.7)*.5+.5, g=sin(wp.y*2.1-uTime*1.9+wp.z*2.3)*.5+.5;
-  transformed+=objectNormal*uThick*(.85+f*.3);
-  vec4 wq=modelMatrix*vec4(transformed,1.); wq.y+=uRise*f*g*clamp(normalize(mat3(modelMatrix)*objectNormal).y+.5,0.,1.);
+  float f=sin(wp.y*2.4-uTime*2.2+wp.x*1.3)*.5+.5;
+  // เปลวลิ้นไฟ: แถบแนวตั้งที่ส่ายช้าๆ แล้วพุ่งขึ้น (โค้งนุ่ม ไม่มีมุมแหลม)
+  float band=sin((wp.x+wp.z)*2.6+sin(wp.y*1.1-uTime*1.3)*1.4+uTime*.35)*.5+.5;
+  float tongue=band*band*(3.-2.*band)*(.55+.45*sin(wp.y*1.7-uTime*2.8)*.5+.225);
+  transformed+=objectNormal*uThick*(.9+f*.2);
+  vec3 wn=normalize(mat3(modelMatrix)*objectNormal);
+  vec4 wq=modelMatrix*vec4(transformed,1.); float lift=uRise*tongue*clamp(wn.y+.65,0.,1.); wq.y+=lift; vLift=uRise>0.?lift/uRise:0.;
   vec4 mvPosition=viewMatrix*wq; vec3 mvRim=mvPosition.xyz; mvPosition.xyz+=normalize(mvPosition.xyz)*uPush; gl_Position=projectionMatrix*mvPosition;
   vec3 N=normalize(transformedNormal); vRim=1.-abs(dot(N,normalize(-mvRim))); vW=wq.xyz;
 }`;
-const AURA_FS=`uniform vec3 uCol,uEdge; uniform float uTime,uAlpha,uAdd; varying float vRim; varying vec3 vW;
+const AURA_FS=`uniform vec3 uCol,uEdge; uniform float uTime,uAlpha,uAdd; varying float vRim,vLift; varying vec3 vW;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
 void main(){
-  vec2 q=vec2(vW.x*1.3+vW.z*1.2,vW.y*1.5-uTime*1.1);
-  float fl=n2(q)*.6+n2(q*1.9+3.1)*.4;
-  float inner=pow(1.-vRim,1.25);
-  float a=inner*(.5+.5*smoothstep(.15,.9,fl))*uAlpha;
-  vec3 col=mix(uCol,uEdge,uAdd>.5?inner*(.4+.6*fl):inner*.85);
-  gl_FragColor=vec4(col*(uAdd>.5?1.4:1.),clamp(a,0.,1.));
+  // เนื้อเปลวยืดตามแนวตั้ง ไหลขึ้นช้าๆ
+  vec2 q=vec2((vW.x+vW.z)*1.6,vW.y*.75-uTime*1.25);
+  float fl=n2(q)*.55+n2(q*2.1+3.1)*.3+n2(q*4.3+7.7)*.15;
+  float inner=pow(1.-vRim,1.4);
+  float tip=1.-smoothstep(.15,1.,vLift);                 // ปลายเปลวค่อยๆ จางหาย
+  float a=inner*(.45+.55*smoothstep(.1,.85,fl))*mix(.35,1.,tip)*uAlpha;
+  vec3 col=mix(uCol,uEdge,uAdd>.5?clamp(inner*(.35+.65*fl)*tip*1.2,0.,1.):inner*.85);
+  gl_FragColor=vec4(col*(uAdd>.5?1.5:1.),clamp(a,0.,1.));
 }`;
 // รวมทิศพื้นผิวของจุดที่ซ้อนกัน (ตะเข็บโมเดล) ให้เปลือกออร่าต่อกันเป็นผืนเดียว ไม่แตกเป็นเสี่ยง
 function auraNormals(geo){if(geo.attributes.auraN)return;const P=geo.attributes.position,N=geo.attributes.normal,n=P.count,key=new Array(n),acc=new Map();
@@ -942,7 +948,7 @@ function addAura(w,sp,el){
   meshes.forEach(o=>{ auraNormals(o.geometry);
     // ความหนาคิดจากขนาดตัวจริงบนจอ แปลงกลับเป็นหน่วยของโมเดลนั้น
     const ws=new THREE.Vector3();o.getWorldScale(ws);const wsc=Math.max(1e-4,(ws.x+ws.y+ws.z)/3);
-    [[.02,.05,A.add?.85:1.05],[.05,.16,A.add?.45:.6]].forEach(([t,r,a],li)=>{if(low&&li)return;
+    [[.016,.04,A.add?.8:1],[.036,.14,A.add?.5:.65],[.064,.34,A.add?.32:.42]].forEach(([t,r,a],li)=>{if(low&&li>1)return;
       const th=H*t/wsc, mat=mk(o.isSkinnedMesh,o.geometry,th,H*r,a);
       const s=o.isSkinnedMesh?new THREE.SkinnedMesh(o.geometry,mat):new THREE.Mesh(o.geometry,mat);
       if(o.isSkinnedMesh){s.bind(o.skeleton,o.bindMatrix);s.bindMode=o.bindMode;}
