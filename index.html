@@ -2137,7 +2137,9 @@ function hyLavaTex(){ // พื้นผิวลาวาวาดด้วย�
       const n=5;for(let k=0;k<n;k++){a+=rnd(-.35,.35);px+=Math.cos(a)*len/n;py+=Math.sin(a)*len/n;x.lineTo(px,py);if(Math.random()<.35)br(px,py,a+rnd(-1,1),len*.55,w*.6,d+1);}x.stroke();};
     for(let i=0;i<11;i++)br(0,0,i/11*6.283+rnd(-.2,.2),s*rnd(.3,.46),rnd(5,9),0);});
   const scorch=mk(256,(x,s)=>{const g=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,'rgba(25,8,4,.95)');g.addColorStop(.55,'rgba(40,12,6,.6)');g.addColorStop(1,'rgba(40,12,6,0)');x.fillStyle=g;x.fillRect(0,0,s,s);});
-  return HY_LAVA={pool,flow,crack,scorch};
+  const flame=mk(64,(x,s)=>{x.scale(1,1);const g=x.createRadialGradient(s/2,s*.78,1,s/2,s*.62,s*.5);g.addColorStop(0,'rgba(255,250,220,1)');g.addColorStop(.25,'rgba(255,190,60,.95)');g.addColorStop(.55,'rgba(255,90,10,.6)');g.addColorStop(1,'rgba(200,20,0,0)');
+    x.fillStyle=g;x.beginPath();x.moveTo(s/2,2);x.bezierCurveTo(s*.95,s*.45,s*.92,s*.98,s/2,s-1);x.bezierCurveTo(s*.08,s*.98,s*.05,s*.45,s/2,2);x.fill();});
+  return HY_LAVA={pool,flow,crack,scorch,flame};
 }
 function loadHydra(scale){
   scale=scale||10;
@@ -2188,8 +2190,8 @@ function makeHydra(root,pivot,body,sm,B,S){
   const fx=new THREE.Group(); root.add(fx);
   const dot=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');const g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);})();
   const POOL=[]; for(let i=0;i<260;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dot,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));s.visible=false;s.userData={life:0};fx.add(s);POOL.push(s);}
-  let pi=0; const emit=(p,v,col,size,life,grav)=>{let s=null;for(let k=0;k<POOL.length;k++){const c=POOL[(pi+k)%POOL.length];if(!c.visible){s=c;pi=(pi+k+1)%POOL.length;break;}}if(!s)return;
-    s.visible=true;s.position.copy(p);s.userData={v,life,max:life,size,grav:grav||0};s.material.color.setHex(col);s.scale.setScalar(size);};
+  let pi=0; const emit=(p,v,col,size,life,grav,fire)=>{let s=null;for(let k=0;k<POOL.length;k++){const c=POOL[(pi+k)%POOL.length];if(!c.visible){s=c;pi=(pi+k+1)%POOL.length;break;}}if(!s)return;
+    s.visible=true;s.position.copy(p);s.userData={v,life,max:life,size,grav:grav||0,fire:!!fire};s.material.color.setHex(col);s.material.blending=fire?THREE.NormalBlending:THREE.AdditiveBlending;s.scale.setScalar(size);};
   const rings=[]; const ring=(x,z,col,R,dur)=>{const m=new THREE.Mesh(new THREE.RingGeometry(.82,1,56),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.85,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));m.rotation.x=-Math.PI/2;m.position.set(x,.12,z);fx.add(m);rings.push({m,t:0,R,dur:dur||.8});};
   const dust=(x,z,n,col)=>{lavaBurst(x,z,Math.min(1.6,.35+n/28));for(let k=0;k<n;k++){const a=Math.random()*6.28,r=Math.random();emit(V3(x+Math.cos(a)*r*.08*S,.03*S,z+Math.sin(a)*r*.08*S),V3(Math.cos(a)*S*(.15+r*.3),S*(.15+Math.random()*.35),Math.sin(a)*S*(.15+r*.3)),col||0xd8b890,S*(.025+Math.random()*.02),.9,-S*.9);}};
   // ---------- ลาวา: แอ่งลาวาไหลใต้เท้าตลอดเวลา + รอยแตกลาวาทุกครั้งที่กระทืบ/กระแทกพื้น ----------
@@ -2198,6 +2200,19 @@ function makeHydra(root,pivot,body,sm,B,S){
   const FEET=['aL3','aR3','lL3','lR3'].filter(n=>B[n]);
   const pools=FEET.map((n,i)=>{const g=new THREE.Group();[0,1,2].forEach(k=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),k===2?lavaMat(LV.scorch,.7,1):lavaMat(k?LV.flow:LV.pool,k?.55:.9,!k));m.rotation.x=-Math.PI/2;m.position.y=k===2?.03:.04+k*.01;m.renderOrder=k===2?1:2+k;m.scale.setScalar(S*(k===2?.36:k?.3:.24));g.add(m);});fx.add(g);return {n,g,y0:0,ph:i*1.7,prevY:0};});
   const cracks=[];
+  // ---------- ไฟ: ลมหายใจไฟของหัวแดง + ไฟลุกค้างบนพื้นตรงที่พ่นโดน ----------
+  const FC=[new THREE.Color(0xffe070),new THREE.Color(0xff8a10),new THREE.Color(0xd8280a),new THREE.Color(0x40140a)];
+  const SMOKE=[];for(let i=0;i<70;i++){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:dot,color:0x2a2220,transparent:true,depthWrite:false,opacity:0}));m.visible=false;fx.add(m);SMOKE.push({s:m,life:0});}
+  const smoke=(p,sz)=>{const o=SMOKE.find(x=>!x.s.visible);if(!o)return;o.s.visible=true;o.s.position.copy(p);o.life=o.max=1.6+Math.random();o.sz=sz;o.v=V3((Math.random()-.5)*S*.04,S*(.12+Math.random()*.1),(Math.random()-.5)*S*.04);};
+  const flameMat=()=>new THREE.SpriteMaterial({map:LV.flame,color:0xffa050,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0});
+  const fires=[];
+  function firePatch(x,z){
+    if(fires.length>=16){const o=fires.shift();fx.remove(o.g);}
+    const g=new THREE.Group();g.position.set(x,0,z);fx.add(g);
+    const sc=new THREE.Mesh(new THREE.PlaneGeometry(1,1),lavaMat(LV.scorch,0,1));sc.rotation.x=-Math.PI/2;sc.position.y=.03;sc.scale.setScalar(S*(.2+Math.random()*.1));sc.renderOrder=1;g.add(sc);
+    const fl=[];for(let i=0;i<5;i++){const f=new THREE.Sprite(flameMat());const a=Math.random()*6.28,r=Math.random()*S*.06;f.position.set(Math.cos(a)*r,0,Math.sin(a)*r);f.userData={h:S*(.15+Math.random()*.16),w:S*(.07+Math.random()*.05),ph:Math.random()*6.28,sp:6+Math.random()*5};f.center.set(.5,0);g.add(f);fl.push(f);}
+    fires.push({g,sc,fl,t:0,life:4.5+Math.random()*2});
+  }
   function lavaBurst(x,z,k){
     const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),lavaMat(LV.crack,1));m.rotation.x=-Math.PI/2;m.rotation.z=Math.random()*6.28;m.position.set(x,.05,z);m.renderOrder=3;fx.add(m);
     const sc=new THREE.Mesh(new THREE.PlaneGeometry(1,1),lavaMat(LV.scorch,.75,1));sc.rotation.x=-Math.PI/2;sc.position.set(x,.035,z);sc.renderOrder=1;fx.add(sc);
@@ -2329,7 +2344,14 @@ function makeHydra(root,pivot,body,sm,B,S){
       for(let i=0;i<5;i++){const n='n_'+h+i;if(!B[n])continue;
         const pitch=am*(pp*NW[i]*1.6+(i<2?-xx*.22:xx*.18)-v('dead')*(i<2?0:.14));
         L(n,target(n,axes[n].pitch,pitch,UP,am*yy*NW[i]*1.5));}
-      const bm=beams[h];if(bm&&bm.t>0){bm.t-=dt;const {p,d}=tip(h);d.multiplyScalar(1-bm.aim*.5).add(fwdDir().multiplyScalar(bm.aim)).normalize();
+      const bm=beams[h];if(bm&&bm.t>0&&h==='red'){bm.t-=dt;const {p,d}=tip(h);d.multiplyScalar(1-bm.aim*.5).add(fwdDir().multiplyScalar(bm.aim)).normalize();d.y=Math.min(d.y,-.6);d.normalize();
+        // ลำไฟ: ขาวเหลืองที่ปาก -> ส้ม -> แดง -> จางเป็นควัน กว้างขึ้นเรื่อย ๆ
+        for(let k=0;k<7;k++){const sp=S*(1.25+Math.random()*.6),vv=d.clone().multiplyScalar(sp).add(V3((Math.random()-.5)*S*.3,(Math.random()-.5)*S*.2,(Math.random()-.5)*S*.3));emit(p,vv,0xfff4c0,S*(.035+Math.random()*.04),.55+Math.random()*.2,S*.25,true);}
+        if(Math.random()<.6)emit(p,V3(0,0,0),0xffe6a0,S*.1,.1);
+        // จุดที่ไฟตกถึงพื้น -> ไฟลุกค้าง
+        bm.gt=(bm.gt||0)-dt; if(bm.gt<=0){bm.gt=.11;const t=Math.min(-p.y/Math.min(-.05,d.y),S*1.3),q=p.clone().addScaledVector(d,t*(.7+Math.random()*.35));
+          if(!bm.last||Math.hypot(q.x-bm.last.x,q.z-bm.last.z)>S*.06){firePatch(q.x+(Math.random()-.5)*S*.08,q.z+(Math.random()-.5)*S*.08);bm.last=q;}}}
+      else if(bm&&bm.t>0){bm.t-=dt;const {p,d}=tip(h);d.multiplyScalar(1-bm.aim*.5).add(fwdDir().multiplyScalar(bm.aim)).normalize();
         for(let k=0;k<4;k++){const vv=d.clone().multiplyScalar(S*(1.7+Math.random()*.7)).add(V3((Math.random()-.5)*S*.22,(Math.random()-.5)*S*.18,(Math.random()-.5)*S*.22));emit(p,vv,HY_EL[h],S*(.04+Math.random()*.05),.6);}
         if(Math.random()<.5)emit(p,V3(0,0,0),0xffffff,S*.09,.12);}});
     // ปีก (+ ยกขึ้น/หุบ, − กางลง)
@@ -2360,8 +2382,16 @@ function makeHydra(root,pivot,body,sm,B,S){
       pl.prevY=h;});
     for(let i=cracks.length-1;i>=0;i--){const c=cracks[i];c.t+=dt;const k=c.t/c.life,g=Math.min(1,c.t/.18);c.m.scale.setScalar(c.R*(.6+.4*g));c.m.material.opacity=k<.55?1:Math.max(0,1-(k-.55)/.45);c.sc.scale.setScalar(c.R*1.1*(.6+.4*g));c.sc.material.opacity=.75*(k<.6?1:Math.max(0,1-(k-.6)/.4));
       if(k>=1){[c.m,c.sc].forEach(o=>{fx.remove(o);o.geometry.dispose();o.material.dispose();});cracks.splice(i,1);}}
+    // ไฟลุกบนพื้น + ควัน
+    for(let i=fires.length-1;i>=0;i--){const F=fires[i];F.t+=dt;const k=F.t/F.life, a=Math.min(1,F.t/.25)*(k<.7?1:Math.max(0,1-(k-.7)/.3));
+      F.sc.material.opacity=.8*Math.min(1,F.t/.3)*(k<.85?1:Math.max(0,1-(k-.85)/.15));
+      F.fl.forEach(f=>{const u=f.userData,fl=.75+.25*Math.sin(T*u.sp+u.ph)+.12*Math.sin(T*u.sp*2.3+u.ph*2);f.scale.set(u.w*(1.1-.2*fl),u.h*fl*a,1);f.material.opacity=a*.95;f.material.rotation=Math.sin(T*3+u.ph)*.12;});
+      if(a>.3&&Math.random()<dt*3)smoke(V3(F.g.position.x,S*.12,F.g.position.z),S*.12);
+      if(a>.3&&Math.random()<dt*4)emit(V3(F.g.position.x+(Math.random()-.5)*S*.06,S*.05,F.g.position.z+(Math.random()-.5)*S*.06),V3((Math.random()-.5)*S*.05,S*(.2+Math.random()*.2),(Math.random()-.5)*S*.05),0xffa030,S*.012,1,S*.05);
+      if(k>=1){fx.remove(F.g);F.g.traverse(o=>{if(o.material)o.material.dispose();if(o.geometry)o.geometry.dispose();});fires.splice(i,1);}}
+    SMOKE.forEach(o=>{if(!o.s.visible)return;o.life-=dt;if(o.life<=0){o.s.visible=false;return;}const k=o.life/o.max;o.s.position.addScaledVector(o.v,dt);o.s.material.opacity=Math.sin(k*Math.PI)*.4;o.s.scale.setScalar(o.sz*(2.2-k*1.2));});
     // อนุภาค + วง
-    POOL.forEach(s=>{if(!s.visible)return;const u=s.userData;u.life-=dt;if(u.life<=0){s.visible=false;return;}u.v.y+=u.grav*dt;s.position.addScaledVector(u.v,dt);u.v.multiplyScalar(1-dt*1.1);const k=u.life/u.max;s.material.opacity=Math.min(1,k*1.4);s.scale.setScalar(u.size*(1.9-k));});
+    POOL.forEach(s=>{if(!s.visible)return;const u=s.userData;u.life-=dt;if(u.life<=0){s.visible=false;return;}u.v.y+=u.grav*dt;s.position.addScaledVector(u.v,dt);u.v.multiplyScalar(1-dt*1.1);const k=u.life/u.max;s.material.opacity=Math.min(1,k*1.4);s.scale.setScalar(u.size*(1.9-k));if(u.fire){s.material.opacity=Math.min(.95,k*1.6);const t=1-k;if(t<.22)s.material.color.lerpColors(FC[0],FC[1],t/.22);else if(t<.6)s.material.color.lerpColors(FC[1],FC[2],(t-.22)/.38);else s.material.color.lerpColors(FC[2],FC[3],(t-.6)/.4);s.scale.setScalar(u.size*(1+t*2.2));}});
     for(let i=rings.length-1;i>=0;i--){const r=rings[i];r.t+=dt;const k=r.t/r.dur,e=1-(1-k)*(1-k);r.m.scale.setScalar(r.R*(.15+e));r.m.material.opacity=.85*(1-k);if(k>=1){fx.remove(r.m);r.m.geometry.dispose();r.m.material.dispose();rings.splice(i,1);}}
   }
   // ออร่าดำทมิฬของบอส (ใช้ระบบออร่าเดียวกับมอนสเตอร์ ถ้ามี gamedata.js)
