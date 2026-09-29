@@ -190,3 +190,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 - รูปปั้นประจำเผ่า `RACES[r].statue` (`race/statue-*.glb` จาก Tripo ~16k สามเหลี่ยม ~0.5MB) หาที่ว่างด้วย `statueSpot()` (ฝั่งตะวันออกเฉียงใต้ หันหากล้อง)
 - ยังไม่ตั้งชื่อ/ยังไม่เลือกเผ่า = เล่นไม่ได้: ฟาร์มเปิดหน้าเลือกเผ่า (`onboard()`), หน้าสนามรบส่งกลับ `index.html` (`bnInit` ใน battle_net.js)
 - ลดโพลีกอนโมเดล Tripo: meshoptimizer `simplifyWithAttributes` (UV น้ำหนัก 1, flag `Permissive`) + texture 512 JPEG — ได้ผลดีกว่า `gltf-transform optimize --simplify` ที่ติดตะเข็บ UV
+
+## กลับจากสนามรบไม่ต้องล็อกอินใหม่
+- ลิงก์กลับฟาร์มในสนามรบใช้ `index.html?back=1` · ฟาร์มจำไว้ใน `sessionStorage.amber_in` (id ผู้ใช้) ตอนเข้าเกมออนไลน์ → ถ้ายังล็อกอินบัญชีเดิมอยู่ `lgStart()` เข้าเกมให้อัตโนมัติ (รีโหลดในแท็บเดิมก็เข้าเลย)
+- เปิดแท็บใหม่/ปิดเบราว์เซอร์ หรือกด "เปลี่ยนบัญชี" (`signOutAll` ล้างค่า) จะเห็นหน้าเข้าสู่ระบบตามปกติ

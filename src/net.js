@@ -68,7 +68,7 @@ async function switchToGoogle(){ // บัญชี Google นี้มีเซ
 async function signInGuest(){
   const r=await withTimeout(NET.sb.auth.signInAnonymously(),8000); if(r.error)throw r.error; NET.user=r.data.user; return NET.user;
 }
-async function signOutAll(){ try{await NET.sb.auth.signOut({scope:'local'});}catch(e){} NET.user=null; }
+async function signOutAll(){ try{sessionStorage.removeItem('amber_in');}catch(e){} try{await NET.sb.auth.signOut({scope:'local'});}catch(e){} NET.user=null; }
 // เข้าเกม: โหลดเซฟจากเซิร์ฟเวอร์ (หรือในเครื่องถ้าออฟไลน์)
 async function enterOnline(){ NET.mode='online'; applyState(await api('game_state')); }
 function enterOffline(){ NET.mode='offline'; applyState(LOCAL.call('game_state',{})); }

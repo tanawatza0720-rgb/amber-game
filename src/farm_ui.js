@@ -270,10 +270,15 @@ async function lgStart(){
     return;}
   if(errCode||errDesc)lgNote('เข้าสู่ระบบไม่สำเร็จ: '+(errDesc||errCode).replace(/\+/g,' '),'warn');
   else if(NET.sessionLost)lgNote('การเข้าสู่ระบบครั้งก่อนหมดอายุแล้ว กรุณาเข้าสู่ระบบอีกครั้ง','warn');
+  // กลับมาจากสนามรบ/รีโหลดในแท็บเดิม: บัญชีเดิมยังล็อกอินอยู่ -> เข้าเกมต่อเลยไม่ต้องกดใหม่
+  let back=false; try{back=!!NET.user&&(q.get('back')==='1'||sessionStorage.getItem('amber_in')===NET.user.id);}catch(e){}
+  if(q.get('back'))history.replaceState(null,'',location.pathname);
+  if(back){lgShow('go','กำลังกลับเข้าฟาร์ม…');try{await enterOnline();enterGame();return;}catch(e){console.warn(e);lgNote('โหลดเซฟไม่สำเร็จ กดเข้าเกมอีกครั้ง','warn');}}
   lgShow(NET.user?'in':'out');
 }
 function enterGame(){
   if(entered)return; entered=true;
+  try{if(NET.mode==='online'&&NET.user)sessionStorage.setItem('amber_in',NET.user.id);}catch(e){}
   document.body.classList.remove('preLogin'); $('#login').classList.add('bye'); setTimeout(()=>$('#login').hidden=true,450);
   renderHUD(); distTo=64;
   if(modelsReady){syncAgents(); onboard();}

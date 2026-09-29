@@ -39,7 +39,7 @@ async function bnInit(){
     if(!data||!data.session)return false;
     const st=await brpc('game_state');
     // ยังไม่ได้ตั้งชื่อ/เลือกเผ่า -> ต้องกลับไปเลือกที่ฟาร์มก่อน (เล่นไม่ได้ถ้ายังไม่มีเผ่า)
-    if(st&&st.player&&(!st.player.named||!st.player.race)){location.replace('./index.html');return false;}
+    if(st&&st.player&&(!st.player.named||!st.player.race)){location.replace('./index.html?back=1');return false;}
     BN.online=true; bnApply(st); return true;
   }catch(e){console.warn('battle net',e);BN.online=false;return false;}
 }
