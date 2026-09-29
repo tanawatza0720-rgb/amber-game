@@ -25,6 +25,12 @@ body.big .num{font-size:15px}body.big .num.crit{font-size:20px}body.big .num.inf
 /* แผงเลือดข้างจอ: ทีมเรา = ซ้าย, ศัตรู = ขวา */
 .hpcol{position:fixed;top:calc(74px + env(safe-area-inset-top,0px));width:150px;display:flex;flex-direction:column;gap:3px;pointer-events:none;z-index:2}
 #hpL{left:8px}#hpR{right:8px}
+body.hasRace #hpL{top:calc(112px + env(safe-area-inset-top,0px))}
+#raceChip{position:fixed;left:8px;top:calc(74px + env(safe-area-inset-top,0px));width:150px;display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:9px;background:rgba(10,8,6,.7);border:1px solid var(--rc,#ffb35a);box-shadow:0 0 10px color-mix(in srgb,var(--rc,#ffb35a) 35%,transparent);pointer-events:none;z-index:2}
+#raceChip .ic{font-size:16px}#raceChip>div{flex:1;min-width:0}#raceChip b{display:block;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--rc,#ffb35a)}
+#raceChip .rb{height:4px;border-radius:2px;background:rgba(255,255,255,.12);margin-top:2px;overflow:hidden}#raceChip .rb i{display:block;height:100%;width:0;background:var(--rc,#ffb35a)}
+#skname.race{background:linear-gradient(90deg,rgba(40,24,10,.2),rgba(40,24,10,.85),rgba(40,24,10,.2));font-size:20px}
+@media (max-width:600px){#raceChip{width:112px;top:calc(96px + env(safe-area-inset-top,0px))}body.hasRace #hpL{top:calc(130px + env(safe-area-inset-top,0px))}}
 .hrow2{padding:3px 6px 4px;border-radius:8px;background:rgba(10,8,6,.62);border:1px solid rgba(255,255,255,.1);transition:opacity .4s,transform .4s}
 .hrow2.p{border-left:3px solid #3fcf7f}.hrow2.e{border-right:3px solid #d8392c}
 .hrow2.boss{border-color:rgba(255,90,78,.7);box-shadow:0 0 10px rgba(255,70,50,.35)}.hrow2.boss .nm{color:#ffb4a8}
@@ -169,6 +175,7 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
 </style>
 <div id="view"></div>
 <div id="ov"></div>
+<div id="raceChip" hidden><span class="ic"></span><div><b></b><div class="rb"><i></i></div></div></div>
 <div id="hpL" class="hpcol"></div><div id="hpR" class="hpcol"></div>
 <div id="stageMsg" hidden></div>
 <div id="hud" hidden>

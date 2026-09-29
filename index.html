@@ -126,6 +126,19 @@ body.preLogin #top,body.preLogin #rail,body.preLogin #dock,body.preLogin #hint,b
 @media (prefers-reduced-motion:reduce){.lgCard{animation:none}.lgWait::before{animation:none}}
 /* ===== คลังมอนสเตอร์ (หน้าต่างไอคอน) ===== */
 body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.boxOpen #mtag,body.boxOpen #sheet{display:none!important}
+#racePick{position:fixed;inset:0;z-index:8;pointer-events:auto;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
+body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,body.raceOpen #mtag{visibility:hidden}
+.rpTop{text-align:center;text-shadow:0 2px 8px #000}.rpTop h1{margin:0;font-family:'Chakra Petch',sans-serif;font-size:24px;color:#ffe6b8}.rpTop p{margin:4px 0 0;font-size:12px;color:#d8cfe8}
+#rpLoad{margin-top:6px;font-size:12px;color:#ffd9a0}
+.rpArr{position:absolute;top:42%;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(10,8,16,.55);color:#fff;font-size:26px;line-height:1}
+#rpPrev{left:10px}#rpNext{right:10px}
+.rpCard{width:100%;max-width:420px;background:rgba(14,10,20,.82);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:12px 14px 14px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#rpTabs{display:flex;justify-content:center;gap:8px;margin-bottom:6px}#rpTabs button{width:42px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);font-size:20px}
+#rpTabs button.on{border-color:#ffd9a0;background:rgba(255,200,120,.2);box-shadow:0 0 10px rgba(255,200,120,.35)}
+#rpName{margin:2px 0 0;text-align:center;font-family:'Chakra Petch',sans-serif;font-size:22px}#rpLore{margin:2px 0 8px;text-align:center;font-size:12px;color:var(--muted)}
+.rpSk{background:rgba(255,255,255,.05);border-radius:12px;padding:8px 10px}.rpSk small{font-size:10px;color:var(--muted)}.rpSk b{display:block;font-size:15px}.rpSk p{margin:2px 0 0;font-size:12px;color:#e8e0f0}
+#rpOk{margin-top:10px;width:100%;height:46px;border-radius:12px;border:1px solid #ffd9a0;background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;font-weight:700;font-size:15px}
+#rpOk.arm{background:linear-gradient(180deg,#ff9a7a,#c8402b);color:#fff;border-color:#ffc0a8;animation:pulse 1s infinite}
 #box{position:fixed;inset:0;z-index:5;background:rgba(10,7,5,.55);display:flex;align-items:center;justify-content:center;padding:calc(8px + env(safe-area-inset-top,0px)) 8px calc(8px + env(safe-area-inset-bottom,0px))}
 #box[hidden]{display:none}
 #box.v3d{background:none;pointer-events:none}
@@ -258,6 +271,13 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
   <div id="shActs"></div>
 </section>
 <div id="mtag" hidden><div id="mtName"></div><div id="mtInfo"></div></div>
+<div id="racePick" hidden>
+  <div class="rpTop"><h1>เลือกเผ่าของคุณ</h1><p>เลือกได้ครั้งเดียว แต่ละเผ่ามีสกิลเผ่าช่วยทีมในสนามรบ</p><div id="rpLoad">กำลังโหลดดินแดน…</div></div>
+  <button id="rpPrev" class="rpArr" aria-label="เผ่าก่อนหน้า">‹</button><button id="rpNext" class="rpArr" aria-label="เผ่าถัดไป">›</button>
+  <div class="rpCard"><div id="rpTabs"></div><h2 id="rpName"></h2><p id="rpLore"></p>
+    <div class="rpSk"><small>สกิลเผ่า</small><b id="rpSkill"></b><p id="rpDesc"></p></div>
+    <button id="rpOk"></button></div>
+</div>
 <div id="box" hidden>
   <div class="bWin" role="dialog" aria-label="มอนสเตอร์">
     <div class="bBar"><h2>มอนสเตอร์ <b id="bCount"></b></h2><button id="bClose" aria-label="ปิด">×</button></div>
@@ -1032,6 +1052,24 @@ function skillsAt(sp,stars){
     return o;});
 }
 
+/* ================= เผ่า (เลือกครั้งเดียวตอนเริ่มเกม) =================
+   สกิลเผ่าใช้อัตโนมัติในสนามรบตามคูลดาวน์ (วินาที) · คำนวณจากพลังโจมตีเฉลี่ยของทีม ไม่แรงเกินสกิลตัวละคร
+   god: สายฟ้าฟาดศัตรูสุ่ม · undead: อุกกาบาตใส่กลุ่มศัตรู · beast: ฮีลทั้งทีม · human: บัพโจมตีทั้งทีม */
+const RACES={
+  god:{n:'เผ่าเทพ',icon:'⚡',c:'#ffe08a',skill:'สายฟ้าพิโรธ',cd:10,hits:3,mult:1,
+    desc:'ทุก 10 วินาที สายฟ้าฟาดศัตรูสุ่ม 3 ตัว ตัวละ 100% ของพลังโจมตีเฉลี่ยทีม',
+    lore:'ผู้สืบสายเลือดแห่งวิหารลอยฟ้า ควบคุมสายฟ้าจากเบื้องบน',glb:'race/gods-sky-island.glb'},
+  undead:{n:'อันเดด',icon:'☄️',c:'#b070ff',skill:'อุกกาบาตมรณะ',cd:14,mult:1.1,r:3.5,stun:.2,
+    desc:'ทุก 14 วินาที อุกกาบาตตกใส่กลุ่มศัตรูที่หนาแน่นที่สุด 110% ในวงกว้าง โอกาส 20% ทำให้มึน',
+    lore:'ผู้ปลุกพลังจากนครแห่งความตาย เรียกอุกกาบาตทมิฬลงมาจากฟ้า',glb:'race/undead-necropolis-island.glb'},
+  beast:{n:'กึ่งมนุษย์',icon:'🌿',c:'#7fd46a',skill:'พรแห่งพงไพร',cd:12,heal:.1,
+    desc:'ทุก 12 วินาที ฟื้นเลือดให้ทีมทุกตัว 10% ของเลือดสูงสุด',
+    lore:'ชนเผ่าแห่งต้นไม้ยักษ์ พลังของป่าเยียวยาพวกพ้องไม่รู้จบ',glb:'race/half-human-forest-island.glb'},
+  human:{n:'มนุษย์',icon:'🚩',c:'#ffb35a',skill:'ธงศึกปลุกใจ',cd:18,atk:.2,dur:8,
+    desc:'ทุก 18 วินาที ทั้งทีมโจมตีแรงขึ้น 20% นาน 8 วินาที',
+    lore:'ชาวนครหินผู้ยิ่งใหญ่ ธงศึกของพวกเขาปลุกใจนักรบให้ฮึกเหิม',glb:'race/human-city-island.glb'}};
+const RACE_ORDER=['god','undead','beast','human'];
+
 /* ================= เชื่อมต่อเซิร์ฟเวอร์ (Supabase) =================
    ออนไลน์: ทุกการใช้เหรียญ/อัมพร/สุ่มไข่/อัปเลเวล ให้เซิร์ฟเวอร์ตัดสิน (ดู setup_v2.sql)
    ออฟไลน์: ถ้าต่อเซิร์ฟเวอร์ไม่ได้ ใช้ LocalServer ที่มีกติกาเดียวกัน เก็บในเครื่องนี้ */
@@ -1041,7 +1079,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–24 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -1146,7 +1184,7 @@ const LOCAL=(()=>{
   function state(){const now=Date.now();return{player:{name:D.name,lv:D.lv,xp:D.xp,coins:D.coins,amber:D.amber,energy:D.energy,energy_max:C.energy_max,
     energy_next:D.energy>=C.energy_max?0:Math.max(0,C.energy_sec-Math.floor((now-D.energy_at)/1000)),energy_sec:C.energy_sec,
     amber_in:Math.max(0,Math.ceil((D.amber_at-now)/1000)),daily_streak:D.daily_streak,daily_claimed:D.daily_last===today(),hatch_count:D.hatch_count,
-    pity:D.pity,pity_max:C.pity_max,quests:{...D.quests},team:[...D.team],slots:C.slots,named:!!D.named,uid:'ในเครื่องนี้'},monsters:D.mons.map(m=>({...m}))};}
+    race:D.race||null,pity:D.pity,pity_max:C.pity_max,quests:{...D.quests},team:[...D.team],slots:C.slots,named:!!D.named,uid:'ในเครื่องนี้'},monsters:D.mons.map(m=>({...m}))};}
   const mon=id=>D.mons.find(m=>m.id===id)||fail('no_monster');
   const F={
     game_state:()=>state(),
@@ -1163,6 +1201,7 @@ const LOCAL=(()=>{
       if(!Array.isArray(mat_ids)||mat_ids.length!==need||new Set(mat_ids).size!==need)fail('bad_material');
       const xs=mat_ids.map(id=>mon(id));if(xs.some(x=>x.id===m.id||x.sp!==m.sp))fail('not_same_species');if(xs.some(x=>D.team.includes(x.id)))fail('material_in_team');
       D.mons=D.mons.filter(x=>!mat_ids.includes(x.id));m.stars=st+1;return{stars:m.stars};},
+    set_race:({r})=>{if(!RACES[r])fail('bad_race');if(D.race)fail('race_locked');D.race=r;return{race:r};},
     mail_list:()=>[],
     claim_mail:()=>fail('no_mail'),
     set_team:({ids})=>{if(!Array.isArray(ids)||ids.length<1||ids.length>6||new Set(ids).size!==ids.length||!ids.every(i=>D.mons.some(m=>m.id===i)))fail('bad_team');D.team=[...ids];return{};},
@@ -2488,7 +2527,7 @@ const save=()=>{SafeStore.setItem('amber_mail_read',S.mailRead?'1':'0');};
 function applyState(st){
   if(!st||!st.player)return; const p=st.player;
   Object.assign(S,{name:p.name,lv:p.lv,xp:p.xp,coins:p.coins,amber:p.amber,energy:p.energy,energyMax:p.energy_max,energyNext:p.energy_next,energySec:p.energy_sec,
-    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now(),mailNew:p.mail_new||0});
+    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now(),mailNew:p.mail_new||0,race:p.race||null});
   S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null}));
   if(typeof renderHUD==='function')renderHUD();
 }
@@ -2498,7 +2537,7 @@ function syncAgents(){AGENTS.forEach(a=>{scene.remove(a.w);});AGENTS.length=0;PI
 const fmt=n=>n.toLocaleString('en-US');
 function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
 function renderHUD(){
-  $('#pname').textContent=S.name; $('#plv').textContent='Lv '+S.lv; $('#pxp').style.width=Math.min(100,S.xp)+'%'; $('#netDot').className=NET.mode; $('#netDot').title=NET.mode==='online'?'ออนไลน์ · เซฟบนเซิร์ฟเวอร์':'ออฟไลน์ · เซฟในเครื่องนี้'; $('#avaT').textContent=S.name.slice(0,1);
+  $('#pname').textContent=S.name; $('#plv').textContent='Lv '+S.lv+(S.race&&RACES[S.race]?' · '+RACES[S.race].icon+' '+RACES[S.race].n:''); $('#pxp').style.width=Math.min(100,S.xp)+'%'; $('#netDot').className=NET.mode; $('#netDot').title=NET.mode==='online'?'ออนไลน์ · เซฟบนเซิร์ฟเวอร์':'ออฟไลน์ · เซฟในเครื่องนี้'; $('#avaT').textContent=S.name.slice(0,1);
   $('#rEnergy').textContent=S.energy+'/'+S.energyMax; $('#rCoin').textContent=fmt(S.coins); $('#rAmber').textContent=fmt(S.amber);
   $('#bDaily').hidden=S.dailyClaimed; $('#bMail').hidden=!S.mailNew; $('#bMail').textContent=S.mailNew||'';
   const qDone=questList().filter(q=>q.cur>=q.need&&!q.claimed).length; $('#bQuest').hidden=!qDone; $('#bQuest').textContent=qDone;
@@ -2693,7 +2732,7 @@ function loop(){
   camera.position.set(camT.x,camT.y+Math.sin(PITCH)*dist,camT.z+Math.cos(PITCH)*dist);
   if(shakeCam>0){shakeCam=Math.max(0,shakeCam-dt*.8);camera.position.x+=(Math.random()-.5)*shakeCam;camera.position.y+=(Math.random()-.5)*shakeCam;}
   camera.lookAt(camT);
-  if(BOX.open)boxFrame(dt,T); else renderer.render(scene,camera);
+  if(RP.open)raceFrame(dt,T); else if(BOX.open)boxFrame(dt,T); else renderer.render(scene,camera);
 }
 const fmtClock=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 /* ---------- บัญชีผู้เล่น ---------- */
@@ -2714,10 +2753,12 @@ $('.profile').onclick=openAccount;
 // ดึงสถานะจากเซิร์ฟเวอร์ใหม่ทุก 2 นาที (พลังงาน/ต้นไม้ตรงกับเซิร์ฟเวอร์)
 setInterval(async()=>{if(NET.mode==='online'&&!NET.busy&&!document.hidden){try{applyState(await api('game_state'));}catch(e){}}},120000);
 // ครั้งแรกที่เข้าเกม: ให้ตั้งชื่อตัวเอง
+// ขั้นตอนเริ่มเกม: ตั้งชื่อ (ครั้งแรก) → เลือกเผ่า (ครั้งแรก)
+function onboard(){if(!S.named&&NET.mode==='online')openWelcome(); else if(!S.race)openRace();}
 function openWelcome(){
   const d=el('div'); d.append(para('ยินดีต้อนรับสู่ป่าอัมพร! นี่คือฟาร์มของคุณเอง ตั้งชื่อนักฝึกมอนสเตอร์ก่อนเริ่มเล่น'));
   const f=el('div','nameRow'); const inp=el('input'); inp.value=(NET.user&&!NET.user.is_anonymous&&NET.user.user_metadata&&(NET.user.user_metadata.full_name||'').slice(0,24))||''; inp.placeholder=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp); d.append(f);
-  openSheet('ตั้งชื่อนักฝึก','รหัสผู้เล่น '+(S.uid||'-'),d,[['เริ่มเล่น',async()=>{const n=inp.value.trim()||S.name;if(await act('set_name',{new_name:n})){closeSheet();toast('สวัสดี '+S.name+'! มังกรอามาเทรุรออยู่ในฟาร์มแล้ว');}}]]);
+  openSheet('ตั้งชื่อนักฝึก','รหัสผู้เล่น '+(S.uid||'-'),d,[['เริ่มเล่น',async()=>{const n=inp.value.trim()||S.name;if(await act('set_name',{new_name:n})){closeSheet();toast('สวัสดี '+S.name+'! มังกรอามาเทรุรออยู่ในฟาร์มแล้ว');if(!S.race)setTimeout(openRace,700);}}]]);
   setTimeout(()=>inp.focus(),50);
 }
 /* ---------- หน้าเข้าสู่ระบบ (ขึ้นทุกครั้งก่อนเข้าเกม) ---------- */
@@ -2770,7 +2811,7 @@ function enterGame(){
   if(entered)return; entered=true;
   document.body.classList.remove('preLogin'); $('#login').classList.add('bye'); setTimeout(()=>$('#login').hidden=true,450);
   renderHUD(); distTo=64;
-  if(modelsReady){syncAgents(); if(!S.named&&NET.mode==='online')openWelcome();}
+  if(modelsReady){syncAgents(); onboard();}
   else {$('#loadMsg').hidden=false;}
   if(NET.mode!=='online')toast('เล่นแบบออฟไลน์ ความคืบหน้าเก็บในเครื่องนี้');
 }
@@ -2778,9 +2819,63 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
   lgStart();
   Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon(),loadSpider()]).then(()=>{
     modelsReady=true; for(const k in THUMB)delete THUMB[k];
-    if(entered){$('#loadMsg').hidden=true; syncAgents(); if(!S.named&&NET.mode==='online')openWelcome();}
+    if(entered){$('#loadMsg').hidden=true; syncAgents(); onboard();}
   });
 }
+
+/* ================= หน้าเลือกเผ่า (ครั้งแรกที่เข้าเกม · เลือกแล้วเปลี่ยนไม่ได้) =================
+   เกาะลอยฟ้า 4 เผ่าหมุนเป็นวงล้อ แตะลูกศร/ปัดจอ/แตะไอคอนเพื่อดูแต่ละเผ่า */
+const RP={open:false,idx:0,rot:0,isl:{},arm:0,loading:false};
+const rScene=new THREE.Scene(), rCam=new THREE.PerspectiveCamera(34,1,.1,200);
+{ const c=document.createElement('canvas');c.width=16;c.height=256;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,256);
+  g.addColorStop(0,'#10182e');g.addColorStop(.55,'#2a2a4a');g.addColorStop(1,'#4a3a3a');x.fillStyle=g;x.fillRect(0,0,16,256);
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;rScene.background=t;
+  rScene.add(new THREE.HemisphereLight(0xdfe8ff,0x3a2a30,1.05)); const d=new THREE.DirectionalLight(0xfff0dc,1.35); d.position.set(4,8,6); rScene.add(d);
+  const r2=new THREE.DirectionalLight(0x9fb8ff,.5); r2.position.set(-6,3,-4); rScene.add(r2);
+  RP.stars=[];for(let i=0;i<60;i++){const s=glow(rScene,0xffffff,.08+Math.random()*.1,[(Math.random()-.5)*40,2+Math.random()*16,-14-Math.random()*10],.6);s.userData.p=Math.random()*6;RP.stars.push(s);} }
+const RP_R=5.2; // รัศมีวงล้อเกาะ
+function rpAngle(i){return (i-RP.idx)*Math.PI*2/RACE_ORDER.length;}
+function openRace(){
+  if(RP.open)return; RP.open=true; RP.arm=0; const el=$('#racePick'); el.hidden=false; document.body.classList.add('raceOpen'); rpRender();
+  if(!RP.loading){RP.loading=true;let n=0;
+    RACE_ORDER.forEach(k=>new THREE.GLTFLoader().load(RACES[k].glb,g=>{const o=g.scene;o.traverse(m=>{if(m.isMesh){m.castShadow=false;if(m.material&&ENV){m.material.envMap=ENV;m.material.envMapIntensity=.35;}}});
+      const box=new THREE.Box3().setFromObject(o),s=2.6/Math.max(.01,box.getSize(new THREE.Vector3()).x);o.scale.setScalar(s);
+      const w=new THREE.Group();w.add(o);w.userData.k=k;rScene.add(w);RP.isl[k]=w;
+      const gl=glow(w,new THREE.Color(RACES[k].c).getHex(),5.5,[0,-.3,-.6],.28);w.userData.halo=gl;
+      $('#rpLoad').textContent='กำลังโหลดดินแดน '+(++n)+'/4';if(n===4)$('#rpLoad').hidden=true;},undefined,()=>{$('#rpLoad').textContent='โหลดดินแดนไม่สำเร็จ ลองรีเฟรช';}));}
+}
+function closeRace(){RP.open=false;$('#racePick').hidden=true;document.body.classList.remove('raceOpen');}
+function rpGo(d){RP.idx=(RP.idx+d+RACE_ORDER.length)%RACE_ORDER.length;RP.arm=0;rpRender();}
+function rpRender(){
+  const k=RACE_ORDER[RP.idx],R=RACES[k];
+  $('#rpName').textContent=R.n; $('#rpName').style.color=R.c; $('#rpLore').textContent=R.lore;
+  $('#rpSkill').textContent=R.icon+' '+R.skill; $('#rpSkill').style.color=R.c; $('#rpDesc').textContent=R.desc;
+  document.querySelectorAll('#rpTabs button').forEach((b,i)=>b.classList.toggle('on',i===RP.idx));
+  const ok=$('#rpOk'); ok.textContent=RP.arm?'แตะอีกครั้งเพื่อยืนยัน · เลือกแล้วเปลี่ยนไม่ได้':'เลือก '+R.n; ok.classList.toggle('arm',!!RP.arm); ok.style.setProperty('--rc',R.c);
+}
+function raceFrame(dt,T){
+  const tgt=0; RP.rot+=(tgt-RP.rot)*Math.min(1,dt*5);
+  RACE_ORDER.forEach((k,i)=>{const w=RP.isl[k];if(!w)return;const a=rpAngle(i);
+    const cur=w.userData.a==null?a:w.userData.a+Math.atan2(Math.sin(a-w.userData.a),Math.cos(a-w.userData.a))*Math.min(1,dt*5);w.userData.a=cur;
+    w.position.set(Math.sin(cur)*RP_R,1.1+Math.sin(T*1.1+i*1.7)*.15+(i===RP.idx?.25:0),Math.cos(cur)*RP_R-RP_R);
+    w.rotation.y+=dt*(i===RP.idx?.35:.12); const sel=i===RP.idx, s=sel?1.15:.72; w.scale.setScalar(w.scale.x+(s-w.scale.x)*Math.min(1,dt*6));
+    if(w.userData.halo)w.userData.halo.material.opacity=sel?.3+.08*Math.sin(T*2):.05;});
+  RP.stars.forEach(s=>{s.material.opacity=.25+.35*Math.sin(T*1.3+s.userData.p);});
+  const port=rCam.aspect<.9; rCam.position.set(0,port?2.4:2.1,port?12.5:9.2); rCam.lookAt(0,port?-.2:.3,-1.2);
+  renderer.render(rScene,rCam);
+}
+function rpResize(){const r=renderer.domElement;rCam.aspect=r.clientWidth/Math.max(1,r.clientHeight);rCam.updateProjectionMatrix();}
+addEventListener('resize',rpResize); setTimeout(rpResize,0);
+$('#rpPrev').onclick=()=>rpGo(-1); $('#rpNext').onclick=()=>rpGo(1);
+RACE_ORDER.forEach((k,i)=>{const b=document.createElement('button');b.textContent=RACES[k].icon;b.title=RACES[k].n;b.onclick=()=>{RP.idx=i;RP.arm=0;rpRender();};$('#rpTabs').append(b);});
+{ let sx=null; $('#racePick').addEventListener('pointerdown',e=>{if(e.target.closest('button,.rpCard'))return;sx=e.clientX;});
+  $('#racePick').addEventListener('pointerup',e=>{if(sx==null)return;const d=e.clientX-sx;sx=null;if(Math.abs(d)>40)rpGo(d<0?1:-1);}); }
+$('#rpOk').onclick=async()=>{
+  const k=RACE_ORDER[RP.idx];
+  if(!RP.arm||Date.now()-RP.arm>6000){RP.arm=Date.now();rpRender();return;}
+  RP.arm=0; const r=await act('set_race',{r:k}); if(!r){rpRender();return;}
+  S.race=k; closeRace(); renderHUD(); toast('ยินดีต้อนรับสู่'+RACES[k].n+'! สกิลเผ่า "'+RACES[k].skill+'" จะช่วยทีมในสนามรบ');
+};
 
 /* ================= คลังมอนสเตอร์ (ดูมอนสเตอร์ที่มี · อัปเลเวล · วิวัฒนาการ · จัดทีม) ================= */
 const SPEC={

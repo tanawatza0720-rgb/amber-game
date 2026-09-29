@@ -18,6 +18,7 @@ function rowGone(u){const r=u.row;if(!r)return;r.classList.add('dead');if(u.side
 function statusOf(u){const L=[];
   if(u.stun||u.stunT>0)L.push(['💫','bad','มึน']);
   const ta=teamAtkOf(u.side); if(ta)L.push(['⚔️','good','โจมตี +'+Math.round(ta*100)+'%']);
+  if(raceAtkBonus(u.side))L.push(['🚩','good','ธงศึก โจมตี +'+Math.round(RACES.human.atk*100)+'%']);
   const p=u.pas||{}; if(p.dr)L.push(['🛡️','good','รับดาเมจ −'+Math.round(p.dr*100)+'%']);
   if(p.revive&&!u.revived)L.push(['💖','good','เก้าชีวิต (ยังไม่ใช้)']);
   if(p.dmgLow)L.push(['🎯','good','แรงขึ้นใส่ศัตรูเลือดน้อย']);

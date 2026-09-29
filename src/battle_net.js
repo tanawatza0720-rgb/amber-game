@@ -23,7 +23,7 @@ async function brpc(fn,args){
 let msgT=0;
 function bMsg(t){const m=$('#bMsg');m.textContent=t;m.hidden=false;clearTimeout(msgT);msgT=setTimeout(()=>m.hidden=true,3500);}
 function bnApply(st){
-  if(!st||!st.player)return; BN.state=st; BN.at=Date.now();
+  if(!st||!st.player)return; BN.state=st; BN.at=Date.now(); RACE=RACES[st.player.race]?st.player.race:null; raceChip();
   const mons=st.monsters||[], ids=(st.player.team||[]).map(Number);
   let team=ids.map(id=>mons.find(m=>Number(m.id)===id)).filter(Boolean);
   if(!team.length)team=[...mons].sort((a,b)=>b.lv-a.lv).slice(0,6);

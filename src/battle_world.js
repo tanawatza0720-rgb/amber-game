@@ -222,7 +222,7 @@ function dealHit(att,t,skill){
   const ap=att.pas||{}, tp=t.pas||{}, em=elMul(att.el,t.el);
   const crit=Math.random()<.15+(ap.crit||0);
   let d=att.atk*skill.mult*(.9+Math.random()*.2)*(crit?1.5:1)*60/(60+t.def);
-  d*=em*(1+teamAtkOf(att.side));
+  d*=em*(1+teamAtkOf(att.side)+(typeof raceAtkBonus==='function'?raceAtkBonus(att.side):0));
   if(ap.dmgLow&&t.hp<t.maxHp*.5)d*=1+ap.dmgLow;
   if(tp.dr)d*=1-tp.dr;
   d=Math.max(1,Math.round(d));

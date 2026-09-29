@@ -2,7 +2,7 @@
 const fmt=n=>n.toLocaleString('en-US');
 function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
 function renderHUD(){
-  $('#pname').textContent=S.name; $('#plv').textContent='Lv '+S.lv; $('#pxp').style.width=Math.min(100,S.xp)+'%'; $('#netDot').className=NET.mode; $('#netDot').title=NET.mode==='online'?'ออนไลน์ · เซฟบนเซิร์ฟเวอร์':'ออฟไลน์ · เซฟในเครื่องนี้'; $('#avaT').textContent=S.name.slice(0,1);
+  $('#pname').textContent=S.name; $('#plv').textContent='Lv '+S.lv+(S.race&&RACES[S.race]?' · '+RACES[S.race].icon+' '+RACES[S.race].n:''); $('#pxp').style.width=Math.min(100,S.xp)+'%'; $('#netDot').className=NET.mode; $('#netDot').title=NET.mode==='online'?'ออนไลน์ · เซฟบนเซิร์ฟเวอร์':'ออฟไลน์ · เซฟในเครื่องนี้'; $('#avaT').textContent=S.name.slice(0,1);
   $('#rEnergy').textContent=S.energy+'/'+S.energyMax; $('#rCoin').textContent=fmt(S.coins); $('#rAmber').textContent=fmt(S.amber);
   $('#bDaily').hidden=S.dailyClaimed; $('#bMail').hidden=!S.mailNew; $('#bMail').textContent=S.mailNew||'';
   const qDone=questList().filter(q=>q.cur>=q.need&&!q.claimed).length; $('#bQuest').hidden=!qDone; $('#bQuest').textContent=qDone;
@@ -197,7 +197,7 @@ function loop(){
   camera.position.set(camT.x,camT.y+Math.sin(PITCH)*dist,camT.z+Math.cos(PITCH)*dist);
   if(shakeCam>0){shakeCam=Math.max(0,shakeCam-dt*.8);camera.position.x+=(Math.random()-.5)*shakeCam;camera.position.y+=(Math.random()-.5)*shakeCam;}
   camera.lookAt(camT);
-  if(BOX.open)boxFrame(dt,T); else renderer.render(scene,camera);
+  if(RP.open)raceFrame(dt,T); else if(BOX.open)boxFrame(dt,T); else renderer.render(scene,camera);
 }
 const fmtClock=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 /* ---------- บัญชีผู้เล่น ---------- */
@@ -218,10 +218,12 @@ $('.profile').onclick=openAccount;
 // ดึงสถานะจากเซิร์ฟเวอร์ใหม่ทุก 2 นาที (พลังงาน/ต้นไม้ตรงกับเซิร์ฟเวอร์)
 setInterval(async()=>{if(NET.mode==='online'&&!NET.busy&&!document.hidden){try{applyState(await api('game_state'));}catch(e){}}},120000);
 // ครั้งแรกที่เข้าเกม: ให้ตั้งชื่อตัวเอง
+// ขั้นตอนเริ่มเกม: ตั้งชื่อ (ครั้งแรก) → เลือกเผ่า (ครั้งแรก)
+function onboard(){if(!S.named&&NET.mode==='online')openWelcome(); else if(!S.race)openRace();}
 function openWelcome(){
   const d=el('div'); d.append(para('ยินดีต้อนรับสู่ป่าอัมพร! นี่คือฟาร์มของคุณเอง ตั้งชื่อนักฝึกมอนสเตอร์ก่อนเริ่มเล่น'));
   const f=el('div','nameRow'); const inp=el('input'); inp.value=(NET.user&&!NET.user.is_anonymous&&NET.user.user_metadata&&(NET.user.user_metadata.full_name||'').slice(0,24))||''; inp.placeholder=S.name; inp.maxLength=24; inp.setAttribute('aria-label','ชื่อผู้เล่น'); f.append(inp); d.append(f);
-  openSheet('ตั้งชื่อนักฝึก','รหัสผู้เล่น '+(S.uid||'-'),d,[['เริ่มเล่น',async()=>{const n=inp.value.trim()||S.name;if(await act('set_name',{new_name:n})){closeSheet();toast('สวัสดี '+S.name+'! มังกรอามาเทรุรออยู่ในฟาร์มแล้ว');}}]]);
+  openSheet('ตั้งชื่อนักฝึก','รหัสผู้เล่น '+(S.uid||'-'),d,[['เริ่มเล่น',async()=>{const n=inp.value.trim()||S.name;if(await act('set_name',{new_name:n})){closeSheet();toast('สวัสดี '+S.name+'! มังกรอามาเทรุรออยู่ในฟาร์มแล้ว');if(!S.race)setTimeout(openRace,700);}}]]);
   setTimeout(()=>inp.focus(),50);
 }
 /* ---------- หน้าเข้าสู่ระบบ (ขึ้นทุกครั้งก่อนเข้าเกม) ---------- */
@@ -274,7 +276,7 @@ function enterGame(){
   if(entered)return; entered=true;
   document.body.classList.remove('preLogin'); $('#login').classList.add('bye'); setTimeout(()=>$('#login').hidden=true,450);
   renderHUD(); distTo=64;
-  if(modelsReady){syncAgents(); if(!S.named&&NET.mode==='online')openWelcome();}
+  if(modelsReady){syncAgents(); onboard();}
   else {$('#loadMsg').hidden=false;}
   if(NET.mode!=='online')toast('เล่นแบบออฟไลน์ ความคืบหน้าเก็บในเครื่องนี้');
 }
@@ -282,6 +284,6 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
   lgStart();
   Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหลดมอนสเตอร์ '+Math.round(p*100)+'%';}),loadDragon(),loadSpider()]).then(()=>{
     modelsReady=true; for(const k in THUMB)delete THUMB[k];
-    if(entered){$('#loadMsg').hidden=true; syncAgents(); if(!S.named&&NET.mode==='online')openWelcome();}
+    if(entered){$('#loadMsg').hidden=true; syncAgents(); onboard();}
   });
 }

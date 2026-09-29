@@ -126,6 +126,19 @@ body.preLogin #top,body.preLogin #rail,body.preLogin #dock,body.preLogin #hint,b
 @media (prefers-reduced-motion:reduce){.lgCard{animation:none}.lgWait::before{animation:none}}
 /* ===== คลังมอนสเตอร์ (หน้าต่างไอคอน) ===== */
 body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.boxOpen #mtag,body.boxOpen #sheet{display:none!important}
+#racePick{position:fixed;inset:0;z-index:8;pointer-events:auto;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
+body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,body.raceOpen #mtag{visibility:hidden}
+.rpTop{text-align:center;text-shadow:0 2px 8px #000}.rpTop h1{margin:0;font-family:'Chakra Petch',sans-serif;font-size:24px;color:#ffe6b8}.rpTop p{margin:4px 0 0;font-size:12px;color:#d8cfe8}
+#rpLoad{margin-top:6px;font-size:12px;color:#ffd9a0}
+.rpArr{position:absolute;top:42%;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(10,8,16,.55);color:#fff;font-size:26px;line-height:1}
+#rpPrev{left:10px}#rpNext{right:10px}
+.rpCard{width:100%;max-width:420px;background:rgba(14,10,20,.82);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:12px 14px 14px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#rpTabs{display:flex;justify-content:center;gap:8px;margin-bottom:6px}#rpTabs button{width:42px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);font-size:20px}
+#rpTabs button.on{border-color:#ffd9a0;background:rgba(255,200,120,.2);box-shadow:0 0 10px rgba(255,200,120,.35)}
+#rpName{margin:2px 0 0;text-align:center;font-family:'Chakra Petch',sans-serif;font-size:22px}#rpLore{margin:2px 0 8px;text-align:center;font-size:12px;color:var(--muted)}
+.rpSk{background:rgba(255,255,255,.05);border-radius:12px;padding:8px 10px}.rpSk small{font-size:10px;color:var(--muted)}.rpSk b{display:block;font-size:15px}.rpSk p{margin:2px 0 0;font-size:12px;color:#e8e0f0}
+#rpOk{margin-top:10px;width:100%;height:46px;border-radius:12px;border:1px solid #ffd9a0;background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;font-weight:700;font-size:15px}
+#rpOk.arm{background:linear-gradient(180deg,#ff9a7a,#c8402b);color:#fff;border-color:#ffc0a8;animation:pulse 1s infinite}
 #box{position:fixed;inset:0;z-index:5;background:rgba(10,7,5,.55);display:flex;align-items:center;justify-content:center;padding:calc(8px + env(safe-area-inset-top,0px)) 8px calc(8px + env(safe-area-inset-bottom,0px))}
 #box[hidden]{display:none}
 #box.v3d{background:none;pointer-events:none}
@@ -258,6 +271,13 @@ body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.
   <div id="shActs"></div>
 </section>
 <div id="mtag" hidden><div id="mtName"></div><div id="mtInfo"></div></div>
+<div id="racePick" hidden>
+  <div class="rpTop"><h1>เลือกเผ่าของคุณ</h1><p>เลือกได้ครั้งเดียว แต่ละเผ่ามีสกิลเผ่าช่วยทีมในสนามรบ</p><div id="rpLoad">กำลังโหลดดินแดน…</div></div>
+  <button id="rpPrev" class="rpArr" aria-label="เผ่าก่อนหน้า">‹</button><button id="rpNext" class="rpArr" aria-label="เผ่าถัดไป">›</button>
+  <div class="rpCard"><div id="rpTabs"></div><h2 id="rpName"></h2><p id="rpLore"></p>
+    <div class="rpSk"><small>สกิลเผ่า</small><b id="rpSkill"></b><p id="rpDesc"></p></div>
+    <button id="rpOk"></button></div>
+</div>
 <div id="box" hidden>
   <div class="bWin" role="dialog" aria-label="มอนสเตอร์">
     <div class="bBar"><h2>มอนสเตอร์ <b id="bCount"></b></h2><button id="bClose" aria-label="ปิด">×</button></div>

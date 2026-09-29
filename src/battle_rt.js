@@ -47,6 +47,7 @@ async function clipStrike(u,nm,sp,onHit,multi){
 const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'}};
 function rtTick(dt,T){
   if(!RT)return;
+  raceTick(dt);
   UNITS.forEach(u=>{
     if(!u.alive)return;
     if(u.stun&&u.dragon){u.stun=0;u.stunT=1.6;u.dizzy=1;stopMove(u,1);dragonSet(u,{droop:1,flapAmp:.25},.25);}
@@ -158,7 +159,7 @@ function rtSpawn(wv){
   });
 }
 async function rtBattle(st,opts){
-  stage=st; OPTS=opts||{}; running=true; RT={manual:!!OPTS.manual};
+  stage=st; OPTS=opts||{}; running=true; RT={manual:!!OPTS.manual}; raceReset();
   UNITS.forEach(removeUnit); UNITS=[]; PICKU=[]; RIGS=[]; clearTrails();
   TEAM.forEach((d,i)=>{const u=rtInit(makeUnit('P',d,i));if(hasClip(u,'battlecry')&&(OPTS.banner||OPTS.manual)){u.holdT=1.3;setTimeout(()=>u.alive&&u.inner.userData.play('battlecry',{speed:1.7,fade:.15}),150);}else if(u.dragon&&(OPTS.banner||OPTS.manual)){u.holdT=1.4;setTimeout(()=>u.alive&&dragonRoar(u,700),150);}});
   document.body.classList.add('rt'); camMode={type:'wide'}; camK=1.6; actRing.visible=tgtRing.visible=false;
