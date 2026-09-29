@@ -2,7 +2,7 @@
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json',morihime:'mrh/morihime_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -169,12 +169,6 @@ function buildMeshyEvo(m,key){
     const a=(i0*nb+bi)*4,b=(i1*nb+bi)*4; _qa.set(q[a],q[a+1],q[a+2],q[a+3]); out.set(q[b],q[b+1],q[b+2],q[b+3]); return out.copy(_qa.slerp(out,fr));};
   function clipW(bi,b,baseW){const D=sampleD(CS.cur,bi,new THREE.Quaternion());
     if(CS.prev&&CS.fade<1){const Dp=sampleD(CS.prev,bi,_qb);D.copy(Dp.slerp(D,CS.fade));}
-    // ตัวละครใหม่มีท่าพักกระดูกต่างจากต้นฉบับ ใช้การหมุนที่เปลี่ยนจากท่ายืนแทนทิศสัมบูรณ์
-    if((key==='hakuneko'||key==='morihime')&&MXA.clips.idle){const q=MXA.clips.idle.q,i=bi*4;
-      _qa.set(q[i],q[i+1],q[i+2],q[i+3]).invert();
-      const leg=key==='morihime'&&(b===B.hips||/(UpLeg|Leg|Foot|Toe)/.test(b.name));
-      const t=leg&&!['idle','walk','run'].includes(CS.cur.name)?.95:key==='morihime'?.3:.15;
-      return D.multiply(_qa).slerp(_q3.identity(),t).multiply(baseW);}
     return D.multiply(CS.Qal[bi]).multiply(b.userData.W);}
   function play(name,o){o=o||{};if(!CS||!MXA.clips[name])return Promise.resolve();
     if(CS.cur&&CS.cur.done)CS.cur.done();
