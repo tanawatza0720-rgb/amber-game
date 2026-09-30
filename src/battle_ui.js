@@ -397,4 +397,4 @@ document.body.classList.add('big');
   el.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.12:1/1.12);},{passive:false});
 }
 // ดีบัก: battle.html?dbg=1 เปิด window.__B (กล้อง/ยูนิต) ไว้ตรวจท่าทางตัวละครใกล้ ๆ
-if(/[?&]dbg=1/.test(location.search))window.__B={RTS,UNITS,camera,MXA:typeof MXA!=='undefined'?MXA:null,setDist:d=>{RTS.dist=d;RTS.manual=99;}};
+if(/[?&]dbg=1/.test(location.search))window.__B={RTS,get UNITS(){return UNITS;},camera,MXA:typeof MXA!=='undefined'?MXA:null,setDist:d=>{RTS.dist=d;RTS.manual=99;}};
