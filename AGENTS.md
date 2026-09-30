@@ -322,5 +322,6 @@ python3 build_battle.py && cp battle.html ../battle.html
 - `tools/rig/autojoints.py body.glb joints.json '{override}'` ประมาณข้อต่อจาก T-pose (armY/neckY/headY/hipsY/legX/shoulderX แก้ได้) → `preview.py` ดูจุด → `selfrig2.py` (รองรับไม่มี trimesh ผ่าน `glbmini.py`, อาวุธ `-` = ไม่มี, `WLEN` ความยาวอาวุธ, `BOX` บังคับน้ำหนักในกล่อง, `weapon.jpg` แยก texture) → `posetest.py` ทดสอบน้ำหนักผิวด้วยภาพ
 - จุดข้อต่อที่ใช้จริงอยู่ใน `tools/rig/joints/`
 - ทดสอบท่าในสนามรบ (โหมดทดลอง ไม่ล็อกอิน): `battle.html?demo=seiro,kohaku,garok`
+- `migrate_newchars2.sql` รันบนฐานข้อมูลจริงแล้ว 30 ก.ย. 2026
 ## งานค้าง (ยังไม่ได้ทำ)
-- **ตัวละครใหม่ 3 ตัว**: `server/migrate_newchars2.sql` ต้องให้เจ้าของรันก่อน ถึงจะฟักได้
+- (ว่าง)
