@@ -2332,3 +2332,42 @@ do $$ begin
     revoke all on public.player_saves from anon, authenticated;
   end if;
 end $$;
+
+
+-- ===== ตัวเริ่มต้นชุดใหม่ (จาก migrate_season_reset.sql ส่วนที่ 1; ส่วนรีเซ็ตไม่ได้ใส่ในไฟล์ติดตั้ง) =====
+-- ---------- 1) ตัวเริ่มต้นชุดใหม่ ----------
+create or replace function public._player(u uuid) returns public.players
+language plpgsql security definer set search_path = '' as $function$
+declare p public.players; n int; sec int := public._c('energy_sec');
+begin
+  select * into p from public.players where user_id = u for update;
+  if not found then
+    insert into public.players (user_id, name) values (u, 'นักฝึก#' || upper(substr(replace(u::text,'-',''),1,4))) returning * into p;
+    -- มอนสเตอร์เริ่มต้น: คุโรกะ ไฟ · คาเซะคิริ น้ำ · โมริฮิเมะ ลม
+    insert into public.monsters (user_id, sp, lv, el) values
+      (u, 'kuroga', 5, 'ไฟ'), (u, 'kazekiri', 5, 'น้ำ'), (u, 'morihime', 5, 'ลม');
+    update public.players set team = (
+      select array_agg(id order by ord) from (
+        select id, case sp when 'kuroga' then 1 when 'kazekiri' then 2 else 3 end as ord
+        from public.monsters where user_id = u) t)
+    where user_id = u returning * into p;
+  end if;
+  -- ฟื้นพลังงานตามเวลาที่ผ่านไป
+  if p.energy >= public._c('energy_max') then
+    p.energy_at := now();
+  else
+    n := floor(extract(epoch from now() - p.energy_at) / sec);
+    if n > 0 then
+      p.energy := least(public._c('energy_max'), p.energy + n);
+      p.energy_at := case when p.energy >= public._c('energy_max') then now() else p.energy_at + make_interval(secs => n * sec) end;
+    end if;
+  end if;
+  -- ภารกิจรายวัน
+  if p.quest_day is distinct from public._today() then
+    p.quest_day := public._today(); p.quests := '{}'::jsonb;
+  end if;
+  update public.players set energy = p.energy, energy_at = p.energy_at, quest_day = p.quest_day, quests = p.quests
+    where user_id = u;
+  return p;
+end $function$;
+

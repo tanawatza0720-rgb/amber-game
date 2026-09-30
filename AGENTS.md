@@ -294,3 +294,10 @@ python3 build_battle.py && cp battle.html ../battle.html
 ## ความปลอดภัย — `server/migrate_security_fix.sql`
 - `boss_finish`: นับชนะเมื่อ client ส่ง won=true **และ** `_power(u) ≥ 0.7 × _req(tgt)` ไม่งั้นคืน `{won:false, weak:true, power, min_power}` (battle_ui.js แสดง "ผลไม่ผ่าน")
 - `player_saves` (v1 ไม่ใช้แล้ว): ลบ policy + revoke all จาก anon/authenticated (ข้อมูลยังอยู่)
+## รีเซ็ตฤดูกาล + ตัวเริ่มต้น — `server/migrate_season_reset.sql`
+- `_player` สร้างผู้เล่นใหม่พร้อม kuroga ไฟ / kazekiri น้ำ / morihime ลม (Lv5) ใส่ทีม 3 ตัว
+- รีเซ็ต 30 ก.ย. 2026: สำรองทุกตารางผู้เล่นไว้ที่ schema `backup_20260930` แล้วล้าง (บัญชี auth ยังอยู่)
+## ประกาศอัปเดต + สิ่งที่ทำได้วันนี้ — `src/farm_news.js`
+- `PATCHES` (ใหม่สุดอยู่บน) → ป๊อปอัป `#newsPop` เด้งบนหน้าล็อกอินครั้งเดียวต่อเวอร์ชัน (localStorage `amber_news_seen`) · ปุ่มราง "อัปเดต" (`#rEvent`, badge `#bNews`) เปิดดูย้อนหลัง
+- `todoList()` รวมงานรายวัน (รางวัลรายวัน, ภารกิจ, อัมพร, รางวัลด่าน, ไข่เทพ, จดหมาย, ไฮดรา, สำรวจ, เยี่ยมเพื่อน, บุกปล้น) สถานะ todo/wait/done · ปุ่ม "วันนี้" (`#rToday`, badge `#bToday`) · `.reddot` บนปุ่มเพื่อน/สำรวจ/ฟักไข่
+- **ทุกครั้งที่อัปเดตเกม ให้เพิ่มรายการใน PATCHES**
