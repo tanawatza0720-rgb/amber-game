@@ -308,3 +308,6 @@ python3 build_battle.py && cp battle.html ../battle.html
 - 10 บัญชีใน auth.users (anonymous, ล็อกอินไม่ได้) + ตาราง `public.bots` · ชื่อเหมือนผู้เล่นทั่วไป · ด่าน 9–26 · ขึ้นอันดับเผ่า/โดนสุ่มบุกได้/รับเพื่อนเอง
 - `_bots_tick()` ทุกชั่วโมงผ่าน pg_cron (`amber_bots_tick`): อัปเดต updated_at, +เหรียญ, อัปเลเวลทีม, ดันด่านเมื่อพลังถึง (ไม่เกินด่าน 60)
 - ลบบอท: `delete from auth.users where id in (select user_id from public.bots);`
+## งานค้าง (ยังไม่ได้ทำ)
+- **ประกาศวิ่งเมื่อมีคนเปิดได้ตำนานขึ้นไป**: ตาราง `pulls(user_id, sp, rar, created_at)` บันทึกใน `hatch_egg`/`hatch_eggs`/`hatch_god_egg` เมื่อ rar ≥ 3 · RPC ดึง 10 รายการล่าสุด · client แถบ marquee บนกลางจอ วิ่งขวา→ซ้าย "🎉 {ชื่อ} เปิดได้ ⭐{ระดับ} {ตัว}! ไปปล้นกันเลยไหม? 👊" กดแล้ว `visitFriend(code,true,{rpc:'raid_visit'})` (ต้องให้ raid_visit ยอมรับเป้าจากประกาศ เช่น เพิ่ม raid_scouts ให้ก่อน) · เอฟเฟกต์เปิดตำนาน/เทพเจ้าให้อลังการขึ้น (แฟลชจอ + ป้ายระดับเด้งกลางจอ)
+- **บอท 10 ตัว**: `server/migrate_bots.sql` ยังไม่ได้รันบนฐานข้อมูลจริง (ต้องให้เจ้าของกด Run เอง) หลังรันให้เช็ก `select * from cron.job` ว่ามี `amber_bots_tick`
