@@ -290,6 +290,7 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
 .exSlots{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:6px 0}.exSlots .ic{width:auto!important}
 .exEmpty{aspect-ratio:1;border-radius:9px;border:1px dashed var(--line);display:grid;place-items:center;color:var(--muted);font-size:18px}
 .exRisk{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:700;background:rgba(0,0,0,.65);color:#8ff0c4;text-align:center}.exRisk.mid{color:#ffd36a}.exRisk.hi{color:#ff7a6a}
+.exEl{position:absolute;left:3px;top:40%;font-size:13px;font-weight:900;line-height:1;text-shadow:0 0 3px #000,0 0 2px #000}.exEl.up{color:#8ff0c4}.exEl.dn{color:#ff8a7a}
 .exPow{font-size:12px;color:var(--muted);margin:4px 0}.exPow b{font-size:15px}
 .exWarn{font-size:11px;color:#ffb36a;margin:2px 0}.exHint{font-size:11px;color:var(--muted);margin:8px 0 4px}
 .exList{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:5px;max-height:190px;overflow:auto}.exList .ic{width:auto!important}
@@ -3810,7 +3811,13 @@ function raidBadgeTex(){if(_raidTex)return _raidTex;_raidTex=srgb(canvasTex(128,
   x.lineWidth=5;x.strokeStyle='#ffe3a0';x.stroke();x.font=`${s*.4}px sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('⚔️',s/2,s*.43);
   x.beginPath();x.moveTo(s*.42,s*.76);x.lineTo(s*.58,s*.76);x.lineTo(s/2,s*.9);x.closePath();x.fillStyle='#b3261e';x.fill();}));return _raidTex;}
 const raidWin=(ap,dp,I)=>Math.min(I.win_max,Math.max(I.win_min,ap/Math.max(ap+dp,1)));
-const raidLoss=(w,I,m)=>(w*I.die_win+(1-w)*I.die_lose)*(m&&I.die_k?(I.die_k[spOf(m).rar]!=null?I.die_k[spOf(m).rar]:1):1);
+// โอกาสไม่กลับมา "ถ้าแพ้" รายตัว: ระดับ × เลเวล × ดาว (ชนะ = กลับมาครบ) · ตรงกับ server/migrate_raid_fairloss.sql
+const raidLossIf=(I,m)=>{const k=I.die_k&&I.die_k[spOf(m).rar]!=null?I.die_k[spOf(m).rar]:1;return I.die_lose*k/(1+(m.lv||1)/(I.die_lv||1e9))*Math.pow(I.die_star||1,m.stars||0);};
+const raidLoss=(w,I,m)=>(1-w)*raidLossIf(I,m)+w*(I.die_win||0)*raidLossIf(I,m)/Math.max(I.die_lose,1e-9);
+// แพ้ทางธาตุ: ตัวคูณที่เราตีเป้า ÷ ตัวคูณที่เป้าตีเรา
+const raidElF=(m,T,I)=>{if(!I.el_on||!T)return 1;const a=elOfMon(m),d=elOfMon(T);return elMul(a,d)/elMul(d,a);};
+const riskTag=(c,v)=>c.append(el('span','exRisk'+(v>.15?' hi':v>.06?' mid':''),(v*100).toFixed(v<.1?1:0)+'%'));
+const elTag=(c,f)=>{if(f>1.01)c.append(el('span','exEl up','▲'));else if(f<.99)c.append(el('span','exEl dn','▼'));};
 function raidEnter(r,code){
   const I=r.raid;FRD.info=I;FRD.f=r.friend;FRD.code=code;FRD.mons=r.monsters||[];
   FRD.rev=!!r.revenge;
@@ -3838,29 +3845,29 @@ function raidTapAgent(ag){if(!FRD.on||!ag.data||ag.data.uid>=0)return false;
 function raidPick(){
   const I=FRD.info,T=FRD.target,dp=Math.round(T.pow*I.def_k),mine=raidMine();
   FRD.sel=FRD.sel.filter(u=>mine.some(m=>m.uid===u)).slice(0,I.n);
-  const party=FRD.sel.map(u=>mine.find(m=>m.uid===u)),ap=party.reduce((a,m)=>a+raidPow(m),0);
-  const w=party.length===I.n?raidWin(ap,dp,I):0,loss=raidLoss(w,I),d=el('div','exp');
+  const party=FRD.sel.map(u=>mine.find(m=>m.uid===u)),ap=Math.round(party.reduce((a,m)=>a+raidPow(m)*raidElF(m,T,I),0));
+  const w=party.length===I.n?raidWin(ap,dp,I):0,d=el('div','exp');
   // เป้า
   const hd=el('div','exHead');const tc=icon({uid:-T.id,sp:T.sp,lv:T.lv,stars:T.stars||0,el:T.el||null});tc.style.width='52px';hd.append(tc);
-  const t=el('div');t.append(el('b',null,spOf(T).name+' Lv'+T.lv+' ของ '+FRD.f.name));t.append(el('small',null,'พลังป้องกัน '+fmt(dp)+' (สู้ในบ้านตัวเอง ×'+I.def_k+')'));hd.append(t);d.append(hd);
+  const t=el('div');t.append(el('b',null,spOf(T).name+' Lv'+T.lv+' ของ '+FRD.f.name));{const te=elOfMon(T),E=ELEM[te];t.append(el('small',null,(E?E.i+' ธาตุ'+te+' · ':'')+'พลังป้องกัน '+fmt(dp)+' (สู้ในบ้านตัวเอง ×'+I.def_k+')'));}hd.append(t);d.append(hd);
   // ทีมบุก 4 ช่อง
   const slots=el('div','exSlots rdSlots');
-  for(let i=0;i<I.n;i++){const m=party[i];if(m){const c=icon(m);if(party.length===I.n){const lm=raidLoss(w,I,m);c.append(el('span','exRisk'+(lm>.15?' hi':lm>.08?' mid':''),(lm*100).toFixed(lm<.1?1:0)+'%'));}c.onclick=()=>{FRD.sel=FRD.sel.filter(u=>u!==m.uid);FRD.arm=false;raidPick();};slots.append(c);}
+  for(let i=0;i<I.n;i++){const m=party[i];if(m){const c=icon(m);riskTag(c,raidLossIf(I,m));elTag(c,raidElF(m,T,I));c.onclick=()=>{FRD.sel=FRD.sel.filter(u=>u!==m.uid);FRD.arm=false;raidPick();};slots.append(c);}
     else slots.append(el('div','exEmpty','+'));}
   d.append(slots);
   const st=el('div','rdStat');
   if(party.length===I.n){const odds=el('div','rdOdds');const wb=el('i');wb.style.width=(w*100)+'%';odds.append(wb);st.append(odds);
     const exp=party.reduce((a,m)=>a+raidLoss(w,I,m),0);
     st.append(el('div','rdLine','พลังบุก '+fmt(ap)+' vs '+fmt(dp)+' · โอกาสชนะ '+Math.round(w*100)+'%'));
-    st.append(el('div','rdLine dim','โอกาสสูญเสียดูที่ตัวเลขบนแต่ละตัว (ยิ่งระดับสูงยิ่งรอดง่าย · พื้นฐาน ชนะ '+Math.round(I.die_win*100)+'% / แพ้ '+Math.round(I.die_lose*100)+'%) · คาดว่าจะเสียราว '+exp.toFixed(1)+' ตัว'));
+    {const adv=party.filter(m=>raidElF(m,T,I)>1.01).length,dis=party.filter(m=>raidElF(m,T,I)<.99).length;if(adv||dis)st.append(el('div','rdLine','ธาตุ: ได้เปรียบ '+adv+' ตัว · เสียเปรียบ '+dis+' ตัว (▲/▼ บนไอคอน · คิดในพลังบุกแล้ว)'));}
+    st.append(el('div','rdLine dim','ชนะ = กลับมาครบทุกตัว · ถ้าแพ้ แต่ละตัวมีโอกาสไม่กลับมาตามตัวเลขบนไอคอน (ระดับ/เลเวล/ดาวสูงยิ่งรอดง่าย) · '+(exp<.05?'แทบไม่เสียตัวไหนเลย':'คาดว่าจะเสียราว '+exp.toFixed(exp<1?2:1)+' ตัว')));
     const cp=(I.cap&&I.cap[spOf(T).rar])||0;
     st.append(el('div','rdLine gold','ชนะได้ราว '+fmt(Math.round(T.pow*(I.loot_k||1.2)))+' เหรียญ (+ลุ้นอัมพร)'));
     if(cp)st.append(el('div','rdLine cap','✨ ชนะแล้วมีโอกาส '+(cp*100).toFixed(cp<.05?1:0)+'% ได้ '+spOf(T).name+' มาเป็นของเรา'));}
   else st.append(el('div','rdLine dim','เลือกมอนสเตอร์ของเรา '+I.n+' ตัว (เหลืออีก '+(I.n-party.length)+')'));
   d.append(st);
   const L=el('div','exList'),cands=[...mine].sort((a,b)=>raidPow(b)-raidPow(a));
-  const w0=party.length===I.n?w:.5;
-  cands.forEach(m=>{const c=icon(m),on=FRD.sel.includes(m.uid);if(on)c.classList.add('on');{const lm=raidLoss(w0,I,m);c.append(el('span','exRisk'+(lm>.15?' hi':lm>.08?' mid':''),(lm*100).toFixed(lm<.1?1:0)+'%'));}
+    cands.forEach(m=>{const c=icon(m),on=FRD.sel.includes(m.uid);if(on)c.classList.add('on');riskTag(c,raidLossIf(I,m));elTag(c,raidElF(m,T,I));
     c.onclick=()=>{if(on)FRD.sel=FRD.sel.filter(u=>u!==m.uid);else if(FRD.sel.length<I.n)FRD.sel.push(m.uid);else{toast('ส่งได้ '+I.n+' ตัว');return;}FRD.arm=false;raidPick();};L.append(c);});
   d.append(el('div','exHint','ตัวที่มีธงคืออยู่ในทีมต่อสู้ ถ้าไม่กลับมาจะหายจากทีมด้วย · ตัวที่ไม่กลับมาได้วิญญาณชดเชย'));d.append(L);
   const risky=party.filter(m=>(VISIT.save.team||[]).includes(m.uid)||(m.stars||0)>0||spOf(m).rar>=4);
