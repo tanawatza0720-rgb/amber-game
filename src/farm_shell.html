@@ -112,24 +112,36 @@ button{font:inherit;color:inherit;cursor:pointer}
 .nameRow input{flex:1;min-width:0;height:40px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--bone);font:inherit;padding:0 12px;user-select:text;-webkit-user-select:text}
 /* ===== หน้าเข้าสู่ระบบ ===== */
 body.preLogin #top,body.preLogin #rail,body.preLogin #dock,body.preLogin #hint,body.preLogin #mtag,body.preLogin #sheet,body.preLogin #loadMsg{display:none!important}
-#login{position:fixed;inset:0;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px));
-  background:radial-gradient(ellipse at 50% 40%,rgba(20,12,6,.35),rgba(12,8,5,.82) 70%);transition:opacity .45s}
+#login{position:fixed;inset:0;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;overflow:hidden;padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(ellipse 70% 45% at 50% 30%,rgba(20,10,4,.55),transparent 75%),linear-gradient(180deg,rgba(30,16,6,.6) 0%,rgba(20,11,5,.35) 40%,rgba(14,8,4,.8) 72%,rgba(10,6,3,.94) 100%);transition:opacity .45s}
 #login.bye{opacity:0;pointer-events:none}
-.lgCard{width:min(380px,100%);background:linear-gradient(180deg,rgba(52,38,26,.94),rgba(30,22,15,.96));border:1px solid rgba(255,200,120,.35);border-radius:22px;padding:26px 22px 20px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,230,180,.18);animation:lgIn .5s ease}
+.lgSky{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.lgRays{position:absolute;left:50%;top:26%;width:180vmax;height:180vmax;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,rgba(255,196,110,.07) 0 6deg,transparent 6deg 18deg);mask:radial-gradient(circle,#000 0,transparent 30%);-webkit-mask:radial-gradient(circle,#000 0,transparent 30%);animation:lgSpin 90s linear infinite}
+@keyframes lgSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.lgFx i{position:absolute;left:var(--x);bottom:-10px;width:var(--s);height:var(--s);border-radius:50%;background:radial-gradient(circle,#fff3c4,#ffb347 55%,transparent 70%);box-shadow:0 0 10px #ffb347;opacity:0;animation:lgRise var(--t) linear var(--d) infinite}
+@keyframes lgRise{0%{transform:translate(0,0);opacity:0}10%{opacity:.9}100%{transform:translate(18px,-105vh);opacity:0}}
+.lgHead{text-align:center;animation:lgIn .6s ease;margin-top:auto}
+.lgLogo{width:76px;height:76px;margin:0 auto 6px;border-radius:24px;background:linear-gradient(145deg,#ffe29a,#e08a2b 60%,#a8551a);display:grid;place-items:center;box-shadow:0 0 0 3px rgba(255,220,150,.25),0 12px 34px rgba(224,138,43,.6),inset 0 2px 0 rgba(255,255,255,.55);animation:lgFloat 4s ease-in-out infinite}
+@keyframes lgFloat{50%{transform:translateY(-6px)}}
+.lgLogo svg{width:46px;height:46px;filter:drop-shadow(0 2px 4px rgba(120,50,0,.35))}
+#login h1{margin:4px 0 0;font-family:'Chakra Petch',sans-serif;font-size:clamp(34px,9.5vw,52px);line-height:1.1;letter-spacing:.5px;background:linear-gradient(180deg,#fffbe8 0%,#ffd98a 45%,#ff9d3a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #6a3410) drop-shadow(0 8px 22px rgba(0,0,0,.6))}
+.lgSub{margin-top:2px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:13px;letter-spacing:6px;color:#ffcf8a;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+.lgTag{display:inline-block;margin:10px auto 0;max-width:340px;padding:5px 14px;border-radius:12px;background:rgba(10,6,3,.55);font-size:12.5px;line-height:1.5;color:#f3e3c6;backdrop-filter:blur(4px)}
+.lgCard{width:min(380px,100%);background:linear-gradient(180deg,rgba(58,40,24,.86),rgba(28,19,12,.92));border:1px solid rgba(255,200,120,.38);border-radius:22px;padding:18px 18px 16px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,230,180,.2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:lgIn .6s ease .1s both}
 @keyframes lgIn{from{opacity:0;transform:translateY(14px) scale(.98)}}
-.lgLogo{width:74px;height:74px;margin:-62px auto 8px;border-radius:22px;background:linear-gradient(145deg,#ffd27a,#d9822b);display:grid;place-items:center;box-shadow:0 10px 30px rgba(217,130,43,.55),inset 0 2px 0 rgba(255,255,255,.5)}
-.lgLogo svg{width:46px;height:46px}
-#login h1{margin:4px 0 2px;font-family:'Chakra Petch',sans-serif;font-size:30px;letter-spacing:.5px;background:linear-gradient(180deg,#fff3d6,#ffb347);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lgTag{margin:0 0 18px;font-size:13px;color:var(--muted)}
 #lgBody{display:grid;gap:10px}
-.lgBtn{min-height:50px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:16px;color:var(--bone);padding:0 16px}
-.lgBtn.main{background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;border-color:#ffd9a0;box-shadow:0 6px 18px rgba(217,130,43,.4)}
-.lgBtn.google{background:#fff;color:#1f1f1f;border-color:#dadce0}
-.lgBtn.ghost{background:rgba(255,255,255,.07)}
-.lgBtn.link{min-height:36px;background:none;border:0;font-family:'Bai Jamjuree',sans-serif;font-weight:400;font-size:13px;color:var(--muted);text-decoration:underline}
+.lgBtn{min-height:52px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:16px;color:var(--bone);padding:0 16px;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .12s,box-shadow .12s}
+.lgBtn:active{transform:scale(.98)}
+.lgBtn.main{background:linear-gradient(180deg,#ffd98a,#e08a2b);color:#2b1808;border-color:#ffe0a8;box-shadow:0 8px 22px rgba(224,138,43,.45),inset 0 1px 0 rgba(255,255,255,.5);font-size:18px}
+.lgBtn.google{background:#fff;color:#1f1f1f;border-color:#dadce0;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+.lgBtn.google::before{content:"";width:20px;height:20px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23FFC107' d='M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z'/%3E%3Cpath fill='%23FF3D00' d='m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z'/%3E%3Cpath fill='%234CAF50' d='M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z'/%3E%3Cpath fill='%231976D2' d='M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z'/%3E%3C/svg%3E") center/contain no-repeat}
+.lgBtn.ghost{background:rgba(255,255,255,.07);border-color:rgba(255,210,150,.28)}
+.lgBtn.ghost::before{content:"🌱";font-size:18px}
+.lgBtn.link{min-height:36px;background:none;border:0;font-family:'Bai Jamjuree',sans-serif;font-weight:400;font-size:13px;color:var(--muted);text-decoration:underline;box-shadow:none}
 .lgBtn:disabled{opacity:.5}
 .lgBtn:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
-.lgOr{margin:2px 0;font-size:12px;color:var(--muted)}
+.lgOr{display:flex;align-items:center;gap:10px;margin:2px 0;font-size:12px;color:var(--muted)}
+.lgOr::before,.lgOr::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(255,210,150,.35),transparent)}
 .lgSmall{margin:0;font-size:11.5px;color:var(--muted);line-height:1.5}
 .lgMsg{margin:0 0 4px;font-size:14px;color:#eadcc0;line-height:1.6}
 .lgWait{padding:18px 0;color:var(--muted);font-size:14px}
@@ -141,9 +153,12 @@ body.preLogin #top,body.preLogin #rail,body.preLogin #dock,body.preLogin #hint,b
 #lgNote{margin:12px 0 0;font-size:12.5px;color:var(--muted);min-height:0}
 #lgNote:empty{display:none}
 #lgNote.warn{color:#ffcf8a}
-.lgFoot{margin-top:16px;font-size:12px}
+.lgChips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:380px;animation:lgIn .6s ease .2s both}
+.lgChips span{padding:4px 10px;border-radius:99px;background:rgba(0,0,0,.35);border:1px solid rgba(255,210,150,.22);font-size:11.5px;color:#f0dfc2;backdrop-filter:blur(4px)}
+.lgFoot{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 8px;margin-bottom:auto;font-size:12px;color:var(--muted)}
 .lgFoot a{color:var(--muted)}
-@media (prefers-reduced-motion:reduce){.lgCard{animation:none}.lgWait::before{animation:none}}
+@media (max-height:640px){.lgLogo{width:56px;height:56px;border-radius:18px}.lgLogo svg{width:34px;height:34px}.lgTag,.lgChips{display:none}}
+@media (prefers-reduced-motion:reduce){.lgCard,.lgHead,.lgChips,.lgLogo,.lgRays{animation:none}.lgFx{display:none}.lgWait::before{animation:none}}
 /* ===== คลังมอนสเตอร์ (หน้าต่างไอคอน) ===== */
 body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.boxOpen #mtag,body.boxOpen #sheet{display:none!important}
 #racePick{position:fixed;inset:0;z-index:8;pointer-events:auto;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
@@ -454,14 +469,19 @@ body.visiting #rail,body.visiting #dock,body.visiting #rankBox,body.visiting #hi
   </section>
 </div>
 <div id="login" role="dialog" aria-label="เข้าสู่ระบบ">
-  <div class="lgCard">
+  <div class="lgSky" aria-hidden="true"><div class="lgRays"></div><div class="lgFx"><i style="--x:6%;--d:0s;--t:9s;--s:5px"></i><i style="--x:14%;--d:3s;--t:11s;--s:3px"></i><i style="--x:22%;--d:6s;--t:8s;--s:4px"></i><i style="--x:31%;--d:1.5s;--t:12s;--s:6px"></i><i style="--x:40%;--d:4.5s;--t:10s;--s:3px"></i><i style="--x:48%;--d:7s;--t:9s;--s:5px"></i><i style="--x:57%;--d:2s;--t:13s;--s:4px"></i><i style="--x:65%;--d:5.5s;--t:9s;--s:3px"></i><i style="--x:73%;--d:0.8s;--t:11s;--s:6px"></i><i style="--x:81%;--d:3.8s;--t:10s;--s:4px"></i><i style="--x:89%;--d:6.5s;--t:12s;--s:3px"></i><i style="--x:95%;--d:2.8s;--t:9s;--s:5px"></i></div></div>
+  <div class="lgHead">
     <div class="lgLogo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 20 9l-8 13L4 9z" fill="#fff4dc"/><path d="M12 2 16 9l-4 4-4-4z" fill="#ffffff"/><path d="M4 9h16l-8 13z" fill="#ffe2b0" opacity=".7"/></svg></div>
     <h1>ตำนานป่าอัมพร</h1>
-    <p class="lgTag">ฟักไข่ · เลี้ยงมอนสเตอร์ · ออกผจญภัย</p>
+    <div class="lgSub">AMBER&nbsp;LAND</div>
+    <p class="lgTag">เลี้ยงมอนสเตอร์บนเกาะลอยฟ้า<br>ฟักไข่ลุ้นเทพเจ้า · ผจญภัย 4 ดินแดน</p>
+  </div>
+  <div class="lgCard">
     <div id="lgBody"></div>
     <p id="lgNote"></p>
   </div>
-  <div class="lgFoot"><a href="privacy.html" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว</a></div>
+  <div class="lgChips" aria-hidden="true"><span>🥚 ฟักไข่ 4 ระดับ</span><span>⚔️ 4 เผ่า</span><span>🐉 บอสโลก</span><span>👊 บุกปล้น</span></div>
+  <div class="lgFoot"><a href="#" id="lgNews">📢 มีอะไรใหม่</a><span>·</span><a href="../" rel="noopener">amberlegend.com</a><span>·</span><a href="privacy.html" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว</a></div>
 </div>
 <div id="toast" hidden></div>
 <div id="loadMsg" hidden>กำลังโหลดมอนสเตอร์…</div>
