@@ -386,6 +386,34 @@ body.visiting #rail,body.visiting #dock,body.visiting #rankBox,body.visiting #hi
 .tdRow.done{opacity:.55}.tdIc{font-size:20px;width:26px;text-align:center}
 .tdTx{flex:1;min-width:0}.tdTx b{display:block;font-size:13px}.tdTx small{color:var(--muted);font-size:11.5px}
 .h10{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:4px 0 6px}.h10 .ic{width:100%!important}.h10 .ic.r4{box-shadow:0 0 0 2px #ff8ac4,0 0 14px #ff8ac4}.h10 .ic.r3{box-shadow:0 0 0 2px #ffc94d,0 0 10px #ffc94d}
+/* ประกาศวิ่ง (farm_pulls.js) · จอกว้าง = บนกลางจอ · มือถือ = เหนือแถบล่าง (บนสุดไม่มีที่ว่าง) */
+#pullBar{position:fixed;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 24px));height:34px;display:flex;align-items:center;gap:8px;padding:0 10px 0 5px;border:1px solid rgba(255,201,77,.55);border-radius:999px;background:linear-gradient(90deg,rgba(60,30,8,.94),rgba(28,18,10,.94));box-shadow:0 0 18px rgba(255,180,60,.28),0 8px 24px rgba(0,0,0,.4);color:var(--bone);font:inherit;font-size:13px;cursor:pointer;animation:pbIn .35s ease-out}
+#pullBar[hidden]{display:none}
+#pullBar.god{border-color:rgba(255,106,176,.75);box-shadow:0 0 22px rgba(255,106,176,.4),0 8px 24px rgba(0,0,0,.4)}
+#pullBar.me{border-color:rgba(95,224,192,.6)}
+.pbTag{flex:none;padding:3px 9px;border-radius:999px;background:linear-gradient(180deg,#ffcf5a,#e08a1f);color:#3a2210;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:12px}
+#pullBar.god .pbTag{background:linear-gradient(180deg,#ff9ad0,#d9408a);color:#fff}
+.pbWin{flex:1;min-width:0;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent)}
+.pbTxt{display:inline-block;will-change:transform}.pbTxt b{font-weight:700}.pbWhat{text-shadow:0 0 8px currentColor}
+@keyframes pbIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (min-width:860px){#pullBar{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px));width:min(480px,calc(100% - 470px))}}
+body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen #pullBar,body.preLogin #pullBar{display:none!important}
+@media (max-width:859px){body:has(#sheet:not([hidden])) #pullBar{display:none!important}}
+/* เอฟเฟกต์เปิดได้ตำนาน/เทพเจ้า */
+#pullFx{position:fixed;inset:0;z-index:12;display:grid;place-items:center;pointer-events:auto;overflow:hidden}
+.pfFlash{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#fff 0,var(--tc) 30%,transparent 70%);animation:pfFlash 1s ease-out forwards}
+.pfRays{position:absolute;left:50%;top:45%;width:180vmax;height:180vmax;margin:-90vmax 0 0 -90vmax;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--tc) 45%,transparent) 0 6deg,transparent 6deg 18deg);-webkit-mask-image:radial-gradient(circle,#000 0,transparent 55%);mask-image:radial-gradient(circle,#000 0,transparent 55%);animation:pfSpin 6s linear infinite,pfFade 2.4s ease-out forwards;opacity:.8}
+#pullFx.god .pfRays{animation:pfSpin 4s linear infinite,pfFade 3.2s ease-out forwards}
+.pfCard{position:relative;text-align:center;padding:16px 28px;border-radius:20px;background:rgba(20,12,8,.72);border:2px solid var(--tc);box-shadow:0 0 40px var(--tc);animation:pfPop .6s cubic-bezier(.2,1.6,.4,1) both,pfFade 2.4s ease-in forwards}
+#pullFx.god .pfCard{animation:pfPop .7s cubic-bezier(.2,1.7,.4,1) both,pfFade 3.2s ease-in forwards}
+.pfTier{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(28px,8vw,52px);color:var(--tc);text-shadow:0 0 18px var(--tc),0 2px 0 #000;letter-spacing:.04em}
+.pfName{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(18px,5vw,26px);color:#fff;margin-top:2px}
+.pfSub{font-size:14px;color:var(--muted);margin-top:2px}
+@keyframes pfFlash{0%{opacity:.95}100%{opacity:0}}
+@keyframes pfSpin{to{transform:rotate(360deg)}}
+@keyframes pfFade{0%,70%{opacity:1}100%{opacity:0}}
+@keyframes pfPop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){#pullBar{animation:none}.pfRays{display:none}.pfCard{animation:pfFade 2.4s ease-in forwards}}
 </style>
 
 <div id="view"></div>
@@ -1255,7 +1283,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -3289,6 +3317,7 @@ async function hatch(kind,name){
   particles(ep,ELEM[hel]?ELEM[hel].fx:col,40,2.6,.06,1.2);
   const ag=addAgent(d,[0,5.9],true); if(!ag.fly){ag.state='idle'; ag.wait=2.5;}
   toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' '+ELEM[hel].i+'ธาตุ'+hel+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
+  if(r.rar>=3&&typeof pullFx==='function'){pullFx(r.rar,SPEC[r.mon.sp].name,ELEM[hel].i+' ธาตุ'+hel);PULL.last=0;setTimeout(pullsLoad,2500);}
   hatching=false;
 }
 // ฟักทีละ 10 ใบ: ฟักที่เซิร์ฟเวอร์ครั้งเดียว แล้วแสดงผลรวม (ตัวหายากสุดเล่นเอฟเฟกต์)
@@ -3310,6 +3339,7 @@ async function hatchMulti(kind,name){
   const sum=[4,3,2,1].filter(k=>cnt(k)).map(k=>tierOf(k).n+' '+cnt(k)).join(' · ');
   openSheet(name+' ×10',sum,d,[['ฟักอีก 10 ใบ',()=>hatchMulti(kind,name),kind==='gold'?'gold':'',kind==='gold'?S.amber<300:S.coins<1000],['ปิด',()=>closeSheet(),'ghost']]);
   toast(best>=4?'ได้ระดับเทพเจ้า!!':best>=3?'ได้ระดับตำนาน!':'ฟักครบ 10 ใบแล้ว');
+  if(best>=3&&typeof pullFx==='function'){const bx=L[0],n=L.filter(x=>x.rar===best).length;pullFx(best,SPEC[bx.mon.sp].name,n>1?'ได้'+tierOf(best).n+' '+n+' ตัว!':ELEM[elOfMon(bx.d)].i+' ธาตุ'+elOfMon(bx.d));PULL.last=0;setTimeout(pullsLoad,2500);}
   hatching=false;
 }
 let shakeCam=0;
@@ -3843,7 +3873,7 @@ async function visitFriend(code,raid,opt){
   const hd=el('div','vbHead');const av=el('span','frAv',R?R.icon:'🌱');if(R)av.style.background=R.c+'33';hd.append(av);
   const t=el('div');t.append(el('b',null,'บ้านของ '+f.name));t.append(el('small',null,'Lv '+f.lv+' · '+(R?R.n:'ยังไม่มีเผ่า')+' · พลังทีม '+fmt(f.power||0)+' · ด่าน '+(f.stage||0)));hd.append(t);
   hd.append(frBtn('🏠 กลับบ้าน','main',leaveVisit));bar.append(hd);
-  if(r.kind==='random')t.firstChild.textContent='🎲 บ้านของ '+f.name;if(r.revenge)t.firstChild.textContent='😤 บ้านของ '+f.name;
+  if(r.kind==='random')t.firstChild.textContent='🎲 บ้านของ '+f.name;if(r.kind==='pull')t.firstChild.textContent='🎉 บ้านของ '+f.name;if(r.revenge)t.firstChild.textContent='😤 บ้านของ '+f.name;
   const team=(r.team||[]).map(id=>r.monsters.find(m=>Number(m.id)===Number(id))).filter(Boolean);
   if(team.length){const tr=el('div','vbTeam');tr.append(el('small',null,'ทีม'));team.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.onclick=null;tr.append(c);});bar.append(tr);}
   bar.append(el('small','vbNote',(r.monsters||[]).length+' ตัวในฟาร์ม'+(r.visitors_today?' · วันนี้มีคนมาเยี่ยม '+r.visitors_today+' คน':'')));
@@ -4037,6 +4067,67 @@ async function raidInbox(){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&typeof entered!=='undefined'&&entered&&!VISIT.on&&!$('#raidPop'))raidInbox();});
 if(/[?&]dbg=1/.test(location.search))window.__frd={AGENTS,raidTapAgent,FRD,raidRandom,raidInbox,ISB};
 
+/* ================= ประกาศวิ่ง: มีคนเปิดได้ระดับตำนานขึ้นไป (server/migrate_pulls.sql) =================
+   pulls_recent() ทุก 40 วิ → แถบ #pullBar วิ่งขวา→ซ้าย ทีละประกาศ · แตะประกาศของคนอื่น → pull_raid(pid) → เข้าเกาะเพื่อบุกปล้น
+   pullFx(rar, ข้อความ) = แฟลชจอ + ป้ายระดับเด้งกลางจอ ตอนเราเปิดได้ตำนาน/เทพเจ้า (เรียกจาก hatch/hatchMulti) */
+const PULL={seen:new Set(),q:[],cur:null,busy:false,first:true,last:0};
+const PULL_SPEED=75; // พิกเซลต่อวินาที
+function pullText(x){const S_=SPEC[x.sp],T=tierOf(x.rar),E=ELEM[x.el];
+  return {who:x.me?'คุณ':x.name,what:(x.rar>=4?'🌟':'⭐')+T.n+' '+(E?E.i:'')+(S_?S_.name:x.sp),col:T.c};}
+function pullBarEl(){let b=$('#pullBar');if(b)return b;
+  b=document.createElement('button');b.id='pullBar';b.type='button';b.hidden=true;b.setAttribute('aria-label','ประกาศ: มีคนเปิดได้ระดับตำนาน');
+  b.append(el('span','pbTag','ประกาศ'));const w=el('span','pbWin');w.append(el('span','pbTxt'));b.append(w);
+  b.onclick=()=>{if(PULL.cur)pullGo(PULL.cur);};document.body.append(b);return b;}
+async function pullsLoad(){
+  if(NET.mode!=='online'||typeof entered==='undefined'||!entered||document.visibilityState!=='visible')return;
+  const now=Date.now();if(now-PULL.last<20000)return;PULL.last=now;
+  let r=null;try{r=await api('pulls_recent');}catch(e){return;}
+  const L=((r&&r.list)||[]).filter(x=>!PULL.seen.has(x.id));L.forEach(x=>PULL.seen.add(x.id));
+  // เข้าเกมครั้งแรก: แสดงแค่ 3 รายการล่าสุด ไม่ให้วิ่งยาวเกินไป
+  const add=(PULL.first?L.slice(0,3):L).reverse();PULL.first=false;
+  PULL.q.push(...add);pullNext();
+}
+function pullNext(){
+  if(PULL.busy)return;const x=PULL.q.shift();const b=pullBarEl();
+  if(!x){b.hidden=true;PULL.cur=null;return;}
+  PULL.busy=true;PULL.cur=x;const t=pullText(x),tx=b.querySelector('.pbTxt');tx.innerHTML='';
+  tx.append('🎉 ');tx.append(el('b',null,t.who));tx.append(' เปิดได้ ');const w=el('b','pbWhat',t.what+'!');w.style.color=t.col;tx.append(w);
+  tx.append(x.me?' ยินดีด้วย! ✨':' ไปปล้นกันเลยไหม? 👊');
+  b.classList.toggle('me',!!x.me);b.classList.toggle('god',x.rar>=4);b.hidden=false;
+  requestAnimationFrame(()=>{const W=b.querySelector('.pbWin').clientWidth,w2=tx.scrollWidth;
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // แถบถูกซ่อนอยู่ (เปิดหน้าต่างอื่น/เยี่ยมบ้าน) → เก็บประกาศไว้ ลองใหม่ภายหลัง
+    if(!W){PULL.q.unshift(x);PULL.busy=false;PULL.cur=null;b.hidden=true;setTimeout(pullNext,4000);return;}
+    const done=()=>{PULL.busy=false;pullNext();};
+    if(reduce||!tx.animate){tx.style.transform='none';setTimeout(done,6000);return;}
+    const a=tx.animate([{transform:'translateX('+W+'px)'},{transform:'translateX('+(-w2)+'px)'}],{duration:(W+w2)/PULL_SPEED*1000,easing:'linear',iterations:2});
+    a.onfinish=done;});
+}
+async function pullGo(x){
+  if(x.me){toast('นี่คือประกาศของคุณเอง ✨');return;}
+  if(NET.mode!=='online'){toast('ต้องเข้าสู่ระบบก่อน');return;}
+  if(VISIT.on){toast('กลับบ้านก่อนแล้วค่อยไปบุกนะ');return;}
+  if(FRD.busy||hatching)return;FRD.busy=true;toast('⚔️ กำลังไปบ้าน '+x.name+'…');let r=null;
+  try{r=await api('pull_raid',{pid:x.id});}catch(e){toast(ERR[e.code]||ERR.network);}
+  FRD.busy=false;if(!r)return;
+  await visitFriend(r.friend.code,true,{payload:r,back:false});
+}
+setInterval(pullsLoad,40000);
+{let started=false;setInterval(()=>{if(started||typeof entered==='undefined'||!entered||NET.mode!=='online')return;started=true;setTimeout(pullsLoad,2500);},1500);}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullsLoad();});
+
+/* ---------- เอฟเฟกต์ตอนเราเปิดได้ตำนาน/เทพเจ้า (DOM ล้วน ไม่แตะฉาก 3D) ---------- */
+function pullFx(rar,title,sub){
+  if(rar<3)return;const T=tierOf(rar);
+  const o=document.createElement('div');o.id='pullFx';o.className=rar>=4?'god':'leg';o.style.setProperty('--tc',T.c);
+  o.append(el('div','pfFlash'));o.append(el('div','pfRays'));
+  const c=el('div','pfCard');c.append(el('div','pfTier',(rar>=4?'🌟 ':'⭐ ')+T.n));c.append(el('div','pfName',title));if(sub)c.append(el('div','pfSub',sub));o.append(c);
+  o.onclick=()=>o.remove();document.body.append(o);
+  if(navigator.vibrate)try{navigator.vibrate(rar>=4?[60,40,120]:[50]);}catch(e){}
+  setTimeout(()=>o.remove(),rar>=4?3200:2400);
+}
+if(/[?&]dbg=1/.test(location.search))window.__pull={PULL,pullsLoad,pullNext,pullFx,pullGo};
+
 /* ================= รางวัลทุก 5 ด่าน (อัมพร + ไข่เทพ) =================
    server/migrate_stage_rewards.sql · ป้ายแจ้งบนปุ่มผจญภัย · ป๊อปอัปรับรางวัลเมื่อมีค้าง · ไข่เทพฟักที่ศาลฟักไข่ */
 var STG=null;
@@ -4071,6 +4162,10 @@ if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VIS
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.09.30.3',date:'30 ก.ย. 2026',title:'ประกาศเปิดได้ของดี 🎉',items:[
+    '📢 ใครเปิดได้ระดับตำนานหรือเทพเจ้า จะมีประกาศวิ่งให้ทุกคนเห็น',
+    '👊 แตะประกาศเพื่อไปบุกปล้นบ้านคนที่เปิดได้ (นับเป็นการสุ่มบ้าน 1 ครั้ง · ประกาศอยู่ได้ 24 ชม.)',
+    '✨ เปิดได้ตำนาน/เทพเจ้าตอนนี้มีแฟลชจอและป้ายระดับเด้งกลางจอ']},
   {ver:'2026.09.30.2',date:'30 ก.ย. 2026',title:'ฟักไข่ ×10 และอัมพรเริ่มต้น 600 🥚',items:[
     '🥚 ศาลฟักไข่กดฟักได้ทั้งทีละ 1 ใบ และทีละ 10 ใบ (ไข่ป่า ×10 · 1,000 เหรียญ / ไข่ทองคำ ×10 · 300 อัมพร) เรทเท่าเดิม',
     '💎 ผู้เล่นใหม่เริ่มต้นด้วยอัมพร 600 · ผู้ที่เริ่มเล่นหลังรีเซ็ตแล้วได้รับเพิ่มให้ครบ 600',

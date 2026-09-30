@@ -308,6 +308,10 @@ python3 build_battle.py && cp battle.html ../battle.html
 - 10 บัญชีใน auth.users (anonymous, ล็อกอินไม่ได้) + ตาราง `public.bots` · ชื่อเหมือนผู้เล่นทั่วไป · ด่าน 9–26 · ขึ้นอันดับเผ่า/โดนสุ่มบุกได้/รับเพื่อนเอง
 - `_bots_tick()` ทุกชั่วโมงผ่าน pg_cron (`amber_bots_tick`): อัปเดต updated_at, +เหรียญ, อัปเลเวลทีม, ดันด่านเมื่อพลังถึง (ไม่เกินด่าน 60)
 - ลบบอท: `delete from auth.users where id in (select user_id from public.bots);`
+## ประกาศวิ่งเมื่อเปิดได้ตำนานขึ้นไป — `server/migrate_pulls.sql`, `src/farm_pulls.js`
+- ตาราง `pulls(user_id, sp, rar, el, created_at)` บันทึกผ่าน `_pull_log()` ใน `hatch_egg` / `hatch_god_egg` เมื่อ rar ≥ 3 (`hatch_eggs` เรียก `hatch_egg` จึงครบ) · เก็บ 3 วัน
+- RPC `pulls_recent()` 10 รายการล่าสุดใน 24 ชม. (เฉพาะคนที่ตั้งชื่อ+เลือกเผ่าแล้ว, `me` = ของเรา) · `pull_raid(pid)` เพิ่มเจ้าของประกาศเข้า `raid_scouts` วันนี้ (นับรวม 20 ครั้ง/วัน) แล้วคืน `_raid_payload(u,t,'pull')` → client `visitFriend(code,true,{payload})` · error `pull_expired`
+- client: แถบ `#pullBar` วิ่งขวา→ซ้าย (Web Animations, 75px/วิ, วน 2 รอบ/ประกาศ) · จอ ≥860px อยู่บนกลางจอ มือถืออยู่เหนือแถบล่าง (ซ่อนตอนเปิด sheet/คลัง/เยี่ยมบ้าน/คู่มือ) · โหลดทุก 40 วิ, เข้าเกมครั้งแรกแสดง 3 รายการ
+- `pullFx(rar, ชื่อ, บรรทัดรอง)` แฟลชจอ + รัศมีหมุน + ป้ายระดับเด้ง (DOM ล้วน) เรียกจาก `hatch()` / `hatchMulti()`
 ## งานค้าง (ยังไม่ได้ทำ)
-- **ประกาศวิ่งเมื่อมีคนเปิดได้ตำนานขึ้นไป**: ตาราง `pulls(user_id, sp, rar, created_at)` บันทึกใน `hatch_egg`/`hatch_eggs`/`hatch_god_egg` เมื่อ rar ≥ 3 · RPC ดึง 10 รายการล่าสุด · client แถบ marquee บนกลางจอ วิ่งขวา→ซ้าย "🎉 {ชื่อ} เปิดได้ ⭐{ระดับ} {ตัว}! ไปปล้นกันเลยไหม? 👊" กดแล้ว `visitFriend(code,true,{rpc:'raid_visit'})` (ต้องให้ raid_visit ยอมรับเป้าจากประกาศ เช่น เพิ่ม raid_scouts ให้ก่อน) · เอฟเฟกต์เปิดตำนาน/เทพเจ้าให้อลังการขึ้น (แฟลชจอ + ป้ายระดับเด้งกลางจอ)
 - **บอท 10 ตัว**: `server/migrate_bots.sql` ยังไม่ได้รันบนฐานข้อมูลจริง (ต้องให้เจ้าของกด Run เอง) หลังรันให้เช็ก `select * from cron.job` ว่ามี `amber_bots_tick`

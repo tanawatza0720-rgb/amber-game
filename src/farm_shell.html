@@ -386,6 +386,34 @@ body.visiting #rail,body.visiting #dock,body.visiting #rankBox,body.visiting #hi
 .tdRow.done{opacity:.55}.tdIc{font-size:20px;width:26px;text-align:center}
 .tdTx{flex:1;min-width:0}.tdTx b{display:block;font-size:13px}.tdTx small{color:var(--muted);font-size:11.5px}
 .h10{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:4px 0 6px}.h10 .ic{width:100%!important}.h10 .ic.r4{box-shadow:0 0 0 2px #ff8ac4,0 0 14px #ff8ac4}.h10 .ic.r3{box-shadow:0 0 0 2px #ffc94d,0 0 10px #ffc94d}
+/* ประกาศวิ่ง (farm_pulls.js) · จอกว้าง = บนกลางจอ · มือถือ = เหนือแถบล่าง (บนสุดไม่มีที่ว่าง) */
+#pullBar{position:fixed;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 24px));height:34px;display:flex;align-items:center;gap:8px;padding:0 10px 0 5px;border:1px solid rgba(255,201,77,.55);border-radius:999px;background:linear-gradient(90deg,rgba(60,30,8,.94),rgba(28,18,10,.94));box-shadow:0 0 18px rgba(255,180,60,.28),0 8px 24px rgba(0,0,0,.4);color:var(--bone);font:inherit;font-size:13px;cursor:pointer;animation:pbIn .35s ease-out}
+#pullBar[hidden]{display:none}
+#pullBar.god{border-color:rgba(255,106,176,.75);box-shadow:0 0 22px rgba(255,106,176,.4),0 8px 24px rgba(0,0,0,.4)}
+#pullBar.me{border-color:rgba(95,224,192,.6)}
+.pbTag{flex:none;padding:3px 9px;border-radius:999px;background:linear-gradient(180deg,#ffcf5a,#e08a1f);color:#3a2210;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:12px}
+#pullBar.god .pbTag{background:linear-gradient(180deg,#ff9ad0,#d9408a);color:#fff}
+.pbWin{flex:1;min-width:0;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent)}
+.pbTxt{display:inline-block;will-change:transform}.pbTxt b{font-weight:700}.pbWhat{text-shadow:0 0 8px currentColor}
+@keyframes pbIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (min-width:860px){#pullBar{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px));width:min(480px,calc(100% - 470px))}}
+body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen #pullBar,body.preLogin #pullBar{display:none!important}
+@media (max-width:859px){body:has(#sheet:not([hidden])) #pullBar{display:none!important}}
+/* เอฟเฟกต์เปิดได้ตำนาน/เทพเจ้า */
+#pullFx{position:fixed;inset:0;z-index:12;display:grid;place-items:center;pointer-events:auto;overflow:hidden}
+.pfFlash{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#fff 0,var(--tc) 30%,transparent 70%);animation:pfFlash 1s ease-out forwards}
+.pfRays{position:absolute;left:50%;top:45%;width:180vmax;height:180vmax;margin:-90vmax 0 0 -90vmax;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--tc) 45%,transparent) 0 6deg,transparent 6deg 18deg);-webkit-mask-image:radial-gradient(circle,#000 0,transparent 55%);mask-image:radial-gradient(circle,#000 0,transparent 55%);animation:pfSpin 6s linear infinite,pfFade 2.4s ease-out forwards;opacity:.8}
+#pullFx.god .pfRays{animation:pfSpin 4s linear infinite,pfFade 3.2s ease-out forwards}
+.pfCard{position:relative;text-align:center;padding:16px 28px;border-radius:20px;background:rgba(20,12,8,.72);border:2px solid var(--tc);box-shadow:0 0 40px var(--tc);animation:pfPop .6s cubic-bezier(.2,1.6,.4,1) both,pfFade 2.4s ease-in forwards}
+#pullFx.god .pfCard{animation:pfPop .7s cubic-bezier(.2,1.7,.4,1) both,pfFade 3.2s ease-in forwards}
+.pfTier{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(28px,8vw,52px);color:var(--tc);text-shadow:0 0 18px var(--tc),0 2px 0 #000;letter-spacing:.04em}
+.pfName{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(18px,5vw,26px);color:#fff;margin-top:2px}
+.pfSub{font-size:14px;color:var(--muted);margin-top:2px}
+@keyframes pfFlash{0%{opacity:.95}100%{opacity:0}}
+@keyframes pfSpin{to{transform:rotate(360deg)}}
+@keyframes pfFade{0%,70%{opacity:1}100%{opacity:0}}
+@keyframes pfPop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){#pullBar{animation:none}.pfRays{display:none}.pfCard{animation:pfFade 2.4s ease-in forwards}}
 </style>
 
 <div id="view"></div>

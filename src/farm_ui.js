@@ -122,6 +122,7 @@ async function hatch(kind,name){
   particles(ep,ELEM[hel]?ELEM[hel].fx:col,40,2.6,.06,1.2);
   const ag=addAgent(d,[0,5.9],true); if(!ag.fly){ag.state='idle'; ag.wait=2.5;}
   toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' '+ELEM[hel].i+'ธาตุ'+hel+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
+  if(r.rar>=3&&typeof pullFx==='function'){pullFx(r.rar,SPEC[r.mon.sp].name,ELEM[hel].i+' ธาตุ'+hel);PULL.last=0;setTimeout(pullsLoad,2500);}
   hatching=false;
 }
 // ฟักทีละ 10 ใบ: ฟักที่เซิร์ฟเวอร์ครั้งเดียว แล้วแสดงผลรวม (ตัวหายากสุดเล่นเอฟเฟกต์)
@@ -143,6 +144,7 @@ async function hatchMulti(kind,name){
   const sum=[4,3,2,1].filter(k=>cnt(k)).map(k=>tierOf(k).n+' '+cnt(k)).join(' · ');
   openSheet(name+' ×10',sum,d,[['ฟักอีก 10 ใบ',()=>hatchMulti(kind,name),kind==='gold'?'gold':'',kind==='gold'?S.amber<300:S.coins<1000],['ปิด',()=>closeSheet(),'ghost']]);
   toast(best>=4?'ได้ระดับเทพเจ้า!!':best>=3?'ได้ระดับตำนาน!':'ฟักครบ 10 ใบแล้ว');
+  if(best>=3&&typeof pullFx==='function'){const bx=L[0],n=L.filter(x=>x.rar===best).length;pullFx(best,SPEC[bx.mon.sp].name,n>1?'ได้'+tierOf(best).n+' '+n+' ตัว!':ELEM[elOfMon(bx.d)].i+' ธาตุ'+elOfMon(bx.d));PULL.last=0;setTimeout(pullsLoad,2500);}
   hatching=false;
 }
 let shakeCam=0;

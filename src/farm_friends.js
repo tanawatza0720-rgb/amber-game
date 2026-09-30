@@ -79,7 +79,7 @@ async function visitFriend(code,raid,opt){
   const hd=el('div','vbHead');const av=el('span','frAv',R?R.icon:'🌱');if(R)av.style.background=R.c+'33';hd.append(av);
   const t=el('div');t.append(el('b',null,'บ้านของ '+f.name));t.append(el('small',null,'Lv '+f.lv+' · '+(R?R.n:'ยังไม่มีเผ่า')+' · พลังทีม '+fmt(f.power||0)+' · ด่าน '+(f.stage||0)));hd.append(t);
   hd.append(frBtn('🏠 กลับบ้าน','main',leaveVisit));bar.append(hd);
-  if(r.kind==='random')t.firstChild.textContent='🎲 บ้านของ '+f.name;if(r.revenge)t.firstChild.textContent='😤 บ้านของ '+f.name;
+  if(r.kind==='random')t.firstChild.textContent='🎲 บ้านของ '+f.name;if(r.kind==='pull')t.firstChild.textContent='🎉 บ้านของ '+f.name;if(r.revenge)t.firstChild.textContent='😤 บ้านของ '+f.name;
   const team=(r.team||[]).map(id=>r.monsters.find(m=>Number(m.id)===Number(id))).filter(Boolean);
   if(team.length){const tr=el('div','vbTeam');tr.append(el('small',null,'ทีม'));team.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.onclick=null;tr.append(c);});bar.append(tr);}
   bar.append(el('small','vbNote',(r.monsters||[]).length+' ตัวในฟาร์ม'+(r.visitors_today?' · วันนี้มีคนมาเยี่ยม '+r.visitors_today+' คน':'')));
