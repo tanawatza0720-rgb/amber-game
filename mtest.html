@@ -1365,6 +1365,7 @@ async function signOutAll(){ try{sessionStorage.removeItem('amber_in');}catch(e)
 // เข้าเกม: โหลดเซฟจากเซิร์ฟเวอร์ (หรือในเครื่องถ้าออฟไลน์)
 async function enterOnline(){ NET.mode='online'; applyState(await api('game_state')); }
 function enterOffline(){ NET.mode='offline'; applyState(LOCAL.call('game_state',{})); }
+window.__F={enterOffline,enterGame:()=>enterGame()};
 async function linkGoogle(){
   if(NET.mode!=='online')return toast('ต้องเชื่อมต่อเซิร์ฟเวอร์ก่อน');
   try{await signInGoogle();}catch(e){toast('ผูกบัญชีไม่สำเร็จ: '+e.message);}
@@ -4622,5 +4623,4 @@ startFarm();
 
 })();
 
-window.__F={enterOffline,enterGame};
 </script>
