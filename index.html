@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ตำนานป่าอัมพร</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -414,6 +419,8 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 @keyframes pfFade{0%,70%{opacity:1}100%{opacity:0}}
 @keyframes pfPop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){#pullBar{animation:none}.pfRays{display:none}.pfCard{animation:pfFade 2.4s ease-in forwards}}
+/* มือถือ: ป้ายปุ่มราง/แถบล่างใหญ่ขึ้นให้อ่านง่าย */
+@media (max-width:520px){.rbtn{font-size:12px}.nbtn{font-size:12px}.nbtn.big{font-size:13px}}
 </style>
 
 <div id="view"></div>
@@ -4175,6 +4182,9 @@ if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VIS
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.01',date:'1 ต.ค. 2026',title:'ตัวหนังสือและปุ่มบนมือถือใหญ่ขึ้น 📱',items:[
+    '📱 แก้หน้าเกมบนมือถือให้แสดงขนาดจริง ตัวหนังสือและปุ่มใหญ่ขึ้นเกือบ 3 เท่า อ่านง่าย กดง่าย',
+    '❤️ แถบเลือดในสนามรบบนมือถือตัวหนังสือใหญ่ขึ้น']},
   {ver:'2026.09.30.4',date:'30 ก.ย. 2026',title:'ตัวละครใหม่ระดับหายาก 3 ตัว 🐺🦊🪓',items:[
     '🐺 เซย์โร หมาป่านักดาบแห่งธารน้ำแข็ง (ธาตุน้ำ) · ฟันสามคลื่น กระโดดฟันให้มึน',
     '🦊 โคฮาคุ จิ้งจอกนักเวทแห่งอัมพร (ธาตุไฟ) · สายตีไกล ยืนยิงไฟจิ้งจอก ยิงลูกไฟพร้อมกัน 4 ตัว และเรียกฝนเพลิงให้ศัตรูมึน',
