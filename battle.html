@@ -815,7 +815,7 @@ function elInfo(e){
   return {strong,weak};
 }
 // ธาตุประจำตัว (ภาพหลักของตัวละคร) · ตัวที่ฟักได้สุ่มธาตุได้ทั้ง 6 ธาตุ (เก็บใน monsters.el; ว่าง = ธาตุประจำตัว)
-const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ'};
+const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ',seiro:'น้ำ',kohaku:'ไฟ',garok:'ดิน'};
 const elOfMon=m=>(m&&m.el&&ELEM[m.el])?m.el:EL_OF[m&&m.sp];
 /* ================= ออร่าตามธาตุ =================
    ผิวตัวละครเป็นสีเดิม · ห่อด้วย "เปลือกออร่า" (ใช้กระดูกเดียวกับตัว จึงขยับตาม) ขอบเรืองเป็นเปลวไหวขึ้นด้านบน
@@ -931,6 +931,18 @@ const SKILLS={
     {id:'s1',name:'แทงหอกพงไพร',desc:'แทงศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
     {id:'s2',name:'หอกพายุใบไม้',desc:'แทง 3 ครั้ง ครั้งละ 60% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.6,target:'one'},
     {id:'s3',name:'หอกดิ่งฟ้า',desc:'กระโดดปักหอกใส่ศัตรูรอบจุดตก 80% โอกาส 30% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.3}],
+  seiro:[
+    {id:'s1',name:'คมเขี้ยวธารา',desc:'ฟันศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
+    {id:'s2',name:'สามคลื่นหมาป่า',desc:'ฟัน 3 ครั้ง ครั้งละ 62% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.62,target:'one'},
+    {id:'s3',name:'จันทร์น้ำแข็งถล่ม',desc:'กระโดดฟันลงกลางศัตรูรอบจุดตก 80% โอกาส 30% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.3}],
+  kohaku:[
+    {id:'s1',name:'คทาจิ้งจอก',desc:'ฟาดคทาใส่ศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
+    {id:'s2',name:'ลูกไฟจิ้งจอก',desc:'ยิงลูกไฟใส่ศัตรูสูงสุด 4 ตัว ตัวละ 60% · คูลดาวน์ 3',cd:3,type:'ranged',mult:.6,target:'all'},
+    {id:'s3',name:'เพลิงอำพันระเบิด',desc:'กระโดดกระแทกคทาใส่ศัตรูรอบจุดตก 80% โอกาส 25% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.25}],
+  garok:[
+    {id:'s1',name:'ขวานผ่าภูผา',desc:'จามขวานใส่ศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
+    {id:'s2',name:'พายุขวานหิน',desc:'หมุนขวาน 3 ครั้ง ครั้งละ 60% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.6,target:'one'},
+    {id:'s3',name:'ธรณีแยก',desc:'กระโดดทุบพื้นใส่ศัตรูรอบจุดตก 80% โอกาส 35% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.35}],
   // ---------- ตำนาน ----------
   kuroga:[
     {id:'s1',name:'ฟันเงาจันทร์',desc:'ฟันศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},
@@ -993,7 +1005,7 @@ const RACE_ORDER=['god','undead','beast','human'];
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -1003,7 +1015,7 @@ function loadRig(key,onProgress){
 }
 function loadMeshy(onProgress){
   const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
-  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),anims]).then(([g])=>{MESHY=g;return g;});
+  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),loadRig('seiro'),loadRig('kohaku'),loadRig('garok'),anims]).then(([g])=>{MESHY=g;return g;});
 }
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
 /* กำมือ: โมเดลจาก Meshy ไม่มีกระดูกนิ้ว มือจึงแบแข็ง -> ดัดนิ้วของเมชให้งอรอบด้ามดาบ (ทำครั้งเดียวต่อโมเดล)
@@ -1048,6 +1060,7 @@ function makeFist(root,hands){
     sw.position.add(new THREE.Vector3(...U[sd].shift));
   });
 }
+const POLE={morihime:1,kohaku:1,garok:1}; // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
 function buildMeshyEvo(m,key){
   key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
   const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
@@ -1177,9 +1190,9 @@ function buildMeshyEvo(m,key){
   const mt=mats();
   const swR=prop?null:katana(R.hd,mt); if(swR){swR.position.set(0,-.04,0); swR.rotation.set(-.35,0,1.95);}
   const swL=prop?null:katana(L.hd,mt); if(swL){swL.position.set(0,-.04,0); swL.rotation.set(-.1,0,Math.PI+.1);}
-  if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||key==='morihime';}
+  if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||!!POLE[key];}
   else{m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;}
-  if(key==='kuroga'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ: ดาบยาวเล่มเดียว
+  if(key==='kuroga'||key==='seiro'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ/เซย์โร: ดาบยาวเล่มเดียว
   const base=[
     [hips.position,'y',.88],[hips.rotation,'y',.12],[hips.rotation,'x',0],
     [torso.rotation,'x',.05],[torso.rotation,'y',-.04],[torso.rotation,'z',0],
@@ -1216,8 +1229,8 @@ function buildMeshyEvo(m,key){
     drawP.sub(hilt.clone().multiply(prop.scale).applyQuaternion(drawQ));
     swordPose={restP:prop.position.clone(),restQ:prop.quaternion.clone(),drawP,drawQ,blend:0};
   }
-  // โมริฮิเมะ: จับหอกตามแกนการจับของท่า Mixamo (หัวหอกออกทางเดียวกับใบดาบ จุดจับเดิมบนด้าม)
-  if(key==='morihime'&&prop&&CS&&MXA.grip&&MXA.grip.R){
+  // อาวุธด้ามยาว (หอกโมริฮิเมะ · คทาโคฮาคุ · ขวานกาโรค): จับตามแกนการจับของท่า Mixamo (ปลายที่กว้างกว่าออกทางเดียวกับใบดาบ)
+  if(POLE[key]&&prop&&CS&&MXA.grip&&MXA.grip.R){
     const P=prop.geometry.attributes.position,n=P.count,v=new THREE.Vector3(),c=new THREE.Vector3();
     for(let i=0;i<n;i++)c.add(v.fromBufferAttribute(P,i));c.multiplyScalar(1/n);
     const a=new THREE.Vector3(),b=new THREE.Vector3();let d0=-1;
@@ -2596,12 +2609,17 @@ const SPECIES={
   kuroga:{name:'คุโรกะ',evo:1,rig:'kuroga',base:{hp:130,atk:48,def:16,spd:50}},
   hakuneko:{name:'ฮาคุเนโกะ',evo:1,rig:'hakuneko',base:{hp:120,atk:51,def:14,spd:56}},
   morihime:{name:'โมริฮิเมะ',evo:1,rig:'morihime',base:{hp:110,atk:32,def:17,spd:38}},
+  seiro:{name:'เซย์โร',evo:1,rig:'seiro',base:{hp:104,atk:34,def:15,spd:40}},
+  kohaku:{name:'โคฮาคุ',evo:1,rig:'kohaku',base:{hp:96,atk:36,def:12,spd:40}},
+  garok:{name:'กาโรค',evo:1,rig:'garok',base:{hp:124,atk:31,def:19,spd:30}},
   yorugumo:{name:'โยรุกุโมะ',evo:1,spider:1,base:{hp:100,atk:34,def:14,spd:38}},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42}},
 };
 // สกิลและธาตุมาจาก gamedata.js (ใช้ร่วมกับคลังมอนสเตอร์)
 Object.keys(SPECIES).forEach(k=>{SPECIES[k].skills=SKILLS[k];SPECIES[k].el=EL_OF[k];});
 const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6},{sp:'kazemaru',lv:5},{sp:'kazemaru',lv:4},{sp:'kazemaru',lv:4}];
+// ทดสอบตัวละคร: battle.html?demo=seiro,kohaku,garok (ใช้ได้เฉพาะโหมดทดลอง · ล็อกอินอยู่ทีมจริงจะทับ)
+{const q=/[?&]demo=([a-z,]+)/.exec(location.search);if(q){const L=q[1].split(',').filter(s=>SPECIES[s]);if(L.length)TEAM.splice(0,TEAM.length,...L.slice(0,6).map(sp=>({sp,lv:10})));}}
 /* ด่านแบบ idle: ด่านที่ n ต้องการพลังทีม REQ(n) (ตรงกับเซิร์ฟเวอร์ _req) ด่านที่ 10,20,... เป็นบอส */
 const POWB=sp=>{const b=SPECIES[sp].base;return b.hp+b.atk*4+b.def*3+b.spd*2;};
 const REQ=n=>Math.round(1400*Math.pow(1.04,Math.max(1,n)-1));
@@ -3271,7 +3289,22 @@ async function clipStrike(u,nm,sp,onHit,multi){
   if(multi){let last=0;for(const h of inf.hits){await wait((h-last)/sp*1000);last=h;onHit();}await wait(Math.max(120,(inf.dur-last)/sp*1000*.35));}
   else{await wait(inf.main/sp*1000);onHit();await wait(Math.max(120,(inf.dur-inf.main)/sp*1000*.4));}
 }
-const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'}};
+/* เวทยิงไกลของตัวที่ใช้ท่า Mixamo (โคฮาคุ): เล่นท่าร่าย รวมลูกไฟที่ปลายคทา แล้วยิงโค้งใส่ศัตรูทีละลูก */
+async function rigCast(u,foes,clip,onHitOne){
+  const A=u.inner.userData,inf=A.clipInfo(clip),sp=1.4; A.play(clip,{speed:sp,fade:.1});
+  const src=()=>{const sw=A.swords&&A.swords[0],v=new THREE.Vector3();if(sw&&sw.userData.tip&&sw.visible)sw.userData.tip.getWorldPosition(v);else v.copy(u.w.position).setY(1.7*u.w.scale.x);return v;};
+  await wait(inf.main/sp*650);
+  const c=elFx(u),g0=glow(scene,c,.35,src().toArray(),1);
+  await tween(.28,k=>{g0.position.copy(src());g0.scale.setScalar(.25+k*1.1);}); scene.remove(g0);g0.material.dispose();
+  shake=Math.max(shake,.06);
+  await Promise.all(foes.map((f,i)=>new Promise(res=>setTimeout(async()=>{
+    const from=src(),g=glow(scene,c,.45,from.toArray(),1),to=f.w.position.clone().setY(.9),mid=from.clone().lerp(to,.5).add(new THREE.Vector3(0,1,0));
+    await tween(.4,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));if(Math.random()<.5*FXK)particles(g.position,c,1,.3,.05,.2,.6);},t=>t);
+    scene.remove(g);g.material.dispose();particles(to,c,Math.round(14*FXK)||4,2,.08,.3,.9);
+    if(f.alive)onHitOne(f); res();},i*120/SPEED))));
+  await wait(220);
+}
+const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'},seiro:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kohaku:{s1:['power','slash'],cast:'battlecry',s3:'jumpatk'},garok:{s1:['power','slash','slash2'],s2:'spin',s3:'jumpatk'}};
 function rtTick(dt,T){
   if(!RT)return;
   raceTick(dt);
@@ -3341,6 +3374,8 @@ async function rtUse(u,s,t){
     } else if(s.type==='ranged'&&u.dragon){
       const fs=near(t.w.position,4.5); await faceTo(u,t.w.position,.2);
       if(Math.random()<.5)await dragonBreath(u,fs,hitAll(fs)); else await dragonStrafe(u,fs,o=>{if(o.alive)dealHit(u,o,s);});
+    } else if(s.type==='ranged'&&AN&&AN.cast&&hasClip(u,AN.cast)){
+      await rigCast(u,near(t.w.position,4.5).slice(0,4),AN.cast,f=>dealHit(u,f,s));
     } else if(s.type==='ranged'){
       const fs=near(u.w.position,9).slice(0,4); u.inner.userData.acting=true; const r=u.rig;
       for(const f of fs){faceTo(u,f.w.position,.08);poseTo([[r.R.a.rotation,'z',-1.2],[r.R.a.rotation,'x',-1.4]],.08);
@@ -3536,7 +3571,7 @@ function previewOrder(n){
 }
 function renderOrder(cur){
   const o=$('#order');o.innerHTML='';
-  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):({kazekiri:'คิริ',kazemaru:'มารุ',amateru:'มังกร',kuroga:'คุโร',hakuneko:'เนโกะ',morihime:'โมริ',yorugumo:'แมงมุม'}[u.sp]||'');o.appendChild(c);});
+  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):({kazekiri:'คิริ',kazemaru:'มารุ',amateru:'มังกร',kuroga:'คุโร',hakuneko:'เนโกะ',morihime:'โมริ',yorugumo:'แมงมุม',seiro:'เซย์',kohaku:'โคฮา',garok:'กาโรค'}[u.sp]||'');o.appendChild(c);});
 }
 
 /* ================= วงแหวนบอกตัวที่ถึงตาและเป้าหมาย ================= */

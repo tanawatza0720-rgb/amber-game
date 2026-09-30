@@ -44,7 +44,22 @@ async function clipStrike(u,nm,sp,onHit,multi){
   if(multi){let last=0;for(const h of inf.hits){await wait((h-last)/sp*1000);last=h;onHit();}await wait(Math.max(120,(inf.dur-last)/sp*1000*.35));}
   else{await wait(inf.main/sp*1000);onHit();await wait(Math.max(120,(inf.dur-inf.main)/sp*1000*.4));}
 }
-const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'}};
+/* เวทยิงไกลของตัวที่ใช้ท่า Mixamo (โคฮาคุ): เล่นท่าร่าย รวมลูกไฟที่ปลายคทา แล้วยิงโค้งใส่ศัตรูทีละลูก */
+async function rigCast(u,foes,clip,onHitOne){
+  const A=u.inner.userData,inf=A.clipInfo(clip),sp=1.4; A.play(clip,{speed:sp,fade:.1});
+  const src=()=>{const sw=A.swords&&A.swords[0],v=new THREE.Vector3();if(sw&&sw.userData.tip&&sw.visible)sw.userData.tip.getWorldPosition(v);else v.copy(u.w.position).setY(1.7*u.w.scale.x);return v;};
+  await wait(inf.main/sp*650);
+  const c=elFx(u),g0=glow(scene,c,.35,src().toArray(),1);
+  await tween(.28,k=>{g0.position.copy(src());g0.scale.setScalar(.25+k*1.1);}); scene.remove(g0);g0.material.dispose();
+  shake=Math.max(shake,.06);
+  await Promise.all(foes.map((f,i)=>new Promise(res=>setTimeout(async()=>{
+    const from=src(),g=glow(scene,c,.45,from.toArray(),1),to=f.w.position.clone().setY(.9),mid=from.clone().lerp(to,.5).add(new THREE.Vector3(0,1,0));
+    await tween(.4,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));if(Math.random()<.5*FXK)particles(g.position,c,1,.3,.05,.2,.6);},t=>t);
+    scene.remove(g);g.material.dispose();particles(to,c,Math.round(14*FXK)||4,2,.08,.3,.9);
+    if(f.alive)onHitOne(f); res();},i*120/SPEED))));
+  await wait(220);
+}
+const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'},seiro:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kohaku:{s1:['power','slash'],cast:'battlecry',s3:'jumpatk'},garok:{s1:['power','slash','slash2'],s2:'spin',s3:'jumpatk'}};
 function rtTick(dt,T){
   if(!RT)return;
   raceTick(dt);
@@ -114,6 +129,8 @@ async function rtUse(u,s,t){
     } else if(s.type==='ranged'&&u.dragon){
       const fs=near(t.w.position,4.5); await faceTo(u,t.w.position,.2);
       if(Math.random()<.5)await dragonBreath(u,fs,hitAll(fs)); else await dragonStrafe(u,fs,o=>{if(o.alive)dealHit(u,o,s);});
+    } else if(s.type==='ranged'&&AN&&AN.cast&&hasClip(u,AN.cast)){
+      await rigCast(u,near(t.w.position,4.5).slice(0,4),AN.cast,f=>dealHit(u,f,s));
     } else if(s.type==='ranged'){
       const fs=near(u.w.position,9).slice(0,4); u.inner.userData.acting=true; const r=u.rig;
       for(const f of fs){faceTo(u,f.w.position,.08);poseTo([[r.R.a.rotation,'z',-1.2],[r.R.a.rotation,'x',-1.4]],.08);

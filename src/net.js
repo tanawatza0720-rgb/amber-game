@@ -82,7 +82,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
   const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
-  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:40},amateru:{rar:4,max:50}};
+  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:40},seiro:{rar:2,max:40},kohaku:{rar:2,max:40},garok:{rar:2,max:40},amateru:{rar:4,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;

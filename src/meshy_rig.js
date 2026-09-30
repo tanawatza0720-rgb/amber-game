@@ -2,7 +2,7 @@
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -12,7 +12,7 @@ function loadRig(key,onProgress){
 }
 function loadMeshy(onProgress){
   const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
-  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),anims]).then(([g])=>{MESHY=g;return g;});
+  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),loadRig('seiro'),loadRig('kohaku'),loadRig('garok'),anims]).then(([g])=>{MESHY=g;return g;});
 }
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
 /* กำมือ: โมเดลจาก Meshy ไม่มีกระดูกนิ้ว มือจึงแบแข็ง -> ดัดนิ้วของเมชให้งอรอบด้ามดาบ (ทำครั้งเดียวต่อโมเดล)
@@ -57,6 +57,7 @@ function makeFist(root,hands){
     sw.position.add(new THREE.Vector3(...U[sd].shift));
   });
 }
+const POLE={morihime:1,kohaku:1,garok:1}; // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
 function buildMeshyEvo(m,key){
   key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
   const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
@@ -186,9 +187,9 @@ function buildMeshyEvo(m,key){
   const mt=mats();
   const swR=prop?null:katana(R.hd,mt); if(swR){swR.position.set(0,-.04,0); swR.rotation.set(-.35,0,1.95);}
   const swL=prop?null:katana(L.hd,mt); if(swL){swL.position.set(0,-.04,0); swL.rotation.set(-.1,0,Math.PI+.1);}
-  if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||key==='morihime';}
+  if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||!!POLE[key];}
   else{m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;}
-  if(key==='kuroga'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ: ดาบยาวเล่มเดียว
+  if(key==='kuroga'||key==='seiro'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ/เซย์โร: ดาบยาวเล่มเดียว
   const base=[
     [hips.position,'y',.88],[hips.rotation,'y',.12],[hips.rotation,'x',0],
     [torso.rotation,'x',.05],[torso.rotation,'y',-.04],[torso.rotation,'z',0],
@@ -225,8 +226,8 @@ function buildMeshyEvo(m,key){
     drawP.sub(hilt.clone().multiply(prop.scale).applyQuaternion(drawQ));
     swordPose={restP:prop.position.clone(),restQ:prop.quaternion.clone(),drawP,drawQ,blend:0};
   }
-  // โมริฮิเมะ: จับหอกตามแกนการจับของท่า Mixamo (หัวหอกออกทางเดียวกับใบดาบ จุดจับเดิมบนด้าม)
-  if(key==='morihime'&&prop&&CS&&MXA.grip&&MXA.grip.R){
+  // อาวุธด้ามยาว (หอกโมริฮิเมะ · คทาโคฮาคุ · ขวานกาโรค): จับตามแกนการจับของท่า Mixamo (ปลายที่กว้างกว่าออกทางเดียวกับใบดาบ)
+  if(POLE[key]&&prop&&CS&&MXA.grip&&MXA.grip.R){
     const P=prop.geometry.attributes.position,n=P.count,v=new THREE.Vector3(),c=new THREE.Vector3();
     for(let i=0;i<n;i++)c.add(v.fromBufferAttribute(P,i));c.multiplyScalar(1/n);
     const a=new THREE.Vector3(),b=new THREE.Vector3();let d0=-1;

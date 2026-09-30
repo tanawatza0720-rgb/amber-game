@@ -20,12 +20,17 @@ const SPECIES={
   kuroga:{name:'คุโรกะ',evo:1,rig:'kuroga',base:{hp:130,atk:48,def:16,spd:50}},
   hakuneko:{name:'ฮาคุเนโกะ',evo:1,rig:'hakuneko',base:{hp:120,atk:51,def:14,spd:56}},
   morihime:{name:'โมริฮิเมะ',evo:1,rig:'morihime',base:{hp:110,atk:32,def:17,spd:38}},
+  seiro:{name:'เซย์โร',evo:1,rig:'seiro',base:{hp:104,atk:34,def:15,spd:40}},
+  kohaku:{name:'โคฮาคุ',evo:1,rig:'kohaku',base:{hp:96,atk:36,def:12,spd:40}},
+  garok:{name:'กาโรค',evo:1,rig:'garok',base:{hp:124,atk:31,def:19,spd:30}},
   yorugumo:{name:'โยรุกุโมะ',evo:1,spider:1,base:{hp:100,atk:34,def:14,spd:38}},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42}},
 };
 // สกิลและธาตุมาจาก gamedata.js (ใช้ร่วมกับคลังมอนสเตอร์)
 Object.keys(SPECIES).forEach(k=>{SPECIES[k].skills=SKILLS[k];SPECIES[k].el=EL_OF[k];});
 const TEAM=[{sp:'kuroga',lv:6},{sp:'amateru',lv:6},{sp:'kazekiri',lv:6},{sp:'kazemaru',lv:5},{sp:'kazemaru',lv:4},{sp:'kazemaru',lv:4}];
+// ทดสอบตัวละคร: battle.html?demo=seiro,kohaku,garok (ใช้ได้เฉพาะโหมดทดลอง · ล็อกอินอยู่ทีมจริงจะทับ)
+{const q=/[?&]demo=([a-z,]+)/.exec(location.search);if(q){const L=q[1].split(',').filter(s=>SPECIES[s]);if(L.length)TEAM.splice(0,TEAM.length,...L.slice(0,6).map(sp=>({sp,lv:10})));}}
 /* ด่านแบบ idle: ด่านที่ n ต้องการพลังทีม REQ(n) (ตรงกับเซิร์ฟเวอร์ _req) ด่านที่ 10,20,... เป็นบอส */
 const POWB=sp=>{const b=SPECIES[sp].base;return b.hp+b.atk*4+b.def*3+b.spd*2;};
 const REQ=n=>Math.round(1400*Math.pow(1.04,Math.max(1,n)-1));

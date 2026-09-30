@@ -27,7 +27,7 @@ function elInfo(e){
   return {strong,weak};
 }
 // ธาตุประจำตัว (ภาพหลักของตัวละคร) · ตัวที่ฟักได้สุ่มธาตุได้ทั้ง 6 ธาตุ (เก็บใน monsters.el; ว่าง = ธาตุประจำตัว)
-const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ'};
+const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ',seiro:'น้ำ',kohaku:'ไฟ',garok:'ดิน'};
 const elOfMon=m=>(m&&m.el&&ELEM[m.el])?m.el:EL_OF[m&&m.sp];
 /* ================= ออร่าตามธาตุ =================
    ผิวตัวละครเป็นสีเดิม · ห่อด้วย "เปลือกออร่า" (ใช้กระดูกเดียวกับตัว จึงขยับตาม) ขอบเรืองเป็นเปลวไหวขึ้นด้านบน
@@ -143,6 +143,18 @@ const SKILLS={
     {id:'s1',name:'แทงหอกพงไพร',desc:'แทงศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
     {id:'s2',name:'หอกพายุใบไม้',desc:'แทง 3 ครั้ง ครั้งละ 60% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.6,target:'one'},
     {id:'s3',name:'หอกดิ่งฟ้า',desc:'กระโดดปักหอกใส่ศัตรูรอบจุดตก 80% โอกาส 30% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.3}],
+  seiro:[
+    {id:'s1',name:'คมเขี้ยวธารา',desc:'ฟันศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
+    {id:'s2',name:'สามคลื่นหมาป่า',desc:'ฟัน 3 ครั้ง ครั้งละ 62% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.62,target:'one'},
+    {id:'s3',name:'จันทร์น้ำแข็งถล่ม',desc:'กระโดดฟันลงกลางศัตรูรอบจุดตก 80% โอกาส 30% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.3}],
+  kohaku:[
+    {id:'s1',name:'คทาจิ้งจอก',desc:'ฟาดคทาใส่ศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
+    {id:'s2',name:'ลูกไฟจิ้งจอก',desc:'ยิงลูกไฟใส่ศัตรูสูงสุด 4 ตัว ตัวละ 60% · คูลดาวน์ 3',cd:3,type:'ranged',mult:.6,target:'all'},
+    {id:'s3',name:'เพลิงอำพันระเบิด',desc:'กระโดดกระแทกคทาใส่ศัตรูรอบจุดตก 80% โอกาส 25% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.25}],
+  garok:[
+    {id:'s1',name:'ขวานผ่าภูผา',desc:'จามขวานใส่ศัตรู 1 ตัว 105%',cd:0,type:'melee',mult:1.05,target:'one'},
+    {id:'s2',name:'พายุขวานหิน',desc:'หมุนขวาน 3 ครั้ง ครั้งละ 60% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.6,target:'one'},
+    {id:'s3',name:'ธรณีแยก',desc:'กระโดดทุบพื้นใส่ศัตรูรอบจุดตก 80% โอกาส 35% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:.8,target:'all',stun:.35}],
   // ---------- ตำนาน ----------
   kuroga:[
     {id:'s1',name:'ฟันเงาจันทร์',desc:'ฟันศัตรู 1 ตัว 120%',cd:0,type:'melee',mult:1.2,target:'one'},

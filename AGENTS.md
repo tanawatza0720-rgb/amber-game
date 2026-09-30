@@ -83,6 +83,9 @@ python3 build_battle.py && cp battle.html ../battle.html
 | `hakuneko` | ฮาคุเนโกะ (นักดาบแมว) | ตำนาน | `hkn/hakuneko_rig.json` | rig เอง (heat-diffusion weights) — Mixamo auto-rig เดิมวางกระดูกผิด (ไหล่อยู่กลางตัว ขาไขว้) จึงเลิกใช้ |
 | `morihime` | โมริฮิเมะ (เอลฟ์ถือหอก) | หายาก | `mrh/morihime_rig.json` | rig เอง (heat-diffusion weights) + ผ้า/ผมตามลำตัว + ตัดหน้าที่ยืดเป็นใย (เครื่องมือใน `tools/rig/`) · หอกจับตามแกนการจับของท่า Mixamo |
 | `amateru` | อามาเทรุ (มังกร) | เทพเจ้า | `drg/dragon.json` | กระดูกสร้างในโค้ด (dragon.js) |
+| `seiro` | เซย์โร (หมาป่านักดาบ น้ำ) | หายาก | `szr/seiro_rig.json` | rig เอง (tools/rig) · ไม่มีอาวุธในโมเดล ใช้คาตานะยาวเล่มเดียวแบบคุโรกะ |
+| `kohaku` | โคฮาคุ (จิ้งจอกนักเวท ไฟ) | หายาก | `khk/kohaku_rig.json` + `weapon.jpg` | rig เอง · หางผูกกับสะโพก (BOX) · คทาจับแบบอาวุธด้ามยาว (`POLE`) · สกิลยิงไกลใช้ `rigCast` |
+| `garok` | กาโรค (ออร์กถือขวาน ดิน) | หายาก | `grk/garok_rig.json` + `weapon.jpg` | rig เอง · ขวานจับแบบอาวุธด้ามยาว (`POLE`) |
 
 - ไฟล์ `*_rig.json` = glTF JSON (buffer ฝังเป็น base64) + `baseColor*.jpg` ในโฟลเดอร์เดียวกัน, ชื่อกระดูกแบบ **Mixamo** (`mixamorig:Hips`, `...RightHand`, `...RightHandMiddle4` ใช้บอกทิศมือ, `...HeadTop_End`)
 - ท่าทางทั้งหมด (idle, slash, combo, leap, hit, death, victory, run, walk, dizzy, powerup, spin, jumpatk, dodge, battlecry) อยู่ใน **`kzr/kazekiri_anims.json`** แล้ว retarget ให้ทุกโมเดลมนุษย์อัตโนมัติ
@@ -314,5 +317,10 @@ python3 build_battle.py && cp battle.html ../battle.html
 - RPC `pulls_recent()` 10 รายการล่าสุดใน 24 ชม. (เฉพาะคนที่ตั้งชื่อ+เลือกเผ่าแล้ว, `me` = ของเรา) · `pull_raid(pid)` เพิ่มเจ้าของประกาศเข้า `raid_scouts` วันนี้ (นับรวม 20 ครั้ง/วัน) แล้วคืน `_raid_payload(u,t,'pull')` → client `visitFriend(code,true,{payload})` · error `pull_expired`
 - client: แถบ `#pullBar` วิ่งขวา→ซ้าย (Web Animations, 75px/วิ, วน 2 รอบ/ประกาศ) · จอ ≥860px อยู่บนกลางจอ มือถืออยู่เหนือแถบล่าง (ซ่อนตอนเปิด sheet/คลัง/เยี่ยมบ้าน/คู่มือ) · โหลดทุก 40 วิ, เข้าเกมครั้งแรกแสดง 3 รายการ
 - `pullFx(rar, ชื่อ, บรรทัดรอง)` แฟลชจอ + รัศมีหมุน + ป้ายระดับเด้ง (DOM ล้วน) เรียกจาก `hatch()` / `hatchMulti()`
+## ตัวละครใหม่จาก Tripo (เซย์โร/โคฮาคุ/กาโรค) — `server/migrate_newchars2.sql`, `tools/rig/`
+- สร้างภาพต้นแบบ T-pose ใน Tripo Studio (Nano Banana) → Generate 3D (H3.1, polycount 25000 ตัว / 6000 อาวุธ, texture 2K) → Export GLB · โมเดลเป็นของเราเอง (ไม่ใช่ของชุมชน)
+- `tools/rig/autojoints.py body.glb joints.json '{override}'` ประมาณข้อต่อจาก T-pose (armY/neckY/headY/hipsY/legX/shoulderX แก้ได้) → `preview.py` ดูจุด → `selfrig2.py` (รองรับไม่มี trimesh ผ่าน `glbmini.py`, อาวุธ `-` = ไม่มี, `WLEN` ความยาวอาวุธ, `BOX` บังคับน้ำหนักในกล่อง, `weapon.jpg` แยก texture) → `posetest.py` ทดสอบน้ำหนักผิวด้วยภาพ
+- จุดข้อต่อที่ใช้จริงอยู่ใน `tools/rig/joints/`
+- ทดสอบท่าในสนามรบ (โหมดทดลอง ไม่ล็อกอิน): `battle.html?demo=seiro,kohaku,garok`
 ## งานค้าง (ยังไม่ได้ทำ)
-- (ว่าง)
+- **ตัวละครใหม่ 3 ตัว**: `server/migrate_newchars2.sql` ต้องให้เจ้าของรันก่อน ถึงจะฟักได้

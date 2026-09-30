@@ -12,6 +12,12 @@ const SPEC={
     base:{hp:120,atk:51,def:14,spd:56},lore:'นักดาบเผ่าแมวขาวผู้ร่าเริง แบกดาบโค้งไว้บนบ่าเสมอ ว่ากันว่าเธอมีเก้าชีวิตและยังไม่เคยใช้หมดสักครั้ง'},
   morihime:{name:'โมริฮิเมะ',title:'ธิดาหอกแห่งพงไพร',rar:2,el:'ไม้',elc:'#7fd46a',role:'จู่โจม',evo:1,rig:'morihime',maxLv:40,
     base:{hp:110,atk:32,def:17,spd:38},lore:'เอลฟ์ผู้พิทักษ์ป่าลึก ผ้าคลุมปักลายใบไม้พลิ้วตามสายลม หอกยาวของเธอแทงได้แม่นยำราวกับเงาใบไม้ที่ร่วงหล่น'},
+  seiro:{name:'เซย์โร',title:'หมาป่านักดาบแห่งธารน้ำแข็ง',rar:2,el:'น้ำ',elc:'#5fb3ff',role:'จู่โจม',evo:1,rig:'seiro',maxLv:40,
+    base:{hp:104,atk:34,def:15,spd:40},lore:'ซามูไรหมาป่าขนสีเงินผู้เฝ้าธารน้ำแข็งเหนือป่าอัมพร ผ้าคาดเอวสีครามพลิ้วตามทุกคมดาบ ว่ากันว่าเสียงหอนของเขาทำให้สายน้ำหยุดไหล'},
+  kohaku:{name:'โคฮาคุ',title:'จิ้งจอกนักเวทแห่งอัมพร',rar:2,el:'ไฟ',elc:'#ff8a3a',role:'เวทมนตร์',evo:1,rig:'kohaku',maxLv:40,
+    base:{hp:96,atk:36,def:12,spd:40},lore:'สาวจิ้งจอกผู้เฝ้าศาลเจ้าเก่ากลางป่า ลูกแก้วอำพันบนคทาของเธอเก็บเปลวไฟไว้นับร้อยปี ยิ่งหางฟูเท่าไรเวทยิ่งแรงเท่านั้น'},
+  garok:{name:'กาโรค',title:'นักรบออร์กเผ่าภูผา',rar:2,el:'ดิน',elc:'#c89a5a',role:'ป้องกัน',evo:1,rig:'garok',maxLv:40,
+    base:{hp:124,atk:31,def:19,spd:30},lore:'นักรบออร์กร่างยักษ์จากเผ่าภูผา เกราะไหล่แกะจากหินภูเขา ขวานหินในมือหนักจนต้องใช้สองคนยก แต่เขาเหวี่ยงได้ด้วยมือเดียว'},
   amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:4,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
     base:{hp:190,atk:74,def:26,spd:60},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ'},
 };// ธาตุและสกิลมาจาก gamedata.js
@@ -77,7 +83,7 @@ function headOf(w,sp){
   return{p:p.add(new THREE.Vector3(F.dx*H,F.dy*H,0)),r:F.r*H};
 }
 // ปรับกรอบหน้าแต่ละสายพันธุ์ (สัดส่วนของความสูงตัว)
-const FACE={yorugumo:{dx:0,dy:.03,r:.16},hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
+const FACE={yorugumo:{dx:0,dy:.03,r:.16},hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},seiro:{dx:0,dy:.03,r:.15},kohaku:{dx:0,dy:.02,r:.16},garok:{dx:0,dy:.03,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
 function makeThumb(sp,el){
   el=el||EL_OF[sp]; const key=sp+'|'+el;
   if(THUMB[key])return THUMB[key];

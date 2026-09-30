@@ -1,4 +1,8 @@
-import numpy as np,json,trimesh,base64,os,sys,scipy.sparse as sp,scipy.sparse.linalg as sla
+import numpy as np,json,base64,os,sys,scipy.sparse as sp,scipy.sparse.linalg as sla
+try:
+    import trimesh
+except ImportError:
+    import glbmini as trimesh  # ไม่มี trimesh ก็ใช้ตัวอ่าน glb แบบง่าย
 from PIL import Image
 name,body,wpn,jfile,outdir,key=sys.argv[1:7]
 J={k:np.array(v) for k,v in json.load(open(jfile)).items()}
@@ -66,6 +70,12 @@ if CLOTH:
     Pm[cloth]=tgt[cloth]/np.maximum(tgt[cloth].sum(1,keepdims=True),1e-9)
     Hd[cloth]=1/.05**2
     print('cloth groups',cloth.sum(),'of',G)
+# BOX: บังคับน้ำหนักในกล่อง เช่น ผ้าคาดเอว/หาง ให้ตามสะโพก  [{"min":[x,y,z],"max":[x,y,z],"w":{"Hips":.7,"Spine":.3}}]
+for bx in json.loads(os.environ.get('BOX','[]')):
+    mk=np.all((GV>=np.array(bx['min']))&(GV<=np.array(bx['max'])),1)
+    t=np.zeros(len(SKIN))
+    for n,v in bx['w'].items():t[SKIN.index(n)]=v
+    Pm[mk]=t/t.sum();Hd[mk]=1/.05**2;print('box',mk.sum())
 M=(L+sp.diags(Hd)).tocsc(); lu=sla.splu(M)
 W=np.stack([lu.solve(Hd*Pm[:,j]) for j in range(len(SKIN))],1)
 W=np.clip(W,0,None); W[W<.01]=0
@@ -106,10 +116,25 @@ IBM=np.stack([np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[-J[n][0],-J[n][1],-J[n][2
 ib=acc(IBM,'MAT4',5126)
 j['skins'].append({'joints':[base+IDX[n] for n in NAMES],'inverseBindMatrices':ib,'skeleton':base+IDX['Hips']})
 # weapon prop
-wm=trimesh.load(wpn,force='mesh'); wv=(wm.vertices*s).astype(np.float32); wuv=wm.visual.uv.astype(np.float32).copy(); wuv[:,1]=1-wuv[:,1]
-wp=acc(wv,'VEC3',5126,34962,True); wn=acc(wm.vertex_normals.astype(np.float32),'VEC3',5126,34962); wu=acc(wuv,'VEC2',5126,34962); wi=acc(wm.faces.astype(np.uint32).ravel(),'SCALAR',5125,34963)
-j['meshes'].append({'name':'weapon_prop','primitives':[{'attributes':{'POSITION':wp,'NORMAL':wn,'TEXCOORD_0':wu},'indices':wi,'material':1}]})
-j['nodes'].append({'name':'weapon_prop','mesh':1}); j['nodes'][0]['children'].append(len(j['nodes'])-1)
+WTEX=None
+if wpn!='-':
+    wm=trimesh.load(wpn,force='mesh'); wv0=wm.vertices-wm.vertices.mean(0); ext=np.ptp(wm.vertices,0).max()
+    wv=(wv0*(float(os.environ.get('WLEN','1.3'))/ext)+J['RightHand']).astype(np.float32); wuv=wm.visual.uv.astype(np.float32).copy(); wuv[:,1]=1-wuv[:,1]
+    WTEX=getattr(wm.visual,'image',None)
+    if WTEX is not None:
+        j['images'].append({'uri':'weapon.jpg','mimeType':'image/jpeg'}); j['textures'].append({'source':1,'sampler':0})
+        j['materials'][1]['pbrMetallicRoughness']['baseColorTexture']={'index':1}
+if wpn!='-':
+    wp=acc(wv,'VEC3',5126,34962,True); wn=acc(wm.vertex_normals.astype(np.float32),'VEC3',5126,34962); wu=acc(wuv,'VEC2',5126,34962); wi=acc(wm.faces.astype(np.uint32).ravel(),'SCALAR',5125,34963)
+    j['meshes'].append({'name':'weapon_prop','primitives':[{'attributes':{'POSITION':wp,'NORMAL':wn,'TEXCOORD_0':wu},'indices':wi,'material':1}]})
+    j['nodes'].append({'name':'weapon_prop','mesh':1}); j['nodes'][0]['children'].append(len(j['nodes'])-1)
+else: j['materials'].pop()
+# texture: ย่อเป็น TEX px (ค่าเริ่ม 1024) JPEG
+TS=int(os.environ.get('TEX','1024'))
+bi=getattr(m.visual,'image',None) or getattr(getattr(m.visual,'material',None),'baseColorTexture',None)
+os.makedirs(outdir,exist_ok=True)
+if bi is not None: bi.convert('RGB').resize((TS,TS),Image.LANCZOS).save(f'{outdir}/baseColor.jpg',quality=85)
+if WTEX is not None: WTEX.convert('RGB').resize((TS//2,TS//2),Image.LANCZOS).save(f'{outdir}/weapon.jpg',quality=85)
 while len(BIN)%4: BIN.append(0)
 j['buffers']=[{'byteLength':len(BIN),'uri':'data:application/octet-stream;base64,'+base64.b64encode(bytes(BIN)).decode()}]
 os.makedirs(outdir,exist_ok=True); json.dump(j,open(f'{outdir}/{key}_rig.json','w'),separators=(',',':'))
