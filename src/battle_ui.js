@@ -169,7 +169,8 @@ async function spawnWave(){
   UNITS.filter(u=>u.side==='E').forEach(removeUnit); UNITS=UNITS.filter(u=>u.side==='P');
   const wv=stage.waves[waveIdx];
   const boss=wv.some(d=>d.boss);
-  if(!OPTS.idle){await banner(boss?'บอสปรากฏตัว!':'คลื่น '+(waveIdx+1)+'/'+stage.waves.length,boss?'boss':'');$('#wave').textContent='คลื่น '+(waveIdx+1)+'/'+stage.waves.length;}
+  const bd=wv.find(d=>d.boss);
+  if(!OPTS.idle){await banner(boss?(bd&&bd.name?bd.name+' ปรากฏตัว!':'บอสปรากฏตัว!'):'คลื่น '+(waveIdx+1)+'/'+stage.waves.length,boss?'boss':'');$('#wave').textContent='คลื่น '+(waveIdx+1)+'/'+stage.waves.length;}
   else if(OPTS.banner)await banner(OPTS.banner,'');
   const slots=wv.length===1?[0]:wv.length===2?[1,2]:[1,0,2];
   const made=wv.map((d,i)=>makeUnit('E',d,slots[i]));
@@ -219,8 +220,9 @@ async function idleLoop(){
     }
     if(MODE!=='idle')continue;
     await useRealm(realmFor(n)); realmSkillOn(/[?&]realmfx=1/.test(location.search),'E');
-    $('#stTitle').textContent='ด่าน '+stLabel(n)+' · '+realmName(RL.key);
-    CUR=rtBattle(idleStage(n,E),{idle:true,label,banner:push?'ด่าน '+stLabel(n):null});
+    const ST=idleStage(n,E);
+    $('#stTitle').textContent='ด่าน '+stLabel(n)+' · '+stageTitle(n,ST);
+    CUR=rtBattle(ST,{idle:true,label,banner:push?'ด่าน '+stLabel(n):null});
     const vis=await CUR; CUR=null;
     if(push&&vis!==undefined&&vis!==won)console.warn('visual result differs from server',vis,won);
     if(MODE!=='idle')continue;
@@ -243,8 +245,9 @@ async function startBoss(){
   BN.bid=r.battle_id; BN.t0=Date.now(); bnApply(r.state);
   const n=r.stage; setBossUI(true);
   await useRealm(realmFor(n)); realmSkillOn(!!RL.key,'E');
-  $('#stTitle').textContent='ด่านบอส '+stLabel(n)+(RL.key?' · '+realmName(RL.key):''); $('#hud').hidden=false;
-  const win=await rtBattle(bossStage(n),{manual:true,label:'ด่านบอส'}); realmSkillOn(false);
+  const BS=bossStage(n);
+  $('#stTitle').textContent='ด่านบอส '+stLabel(n)+' · '+BS.boss+(BS.mod?' · '+BS.mod.icon+' '+BS.mod.name:''); $('#hud').hidden=false;
+  const win=await rtBattle(BS,{manual:true,label:'ด่านบอส'}); realmSkillOn(false);
   showBossResult(!!win,n);
 }
 async function showBossResult(win,n){
@@ -344,7 +347,7 @@ function loop(){
   const rdt=Math.min(clock.getDelta(),.1), dt=rdt*SPEED*HS; T+=rdt;
   for(let i=tweens.length-1;i>=0;i--){const tw=tweens[i];tw.t+=dt;const k=Math.min(1,tw.t/tw.d);tw.fn(tw.ease(k));if(k>=1){tweens.splice(i,1);tw.r();}}
   for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.p.position.addScaledVector(q.v,dt);q.v.y-=dt*q.grav;q.v.multiplyScalar(q.grow?.96:1);q.life-=dt*q.decay;q.p.material.opacity=Math.max(0,q.life*q.o);if(q.grow)q.p.scale.multiplyScalar(1+dt*.9);if(q.life<=0){scene.remove(q.p);q.p.material.dispose();parts.splice(i,1);}}
-  rigUpdate(dt); rtTick(dt,T); if(typeof raidTick==='function')raidTick(dt); if(typeof realmTick==='function')realmTick(dt);
+  rigUpdate(dt); rtTick(dt,T); if(typeof raidTick==='function')raidTick(dt); if(typeof realmTick==='function')realmTick(dt); if(typeof storyTick==='function')storyTick(dt);
   UNITS.forEach(u=>{if(u.alive||u.w.visible)u.inner.userData.idle(T);});
   separate(); trailUpdate(); blobUpdate();
   falling.forEach((l,i)=>{l.position.y-=rdt*.35;l.position.x+=Math.sin(T+i)*rdt*.3;l.rotation.x+=rdt*(1.5+i%3);l.rotation.y+=rdt;if(l.position.y<.05)l.position.set((Math.random()-.5)*16,5+Math.random()*2,-6+Math.random()*10);});

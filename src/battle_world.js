@@ -87,18 +87,23 @@ function makeUnit(side,def,slot){
   const SPD=!!(sp.spider&&SPIDER);
   const inner=w.userData.inner, rig=inner.userData.rig;
   if(def.boss){w.userData.k*=1.3;w.scale.setScalar(w.userData.k);}
-  if(side==='E')tintCrimson(w,def.boss);
-  if(side==='E'&&(inner.userData.meshy||SPD))w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
+  if(side==='E'){if(def.tint&&typeof tintRealm==='function')tintRealm(w,def.tint,def.boss);else tintCrimson(w,def.boss);}
+  if(side==='E'&&!def.tint&&(inner.userData.meshy||SPD))w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
   if(sp.evo&&!sp.dragon&&!SPD){(inner.userData.swords||[]).forEach(s=>s.visible=true);
-    if(side==='E'&&!inner.userData.meshy){const em=new THREE.MeshBasicMaterial({color:0xff4a3a});[-1,1].forEach(sx=>{P(rig.head,B1,em,[sx*.042,.03,.1],[.045,.009,.01],[0,sx*-.25,sx*.35]);glow(rig.head,0xff4030,.08,[sx*.042,.03,.11],.8);});}}
+    if(side==='E'&&!inner.userData.meshy){const em=new THREE.MeshBasicMaterial({color:def.tint?def.tint.glow:0xff4a3a});[-1,1].forEach(sx=>{P(rig.head,B1,em,[sx*.042,.03,.1],[.045,.009,.01],[0,sx*-.25,sx*.35]);glow(rig.head,0xff4030,.08,[sx*.042,.03,.11],.8);});}}
   if(!inner.userData.meshy&&!sp.dragon&&!SPD)mergeRigid(w);
   if(side==='P')addAura(w,def.sp,def.el);
   const [x,z]=(side==='P'?P_SLOTS:E_SLOTS)[slot];
   w.position.set(x+(def.boss?.6:0),0,z); w.rotation.y=side==='P'?FACE_P:FACE_E; scene.add(w);
   const u={id:UNITS.length,side,sp:def.sp,evo:sp.evo,boss:!!def.boss,lv:def.show||def.lv,
-    name:side==='P'?sp.name:(def.boss?'หัวหน้านินจาชาด':sp.evo?'นินจาชาด':'นินจาชาดจิ๋ว'),
+    name:side==='P'?sp.name:(def.name||(def.boss?'หัวหน้านินจาชาด':sp.evo?'นินจาชาด':'นินจาชาดจิ๋ว')),
     maxHp:Math.round(sp.base.hp*f*bm), atk:Math.round(sp.base.atk*f*(def.boss?.85:1)), def:Math.round(sp.base.def*f), spd:sp.base.spd+def.lv,
     skills:skillsAt(def.sp,def.stars||0), stars:def.stars||0, cds:{}, gauge:Math.random()*30, stun:0, alive:true, w, inner, rig, home:new THREE.Vector3(x,0,z), face:w.rotation.y};
+  u.defLv=def.lv; u.defMul=def.mul||1;
+  { // เงื่อนไขพิเศษของด่าน (battle_story.js)
+    const M=side==='E'?def.mod:(typeof STORY!=='undefined'&&STORY.mod&&STORY.mod.p);
+    if(M){if(M.hp)u.maxHp=Math.round(u.maxHp*M.hp);if(M.atk)u.atk=Math.round(u.atk*M.atk);if(M.def)u.def=Math.round(u.def*M.def);if(M.spd)u.spd=Math.round(u.spd*M.spd);if(M.leech)u.leech=M.leech;
+      if(M.size&&!sp.dragon){w.userData.k*=M.size;w.scale.setScalar(w.userData.k);}}}
   u.hp=u.maxHp; u.el=def.el||sp.el; u.pas=(u.skills.find(s=>s.type==='passive')||{}).passive||null; u.revived=false;
   const DK=sp.dragon?DRAGON_BATTLE_K:1; if(sp.dragon){w.scale.setScalar(DK);const R=inner.userData.rig;if(R&&R.st){R.st.alt=R.tg.alt=2.6;}}
   u.rad=sp.dragon?1.55*DK:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=4.95*DK;u.camS=2.1*DK;} u.reach=sp.dragon?1.9*DK:inner.userData.meshy?1.25:u.evo?1.0:.72;
@@ -229,6 +234,7 @@ function dealHit(att,t,skill){
   d=Math.max(1,Math.round(d));
   if(t.raid&&typeof raidScale==='function')d=raidScale(d); // บอสโลก: ตัวเลขรวมให้ตรงกับดาเมจจริงจากเซิร์ฟเวอร์
   t.hp=Math.max(0,t.hp-d);
+  if(att.leech&&att.alive){const h=Math.round(d*att.leech);att.hp=Math.min(att.maxHp,att.hp+h);updateBar(att);}
   popNum(t,d+(em>1?' ▲':em<1?' ▼':''),crit?'crit':em>1?'dmg adv':em<1?'dmg weak':'dmg');
   if(em>1&&performance.now()-elTipT>2500){elTipT=performance.now();setTimeout(()=>popNum(t,'แพ้ทางธาตุ!','info adv'),120/SPEED);}
   shake=Math.max(shake,crit?.14:.07);

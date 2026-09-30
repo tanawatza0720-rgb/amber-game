@@ -28,15 +28,16 @@ const INFO={
     const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th></tr>';
     [[4,'—','0.5%'],[3,'2%','10%'],[2,'15%','32%'],[1,'83%','57.5%']].forEach(([r,a,b])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t);tr2.append(td);[a,b].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
     d.append(T); d.append(rows([['ระดับเทพเจ้า','ออกจากไข่ทองคำเท่านั้น','#ff8ac4'],['การันตีระดับตำนานขึ้นไป (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
-    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
+    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]].concat(typeof godEggAct==='function'?godEggAct():[]));},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
     const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
     d.append(rows([['ด่านที่ผ่านแล้ว',S.stage?lb(S.stage):'-'],['พลังทีม',(S.power||0).toLocaleString('en-US')],
       ['ด่านต่อไป',S.boss?'บอส '+lb(S.stage+1):lb(S.stage+1)+' · ต้องการ '+(S.need||0).toLocaleString('en-US'),S.boss?'#ffd24a':S.power>=S.need?'#5fe0c0':'#ffb09a'],
+      ...(typeof stageRewardRow==='function'?[stageRewardRow()]:[]),
       ['รางวัลสะสม','🪙 '+Math.floor(sec*(S.rateC||0)/60).toLocaleString('en-US')+' · '+(h?h+' ชม. ':'')+m+' นาที','#ffb347']]));
     const tm=S.team.map(u=>S.mons.find(m=>m.uid===u)).filter(Boolean).map(m=>spOf(m).name).join(', ');
-    openSheet('ผจญภัย','ทีมปัจจุบัน: '+(tm||'-'),d,[['ไปผจญภัย',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
+    openSheet('ผจญภัย','ทีมปัจจุบัน: '+(tm||'-'),d,[...(typeof STG!=='undefined'&&STG&&STG.pending.length?[['🎁 รับรางวัลด่าน ('+STG.pending.length+')',()=>openStageRewards(),'gold']]:[]),['ไปผจญภัย',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
     const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,tierOf(spOf(m).rar).n+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},
@@ -110,9 +111,9 @@ let hatching=false;
 async function hatch(kind,name){
   if(hatching)return; hatching=true; closeSheet(); camTTo.set(0,0,5); distTo=FARM_ZMIN;
   const shake=tween(1.4,t=>{hatchEggMat.emissiveIntensity=.25+t*2.5;hatchEgg.rotation.y+=.2+t*.6;hatchEgg.position.y=2.15+Math.sin(t*40)*.03*t;});
-  const r=await act('hatch_egg',{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
+  const r=await act(kind==='god'?'hatch_god_egg':'hatch_egg',kind==='god'?{}:{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
-  bumpRes(kind==='gold'?'amber':'coins');
+  if(kind==='god'){if(r.stage&&typeof stageApply==='function')stageApply(r.stage);}else bumpRes(kind==='gold'?'amber':'coins');
   const col=tierOf(r.rar).hx;
   const ep=new THREE.Vector3(0,2.15,3.2);
   flashBall(ep,col,r.rar>=4?6:r.rar>=3?5:4); particles(ep,col,r.rar>=4?120:r.rar>=3?85:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);

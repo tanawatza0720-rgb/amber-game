@@ -348,6 +348,10 @@ body.visiting #rail,body.visiting #dock,body.visiting #rankBox,body.visiting #hi
 .rpGo{flex-basis:100%;border:0;border-radius:11px;padding:10px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(180deg,#ff7a4a,#c42a18);box-shadow:0 4px 0 #7a160c;animation:rpPulse 1.2s infinite}
 .rpGo:active{transform:translateY(2px);box-shadow:0 2px 0 #7a160c}@keyframes rpPulse{50%{filter:brightness(1.18)}}
 .rpClose{margin-top:4px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--muted);border-radius:10px;padding:8px 16px;font-family:inherit;font-size:13px}
+/* รางวัลทุก 5 ด่าน */
+.stList{display:flex;flex-direction:column;gap:4px;max-height:128px;overflow:auto;margin:6px 0}
+.stRow{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.05);font-size:12px}.stRow span{color:var(--muted)}.stRow.boss{background:rgba(255,200,80,.12)}
+.sbtn.god{background:linear-gradient(180deg,#d9a8ff,#8a4ad0);color:#fff;border-color:#e6c8ff}
 </style>
 
 <div id="view"></div>
@@ -378,7 +382,7 @@ body.visiting #rail,body.visiting #dock,body.visiting #rankBox,body.visiting #hi
 
 <section id="visitBar" hidden></section>
 <nav id="dock">
-  <button class="nbtn" id="nBattle"><svg viewBox="0 0 24 24"><path d="M4 3l9 9-2 2-9-9zM20 3l-9 9 2 2 9-9z" fill="#dfe5ee"/><path d="M5 17l2 2-3 3-2-2zM19 17l-2 2 3 3 2-2z" fill="#c9a24a"/></svg>ผจญภัย</button>
+  <button class="nbtn" id="nBattle"><svg viewBox="0 0 24 24"><path d="M4 3l9 9-2 2-9-9zM20 3l-9 9 2 2 9-9z" fill="#dfe5ee"/><path d="M5 17l2 2-3 3-2-2zM19 17l-2 2 3 3 2-2z" fill="#c9a24a"/></svg>ผจญภัย<span class="badge" id="bStage" hidden></span></button>
   <button class="nbtn" id="nMons"><svg viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-8 8v9l3-2 2 2 3-2 3 2 2-2 3 2v-9a8 8 0 0 0-8-8z" fill="#3a3f4a"/><circle cx="9" cy="11" r="2" fill="#7fffe0"/><circle cx="15" cy="11" r="2" fill="#7fffe0"/></svg>มอนสเตอร์</button>
   <button class="nbtn big" id="nHatch"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="7" ry="9" fill="#fff4d6"/><path d="M6 12l3 2 3-3 3 3 3-2" stroke="#d9822b" stroke-width="1.6" fill="none"/></svg>ฟักไข่</button>
   <button class="nbtn" id="nQuest"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="#e9dcc0"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#8a6a44" stroke-width="2"/></svg>ภารกิจ<span class="badge" id="bQuest" hidden>1</span></button>
@@ -1211,7 +1215,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -3151,15 +3155,16 @@ const INFO={
     const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th></tr>';
     [[4,'—','0.5%'],[3,'2%','10%'],[2,'15%','32%'],[1,'83%','57.5%']].forEach(([r,a,b])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t);tr2.append(td);[a,b].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
     d.append(T); d.append(rows([['ระดับเทพเจ้า','ออกจากไข่ทองคำเท่านั้น','#ff8ac4'],['การันตีระดับตำนานขึ้นไป (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
-    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]]);},
+    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]].concat(typeof godEggAct==='function'?godEggAct():[]));},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
     const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
     d.append(rows([['ด่านที่ผ่านแล้ว',S.stage?lb(S.stage):'-'],['พลังทีม',(S.power||0).toLocaleString('en-US')],
       ['ด่านต่อไป',S.boss?'บอส '+lb(S.stage+1):lb(S.stage+1)+' · ต้องการ '+(S.need||0).toLocaleString('en-US'),S.boss?'#ffd24a':S.power>=S.need?'#5fe0c0':'#ffb09a'],
+      ...(typeof stageRewardRow==='function'?[stageRewardRow()]:[]),
       ['รางวัลสะสม','🪙 '+Math.floor(sec*(S.rateC||0)/60).toLocaleString('en-US')+' · '+(h?h+' ชม. ':'')+m+' นาที','#ffb347']]));
     const tm=S.team.map(u=>S.mons.find(m=>m.uid===u)).filter(Boolean).map(m=>spOf(m).name).join(', ');
-    openSheet('ผจญภัย','ทีมปัจจุบัน: '+(tm||'-'),d,[['ไปผจญภัย',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
+    openSheet('ผจญภัย','ทีมปัจจุบัน: '+(tm||'-'),d,[...(typeof STG!=='undefined'&&STG&&STG.pending.length?[['🎁 รับรางวัลด่าน ('+STG.pending.length+')',()=>openStageRewards(),'gold']]:[]),['ไปผจญภัย',()=>{location.href='battle.html';}],['จัดทีม',()=>openBox(),'ghost']]);},
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
     const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,tierOf(spOf(m).rar).n+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},
@@ -3233,9 +3238,9 @@ let hatching=false;
 async function hatch(kind,name){
   if(hatching)return; hatching=true; closeSheet(); camTTo.set(0,0,5); distTo=FARM_ZMIN;
   const shake=tween(1.4,t=>{hatchEggMat.emissiveIntensity=.25+t*2.5;hatchEgg.rotation.y+=.2+t*.6;hatchEgg.position.y=2.15+Math.sin(t*40)*.03*t;});
-  const r=await act('hatch_egg',{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
+  const r=await act(kind==='god'?'hatch_god_egg':'hatch_egg',kind==='god'?{}:{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
-  bumpRes(kind==='gold'?'amber':'coins');
+  if(kind==='god'){if(r.stage&&typeof stageApply==='function')stageApply(r.stage);}else bumpRes(kind==='gold'?'amber':'coins');
   const col=tierOf(r.rar).hx;
   const ep=new THREE.Vector3(0,2.15,3.2);
   flashBall(ep,col,r.rar>=4?6:r.rar>=3?5:4); particles(ep,col,r.rar>=4?120:r.rar>=3?85:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
@@ -3964,6 +3969,37 @@ async function raidInbox(){
   if(document.body.classList.contains('raceOpen')||(typeof GD!=='undefined'&&GD.on))return;asked=true;setTimeout(raidInbox,1500);},1500);}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&typeof entered!=='undefined'&&entered&&!VISIT.on&&!$('#raidPop'))raidInbox();});
 if(/[?&]dbg=1/.test(location.search))window.__frd={AGENTS,raidTapAgent,FRD,raidRandom,raidInbox,ISB};
+
+/* ================= รางวัลทุก 5 ด่าน (อัมพร + ไข่เทพ) =================
+   server/migrate_stage_rewards.sql · ป้ายแจ้งบนปุ่มผจญภัย · ป๊อปอัปรับรางวัลเมื่อมีค้าง · ไข่เทพฟักที่ศาลฟักไข่ */
+var STG=null;
+function stageApply(st){STG=st;const b=$('#bStage');if(!b)return;const n=st?st.pending.length:0;b.hidden=!n;b.textContent=n;}
+async function loadStage(){if(NET.mode!=='online')return;try{stageApply(await api('stage_state'));}catch(e){console.warn('stage',e);}}
+const stLb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1);
+function stageRewardRow(){if(!STG)return ['รางวัลทุก 5 ด่าน','อัมพร + ไข่เทพ','#c9b8ff'];
+  const nx=STG.next;return ['รางวัลขั้นถัดไป','ด่าน '+stLb(nx.n)+' · 🔶'+nx.amber+' + '+(nx.sure?'ไข่เทพการันตี':'ไข่เทพ'),'#c9b8ff'];}
+function godEggAct(){if(!STG)return [];const n=(STG.god_eggs||0)+(STG.god_eggs_sure||0);if(!n)return [];
+  return [['🥚 ฟักไข่เทพ ('+n+(STG.god_eggs_sure?' · การันตี '+STG.god_eggs_sure:'')+')',()=>hatch('god',STG.god_eggs_sure?'ไข่เทพการันตี':'ไข่เทพ'),'god']];}
+function openStageRewards(){
+  if(!STG||!STG.pending.length){toast('ยังไม่มีรางวัลด่านค้างรับ');return;}
+  const d=el('div','stRw'),P=STG.pending,amber=P.reduce((a,r)=>a+r.amber,0),sure=P.filter(r=>r.sure).length,eggs=P.length-sure;
+  d.append(para('ผ่านทุก 5 ด่านได้รับอัมพรและไข่เทพ · ด่านบอสได้อัมพร ×2 · ทุก 50 ด่านได้ไข่เทพการันตี'));
+  const L=el('div','stList');P.slice(0,30).forEach(r=>{const row=el('div','stRow'+(r.boss?' boss':''));row.append(el('b',null,'ด่าน '+stLb(r.n)+(r.boss?' 👑':'')));row.append(el('span',null,'🔶 '+r.amber+' · 🥚 '+(r.sure?'ไข่เทพการันตี':'ไข่เทพ')));L.append(row);});
+  if(P.length>30)L.append(el('small',null,'และอีก '+(P.length-30)+' ขั้น'));d.append(L);
+  d.append(rows([['รวมอัมพร','+'+fmt(amber),'#ffb347'],['ไข่เทพ',eggs+' ใบ','#e6c8ff'],...(sure?[['ไข่เทพการันตี',sure+' ใบ','#ff8ac4']]:[])]));
+  d.append(el('p','frNote','ไข่เทพ: เทพ 10% · ตำนาน 30% · หายาก 60% · ฟักได้ที่ศาลฟักไข่'));
+  openSheet('รางวัลผ่านด่าน',P.length+' ขั้นรอรับ',d,[['🎁 รับทั้งหมด',async()=>{const r=await act('claim_stage_rewards',{});if(!r)return;stageApply(r.stage);bumpRes('amber');
+    toast('ได้รับอัมพร '+fmt(r.amber)+' และไข่เทพ '+(r.eggs+r.sure)+' ใบ! ไปฟักที่ศาลฟักไข่ได้เลย');
+    openSheet('รับรางวัลแล้ว!','',(()=>{const x=el('div');x.append(rows([['อัมพร','+'+fmt(r.amber),'#ffb347'],['ไข่เทพ','+'+(r.eggs+r.sure)+' ใบ','#e6c8ff']]));return x;})(),[['🥚 ไปฟักไข่เทพ',()=>{closeSheet();focusBuilding('hatch');},'god'],['ปิด',()=>closeSheet(),'ghost']]);},'gold']]);
+}
+{let asked=false,shown=false,tries=0;const free=()=>!$('#raidPop')&&$('#sheet').hidden&&!(typeof VISIT!=='undefined'&&VISIT.on)&&!(typeof GD!=='undefined'&&GD.on)&&!document.body.classList.contains('raceOpen')&&!$('#evo:not([hidden])');
+  const t=setInterval(()=>{if(typeof entered==='undefined'||!entered||NET.mode!=='online')return;
+    if(!asked){asked=true;loadStage();return;}
+    if(!STG||shown)return;if(!STG.pending.length||++tries>60){clearInterval(t);return;}
+    if(tries>2&&free()){shown=true;clearInterval(t);openStageRewards();}},1500);}
+// ดันด่านได้ขณะเปิดเกม: เช็กใหม่ทุก 2 นาที
+setInterval(()=>{if(typeof entered!=='undefined'&&entered&&NET.mode==='online'&&document.visibilityState==='visible')loadStage();},120000);
+if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VISIT(){return VISIT},get GD(){return typeof GD!=='undefined'?GD:null},get entered(){return entered},NET};
 
 /* ================= คู่มือผู้เล่นใหม่ (ป๊อปอัปแนะนำทีละขั้น) =================
    เริ่มเองครั้งแรกหลังเลือกเผ่า · ทำตามได้ (แตะจุดที่ไฮไลต์) หรือกดข้าม · เปิดซ้ำได้จากปุ่ม "คู่มือ" */

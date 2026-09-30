@@ -2663,18 +2663,23 @@ function makeUnit(side,def,slot){
   const SPD=!!(sp.spider&&SPIDER);
   const inner=w.userData.inner, rig=inner.userData.rig;
   if(def.boss){w.userData.k*=1.3;w.scale.setScalar(w.userData.k);}
-  if(side==='E')tintCrimson(w,def.boss);
-  if(side==='E'&&(inner.userData.meshy||SPD))w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
+  if(side==='E'){if(def.tint&&typeof tintRealm==='function')tintRealm(w,def.tint,def.boss);else tintCrimson(w,def.boss);}
+  if(side==='E'&&!def.tint&&(inner.userData.meshy||SPD))w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
   if(sp.evo&&!sp.dragon&&!SPD){(inner.userData.swords||[]).forEach(s=>s.visible=true);
-    if(side==='E'&&!inner.userData.meshy){const em=new THREE.MeshBasicMaterial({color:0xff4a3a});[-1,1].forEach(sx=>{P(rig.head,B1,em,[sx*.042,.03,.1],[.045,.009,.01],[0,sx*-.25,sx*.35]);glow(rig.head,0xff4030,.08,[sx*.042,.03,.11],.8);});}}
+    if(side==='E'&&!inner.userData.meshy){const em=new THREE.MeshBasicMaterial({color:def.tint?def.tint.glow:0xff4a3a});[-1,1].forEach(sx=>{P(rig.head,B1,em,[sx*.042,.03,.1],[.045,.009,.01],[0,sx*-.25,sx*.35]);glow(rig.head,0xff4030,.08,[sx*.042,.03,.11],.8);});}}
   if(!inner.userData.meshy&&!sp.dragon&&!SPD)mergeRigid(w);
   if(side==='P')addAura(w,def.sp,def.el);
   const [x,z]=(side==='P'?P_SLOTS:E_SLOTS)[slot];
   w.position.set(x+(def.boss?.6:0),0,z); w.rotation.y=side==='P'?FACE_P:FACE_E; scene.add(w);
   const u={id:UNITS.length,side,sp:def.sp,evo:sp.evo,boss:!!def.boss,lv:def.show||def.lv,
-    name:side==='P'?sp.name:(def.boss?'หัวหน้านินจาชาด':sp.evo?'นินจาชาด':'นินจาชาดจิ๋ว'),
+    name:side==='P'?sp.name:(def.name||(def.boss?'หัวหน้านินจาชาด':sp.evo?'นินจาชาด':'นินจาชาดจิ๋ว')),
     maxHp:Math.round(sp.base.hp*f*bm), atk:Math.round(sp.base.atk*f*(def.boss?.85:1)), def:Math.round(sp.base.def*f), spd:sp.base.spd+def.lv,
     skills:skillsAt(def.sp,def.stars||0), stars:def.stars||0, cds:{}, gauge:Math.random()*30, stun:0, alive:true, w, inner, rig, home:new THREE.Vector3(x,0,z), face:w.rotation.y};
+  u.defLv=def.lv; u.defMul=def.mul||1;
+  { // เงื่อนไขพิเศษของด่าน (battle_story.js)
+    const M=side==='E'?def.mod:(typeof STORY!=='undefined'&&STORY.mod&&STORY.mod.p);
+    if(M){if(M.hp)u.maxHp=Math.round(u.maxHp*M.hp);if(M.atk)u.atk=Math.round(u.atk*M.atk);if(M.def)u.def=Math.round(u.def*M.def);if(M.spd)u.spd=Math.round(u.spd*M.spd);if(M.leech)u.leech=M.leech;
+      if(M.size&&!sp.dragon){w.userData.k*=M.size;w.scale.setScalar(w.userData.k);}}}
   u.hp=u.maxHp; u.el=def.el||sp.el; u.pas=(u.skills.find(s=>s.type==='passive')||{}).passive||null; u.revived=false;
   const DK=sp.dragon?DRAGON_BATTLE_K:1; if(sp.dragon){w.scale.setScalar(DK);const R=inner.userData.rig;if(R&&R.st){R.st.alt=R.tg.alt=2.6;}}
   u.rad=sp.dragon?1.55*DK:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=4.95*DK;u.camS=2.1*DK;} u.reach=sp.dragon?1.9*DK:inner.userData.meshy?1.25:u.evo?1.0:.72;
@@ -2805,6 +2810,7 @@ function dealHit(att,t,skill){
   d=Math.max(1,Math.round(d));
   if(t.raid&&typeof raidScale==='function')d=raidScale(d); // บอสโลก: ตัวเลขรวมให้ตรงกับดาเมจจริงจากเซิร์ฟเวอร์
   t.hp=Math.max(0,t.hp-d);
+  if(att.leech&&att.alive){const h=Math.round(d*att.leech);att.hp=Math.min(att.maxHp,att.hp+h);updateBar(att);}
   popNum(t,d+(em>1?' ▲':em<1?' ▼':''),crit?'crit':em>1?'dmg adv':em<1?'dmg weak':'dmg');
   if(em>1&&performance.now()-elTipT>2500){elTipT=performance.now();setTimeout(()=>popNum(t,'แพ้ทางธาตุ!','info adv'),120/SPEED);}
   shake=Math.max(shake,crit?.14:.07);
@@ -3084,6 +3090,86 @@ function realmTick(dt){
   RL.next-=dt; if(RL.next<=0){RL.next=10;try{realmFire();}catch(e){console.warn(e);}}
 }
 
+/* ================= ด่านสตอรี่: ศัตรูตามดินแดน + บอสประจำบท + เงื่อนไขพิเศษประจำด่าน =================
+   บท 1 = นินจาชาดหน้าประตูนครอัมพร (แบบเดิม) · บท 2+ วนดินแดน (ดู realmFor ใน battle_realm.js)
+   บอส (ด่าน x-10): มีชื่อเฉพาะ · เลือดเหลือครึ่งจะคลั่ง (โจมตี +30% เร็วขึ้น) และเรียกลูกน้อง 2 ตัว
+   เงื่อนไขพิเศษ: สุ่มแบบคงที่ตามเลขด่าน (ด่านเดิมได้เงื่อนไขเดิมเสมอ) · บท 1 ด่าน 1–3 ไม่มีเงื่อนไข */
+const STORY_REALM={
+  null:{tint:null,minion:{sp:'kazemaru',name:'นินจาชาดจิ๋ว'},mid:{sp:'kazekiri',name:'นินจาชาด'},big:{sp:'kazekiri',name:'นินจาชาด'},
+    boss:{sp:'kazekiri',name:'หัวหน้านินจาชาด'},stage:'หน้าประตูนครอัมพร',bossStage:'ประตูแดงของนินจาชาด'},
+  human:{tint:{dark:0x243248,skin:0xa8bedc,em:0x00101e,glow:0x7fd4ff},minion:{sp:'kazemaru',name:'ทหารยามเหล็ก'},mid:{sp:'kazekiri',name:'อัศวินเหล็ก'},big:{sp:'kuroga',name:'กัปตันนครา'},
+    boss:{sp:'kuroga',name:'จอมทัพเหล็กกล้า'},stage:'ลานมหานครอัมพร',bossStage:'ป้อมจอมทัพเหล็กกล้า'},
+  beast:{tint:{dark:0x2c4a1c,skin:0xa6dc8c,em:0x061400,glow:0x9dff7a},minion:{sp:'kazemaru',name:'ภูตไม้'},mid:{sp:'yorugumo',name:'แมงมุมพงไพร'},big:{sp:'morihime',name:'พรานเอลฟ์ป่า'},
+    boss:{sp:'yorugumo',name:'ราชินีแมงมุมพงไพร'},stage:'หุบเขาพงไพร',bossStage:'รังราชินีแมงมุม'},
+  undead:{tint:{dark:0x170e22,skin:0x8e7cb0,em:0x1c0034,glow:0xb070ff},minion:{sp:'kazemaru',name:'โครงกระดูกทมิฬ'},mid:{sp:'hakuneko',name:'แม่มดวิญญาณ'},big:{sp:'kuroga',name:'อัศวินวิญญาณ'},
+    boss:{sp:'amateru',alt:'kuroga',name:'มังกรทมิฬยมโลก'},stage:'สมรภูมิยมโลก',bossStage:'บัลลังก์มังกรทมิฬ'},
+  god:{tint:{dark:0x6a5418,skin:0xffe8b0,em:0x201400,glow:0xffe08a},minion:{sp:'kazemaru',name:'ภูตแสง'},mid:{sp:'kazekiri',name:'ผู้พิทักษ์วิหาร'},big:{sp:'hakuneko',name:'เทวทูตทอง'},
+    boss:{sp:'amateru',alt:'hakuneko',name:'มังกรทองแห่งสรวงสวรรค์'},stage:'วิหารแดนสวรรค์',bossStage:'บัลลังก์มังกรทอง'},
+};
+const STORY_MODS=[
+  {id:'el',icon:'🔥',name:'พลังธาตุ',desc:'ศัตรูทั้งหมดเป็นธาตุเดียวกัน พลังโจมตี +25%',e:{atk:1.25},el:1},
+  {id:'armor',icon:'🛡️',name:'เกราะหนา',desc:'ศัตรูป้องกัน +50%',e:{def:1.5}},
+  {id:'swift',icon:'💨',name:'ลมกรด',desc:'ศัตรูเร็วขึ้น 30%',e:{spd:1.3}},
+  {id:'giant',icon:'🗿',name:'ร่างยักษ์',desc:'ศัตรูน้อยลง แต่เลือด ×1.6 และตัวใหญ่ขึ้น',e:{hp:1.6,size:1.18},fewer:1},
+  {id:'fog',icon:'🌫️',name:'หมอกหนา',desc:'ทุกฝ่ายช้าลง 20%',e:{spd:.8},p:{spd:.8}},
+  {id:'bless',icon:'🍀',name:'พรแห่งดินแดน',desc:'ทีมเราเลือด +15%',p:{hp:1.15}},
+  {id:'horde',icon:'👥',name:'ฝูงใหญ่',desc:'ศัตรูมากขึ้น แต่ตัวเล็กลง',e:{hp:.8,atk:.85},more:1},
+  {id:'blood',icon:'🩸',name:'กระหายเลือด',desc:'ศัตรูดูดเลือด 15% ของความเสียหายที่ทำ',e:{leech:.15}},
+];
+var STORY={mod:null,rage:new Set()};
+const storyHash=n=>{let h=(n*2654435761)>>>0;h^=h>>>13;h=Math.imul(h,1274126177)>>>0;return h;};
+function storyMod(n){if(n<=3)return null;const h=storyHash(n),k=h%(STORY_MODS.length+4);if(k>=STORY_MODS.length)return null;
+  const m=Object.assign({},STORY_MODS[k]);if(m.el){m.elv=EN_ELS[(h>>>8)%EN_ELS.length];m.name='พลังธาตุ'+m.elv;m.desc='ศัตรูทั้งหมดเป็นธาตุ'+m.elv+' พลังโจมตี +25%';m.icon=ELEM&&ELEM[m.elv]?ELEM[m.elv].i:'🔥';}return m;}
+function storyTheme(n){const k=typeof realmFor==='function'?realmFor(n):null;return STORY_REALM[k]||STORY_REALM.null;}
+// ย้อมสีศัตรูตามดินแดน (แทนสีแดงของนินจาชาด)
+function tintRealm(w,T,boss){
+  const dark=new THREE.Color(T.dark),cache=new Map(),tint=(m,f)=>{if(!cache.has(m)){const n=m.clone();f(n);cache.set(m,n);}return cache.get(m);};
+  w.traverse(o=>{
+    if(o.isMesh&&o.material&&!o.material.isMeshBasicMaterial&&o.material.color){o.material=tint(o.material,n=>{const c=n.color,l=(c.r+c.g+c.b)/3;if(l<.35&&!(n.metalness>.5))c.lerp(dark,.65);if(n.emissive)n.emissive.set(T.em);});}
+    else if(o.isMesh&&o.material&&o.material.isMeshBasicMaterial){o.material=tint(o.material,n=>{n.color.set(T.glow);});}
+    if(o.isSprite){o.material=o.material.clone();o.material.color.set(T.glow);}
+    if(o.isPointLight)o.color.set(T.glow);
+    if(o.isSkinnedMesh){o.material=o.material.clone();o.material.color.set(T.skin);if(o.material.emissive)o.material.emissive.set(boss?T.em:0x000000);}
+  });
+  if(boss)glow(w,T.glow,3.2,[0,1.2,0],.35);
+}
+function storyWaveDefs(T,count,bigs,mod,show){
+  let n=count;if(mod&&mod.fewer)n=Math.max(3,Math.round(n*.65));if(mod&&mod.more)n=Math.round(n*1.3);
+  const cap=typeof LOW!=='undefined'&&LOW?7:99;n=Math.min(n,cap);
+  const out=[];for(let i=0;i<n;i++){const r=i%4===3&&bigs>0?(bigs--,T.big):(i%3===1?T.mid:T.minion);out.push({sp:r.sp,name:r.name,show});}
+  return out;}
+function storyApply(defs,T,mod){return defs.map(d=>Object.assign(d,T.tint?{tint:T.tint}:{},mod&&mod.e?{mod:mod.e}:{},mod&&mod.elv?{el:mod.elv}:{}));}
+idleStage=function(n,E){
+  const T=storyTheme(n),mod=storyMod(n);
+  const sizes=n<4?[[6,0],[7,1],[8,1]]:n<10?[[8,1],[9,2],[10,2]]:[[9,2],[10,3],[11,3]];
+  const waves=sizes.map(([c,b],i)=>storyApply(makeWave(storyWaveDefs(T,c+b,b,mod,n),E,enemyEl(n,i)),T,mod));
+  return {id:stLabel(n),name:T.stage,mod,waves};
+};
+bossStage=function(n){
+  const R=REQ(n),T=storyTheme(n),mod=storyMod(n);
+  const bsp=T.boss.sp==='amateru'&&(typeof NO_DRAGON!=='undefined'&&NO_DRAGON||typeof DRAGON==='undefined'||!DRAGON)?T.boss.alt:T.boss.sp;
+  const w1=storyApply(makeWave(storyWaveDefs(T,8,2,mod,n),R*.55,enemyEl(n,0)),T,mod);
+  const minions=storyWaveDefs(T,6,1,null,n);minions.splice(3,0,{sp:bsp,boss:1,name:T.boss.name,show:n});
+  const w2=storyApply(makeWave(minions,R*.8,EN_ELS[(Math.ceil(n/10)+3)%EN_ELS.length]),T,mod);
+  return {id:stLabel(n),name:T.bossStage,mod,boss:T.boss.name,theme:T,waves:[w1,w2]};
+};
+const stageTitle=(n,st)=>st.name+(st.mod?' · '+st.mod.icon+' '+st.mod.name:'');
+// ตอนเริ่มด่าน: แจ้งเงื่อนไขพิเศษ
+function storyStart(st){STORY.mod=st&&st.mod||null;STORY.rage.clear();STORY.theme=st&&st.theme||null;
+  if(st&&st.mod){const m=st.mod;setTimeout(()=>{const t=alive('P')[0];if(t)popNum(t,m.icon+' '+m.name+': '+m.desc,'info');},900);}}
+// บอสคลั่งเมื่อเลือดเหลือครึ่ง: โจมตีแรงขึ้น เร็วขึ้น และเรียกลูกน้อง
+function storyTick(dt){
+  if(typeof running==='undefined'||!running||MODE==='raid')return;
+  UNITS.forEach(u=>{if(!u.boss||!u.alive||u.side!=='E'||STORY.rage.has(u.id)||u.hp>u.maxHp*.5)return;STORY.rage.add(u.id);
+    u.atk=Math.round(u.atk*1.3);u.spd=Math.round(u.spd*1.2);banner(u.name+' คลั่ง!','boss');shake=Math.max(shake,.3);
+    shockRing(u.w.position.clone().setY(.08),0xff4a2a);particles(u.w.position.clone().setY(1.2),0xff6a3a,24,4,.12,1);
+    (u.mats||[]).forEach(m=>{if(m.emissive){m.emissive.setHex(0x3a0800);}});
+    const T=STORY.theme||STORY_REALM.null;
+    const adds=[T.mid,T.minion].map(r=>Object.assign({sp:r.sp,name:r.name,lv:u.defLv||1,mul:(u.defMul||1)*.8,show:u.lv},T.tint?{tint:T.tint}:{}));
+    try{if(typeof rtSpawn==='function'){rtSpawn(adds);popNum(u,'เรียกลูกน้อง!','info');}}catch(e){console.warn(e);}
+  });
+}
+
 /* ================= เชื่อมเซิร์ฟเวอร์ (ใช้บัญชีเดียวกับฟาร์ม) =================
    ล็อกอินค้างจากหน้าฟาร์ม -> ทีมจริง ดันด่าน/รางวัลสะสม/บอส ตัดสินที่เซิร์ฟเวอร์ (migrate_idle.sql)
    ไม่ได้ล็อกอิน/ต่อไม่ได้ -> โหมดทดลอง ดูการต่อสู้ได้แต่ไม่ได้รางวัล */
@@ -3300,7 +3386,7 @@ function rtSpawn(wv){
   });
 }
 async function rtBattle(st,opts){
-  stage=st; OPTS=opts||{}; running=true; RT={manual:!!OPTS.manual}; raceReset();
+  stage=st; OPTS=opts||{}; running=true; RT={manual:!!OPTS.manual}; raceReset(); if(typeof storyStart==='function')storyStart(st);
   UNITS.forEach(removeUnit); UNITS=[]; PICKU=[]; RIGS=[]; clearTrails();
   TEAM.forEach((d,i)=>{const u=rtInit(makeUnit('P',d,i));if(hasClip(u,'battlecry')&&(OPTS.banner||OPTS.manual)){u.holdT=1.3;setTimeout(()=>u.alive&&u.inner.userData.play('battlecry',{speed:1.7,fade:.15}),150);}else if(u.dragon&&(OPTS.banner||OPTS.manual)){u.holdT=1.4;setTimeout(()=>u.alive&&dragonRoar(u,700),150);}});
   document.body.classList.add('rt'); camMode={type:'wide'}; camK=1.6; actRing.visible=tgtRing.visible=false;
@@ -3572,7 +3658,8 @@ async function spawnWave(){
   UNITS.filter(u=>u.side==='E').forEach(removeUnit); UNITS=UNITS.filter(u=>u.side==='P');
   const wv=stage.waves[waveIdx];
   const boss=wv.some(d=>d.boss);
-  if(!OPTS.idle){await banner(boss?'บอสปรากฏตัว!':'คลื่น '+(waveIdx+1)+'/'+stage.waves.length,boss?'boss':'');$('#wave').textContent='คลื่น '+(waveIdx+1)+'/'+stage.waves.length;}
+  const bd=wv.find(d=>d.boss);
+  if(!OPTS.idle){await banner(boss?(bd&&bd.name?bd.name+' ปรากฏตัว!':'บอสปรากฏตัว!'):'คลื่น '+(waveIdx+1)+'/'+stage.waves.length,boss?'boss':'');$('#wave').textContent='คลื่น '+(waveIdx+1)+'/'+stage.waves.length;}
   else if(OPTS.banner)await banner(OPTS.banner,'');
   const slots=wv.length===1?[0]:wv.length===2?[1,2]:[1,0,2];
   const made=wv.map((d,i)=>makeUnit('E',d,slots[i]));
@@ -3622,8 +3709,9 @@ async function idleLoop(){
     }
     if(MODE!=='idle')continue;
     await useRealm(realmFor(n)); realmSkillOn(/[?&]realmfx=1/.test(location.search),'E');
-    $('#stTitle').textContent='ด่าน '+stLabel(n)+' · '+realmName(RL.key);
-    CUR=rtBattle(idleStage(n,E),{idle:true,label,banner:push?'ด่าน '+stLabel(n):null});
+    const ST=idleStage(n,E);
+    $('#stTitle').textContent='ด่าน '+stLabel(n)+' · '+stageTitle(n,ST);
+    CUR=rtBattle(ST,{idle:true,label,banner:push?'ด่าน '+stLabel(n):null});
     const vis=await CUR; CUR=null;
     if(push&&vis!==undefined&&vis!==won)console.warn('visual result differs from server',vis,won);
     if(MODE!=='idle')continue;
@@ -3646,8 +3734,9 @@ async function startBoss(){
   BN.bid=r.battle_id; BN.t0=Date.now(); bnApply(r.state);
   const n=r.stage; setBossUI(true);
   await useRealm(realmFor(n)); realmSkillOn(!!RL.key,'E');
-  $('#stTitle').textContent='ด่านบอส '+stLabel(n)+(RL.key?' · '+realmName(RL.key):''); $('#hud').hidden=false;
-  const win=await rtBattle(bossStage(n),{manual:true,label:'ด่านบอส'}); realmSkillOn(false);
+  const BS=bossStage(n);
+  $('#stTitle').textContent='ด่านบอส '+stLabel(n)+' · '+BS.boss+(BS.mod?' · '+BS.mod.icon+' '+BS.mod.name:''); $('#hud').hidden=false;
+  const win=await rtBattle(BS,{manual:true,label:'ด่านบอส'}); realmSkillOn(false);
   showBossResult(!!win,n);
 }
 async function showBossResult(win,n){
@@ -3747,7 +3836,7 @@ function loop(){
   const rdt=Math.min(clock.getDelta(),.1), dt=rdt*SPEED*HS; T+=rdt;
   for(let i=tweens.length-1;i>=0;i--){const tw=tweens[i];tw.t+=dt;const k=Math.min(1,tw.t/tw.d);tw.fn(tw.ease(k));if(k>=1){tweens.splice(i,1);tw.r();}}
   for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.p.position.addScaledVector(q.v,dt);q.v.y-=dt*q.grav;q.v.multiplyScalar(q.grow?.96:1);q.life-=dt*q.decay;q.p.material.opacity=Math.max(0,q.life*q.o);if(q.grow)q.p.scale.multiplyScalar(1+dt*.9);if(q.life<=0){scene.remove(q.p);q.p.material.dispose();parts.splice(i,1);}}
-  rigUpdate(dt); rtTick(dt,T); if(typeof raidTick==='function')raidTick(dt); if(typeof realmTick==='function')realmTick(dt);
+  rigUpdate(dt); rtTick(dt,T); if(typeof raidTick==='function')raidTick(dt); if(typeof realmTick==='function')realmTick(dt); if(typeof storyTick==='function')storyTick(dt);
   UNITS.forEach(u=>{if(u.alive||u.w.visible)u.inner.userData.idle(T);});
   separate(); trailUpdate(); blobUpdate();
   falling.forEach((l,i)=>{l.position.y-=rdt*.35;l.position.x+=Math.sin(T+i)*rdt*.3;l.rotation.x+=rdt*(1.5+i%3);l.rotation.y+=rdt;if(l.position.y<.05)l.position.set((Math.random()-.5)*16,5+Math.random()*2,-6+Math.random()*10);});
@@ -3843,7 +3932,7 @@ function raidTick(dt){
   if(RB.t>=RAID_T||!alive('P').length)raidEnd();
 }
 async function raidStart(){
-  MODE='raid'; setBossUI(true); if(typeof useRealm==='function')useRealm(null); $('#hud').hidden=false; $('#bExit').textContent='ถอย';
+  MODE='raid'; if(typeof STORY!=='undefined')STORY.mod=null; setBossUI(true); if(typeof useRealm==='function')useRealm(null); $('#hud').hidden=false; $('#bExit').textContent='ถอย';
   $('#stTitle').textContent='การรุกรานของไฮดรา'; $('#wave').textContent='กำลังเตรียมการต่อสู้…';
   let H,res;
   try{

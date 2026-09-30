@@ -277,3 +277,13 @@ python3 build_battle.py && cp battle.html ../battle.html
 - ชนะแล้วมีโอกาสได้สำเนาของมอนสเตอร์เป้าหมาย (เลเวลเท่ากัน ดาว 0 · เจ้าของเดิมไม่เสียตัว · คลังเต็มไม่ได้ แจ้ง "เกือบได้") ตามระดับ `_fraid_cap()`: 1=15% 2=8% 3=4% 4=1.5%
 - เหรียญ `loot_k` 0.8 → 1.2 · ฝั่งโดนปล้นเสีย loot/3 (ไม่เกิน 5% ที่มี) · หน้าเลือกทีมแสดงโอกาสจับ, หน้าผลแสดงตัวที่ได้
 - โอกาสสูญเสียของตัวที่ส่งไปบุก ลดหลั่นตามระดับ (`_fraid_diek()`, `server/migrate_raid_tierloss.sql`): ×1 / ×0.7 / ×0.45 / เทพ ×0.2 ของค่าพื้นฐาน (ชนะ 5% / แพ้ 25%) · หน้าเลือกทีมแสดง % รายตัวบนไอคอนทุกตัว
+
+## ด่านสตอรี่ — `src/battle_story.js` (โหลดหลัง battle_realm.js, เขียนทับ `idleStage/bossStage`)
+- ศัตรูตามดินแดน: `STORY_REALM[realmFor(n)]` กำหนดชื่อ/สายพันธุ์ minion/mid/big + สีย้อม (`def.tint` → `tintRealm` ใน makeUnit) · บท 1 = นินจาชาดแบบเดิม
+- บอสประจำบท (ด่าน x-10): ชื่อเฉพาะ (`def.name`) · เลือด < 50% → คลั่ง (atk ×1.3, spd ×1.2) + เรียก mid+minion ผ่าน `rtSpawn` (`storyTick` ใน loop) · amateru ใช้ `alt` ถ้าไม่มีมังกร
+- เงื่อนไขพิเศษ: `storyMod(n)` สุ่มคงที่ด้วย hash ของเลขด่าน (ด่าน ≤3 ไม่มี) · `STORY_MODS` e={hp,atk,def,spd,size,leech} ใส่ศัตรูผ่าน `def.mod`, p={...} ใส่ทีมเราผ่าน `STORY.mod.p` · fewer/more ปรับจำนวน · el ล็อกธาตุ
+- โหมดไฮดรา (battle_raid.js) ล้าง `STORY.mod=null`
+## รางวัลทุก 5 ด่าน — `server/migrate_stage_rewards.sql`, `src/farm_stage.js`
+- `players.god_eggs/god_eggs_sure`, ตาราง `stage_claims(user_id,n)` · `_stage_reward(n)`: อัมพร 30+10×(บท−1), ด่านบอส ×2, n%50=0 → ไข่การันตี
+- RPC `stage_state()`, `claim_stage_rewards()` (รับทุกขั้นที่ค้าง รวมย้อนหลัง), `hatch_god_egg()` (การันตีก่อน → rar4, ไม่งั้น 10/30/60% rar 4/3/2)
+- client: ป้าย `#bStage` บนปุ่มผจญภัย, ป๊อปอัปอัตโนมัติเมื่อมีค้าง (รอจนไม่มี sheet/raidPop/guide/visit), แถวใน sheet โดโจ, ปุ่ม `sbtn.god` ในศาลฟักไข่ (`hatch('god')`)
