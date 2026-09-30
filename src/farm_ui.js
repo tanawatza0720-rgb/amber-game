@@ -285,7 +285,7 @@ function enterGame(){
   if(modelsReady){syncAgents(); onboard();}
   else {$('#loadMsg').hidden=false;}
   if(NET.mode!=='online')toast('เล่นแบบออฟไลน์ ความคืบหน้าเก็บในเครื่องนี้');
-  loadRank(true); loadRaid(true); if(typeof loadExp==='function')loadExp(true);
+  loadRank(true); loadRaid(true); if(typeof loadExp==='function')loadExp(true); if(typeof loadFriends==='function')loadFriends(true);
 }
 
 /* ---------- อันดับเผ่า (ใต้เหรียญอัมพร): สมาชิกแต่ละเผ่า + TOP 3 (server/migrate_ranking.sql) ---------- */
