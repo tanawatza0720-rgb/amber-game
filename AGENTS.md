@@ -2,7 +2,7 @@
 
 เกม 3D บนมือถือ (เว็บ): ฟาร์ม · ฟักไข่ · เลี้ยงมอนสเตอร์ · ต่อสู้แบบเรียลไทม์ + ระบบ idle (ดันด่านเอง รางวัลตอนไม่อยู่ 8 ชม.)
 
-- เว็บจริง: https://tanawatza0720-rgb.github.io/amber-game/ (ฟาร์ม) · `/battle.html` (สนามรบ)
+- เว็บจริง: https://amberlegend.com/amber-land/ (ฟาร์ม; หน้าแรกเว็บ = คลัง tanawatza0720-rgb.github.io) · `/battle.html` (สนามรบ)
 - Deploy: **GitHub Pages จาก branch `main` โฟลเดอร์ราก** — push เข้า main แล้วเว็บอัปเดตเองใน 1–2 นาที
 - ข้อความในเกมและคอมเมนต์ในโค้ดเป็น **ภาษาไทย** ให้คงแบบนี้
 

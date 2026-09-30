@@ -4,8 +4,8 @@
 
 > รายละเอียดสำหรับนักพัฒนา/AI ที่มาช่วย ดู **[AGENTS.md](AGENTS.md)**
 
-- เล่นได้ที่ https://tanawatza0720-rgb.github.io/amber-game/
-- ด่านทดสอบการต่อสู้ 1-1 ถึง 1-3: https://tanawatza0720-rgb.github.io/amber-game/battle.html
+- เล่นได้ที่ https://amberlegend.com/amber-land/
+- ด่านทดสอบการต่อสู้ 1-1 ถึง 1-3: https://amberlegend.com/amber-land/battle.html
 
 ## โครงสร้างไฟล์
 
