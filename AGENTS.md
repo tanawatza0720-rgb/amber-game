@@ -304,3 +304,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 ## ฟักไข่ ×10 + อัมพรเริ่มต้น 600 — `server/migrate_hatch10.sql`
 - RPC `hatch_eggs(kind, n)` (n = 1|10) เช็กเงิน/ช่องครบก่อน แล้วเรียก `hatch_egg` ซ้ำ n ครั้ง คืน `{list:[{mon,rar}], state}` · client `hatchMulti()` ใน farm_ui.js แสดงผล 10 ช่อง (`.h10`)
 - `players.amber` default 600 (`amber600` กันเติมซ้ำ)
+## ผู้เล่นจำลอง (บอท) — `server/migrate_bots.sql`
+- 10 บัญชีใน auth.users (anonymous, ล็อกอินไม่ได้) + ตาราง `public.bots` · ชื่อเหมือนผู้เล่นทั่วไป · ด่าน 9–26 · ขึ้นอันดับเผ่า/โดนสุ่มบุกได้/รับเพื่อนเอง
+- `_bots_tick()` ทุกชั่วโมงผ่าน pg_cron (`amber_bots_tick`): อัปเดต updated_at, +เหรียญ, อัปเลเวลทีม, ดันด่านเมื่อพลังถึง (ไม่เกินด่าน 60)
+- ลบบอท: `delete from auth.users where id in (select user_id from public.bots);`
