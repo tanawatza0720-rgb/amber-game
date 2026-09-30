@@ -8,7 +8,7 @@ function raidBadgeTex(){if(_raidTex)return _raidTex;_raidTex=srgb(canvasTex(128,
   x.lineWidth=5;x.strokeStyle='#ffe3a0';x.stroke();x.font=`${s*.4}px sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('⚔️',s/2,s*.43);
   x.beginPath();x.moveTo(s*.42,s*.76);x.lineTo(s*.58,s*.76);x.lineTo(s/2,s*.9);x.closePath();x.fillStyle='#b3261e';x.fill();}));return _raidTex;}
 const raidWin=(ap,dp,I)=>Math.min(I.win_max,Math.max(I.win_min,ap/Math.max(ap+dp,1)));
-const raidLoss=(w,I)=>w*I.die_win+(1-w)*I.die_lose;
+const raidLoss=(w,I,m)=>(w*I.die_win+(1-w)*I.die_lose)*(m&&I.die_k?(I.die_k[spOf(m).rar]!=null?I.die_k[spOf(m).rar]:1):1);
 function raidEnter(r,code){
   const I=r.raid;FRD.info=I;FRD.f=r.friend;FRD.code=code;FRD.mons=r.monsters||[];
   FRD.rev=!!r.revenge;
@@ -43,21 +43,22 @@ function raidPick(){
   const t=el('div');t.append(el('b',null,spOf(T).name+' Lv'+T.lv+' ของ '+FRD.f.name));t.append(el('small',null,'พลังป้องกัน '+fmt(dp)+' (สู้ในบ้านตัวเอง ×'+I.def_k+')'));hd.append(t);d.append(hd);
   // ทีมบุก 4 ช่อง
   const slots=el('div','exSlots rdSlots');
-  for(let i=0;i<I.n;i++){const m=party[i];if(m){const c=icon(m);if(party.length===I.n)c.append(el('span','exRisk'+(loss>.15?' hi':loss>.08?' mid':''),Math.round(loss*100)+'%'));c.onclick=()=>{FRD.sel=FRD.sel.filter(u=>u!==m.uid);FRD.arm=false;raidPick();};slots.append(c);}
+  for(let i=0;i<I.n;i++){const m=party[i];if(m){const c=icon(m);if(party.length===I.n){const lm=raidLoss(w,I,m);c.append(el('span','exRisk'+(lm>.15?' hi':lm>.08?' mid':''),(lm*100).toFixed(lm<.1?1:0)+'%'));}c.onclick=()=>{FRD.sel=FRD.sel.filter(u=>u!==m.uid);FRD.arm=false;raidPick();};slots.append(c);}
     else slots.append(el('div','exEmpty','+'));}
   d.append(slots);
   const st=el('div','rdStat');
   if(party.length===I.n){const odds=el('div','rdOdds');const wb=el('i');wb.style.width=(w*100)+'%';odds.append(wb);st.append(odds);
-    const exp=party.length*loss;
+    const exp=party.reduce((a,m)=>a+raidLoss(w,I,m),0);
     st.append(el('div','rdLine','พลังบุก '+fmt(ap)+' vs '+fmt(dp)+' · โอกาสชนะ '+Math.round(w*100)+'%'));
-    st.append(el('div','rdLine dim','โอกาสสูญเสียต่อตัว '+Math.round(loss*100)+'% (ชนะ '+Math.round(I.die_win*100)+'% / แพ้ '+Math.round(I.die_lose*100)+'%) · คาดว่าจะเสียราว '+exp.toFixed(1)+' ตัว'));
+    st.append(el('div','rdLine dim','โอกาสสูญเสียดูที่ตัวเลขบนแต่ละตัว (ยิ่งระดับสูงยิ่งรอดง่าย · พื้นฐาน ชนะ '+Math.round(I.die_win*100)+'% / แพ้ '+Math.round(I.die_lose*100)+'%) · คาดว่าจะเสียราว '+exp.toFixed(1)+' ตัว'));
     const cp=(I.cap&&I.cap[spOf(T).rar])||0;
     st.append(el('div','rdLine gold','ชนะได้ราว '+fmt(Math.round(T.pow*(I.loot_k||1.2)))+' เหรียญ (+ลุ้นอัมพร)'));
     if(cp)st.append(el('div','rdLine cap','✨ ชนะแล้วมีโอกาส '+(cp*100).toFixed(cp<.05?1:0)+'% ได้ '+spOf(T).name+' มาเป็นของเรา'));}
   else st.append(el('div','rdLine dim','เลือกมอนสเตอร์ของเรา '+I.n+' ตัว (เหลืออีก '+(I.n-party.length)+')'));
   d.append(st);
   const L=el('div','exList'),cands=[...mine].sort((a,b)=>raidPow(b)-raidPow(a));
-  cands.forEach(m=>{const c=icon(m),on=FRD.sel.includes(m.uid);if(on)c.classList.add('on');
+  const w0=party.length===I.n?w:.5;
+  cands.forEach(m=>{const c=icon(m),on=FRD.sel.includes(m.uid);if(on)c.classList.add('on');{const lm=raidLoss(w0,I,m);c.append(el('span','exRisk'+(lm>.15?' hi':lm>.08?' mid':''),(lm*100).toFixed(lm<.1?1:0)+'%'));}
     c.onclick=()=>{if(on)FRD.sel=FRD.sel.filter(u=>u!==m.uid);else if(FRD.sel.length<I.n)FRD.sel.push(m.uid);else{toast('ส่งได้ '+I.n+' ตัว');return;}FRD.arm=false;raidPick();};L.append(c);});
   d.append(el('div','exHint','ตัวที่มีธงคืออยู่ในทีมต่อสู้ ถ้าไม่กลับมาจะหายจากทีมด้วย · ตัวที่ไม่กลับมาได้วิญญาณชดเชย'));d.append(L);
   const risky=party.filter(m=>(VISIT.save.team||[]).includes(m.uid)||(m.stars||0)>0||spOf(m).rar>=4);
