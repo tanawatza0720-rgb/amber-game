@@ -335,6 +335,18 @@ body.visiting #rail,body.visiting #dock,body.visiting #rankBox,body.visiting #hi
 .rdSlots{grid-template-columns:repeat(4,1fr);max-width:260px}
 .rdStat{margin:6px 0}.rdOdds{height:10px;border-radius:5px;background:rgba(255,90,70,.35);overflow:hidden;margin:4px 0}.rdOdds i{display:block;height:100%;background:linear-gradient(90deg,#5fe0a0,#8ff0c4)}
 .rdLine{font-size:12px;margin:2px 0}.rdLine.dim{color:var(--muted);font-size:11px}.rdLine.gold{color:#ffd36a;font-size:11.5px}
+/* แจ้งเตือนโดนปล้น */
+.rdRobRow{display:flex;align-items:center;justify-content:space-between;gap:6px}
+#raidPop{position:fixed;inset:0;z-index:11;background:rgba(10,4,2,.6);display:flex;align-items:center;justify-content:center;padding:16px;animation:rpIn .25s ease-out}
+@keyframes rpIn{from{opacity:0}to{opacity:1}}
+.rpCard{width:min(380px,100%);max-height:calc(100vh - 32px);overflow:auto;border-radius:18px;padding:18px 16px 14px;text-align:center;background:linear-gradient(180deg,#4a1a12,#241008);border:2px solid #ff6a4a;box-shadow:0 0 40px rgba(255,80,40,.35),0 20px 60px rgba(0,0,0,.6);animation:rpShake .5s .15s}
+@keyframes rpShake{20%,60%{transform:translateX(-6px) rotate(-1deg)}40%,80%{transform:translateX(6px) rotate(1deg)}}
+.rpIc{font-size:42px;line-height:1}.rpCard h3{margin:6px 0 2px;font-family:'Chakra Petch',sans-serif;font-size:20px;color:#ffd36a}.rpSub{margin:0 0 8px;font-size:13px;color:#ffb3a0}
+.rpList{display:flex;flex-direction:column;gap:6px;margin:8px 0;text-align:left}
+.rpRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px;border-radius:12px;background:rgba(0,0,0,.28)}
+.rpGo{flex-basis:100%;border:0;border-radius:11px;padding:10px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(180deg,#ff7a4a,#c42a18);box-shadow:0 4px 0 #7a160c;animation:rpPulse 1.2s infinite}
+.rpGo:active{transform:translateY(2px);box-shadow:0 2px 0 #7a160c}@keyframes rpPulse{50%{filter:brightness(1.18)}}
+.rpClose{margin-top:4px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--muted);border-radius:10px;padding:8px 16px;font-family:inherit;font-size:13px}
 </style>
 
 <div id="view"></div>

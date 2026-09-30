@@ -11,16 +11,17 @@ const raidWin=(ap,dp,I)=>Math.min(I.win_max,Math.max(I.win_min,ap/Math.max(ap+dp
 const raidLoss=(w,I)=>w*I.die_win+(1-w)*I.die_lose;
 function raidEnter(r,code){
   const I=r.raid;FRD.info=I;FRD.f=r.friend;FRD.code=code;FRD.mons=r.monsters||[];
-  if(I.raided.includes(code)){toast('วันนี้บุกปล้น '+r.friend.name+' ไปแล้ว พรุ่งนี้มาใหม่นะ');return;}
-  if(I.left<=0){toast('วันนี้บุกปล้นครบ '+I.per_day+' ครั้งแล้ว');return;}
+  FRD.rev=!!r.revenge;
+  if(!FRD.rev){if(I.raided.includes(code)){toast('วันนี้บุกปล้น '+r.friend.name+' ไปแล้ว พรุ่งนี้มาใหม่นะ');return;}
+    if(I.left<=0){toast('วันนี้บุกปล้นครบ '+I.per_day+' ครั้งแล้ว');return;}}
   FRD.on=true;VISIT.raid=true;
   AGENTS.forEach((ag,i)=>{if(!ag.data||ag.data.uid>=0)return;const b=new THREE.Sprite(new THREE.SpriteMaterial({map:raidBadgeTex(),transparent:true,depthTest:false,fog:false}));
     b.scale.set(2,2,1);b.renderOrder=9;b.userData.agent=i;b.userData.ag=ag;scene.add(b);PICK.push(b);FRD.badges.push(b);});
   const place=()=>{const t=performance.now()/1000;FRD.badges.forEach((b,i)=>{const ag=b.userData.ag,p=ag.w.position;b.position.set(p.x,p.y+(ag.fly?2.6:3.1)+Math.sin(t*3+i)*.15,p.z);});};
   place();clearInterval(FRD.bob);FRD.bob=setInterval(place,40);
   const bar=$('#visitBar');bar.classList.add('raiding');
-  const note=el('div','vbRaid','⚔ โหมดบุกปล้น · แตะป้ายบนหัวมอนสเตอร์เพื่อเลือกเป้า · ส่งได้ '+I.n+' ตัว · เหลือวันนี้ '+I.left+'/'+I.per_day+' ครั้ง');bar.append(note);
-  toast('เลือกมอนสเตอร์ของ '+r.friend.name+' ที่จะบุก!');
+  const note=el('div','vbRaid',FRD.rev?'😤 เอาคืน! แตะป้ายบนหัวมอนสเตอร์เพื่อเลือกเป้า · ส่งได้ '+I.n+' ตัว · ไม่นับโควตาวันนี้':'⚔ โหมดบุกปล้น · แตะป้ายบนหัวมอนสเตอร์เพื่อเลือกเป้า · ส่งได้ '+I.n+' ตัว · เหลือวันนี้ '+I.left+'/'+I.per_day+' ครั้ง');bar.append(note);
+  toast(FRD.rev?'ได้เวลาเอาคืน '+r.friend.name+'! 👊':'เลือกมอนสเตอร์ของ '+r.friend.name+' ที่จะบุก!');
 }
 function raidExit(){FRD.on=false;VISIT.raid=false;clearInterval(FRD.bob);FRD.bob=null;
   FRD.badges.forEach(b=>{scene.remove(b);const i=PICK.indexOf(b);if(i>=0)PICK.splice(i,1);b.material.dispose();});FRD.badges=[];
@@ -58,7 +59,7 @@ function raidPick(){
     c.onclick=()=>{if(on)FRD.sel=FRD.sel.filter(u=>u!==m.uid);else if(FRD.sel.length<I.n)FRD.sel.push(m.uid);else{toast('ส่งได้ '+I.n+' ตัว');return;}FRD.arm=false;raidPick();};L.append(c);});
   d.append(el('div','exHint','ตัวที่มีธงคืออยู่ในทีมต่อสู้ ถ้าไม่กลับมาจะหายจากทีมด้วย · ตัวที่ไม่กลับมาได้วิญญาณชดเชย'));d.append(L);
   const risky=party.filter(m=>(VISIT.save.team||[]).includes(m.uid)||(m.stars||0)>0||spOf(m).rar>=4);
-  openSheet('บุกปล้น','เหลือวันนี้ '+I.left+'/'+I.per_day+' ครั้ง',d,[['ยกเลิก',()=>{closeSheet();},''],
+  openSheet(FRD.rev?'เอาคืน!':'บุกปล้น',FRD.rev?'ไม่นับโควตาวันนี้':'เหลือวันนี้ '+I.left+'/'+I.per_day+' ครั้ง',d,[['ยกเลิก',()=>{closeSheet();},''],
     [FRD.arm?'ยืนยันบุก! (มีตัวในทีม/หายาก '+risky.length+')':'⚔ บุกปล้น'+(party.length===I.n?' · ชนะ '+Math.round(w*100)+'%':''),async()=>{
       if(risky.length&&!FRD.arm){FRD.arm=true;toast('มี '+risky.map(m=>spOf(m).name).join(', ')+' ที่อาจไม่กลับมา · กดอีกครั้งเพื่อยืนยัน');raidPick();return;}
       raidGo(party);},'main',party.length!==I.n]]);
@@ -107,12 +108,52 @@ async function raidAnim(tag,party,r){
 }
 function raidResult(r,party){
   const d=el('div','exp'),dead=r.dead||[],alive=r.alive||[];
-  d.append(el('h4',null,r.win?'บุกสำเร็จ! 🏆':'บุกไม่สำเร็จ…'));
+  d.append(el('h4',null,r.win?(r.revenge?'เอาคืนสำเร็จ! สาแก่ใจ 😎':'บุกสำเร็จ! 🏆'):'บุกไม่สำเร็จ…'));
   d.append(el('p','frNote','โอกาสชนะ '+Math.round(r.win_p*100)+'% · กลับมา '+alive.length+' จาก '+(alive.length+dead.length)+' ตัว'));
   const ok=el('div','exSlots rdSlots');alive.forEach(m=>ok.append(icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null})));d.append(ok);
   if(dead.length){d.append(el('h4','exDeadH','ไม่ได้กลับมา'));const ds=el('div','exSlots rdSlots');dead.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.classList.add('dead');c.append(el('span','exSoulB','👻'+m.souls));ds.append(c);});d.append(ds);}
   const R=[];if(r.win){R.push(['เหรียญที่ปล้นได้','+'+fmt(r.coins),'#ffd34d']);if(r.amber)R.push(['อัมพรโบนัส','+'+r.amber,'#ffb347']);R.push([FRD.f.name+' เสียไป',fmt(r.lost)+' เหรียญ','#ff9a8a']);}
   if(r.souls)R.push(['วิญญาณ','+'+r.souls,'#c9b8ff']);if(R.length)d.append(rows(R));
-  openSheet(r.win?'บุกปล้นสำเร็จ':'บุกปล้นล้มเหลว',FRD.f.name,d,[['อยู่ต่อ',()=>closeSheet(),''],['🏠 กลับบ้าน',()=>{closeSheet();leaveVisit();},'main']]);
+  const acts=[['อยู่ต่อ',()=>closeSheet(),''],['🏠 กลับบ้าน',()=>{closeSheet();leaveVisit();},'main']];
+  if(VISIT.kind==='random')acts.splice(1,0,['🎲 สุ่มบ้านต่อ',()=>{closeSheet();VISIT.back=false;leaveVisit();setTimeout(raidRandom,400);},'']);
+  openSheet(r.win?'บุกปล้นสำเร็จ':'บุกปล้นล้มเหลว',FRD.f.name,d,acts);
 }
-if(/[?&]dbg=1/.test(location.search))window.__frd={AGENTS,raidTapAgent,FRD};
+
+/* ---------- เกาะเล็กรอบบ้าน: สุ่มบ้านผู้เล่นอื่นเพื่อบุกปล้น ---------- */
+var ISB=[];
+function isletBadges(on){
+  if(on&&(NET.mode!=='online'||!S.race))on=false;
+  if(on&&!ISB.length&&typeof ISLETS!=='undefined')ISLETS.forEach((g,i)=>{const b=new THREE.Sprite(new THREE.SpriteMaterial({map:raidBadgeTex(),transparent:true,depthTest:false,fog:false}));
+    b.scale.set(3.2,3.2,1);b.position.set(0,4.2,0);b.renderOrder=9;b.userData.islet=1;g.add(b);PICK.push(b);ISB.push(b);});
+  ISB.forEach(b=>b.visible=!!on);}
+setInterval(()=>{if(!ISB.length)return;const t=performance.now()/1000;ISB.forEach((b,i)=>{b.position.y=4.2+Math.sin(t*2.4+i)*.3;const s=3.2+Math.sin(t*4+i)*.15;b.scale.set(s,s,1);});},60);
+setInterval(()=>{if(typeof entered!=='undefined'&&entered&&!VISIT.on)isletBadges(true);},3000);
+async function raidRandom(){
+  if(VISIT.on||FRD.busy)return;if(NET.mode!=='online'){toast('ต้องเข้าสู่ระบบก่อน');return;}
+  FRD.busy=true;let r=null;toast('🎲 กำลังสุ่มบ้านเป้าหมาย…');
+  try{r=await api('raid_random');}catch(e){toast(ERR[e.code]||ERR.network);}
+  FRD.busy=false;if(!r)return;
+  await visitFriend(r.friend.code,true,{payload:r,back:false});
+}
+/* ---------- แจ้งเตือนโดนบุกปล้น + เอาคืน ---------- */
+async function raidInbox(){
+  if(NET.mode!=='online')return;let r=null;try{r=await api('raid_inbox');}catch(e){return;}
+  const L=(r&&r.raids)||[];if(!L.length)return;
+  let pop=$('#raidPop');if(!pop){pop=document.createElement('div');pop.id='raidPop';document.body.append(pop);}
+  pop.innerHTML='';const card=el('div','rpCard');
+  const lost=L.filter(x=>x.win).reduce((a,x)=>a+x.lost,0);
+  card.append(el('div','rpIc','⚔️'));card.append(el('h3',null,L.length>1?'บ้านคุณโดนบุก '+L.length+' ครั้ง!':'บ้านคุณโดนบุกปล้น!'));
+  if(lost)card.append(el('p','rpSub','เสียไปทั้งหมด '+fmt(lost)+' เหรียญ'));
+  const list=el('div','rpList');
+  L.slice(0,5).forEach(x=>{const R=RACES[x.race],row=el('div','rpRow');const av=el('span','frAv',R?R.icon:'🌱');if(R)av.style.background=R.c+'33';row.append(av);
+    const t=el('div','frInfo');t.append(el('b',null,x.name+(x.is_revenge?' (เอาคืน)':'')));t.append(el('small',null,(x.win?'ปล้นสำเร็จ · เสีย '+fmt(x.lost)+' เหรียญ':'บุกมาแต่แพ้กลับไป 💪')+' · พลัง '+fmt(x.power||0)));row.append(t);
+    if(x.revenge){const b=el('button','rpGo','หวดมันคืนเลยมั้ยเพ่! 👊');b.onclick=()=>{pop.remove();visitFriend(x.code,true,{rpc:'raid_visit',back:false});};row.append(b);}
+    list.append(row);});
+  card.append(list);
+  const close=el('button','rpClose','ช่างมันเถอะ');close.onclick=()=>pop.remove();card.append(close);
+  pop.append(card);
+}
+{let asked=false;setInterval(()=>{if(asked||typeof entered==='undefined'||!entered||NET.mode!=='online'||VISIT.on)return;
+  if(document.body.classList.contains('raceOpen')||(typeof GD!=='undefined'&&GD.on))return;asked=true;setTimeout(raidInbox,1500);},1500);}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&typeof entered!=='undefined'&&entered&&!VISIT.on&&!$('#raidPop'))raidInbox();});
+if(/[?&]dbg=1/.test(location.search))window.__frd={AGENTS,raidTapAgent,FRD,raidRandom,raidInbox,ISB};

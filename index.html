@@ -335,6 +335,18 @@ body.visiting #rail,body.visiting #dock,body.visiting #rankBox,body.visiting #hi
 .rdSlots{grid-template-columns:repeat(4,1fr);max-width:260px}
 .rdStat{margin:6px 0}.rdOdds{height:10px;border-radius:5px;background:rgba(255,90,70,.35);overflow:hidden;margin:4px 0}.rdOdds i{display:block;height:100%;background:linear-gradient(90deg,#5fe0a0,#8ff0c4)}
 .rdLine{font-size:12px;margin:2px 0}.rdLine.dim{color:var(--muted);font-size:11px}.rdLine.gold{color:#ffd36a;font-size:11.5px}
+/* แจ้งเตือนโดนปล้น */
+.rdRobRow{display:flex;align-items:center;justify-content:space-between;gap:6px}
+#raidPop{position:fixed;inset:0;z-index:11;background:rgba(10,4,2,.6);display:flex;align-items:center;justify-content:center;padding:16px;animation:rpIn .25s ease-out}
+@keyframes rpIn{from{opacity:0}to{opacity:1}}
+.rpCard{width:min(380px,100%);max-height:calc(100vh - 32px);overflow:auto;border-radius:18px;padding:18px 16px 14px;text-align:center;background:linear-gradient(180deg,#4a1a12,#241008);border:2px solid #ff6a4a;box-shadow:0 0 40px rgba(255,80,40,.35),0 20px 60px rgba(0,0,0,.6);animation:rpShake .5s .15s}
+@keyframes rpShake{20%,60%{transform:translateX(-6px) rotate(-1deg)}40%,80%{transform:translateX(6px) rotate(1deg)}}
+.rpIc{font-size:42px;line-height:1}.rpCard h3{margin:6px 0 2px;font-family:'Chakra Petch',sans-serif;font-size:20px;color:#ffd36a}.rpSub{margin:0 0 8px;font-size:13px;color:#ffb3a0}
+.rpList{display:flex;flex-direction:column;gap:6px;margin:8px 0;text-align:left}
+.rpRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px;border-radius:12px;background:rgba(0,0,0,.28)}
+.rpGo{flex-basis:100%;border:0;border-radius:11px;padding:10px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(180deg,#ff7a4a,#c42a18);box-shadow:0 4px 0 #7a160c;animation:rpPulse 1.2s infinite}
+.rpGo:active{transform:translateY(2px);box-shadow:0 2px 0 #7a160c}@keyframes rpPulse{50%{filter:brightness(1.18)}}
+.rpClose{margin-top:4px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--muted);border-radius:10px;padding:8px 16px;font-family:inherit;font-size:13px}
 </style>
 
 <div id="view"></div>
@@ -1198,7 +1210,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -3269,6 +3281,7 @@ function tap(cx,cy){
   if(!hit){closeSheet();tagAgent=null;$('#mtag').hidden=true;return;}
   const o=hit.object;
   if(o.userData.agent!=null&&typeof raidTapAgent==='function'&&raidTapAgent(AGENTS[o.userData.agent]))return;
+  if(o.userData.islet&&typeof raidRandom==='function'){raidRandom();return;}
   if(o.userData.agent!=null){const ag=AGENTS[o.userData.agent];tagAgent=ag;const t=$('#mtag');t.hidden=false;
     $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent=tierOf(spOf(ag.data).rar).n+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
     const w=ag.w; tween(.3,t=>w.position.y=Math.sin(t*Math.PI)*.4); return;}
@@ -3700,6 +3713,7 @@ async function loadFriends(force){
 function frHud(){const n=FR.st?FR.st.incoming.length:0,b=$('#bFriend');b.hidden=!n;b.textContent=n;}
 setInterval(()=>{if(typeof entered!=='undefined'&&entered&&!VISIT.on&&document.visibilityState==='visible')loadFriends();},90000);
 async function frCall(fn,args,after){
+  for(let i=0;i<40&&FR.busy;i++)await new Promise(r=>setTimeout(r,100));
   if(FR.busy)return null;FR.busy=true;
   try{const r=await api(fn,args);return r;}catch(e){toast(ERR[e.code]||ERR.network);return null;}finally{FR.busy=false;}
 }
@@ -3733,7 +3747,7 @@ function openFriends(){
   else d.append(el('p','frNote','เยี่ยมบ้านเพื่อนครั้งแรกของวัน ได้ '+s.visit_coins+' เหรียญ (เหลือวันนี้ '+left+'/'+s.visit_max+' คน)'+(s.visitors_today?' · วันนี้มีเพื่อนมาเยี่ยมคุณ '+s.visitors_today+' คน':'')));
   const RI=FR.raid;
   if(RI&&RI.robbed&&RI.robbed.length){const bx=el('div','rdRobbed');bx.append(el('b',null,'⚔ วันนี้ถูกบุกปล้น '+RI.robbed.length+' ครั้ง'));
-    RI.robbed.forEach(x=>bx.append(el('small',null,x.name+(x.win?' ปล้นสำเร็จ · เสีย '+fmt(x.lost)+' เหรียญ':' บุกมาแต่แพ้กลับไป'))));d.append(bx);}
+    RI.robbed.forEach(x=>{const ln=el('div','rdRobRow');ln.append(el('small',null,x.name+(x.win?' ปล้นสำเร็จ · เสีย '+fmt(x.lost)+' เหรียญ':' บุกมาแต่แพ้กลับไป')));if(x.revenge)ln.append(frBtn('👊 เอาคืน','raid',()=>visitFriend(x.code,true,{rpc:'raid_visit'})));bx.append(ln);});d.append(bx);}
   s.friends.forEach(f=>{const vb=frBtn(f.visited||!left?'เยี่ยม':'เยี่ยม +'+s.visit_coins+'🪙','main',()=>visitFriend(f.code));
     const done=RI&&RI.raided.includes(f.code),rb=frBtn(done?'ปล้นแล้ว':'บุกปล้น','raid',()=>visitFriend(f.code,true),!RI||done||RI.left<=0);
     const rm=frBtn('ลบ','ghost',async function(){if(FR.arm!==f.code){FR.arm=f.code;this.textContent='ยืนยันลบ';setTimeout(()=>{if(FR.arm===f.code){FR.arm=null;this.textContent='ลบ';}},4000);return;}
@@ -3745,9 +3759,11 @@ function openFriends(){
   openSheet('เพื่อน',s.incoming.length?'มีคำขอใหม่ '+s.incoming.length+' รายการ':'เพิ่มเพื่อนและไปเยี่ยมบ้านกัน',d,[]);
 }
 /* ---------- เยี่ยมบ้านเพื่อน ---------- */
-async function visitFriend(code,raid){
-  if(VISIT.on)return;
-  const r=await frCall('friend_visit',{code});if(!r)return;
+// opt: {payload} = ข้อมูลที่ได้มาแล้ว (สุ่มบ้าน) · {rpc:'raid_visit'} = เข้าเกาะเพื่อบุก/เอาคืน · back: เปิดหน้าเพื่อนตอนกลับ
+async function visitFriend(code,raid,opt){
+  opt=opt||{};if(VISIT.on)return;
+  const r=opt.payload||await frCall(opt.rpc||'friend_visit',{code});if(!r)return;
+  VISIT.back=opt.back!==false;VISIT.kind=r.kind||'friend';
   closeSheet(); if(r.state)_applyStateHome(r.state); if(r.coins){if(typeof bumpRes==='function')bumpRes('coins');}
   const f=r.friend;
   if(FR.st){const x=FR.st.friends.find(y=>y.code===code);if(x&&!x.visited){x.visited=true;FR.st.visits_today++;}}
@@ -3760,11 +3776,13 @@ async function visitFriend(code,raid){
   const hd=el('div','vbHead');const av=el('span','frAv',R?R.icon:'🌱');if(R)av.style.background=R.c+'33';hd.append(av);
   const t=el('div');t.append(el('b',null,'บ้านของ '+f.name));t.append(el('small',null,'Lv '+f.lv+' · '+(R?R.n:'ยังไม่มีเผ่า')+' · พลังทีม '+fmt(f.power||0)+' · ด่าน '+(f.stage||0)));hd.append(t);
   hd.append(frBtn('🏠 กลับบ้าน','main',leaveVisit));bar.append(hd);
+  if(r.kind==='random')t.firstChild.textContent='🎲 บ้านของ '+f.name;if(r.revenge)t.firstChild.textContent='😤 บ้านของ '+f.name;
   const team=(r.team||[]).map(id=>r.monsters.find(m=>Number(m.id)===Number(id))).filter(Boolean);
   if(team.length){const tr=el('div','vbTeam');tr.append(el('small',null,'ทีม'));team.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.onclick=null;tr.append(c);});bar.append(tr);}
   bar.append(el('small','vbNote',(r.monsters||[]).length+' ตัวในฟาร์ม'+(r.visitors_today?' · วันนี้มีคนมาเยี่ยม '+r.visitors_today+' คน':'')));
   bar.hidden=false;
-  toast(r.coins?'มาเยี่ยม '+f.name+' ได้รับ '+r.coins+' เหรียญ 🪙':'มาเยี่ยมบ้าน '+f.name);
+  if(!raid)toast(r.coins?'มาเยี่ยม '+f.name+' ได้รับ '+r.coins+' เหรียญ 🪙':'มาเยี่ยมบ้าน '+f.name);
+  if(typeof isletBadges==='function')isletBadges(false);
   if(r.raid&&FR)FR.raid=r.raid;
   if(raid&&typeof raidEnter==='function'&&r.raid)setTimeout(()=>VISIT.on&&raidEnter(r,code),900);
 }
@@ -3773,7 +3791,7 @@ function leaveVisit(){if(!VISIT.on)return;
   const sv=VISIT.save;VISIT.on=false;document.body.classList.remove('visiting');$('#visitBar').hidden=true;$('#mtag').hidden=true;
   S.mons=sv.mons;S.team=sv.team;if(sv.race&&typeof applyRaceTheme==='function')applyRaceTheme(sv.race);
   if(VISIT.home){_applyStateHome(VISIT.home);VISIT.home=null;}
-  syncAgents();if(typeof renderHUD==='function')renderHUD();VISIT.f=null;openFriends();}
+  syncAgents();if(typeof renderHUD==='function')renderHUD();VISIT.f=null;if(typeof isletBadges==='function')isletBadges(true);if(VISIT.back)openFriends();}
 $('#rFriend').onclick=()=>openFriends();
 
 /* ================= บุกปล้นบ้านเพื่อน =================
@@ -3789,16 +3807,17 @@ const raidWin=(ap,dp,I)=>Math.min(I.win_max,Math.max(I.win_min,ap/Math.max(ap+dp
 const raidLoss=(w,I)=>w*I.die_win+(1-w)*I.die_lose;
 function raidEnter(r,code){
   const I=r.raid;FRD.info=I;FRD.f=r.friend;FRD.code=code;FRD.mons=r.monsters||[];
-  if(I.raided.includes(code)){toast('วันนี้บุกปล้น '+r.friend.name+' ไปแล้ว พรุ่งนี้มาใหม่นะ');return;}
-  if(I.left<=0){toast('วันนี้บุกปล้นครบ '+I.per_day+' ครั้งแล้ว');return;}
+  FRD.rev=!!r.revenge;
+  if(!FRD.rev){if(I.raided.includes(code)){toast('วันนี้บุกปล้น '+r.friend.name+' ไปแล้ว พรุ่งนี้มาใหม่นะ');return;}
+    if(I.left<=0){toast('วันนี้บุกปล้นครบ '+I.per_day+' ครั้งแล้ว');return;}}
   FRD.on=true;VISIT.raid=true;
   AGENTS.forEach((ag,i)=>{if(!ag.data||ag.data.uid>=0)return;const b=new THREE.Sprite(new THREE.SpriteMaterial({map:raidBadgeTex(),transparent:true,depthTest:false,fog:false}));
     b.scale.set(2,2,1);b.renderOrder=9;b.userData.agent=i;b.userData.ag=ag;scene.add(b);PICK.push(b);FRD.badges.push(b);});
   const place=()=>{const t=performance.now()/1000;FRD.badges.forEach((b,i)=>{const ag=b.userData.ag,p=ag.w.position;b.position.set(p.x,p.y+(ag.fly?2.6:3.1)+Math.sin(t*3+i)*.15,p.z);});};
   place();clearInterval(FRD.bob);FRD.bob=setInterval(place,40);
   const bar=$('#visitBar');bar.classList.add('raiding');
-  const note=el('div','vbRaid','⚔ โหมดบุกปล้น · แตะป้ายบนหัวมอนสเตอร์เพื่อเลือกเป้า · ส่งได้ '+I.n+' ตัว · เหลือวันนี้ '+I.left+'/'+I.per_day+' ครั้ง');bar.append(note);
-  toast('เลือกมอนสเตอร์ของ '+r.friend.name+' ที่จะบุก!');
+  const note=el('div','vbRaid',FRD.rev?'😤 เอาคืน! แตะป้ายบนหัวมอนสเตอร์เพื่อเลือกเป้า · ส่งได้ '+I.n+' ตัว · ไม่นับโควตาวันนี้':'⚔ โหมดบุกปล้น · แตะป้ายบนหัวมอนสเตอร์เพื่อเลือกเป้า · ส่งได้ '+I.n+' ตัว · เหลือวันนี้ '+I.left+'/'+I.per_day+' ครั้ง');bar.append(note);
+  toast(FRD.rev?'ได้เวลาเอาคืน '+r.friend.name+'! 👊':'เลือกมอนสเตอร์ของ '+r.friend.name+' ที่จะบุก!');
 }
 function raidExit(){FRD.on=false;VISIT.raid=false;clearInterval(FRD.bob);FRD.bob=null;
   FRD.badges.forEach(b=>{scene.remove(b);const i=PICK.indexOf(b);if(i>=0)PICK.splice(i,1);b.material.dispose();});FRD.badges=[];
@@ -3836,7 +3855,7 @@ function raidPick(){
     c.onclick=()=>{if(on)FRD.sel=FRD.sel.filter(u=>u!==m.uid);else if(FRD.sel.length<I.n)FRD.sel.push(m.uid);else{toast('ส่งได้ '+I.n+' ตัว');return;}FRD.arm=false;raidPick();};L.append(c);});
   d.append(el('div','exHint','ตัวที่มีธงคืออยู่ในทีมต่อสู้ ถ้าไม่กลับมาจะหายจากทีมด้วย · ตัวที่ไม่กลับมาได้วิญญาณชดเชย'));d.append(L);
   const risky=party.filter(m=>(VISIT.save.team||[]).includes(m.uid)||(m.stars||0)>0||spOf(m).rar>=4);
-  openSheet('บุกปล้น','เหลือวันนี้ '+I.left+'/'+I.per_day+' ครั้ง',d,[['ยกเลิก',()=>{closeSheet();},''],
+  openSheet(FRD.rev?'เอาคืน!':'บุกปล้น',FRD.rev?'ไม่นับโควตาวันนี้':'เหลือวันนี้ '+I.left+'/'+I.per_day+' ครั้ง',d,[['ยกเลิก',()=>{closeSheet();},''],
     [FRD.arm?'ยืนยันบุก! (มีตัวในทีม/หายาก '+risky.length+')':'⚔ บุกปล้น'+(party.length===I.n?' · ชนะ '+Math.round(w*100)+'%':''),async()=>{
       if(risky.length&&!FRD.arm){FRD.arm=true;toast('มี '+risky.map(m=>spOf(m).name).join(', ')+' ที่อาจไม่กลับมา · กดอีกครั้งเพื่อยืนยัน');raidPick();return;}
       raidGo(party);},'main',party.length!==I.n]]);
@@ -3885,15 +3904,55 @@ async function raidAnim(tag,party,r){
 }
 function raidResult(r,party){
   const d=el('div','exp'),dead=r.dead||[],alive=r.alive||[];
-  d.append(el('h4',null,r.win?'บุกสำเร็จ! 🏆':'บุกไม่สำเร็จ…'));
+  d.append(el('h4',null,r.win?(r.revenge?'เอาคืนสำเร็จ! สาแก่ใจ 😎':'บุกสำเร็จ! 🏆'):'บุกไม่สำเร็จ…'));
   d.append(el('p','frNote','โอกาสชนะ '+Math.round(r.win_p*100)+'% · กลับมา '+alive.length+' จาก '+(alive.length+dead.length)+' ตัว'));
   const ok=el('div','exSlots rdSlots');alive.forEach(m=>ok.append(icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null})));d.append(ok);
   if(dead.length){d.append(el('h4','exDeadH','ไม่ได้กลับมา'));const ds=el('div','exSlots rdSlots');dead.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.classList.add('dead');c.append(el('span','exSoulB','👻'+m.souls));ds.append(c);});d.append(ds);}
   const R=[];if(r.win){R.push(['เหรียญที่ปล้นได้','+'+fmt(r.coins),'#ffd34d']);if(r.amber)R.push(['อัมพรโบนัส','+'+r.amber,'#ffb347']);R.push([FRD.f.name+' เสียไป',fmt(r.lost)+' เหรียญ','#ff9a8a']);}
   if(r.souls)R.push(['วิญญาณ','+'+r.souls,'#c9b8ff']);if(R.length)d.append(rows(R));
-  openSheet(r.win?'บุกปล้นสำเร็จ':'บุกปล้นล้มเหลว',FRD.f.name,d,[['อยู่ต่อ',()=>closeSheet(),''],['🏠 กลับบ้าน',()=>{closeSheet();leaveVisit();},'main']]);
+  const acts=[['อยู่ต่อ',()=>closeSheet(),''],['🏠 กลับบ้าน',()=>{closeSheet();leaveVisit();},'main']];
+  if(VISIT.kind==='random')acts.splice(1,0,['🎲 สุ่มบ้านต่อ',()=>{closeSheet();VISIT.back=false;leaveVisit();setTimeout(raidRandom,400);},'']);
+  openSheet(r.win?'บุกปล้นสำเร็จ':'บุกปล้นล้มเหลว',FRD.f.name,d,acts);
 }
-if(/[?&]dbg=1/.test(location.search))window.__frd={AGENTS,raidTapAgent,FRD};
+
+/* ---------- เกาะเล็กรอบบ้าน: สุ่มบ้านผู้เล่นอื่นเพื่อบุกปล้น ---------- */
+var ISB=[];
+function isletBadges(on){
+  if(on&&(NET.mode!=='online'||!S.race))on=false;
+  if(on&&!ISB.length&&typeof ISLETS!=='undefined')ISLETS.forEach((g,i)=>{const b=new THREE.Sprite(new THREE.SpriteMaterial({map:raidBadgeTex(),transparent:true,depthTest:false,fog:false}));
+    b.scale.set(3.2,3.2,1);b.position.set(0,4.2,0);b.renderOrder=9;b.userData.islet=1;g.add(b);PICK.push(b);ISB.push(b);});
+  ISB.forEach(b=>b.visible=!!on);}
+setInterval(()=>{if(!ISB.length)return;const t=performance.now()/1000;ISB.forEach((b,i)=>{b.position.y=4.2+Math.sin(t*2.4+i)*.3;const s=3.2+Math.sin(t*4+i)*.15;b.scale.set(s,s,1);});},60);
+setInterval(()=>{if(typeof entered!=='undefined'&&entered&&!VISIT.on)isletBadges(true);},3000);
+async function raidRandom(){
+  if(VISIT.on||FRD.busy)return;if(NET.mode!=='online'){toast('ต้องเข้าสู่ระบบก่อน');return;}
+  FRD.busy=true;let r=null;toast('🎲 กำลังสุ่มบ้านเป้าหมาย…');
+  try{r=await api('raid_random');}catch(e){toast(ERR[e.code]||ERR.network);}
+  FRD.busy=false;if(!r)return;
+  await visitFriend(r.friend.code,true,{payload:r,back:false});
+}
+/* ---------- แจ้งเตือนโดนบุกปล้น + เอาคืน ---------- */
+async function raidInbox(){
+  if(NET.mode!=='online')return;let r=null;try{r=await api('raid_inbox');}catch(e){return;}
+  const L=(r&&r.raids)||[];if(!L.length)return;
+  let pop=$('#raidPop');if(!pop){pop=document.createElement('div');pop.id='raidPop';document.body.append(pop);}
+  pop.innerHTML='';const card=el('div','rpCard');
+  const lost=L.filter(x=>x.win).reduce((a,x)=>a+x.lost,0);
+  card.append(el('div','rpIc','⚔️'));card.append(el('h3',null,L.length>1?'บ้านคุณโดนบุก '+L.length+' ครั้ง!':'บ้านคุณโดนบุกปล้น!'));
+  if(lost)card.append(el('p','rpSub','เสียไปทั้งหมด '+fmt(lost)+' เหรียญ'));
+  const list=el('div','rpList');
+  L.slice(0,5).forEach(x=>{const R=RACES[x.race],row=el('div','rpRow');const av=el('span','frAv',R?R.icon:'🌱');if(R)av.style.background=R.c+'33';row.append(av);
+    const t=el('div','frInfo');t.append(el('b',null,x.name+(x.is_revenge?' (เอาคืน)':'')));t.append(el('small',null,(x.win?'ปล้นสำเร็จ · เสีย '+fmt(x.lost)+' เหรียญ':'บุกมาแต่แพ้กลับไป 💪')+' · พลัง '+fmt(x.power||0)));row.append(t);
+    if(x.revenge){const b=el('button','rpGo','หวดมันคืนเลยมั้ยเพ่! 👊');b.onclick=()=>{pop.remove();visitFriend(x.code,true,{rpc:'raid_visit',back:false});};row.append(b);}
+    list.append(row);});
+  card.append(list);
+  const close=el('button','rpClose','ช่างมันเถอะ');close.onclick=()=>pop.remove();card.append(close);
+  pop.append(card);
+}
+{let asked=false;setInterval(()=>{if(asked||typeof entered==='undefined'||!entered||NET.mode!=='online'||VISIT.on)return;
+  if(document.body.classList.contains('raceOpen')||(typeof GD!=='undefined'&&GD.on))return;asked=true;setTimeout(raidInbox,1500);},1500);}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&typeof entered!=='undefined'&&entered&&!VISIT.on&&!$('#raidPop'))raidInbox();});
+if(/[?&]dbg=1/.test(location.search))window.__frd={AGENTS,raidTapAgent,FRD,raidRandom,raidInbox,ISB};
 
 /* ================= คู่มือผู้เล่นใหม่ (ป๊อปอัปแนะนำทีละขั้น) =================
    เริ่มเองครั้งแรกหลังเลือกเผ่า · ทำตามได้ (แตะจุดที่ไฮไลต์) หรือกดข้าม · เปิดซ้ำได้จากปุ่ม "คู่มือ" */

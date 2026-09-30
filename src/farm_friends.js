@@ -16,6 +16,7 @@ async function loadFriends(force){
 function frHud(){const n=FR.st?FR.st.incoming.length:0,b=$('#bFriend');b.hidden=!n;b.textContent=n;}
 setInterval(()=>{if(typeof entered!=='undefined'&&entered&&!VISIT.on&&document.visibilityState==='visible')loadFriends();},90000);
 async function frCall(fn,args,after){
+  for(let i=0;i<40&&FR.busy;i++)await new Promise(r=>setTimeout(r,100));
   if(FR.busy)return null;FR.busy=true;
   try{const r=await api(fn,args);return r;}catch(e){toast(ERR[e.code]||ERR.network);return null;}finally{FR.busy=false;}
 }
@@ -49,7 +50,7 @@ function openFriends(){
   else d.append(el('p','frNote','เยี่ยมบ้านเพื่อนครั้งแรกของวัน ได้ '+s.visit_coins+' เหรียญ (เหลือวันนี้ '+left+'/'+s.visit_max+' คน)'+(s.visitors_today?' · วันนี้มีเพื่อนมาเยี่ยมคุณ '+s.visitors_today+' คน':'')));
   const RI=FR.raid;
   if(RI&&RI.robbed&&RI.robbed.length){const bx=el('div','rdRobbed');bx.append(el('b',null,'⚔ วันนี้ถูกบุกปล้น '+RI.robbed.length+' ครั้ง'));
-    RI.robbed.forEach(x=>bx.append(el('small',null,x.name+(x.win?' ปล้นสำเร็จ · เสีย '+fmt(x.lost)+' เหรียญ':' บุกมาแต่แพ้กลับไป'))));d.append(bx);}
+    RI.robbed.forEach(x=>{const ln=el('div','rdRobRow');ln.append(el('small',null,x.name+(x.win?' ปล้นสำเร็จ · เสีย '+fmt(x.lost)+' เหรียญ':' บุกมาแต่แพ้กลับไป')));if(x.revenge)ln.append(frBtn('👊 เอาคืน','raid',()=>visitFriend(x.code,true,{rpc:'raid_visit'})));bx.append(ln);});d.append(bx);}
   s.friends.forEach(f=>{const vb=frBtn(f.visited||!left?'เยี่ยม':'เยี่ยม +'+s.visit_coins+'🪙','main',()=>visitFriend(f.code));
     const done=RI&&RI.raided.includes(f.code),rb=frBtn(done?'ปล้นแล้ว':'บุกปล้น','raid',()=>visitFriend(f.code,true),!RI||done||RI.left<=0);
     const rm=frBtn('ลบ','ghost',async function(){if(FR.arm!==f.code){FR.arm=f.code;this.textContent='ยืนยันลบ';setTimeout(()=>{if(FR.arm===f.code){FR.arm=null;this.textContent='ลบ';}},4000);return;}
@@ -61,9 +62,11 @@ function openFriends(){
   openSheet('เพื่อน',s.incoming.length?'มีคำขอใหม่ '+s.incoming.length+' รายการ':'เพิ่มเพื่อนและไปเยี่ยมบ้านกัน',d,[]);
 }
 /* ---------- เยี่ยมบ้านเพื่อน ---------- */
-async function visitFriend(code,raid){
-  if(VISIT.on)return;
-  const r=await frCall('friend_visit',{code});if(!r)return;
+// opt: {payload} = ข้อมูลที่ได้มาแล้ว (สุ่มบ้าน) · {rpc:'raid_visit'} = เข้าเกาะเพื่อบุก/เอาคืน · back: เปิดหน้าเพื่อนตอนกลับ
+async function visitFriend(code,raid,opt){
+  opt=opt||{};if(VISIT.on)return;
+  const r=opt.payload||await frCall(opt.rpc||'friend_visit',{code});if(!r)return;
+  VISIT.back=opt.back!==false;VISIT.kind=r.kind||'friend';
   closeSheet(); if(r.state)_applyStateHome(r.state); if(r.coins){if(typeof bumpRes==='function')bumpRes('coins');}
   const f=r.friend;
   if(FR.st){const x=FR.st.friends.find(y=>y.code===code);if(x&&!x.visited){x.visited=true;FR.st.visits_today++;}}
@@ -76,11 +79,13 @@ async function visitFriend(code,raid){
   const hd=el('div','vbHead');const av=el('span','frAv',R?R.icon:'🌱');if(R)av.style.background=R.c+'33';hd.append(av);
   const t=el('div');t.append(el('b',null,'บ้านของ '+f.name));t.append(el('small',null,'Lv '+f.lv+' · '+(R?R.n:'ยังไม่มีเผ่า')+' · พลังทีม '+fmt(f.power||0)+' · ด่าน '+(f.stage||0)));hd.append(t);
   hd.append(frBtn('🏠 กลับบ้าน','main',leaveVisit));bar.append(hd);
+  if(r.kind==='random')t.firstChild.textContent='🎲 บ้านของ '+f.name;if(r.revenge)t.firstChild.textContent='😤 บ้านของ '+f.name;
   const team=(r.team||[]).map(id=>r.monsters.find(m=>Number(m.id)===Number(id))).filter(Boolean);
   if(team.length){const tr=el('div','vbTeam');tr.append(el('small',null,'ทีม'));team.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.onclick=null;tr.append(c);});bar.append(tr);}
   bar.append(el('small','vbNote',(r.monsters||[]).length+' ตัวในฟาร์ม'+(r.visitors_today?' · วันนี้มีคนมาเยี่ยม '+r.visitors_today+' คน':'')));
   bar.hidden=false;
-  toast(r.coins?'มาเยี่ยม '+f.name+' ได้รับ '+r.coins+' เหรียญ 🪙':'มาเยี่ยมบ้าน '+f.name);
+  if(!raid)toast(r.coins?'มาเยี่ยม '+f.name+' ได้รับ '+r.coins+' เหรียญ 🪙':'มาเยี่ยมบ้าน '+f.name);
+  if(typeof isletBadges==='function')isletBadges(false);
   if(r.raid&&FR)FR.raid=r.raid;
   if(raid&&typeof raidEnter==='function'&&r.raid)setTimeout(()=>VISIT.on&&raidEnter(r,code),900);
 }
@@ -89,5 +94,5 @@ function leaveVisit(){if(!VISIT.on)return;
   const sv=VISIT.save;VISIT.on=false;document.body.classList.remove('visiting');$('#visitBar').hidden=true;$('#mtag').hidden=true;
   S.mons=sv.mons;S.team=sv.team;if(sv.race&&typeof applyRaceTheme==='function')applyRaceTheme(sv.race);
   if(VISIT.home){_applyStateHome(VISIT.home);VISIT.home=null;}
-  syncAgents();if(typeof renderHUD==='function')renderHUD();VISIT.f=null;openFriends();}
+  syncAgents();if(typeof renderHUD==='function')renderHUD();VISIT.f=null;if(typeof isletBadges==='function')isletBadges(true);if(VISIT.back)openFriends();}
 $('#rFriend').onclick=()=>openFriends();
