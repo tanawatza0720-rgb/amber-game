@@ -291,3 +291,6 @@ python3 build_battle.py && cp battle.html ../battle.html
 - ชนะ = กลับมาครบ (die_win 0) · แพ้: รายตัว 30% × `_fraid_diek()` {1:1,2:.45,3:.2,4:.08} ÷ (1+lv/25) × 0.85^ดาว
 - พลังบุกรายตัว × `_el_mul(เรา,เป้า)/_el_mul(เป้า,เรา)` (`_el_of(el,sp)` = ธาตุ/ธาตุประจำตัว, ตรงกับ elMul/EL_OF ใน gamedata.js)
 - client: `raidLossIf` (ตัวเลข "ถ้าแพ้" บนไอคอน), `raidElF` + ▲/▼ บนไอคอน · `_fraid_info` ส่ง die_lv/die_star/el_on
+## ความปลอดภัย — `server/migrate_security_fix.sql`
+- `boss_finish`: นับชนะเมื่อ client ส่ง won=true **และ** `_power(u) ≥ 0.7 × _req(tgt)` ไม่งั้นคืน `{won:false, weak:true, power, min_power}` (battle_ui.js แสดง "ผลไม่ผ่าน")
+- `player_saves` (v1 ไม่ใช้แล้ว): ลบ policy + revoke all จาก anon/authenticated (ข้อมูลยังอยู่)

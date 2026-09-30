@@ -260,7 +260,10 @@ async function showBossResult(win,n){
   const bid=BN.bid; BN.bid=null;
   try{const w=15600-(Date.now()-BN.t0);if(w>0)await sleep(w);
     const res=await brpc('boss_finish',{battle_id:bid,won:win}); bnApply(res.state);
-    if(res.won){row('เหรียญ','+'+fmtN(res.coins));row('อัมพร','+'+res.amber);} note.textContent='บันทึกแล้ว';}
+    if(res.won){row('เหรียญ','+'+fmtN(res.coins));row('อัมพร','+'+res.amber);note.textContent='บันทึกแล้ว';}
+    else if(win&&res.weak){r.className='lose';$('#rTitle').textContent='ผลไม่ผ่าน';note.textContent='ทีมยังอ่อนเกินไปสำหรับด่านนี้';
+      row('พลังทีม',fmtN(res.power)+' / ต้องมีอย่างน้อย '+fmtN(res.min_power));$('#rStarsNote').textContent='อัปเลเวลหรืออัปดาวทีมในฟาร์มให้พลังถึงเกณฑ์ แล้วลองใหม่';}
+    else note.textContent='บันทึกแล้ว';}
   catch(e){note.textContent=BERR[e.code]||BERR.network;}
   back.disabled=false;
 }
