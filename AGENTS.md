@@ -285,5 +285,5 @@ python3 build_battle.py && cp battle.html ../battle.html
 - โหมดไฮดรา (battle_raid.js) ล้าง `STORY.mod=null`
 ## รางวัลทุก 5 ด่าน — `server/migrate_stage_rewards.sql`, `src/farm_stage.js`
 - `players.god_eggs/god_eggs_sure`, ตาราง `stage_claims(user_id,n)` · `_stage_reward(n)`: อัมพร 30+10×(บท−1), ด่านบอส ×2, n%50=0 → ไข่การันตี
-- RPC `stage_state()`, `claim_stage_rewards()` (รับทุกขั้นที่ค้าง รวมย้อนหลัง), `hatch_god_egg()` (การันตีก่อน → rar4, ไม่งั้น 10/30/60% rar 4/3/2)
+- RPC `stage_state()`, `claim_stage_rewards()` (รับทุกขั้นที่ค้าง รวมย้อนหลัง), `hatch_god_egg()` (การันตีก่อน → rar4, ไม่งั้น 0.8/15/84.2% rar 4/3/2 · ธาตุแสง/มืด w=0.5 ใน el_rates (ทุกไข่ออกยากกว่า 2 เท่า, ไม่แสดงในหน้าเรท) — server/migrate_god_egg_rates.sql)
 - client: ป้าย `#bStage` บนปุ่มผจญภัย, ป๊อปอัปอัตโนมัติเมื่อมีค้าง (รอจนไม่มี sheet/raidPop/guide/visit), แถวใน sheet โดโจ, ปุ่ม `sbtn.god` ในศาลฟักไข่ (`hatch('god')`)

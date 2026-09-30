@@ -15,7 +15,7 @@ function openStageRewards(){
   const L=el('div','stList');P.slice(0,30).forEach(r=>{const row=el('div','stRow'+(r.boss?' boss':''));row.append(el('b',null,'ด่าน '+stLb(r.n)+(r.boss?' 👑':'')));row.append(el('span',null,'🔶 '+r.amber+' · 🥚 '+(r.sure?'ไข่เทพการันตี':'ไข่เทพ')));L.append(row);});
   if(P.length>30)L.append(el('small',null,'และอีก '+(P.length-30)+' ขั้น'));d.append(L);
   d.append(rows([['รวมอัมพร','+'+fmt(amber),'#ffb347'],['ไข่เทพ',eggs+' ใบ','#e6c8ff'],...(sure?[['ไข่เทพการันตี',sure+' ใบ','#ff8ac4']]:[])]));
-  d.append(el('p','frNote','ไข่เทพ: เทพ 10% · ตำนาน 30% · หายาก 60% · ฟักได้ที่ศาลฟักไข่'));
+  d.append(el('p','frNote','ไข่เทพ: เทพเจ้า 0.8% · ตำนาน 15% · หายาก 84.2% · ฟักได้ที่ศาลฟักไข่'));
   openSheet('รางวัลผ่านด่าน',P.length+' ขั้นรอรับ',d,[['🎁 รับทั้งหมด',async()=>{const r=await act('claim_stage_rewards',{});if(!r)return;stageApply(r.stage);bumpRes('amber');
     toast('ได้รับอัมพร '+fmt(r.amber)+' และไข่เทพ '+(r.eggs+r.sure)+' ใบ! ไปฟักที่ศาลฟักไข่ได้เลย');
     openSheet('รับรางวัลแล้ว!','',(()=>{const x=el('div');x.append(rows([['อัมพร','+'+fmt(r.amber),'#ffb347'],['ไข่เทพ','+'+(r.eggs+r.sure)+' ใบ','#e6c8ff']]));return x;})(),[['🥚 ไปฟักไข่เทพ',()=>{closeSheet();focusBuilding('hatch');},'god'],['ปิด',()=>closeSheet(),'ghost']]);},'gold']]);

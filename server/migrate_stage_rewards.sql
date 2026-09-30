@@ -2,7 +2,7 @@
 -- ตำนานป่าอัมพร : รางวัลทุก 5 ด่าน (อัมพร + ไข่เทพ)
 -- วิธีใช้: Supabase > SQL Editor > New query > วางทั้งหมดนี้ > Run  (รันซ้ำได้)
 --   ผ่านด่าน 5, 10, 15, ... รับได้ครั้งละ: อัมพร 30 + 10 × (บท − 1) (ด่านบอส x-10 ได้ ×2) + ไข่เทพ 1 ใบ
---   ไข่เทพ: เทพ 10% · ตำนาน 30% · หายาก 60% · ด่าน 50, 100, 150, ... ได้ "ไข่เทพการันตี" (ได้ตัวเทพแน่นอน)
+--   ไข่เทพ: เทพเจ้า 0.8% · ตำนาน 15% · หายาก 84.2% (ไม่มีระดับทั่วไป) · ด่าน 50, 100, 150, ... ได้ "ไข่เทพการันตี" (ได้ตัวเทพแน่นอน)
 --   ผู้เล่นที่ผ่านด่านไปก่อนแล้ว รับย้อนหลังได้ทุกขั้น
 -- =====================================================================
 alter table public.players add column if not exists god_eggs int not null default 0;
@@ -28,7 +28,7 @@ begin
     'pending', coalesce((select jsonb_agg(public._stage_reward(g) order by g) from generate_series(5, p.stage, 5) g
                          where not exists (select 1 from public.stage_claims c where c.user_id = u and c.n = g)), '[]'::jsonb),
     'next', public._stage_reward(((p.stage / 5) + 1) * 5),
-    'rates', jsonb_build_object('4', 0.10, '3', 0.30, '2', 0.60));
+    'rates', jsonb_build_object('4', 0.008, '3', 0.15, '2', 0.842));
 end $$;
 
 -- รับรางวัลขั้นที่ค้างทั้งหมด
@@ -64,7 +64,7 @@ begin
   if sure then update public.players set god_eggs_sure = god_eggs_sure - 1 where user_id = u; t := 4;
   else
     update public.players set god_eggs = god_eggs - 1 where user_id = u;
-    t := case when r < 0.10 then 4 when r < 0.40 then 3 else 2 end;
+    t := case when r < 0.008 then 4 when r < 0.158 then 3 else 2 end;
   end if;
   select s.sp into v_sp from public.species s where s.rar = t order by random() limit 1;
   if v_sp is null then select s.sp into v_sp from public.species s where s.rar <= t order by s.rar desc, random() limit 1; end if;
