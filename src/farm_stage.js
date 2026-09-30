@@ -28,3 +28,11 @@ function openStageRewards(){
 // ดันด่านได้ขณะเปิดเกม: เช็กใหม่ทุก 2 นาที
 setInterval(()=>{if(typeof entered!=='undefined'&&entered&&NET.mode==='online'&&document.visibilityState==='visible')loadStage();},120000);
 if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VISIT(){return VISIT},get GD(){return typeof GD!=='undefined'?GD:null},get entered(){return entered},NET};
+/* ---------- ประกาศย้ายเว็บไป amberlegend.com: ชวนผู้เยี่ยมชมผูก Google ก่อน (เซฟผู้เยี่ยมชมผูกกับเว็บเดิม) ---------- */
+{let shown=false;setInterval(()=>{if(shown||typeof entered==='undefined'||!entered||NET.mode!=='online'||!NET.user||!NET.user.is_anonymous)return;
+  if(!/github\.io$/.test(location.hostname))return;
+  if(!$('#sheet').hidden||$('#raidPop')||(typeof VISIT!=='undefined'&&VISIT.on)||(typeof GD!=='undefined'&&GD.on)||document.body.classList.contains('raceOpen'))return;
+  shown=true;const d=el('div');
+  d.append(para('ตำนานป่าอัมพรกำลังย้ายไปเว็บใหม่ amberlegend.com 🎉'));
+  d.append(para('ตอนนี้คุณเล่นแบบผู้เยี่ยมชม เซฟจะผูกอยู่กับเว็บเดิมเท่านั้น ถ้าย้ายเว็บแล้วจะเข้าบัญชีนี้ไม่ได้ ผูกบัญชี Google ตอนนี้ (ฟรี ใช้เวลาไม่ถึงนาที) เซฟทั้งหมดจะตามไปเล่นต่อที่เว็บใหม่ได้'));
+  openSheet('ย้ายไปเว็บใหม่เร็ว ๆ นี้','ผูก Google เพื่อเก็บเซฟ',d,[['ผูกบัญชี Google',linkGoogle,'gold'],['ไว้ทีหลัง',()=>closeSheet(),'ghost']]);},3000);}
