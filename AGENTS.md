@@ -323,5 +323,8 @@ python3 build_battle.py && cp battle.html ../battle.html
 - จุดข้อต่อที่ใช้จริงอยู่ใน `tools/rig/joints/`
 - ทดสอบท่าในสนามรบ (โหมดทดลอง ไม่ล็อกอิน): `battle.html?demo=seiro,kohaku,garok`
 - `migrate_newchars2.sql` รันบนฐานข้อมูลจริงแล้ว 30 ก.ย. 2026
+## มือถือ: viewport — `src/farm_shell.html`, `src/battle_shell.html`
+- ทั้งสองหน้าต้องขึ้นต้นด้วย `<!doctype html>` + `<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">` (ก่อน 1 ต.ค. 2026 ไม่มี มือถือเลยแสดงแบบจอกว้าง 980px ทุกอย่างเล็กลง ~2.6 เท่า และ media query มือถือไม่ทำงาน) · ห้ามลบ
+- ทดสอบขนาดมือถือ: เบราว์เซอร์ตั้ง viewport 375×812 แล้วเช็ก `innerWidth` ต้องได้ 375 และ `document.compatMode` = `CSS1Compat`
 ## งานค้าง (ยังไม่ได้ทำ)
 - (ว่าง)
