@@ -104,9 +104,9 @@ function rtTick(dt,T){
     }
     if(!u.dodged&&u.hp<u.maxHp*.35&&d<3&&hasClip(u,'dodge')){u.dodged=1;stopMove(u,1);rtDodge(u,t);return;}
     const manual=RT.manual&&u.side==='P'&&!AUTO;
-    if(u.queued&&d<8){const s=u.queued;u.queued=null;stopMove(u);rtUse(u,s,t);return;}
+    if(u.queued&&d<(u.ranged?9:8)){const s=u.queued;u.queued=null;stopMove(u);rtUse(u,s,t);return;}
     const ready=u.skills.filter(s=>s.cd&&u.skT[s.id]<=0&&!(manual&&s===ultOf(u)));
-    if(ready.length&&d<6.5){stopMove(u);rtUse(u,ready[ready.length-1],t);return;}
+    if(ready.length&&d<(u.ranged?8.6:6.5)){stopMove(u);rtUse(u,ready[ready.length-1],t);return;}
     const range=t.rad+u.reach+.15;
     if(d>range){stepToward(u,t.w.position.x,t.w.position.z,d-range,dt,T);return;}
     stopMove(u); turnToward(u,t.w.position.x,t.w.position.z,dt);
