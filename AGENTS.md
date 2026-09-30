@@ -84,7 +84,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 | `morihime` | โมริฮิเมะ (เอลฟ์ถือหอก) | หายาก | `mrh/morihime_rig.json` | rig เอง (heat-diffusion weights) + ผ้า/ผมตามลำตัว + ตัดหน้าที่ยืดเป็นใย (เครื่องมือใน `tools/rig/`) · หอกจับตามแกนการจับของท่า Mixamo |
 | `amateru` | อามาเทรุ (มังกร) | เทพเจ้า | `drg/dragon.json` | กระดูกสร้างในโค้ด (dragon.js) |
 | `seiro` | เซย์โร (หมาป่านักดาบ น้ำ) | หายาก | `szr/seiro_rig.json` | rig เอง (tools/rig) · ไม่มีอาวุธในโมเดล ใช้คาตานะยาวเล่มเดียวแบบคุโรกะ |
-| `kohaku` | โคฮาคุ (จิ้งจอกนักเวท ไฟ) | หายาก | `khk/kohaku_rig.json` + `weapon.jpg` | rig เอง · หางผูกกับสะโพก (BOX) · คทาจับแบบอาวุธด้ามยาว (`POLE`) · สกิลยิงไกลใช้ `rigCast` |
+| `kohaku` | โคฮาคุ (จิ้งจอกนักเวท ไฟ) | หายาก | `khk/kohaku_rig.json` + `weapon.jpg` | rig เอง · หางผูกกับสะโพก (BOX) · คทาจับแบบอาวุธด้ามยาว (`POLE`) · สายตีไกล (`SPECIES.ranged` → `u.reach=5.5`): s1 `type:'bolt'` / s2 `ranged` ใช้ `rigCast` · s3 `type:'rain'` ใช้ `rigRain` |
 | `garok` | กาโรค (ออร์กถือขวาน ดิน) | หายาก | `grk/garok_rig.json` + `weapon.jpg` | rig เอง · ขวานจับแบบอาวุธด้ามยาว (`POLE`) |
 
 - ไฟล์ `*_rig.json` = glTF JSON (buffer ฝังเป็น base64) + `baseColor*.jpg` ในโฟลเดอร์เดียวกัน, ชื่อกระดูกแบบ **Mixamo** (`mixamorig:Hips`, `...RightHand`, `...RightHandMiddle4` ใช้บอกทิศมือ, `...HeadTop_End`)

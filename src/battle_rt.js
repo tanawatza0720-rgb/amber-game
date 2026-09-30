@@ -45,13 +45,15 @@ async function clipStrike(u,nm,sp,onHit,multi){
   else{await wait(inf.main/sp*1000);onHit();await wait(Math.max(120,(inf.dur-inf.main)/sp*1000*.4));}
 }
 /* เวทยิงไกลของตัวที่ใช้ท่า Mixamo (โคฮาคุ): เล่นท่าร่าย รวมลูกไฟที่ปลายคทา แล้วยิงโค้งใส่ศัตรูทีละลูก */
-async function rigCast(u,foes,clip,onHitOne){
-  const A=u.inner.userData,inf=A.clipInfo(clip),sp=1.4; A.play(clip,{speed:sp,fade:.1});
-  const src=()=>{const sw=A.swords&&A.swords[0],v=new THREE.Vector3();if(sw&&sw.userData.tip&&sw.visible)sw.userData.tip.getWorldPosition(v);else v.copy(u.w.position).setY(1.7*u.w.scale.x);return v;};
-  await wait(inf.main/sp*650);
+const castSrc=u=>{const A=u.inner.userData,sw=A.swords&&A.swords[0],v=new THREE.Vector3();if(sw&&sw.userData.tip&&sw.visible)sw.userData.tip.getWorldPosition(v);else v.copy(u.w.position).setY(1.7*u.w.scale.x);return v;};
+async function rigCast(u,foes,clip,onHitOne,o){
+  o=o||{};const A=u.inner.userData,sp=o.fast?1.8:1.4,inf=clip&&A.clipInfo?A.clipInfo(clip):null;
+  if(inf)A.play(clip,{speed:sp,fade:.1});
+  const src=()=>castSrc(u);
+  await wait(inf?inf.main/sp*(o.fast?500:650):120);
   const c=elFx(u),g0=glow(scene,c,.35,src().toArray(),1);
-  await tween(.28,k=>{g0.position.copy(src());g0.scale.setScalar(.25+k*1.1);}); scene.remove(g0);g0.material.dispose();
-  shake=Math.max(shake,.06);
+  await tween(o.fast?.14:.28,k=>{g0.position.copy(src());g0.scale.setScalar(.25+k*(o.fast?.6:1.1));}); scene.remove(g0);g0.material.dispose();
+  shake=Math.max(shake,o.fast?.02:.06);
   await Promise.all(foes.map((f,i)=>new Promise(res=>setTimeout(async()=>{
     const from=src(),g=glow(scene,c,.45,from.toArray(),1),to=f.w.position.clone().setY(.9),mid=from.clone().lerp(to,.5).add(new THREE.Vector3(0,1,0));
     await tween(.4,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));if(Math.random()<.5*FXK)particles(g.position,c,1,.3,.05,.2,.6);},t=>t);
@@ -59,7 +61,21 @@ async function rigCast(u,foes,clip,onHitOne){
     if(f.alive)onHitOne(f); res();},i*120/SPEED))));
   await wait(220);
 }
-const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'},seiro:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kohaku:{s1:['power','slash'],cast:'battlecry',s3:'jumpatk'},garok:{s1:['power','slash','slash2'],s2:'spin',s3:'jumpatk'}};
+/* ฝนเพลิง: ยืนร่ายที่เดิม ลูกไฟตกจากฟ้าลงศัตรูรอบเป้าหมายทีละลูก แล้วระเบิดเป็นวงที่จุดกลาง */
+async function rigRain(u,t,foes,clip,onHitOne){
+  const A=u.inner.userData,sp=1.3,inf=clip&&A.clipInfo?A.clipInfo(clip):null; if(inf)A.play(clip,{speed:sp,fade:.1});
+  const c=elFx(u),src=castSrc(u),g0=glow(scene,c,.4,src.toArray(),1);
+  await tween(.5,k=>{g0.position.copy(castSrc(u)).y+=k*1.2;g0.scale.setScalar(.3+k*1.4);}); scene.remove(g0);g0.material.dispose();
+  const cen=t.w.position.clone().setY(0), list=foes.length?foes:[t];
+  await Promise.all(list.map((f,i)=>new Promise(res=>setTimeout(async()=>{
+    const to=f.w.position.clone().setY(.5),from=to.clone().add(new THREE.Vector3(-1.2,7,0)),g=glow(scene,c,.7,from.toArray(),1);
+    await tween(.38,k=>{g.position.lerpVectors(from,to,k*k);if(Math.random()<.5*FXK)particles(g.position,c,1,.3,.05,.3,.5);});
+    scene.remove(g);g.material.dispose();particles(to,c,Math.round(18*FXK)||5,2.2,.09,.4,.9);
+    if(f.alive)onHitOne(f); res();},i*140/SPEED))));
+  shockRing(cen,c); shake=Math.max(shake,.18); particles(tmpV.copy(cen).setY(.2),c,Math.round(22*FXK)||6,2.4,.08,.5,.9);
+  await wait(250);
+}
+const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'},seiro:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kohaku:{bolt:'slash',cast:'battlecry',rain:'powerup'},garok:{s1:['power','slash','slash2'],s2:'spin',s3:'jumpatk'}};
 function rtTick(dt,T){
   if(!RT)return;
   raceTick(dt);
@@ -129,6 +145,10 @@ async function rtUse(u,s,t){
     } else if(s.type==='ranged'&&u.dragon){
       const fs=near(t.w.position,4.5); await faceTo(u,t.w.position,.2);
       if(Math.random()<.5)await dragonBreath(u,fs,hitAll(fs)); else await dragonStrafe(u,fs,o=>{if(o.alive)dealHit(u,o,s);});
+    } else if(s.type==='bolt'){
+      await rigCast(u,[t],AN&&hasClip(u,AN.bolt)?AN.bolt:null,f=>dealHit(u,f,s),{fast:1});
+    } else if(s.type==='rain'){
+      await rigRain(u,t,near(t.w.position,3.2),AN&&hasClip(u,AN.rain)?AN.rain:null,f=>dealHit(u,f,s));
     } else if(s.type==='ranged'&&AN&&AN.cast&&hasClip(u,AN.cast)){
       await rigCast(u,near(t.w.position,4.5).slice(0,4),AN.cast,f=>dealHit(u,f,s));
     } else if(s.type==='ranged'){
