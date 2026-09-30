@@ -11,7 +11,7 @@ async function loadFriends(force){
   if(NET.mode!=='online'){$('#rFriend').hidden=true;return;}
   $('#rFriend').hidden=false;
   if(FR.busy||(!force&&Date.now()-FR.at<60000))return; FR.busy=true;
-  try{FR.st=await api('friend_list');FR.at=Date.now();frHud();}catch(e){console.warn('friends',e);}finally{FR.busy=false;}
+  try{FR.st=await api('friend_list');try{FR.raid=await api('friend_raid_info');}catch(e){FR.raid=null;}FR.at=Date.now();frHud();}catch(e){console.warn('friends',e);}finally{FR.busy=false;}
 }
 function frHud(){const n=FR.st?FR.st.incoming.length:0,b=$('#bFriend');b.hidden=!n;b.textContent=n;}
 setInterval(()=>{if(typeof entered!=='undefined'&&entered&&!VISIT.on&&document.visibilityState==='visible')loadFriends();},90000);
@@ -47,17 +47,21 @@ function openFriends(){
   const left=Math.max(0,s.visit_max-s.visits_today);
   if(!s.friends.length)d.append(para('ยังไม่มีเพื่อน · ส่งรหัสของคุณให้เพื่อน หรือใส่รหัสของเพื่อนด้านบน'));
   else d.append(el('p','frNote','เยี่ยมบ้านเพื่อนครั้งแรกของวัน ได้ '+s.visit_coins+' เหรียญ (เหลือวันนี้ '+left+'/'+s.visit_max+' คน)'+(s.visitors_today?' · วันนี้มีเพื่อนมาเยี่ยมคุณ '+s.visitors_today+' คน':'')));
+  const RI=FR.raid;
+  if(RI&&RI.robbed&&RI.robbed.length){const bx=el('div','rdRobbed');bx.append(el('b',null,'⚔ วันนี้ถูกบุกปล้น '+RI.robbed.length+' ครั้ง'));
+    RI.robbed.forEach(x=>bx.append(el('small',null,x.name+(x.win?' ปล้นสำเร็จ · เสีย '+fmt(x.lost)+' เหรียญ':' บุกมาแต่แพ้กลับไป'))));d.append(bx);}
   s.friends.forEach(f=>{const vb=frBtn(f.visited||!left?'เยี่ยม':'เยี่ยม +'+s.visit_coins+'🪙','main',()=>visitFriend(f.code));
+    const done=RI&&RI.raided.includes(f.code),rb=frBtn(done?'ปล้นแล้ว':'บุกปล้น','raid',()=>visitFriend(f.code,true),!RI||done||RI.left<=0);
     const rm=frBtn('ลบ','ghost',async function(){if(FR.arm!==f.code){FR.arm=f.code;this.textContent='ยืนยันลบ';setTimeout(()=>{if(FR.arm===f.code){FR.arm=null;this.textContent='ลบ';}},4000);return;}
       FR.arm=null;const r=await frCall('friend_remove',{code:f.code});if(r){FR.st=r;FR.at=Date.now();toast('ลบ '+f.name+' ออกจากเพื่อนแล้ว');openFriends();}});
-    d.append(frRow(f,[vb,rm]));});
+    d.append(frRow(f,[vb,rb,rm]));});
   // คำขอที่ส่งไป
   if(s.outgoing.length){d.append(el('h4',null,'รออีกฝ่ายตอบรับ'));
     s.outgoing.forEach(f=>d.append(frRow(f,[frBtn('ยกเลิก','ghost',async()=>{const r=await frCall('friend_remove',{code:f.code});if(r){FR.st=r;FR.at=Date.now();openFriends();}})])));}
   openSheet('เพื่อน',s.incoming.length?'มีคำขอใหม่ '+s.incoming.length+' รายการ':'เพิ่มเพื่อนและไปเยี่ยมบ้านกัน',d,[]);
 }
 /* ---------- เยี่ยมบ้านเพื่อน ---------- */
-async function visitFriend(code){
+async function visitFriend(code,raid){
   if(VISIT.on)return;
   const r=await frCall('friend_visit',{code});if(!r)return;
   closeSheet(); if(r.state)_applyStateHome(r.state); if(r.coins){if(typeof bumpRes==='function')bumpRes('coins');}
@@ -77,8 +81,11 @@ async function visitFriend(code){
   bar.append(el('small','vbNote',(r.monsters||[]).length+' ตัวในฟาร์ม'+(r.visitors_today?' · วันนี้มีคนมาเยี่ยม '+r.visitors_today+' คน':'')));
   bar.hidden=false;
   toast(r.coins?'มาเยี่ยม '+f.name+' ได้รับ '+r.coins+' เหรียญ 🪙':'มาเยี่ยมบ้าน '+f.name);
+  if(r.raid&&FR)FR.raid=r.raid;
+  if(raid&&typeof raidEnter==='function'&&r.raid)setTimeout(()=>VISIT.on&&raidEnter(r,code),900);
 }
 function leaveVisit(){if(!VISIT.on)return;
+  if(typeof raidExit==='function')raidExit();
   const sv=VISIT.save;VISIT.on=false;document.body.classList.remove('visiting');$('#visitBar').hidden=true;$('#mtag').hidden=true;
   S.mons=sv.mons;S.team=sv.team;if(sv.race&&typeof applyRaceTheme==='function')applyRaceTheme(sv.race);
   if(VISIT.home){_applyStateHome(VISIT.home);VISIT.home=null;}

@@ -158,6 +158,7 @@ function tap(cx,cy){
   const hit=ray.intersectObjects(PICK,false).find(h=>h.object.visible!==false);
   if(!hit){closeSheet();tagAgent=null;$('#mtag').hidden=true;return;}
   const o=hit.object;
+  if(o.userData.agent!=null&&typeof raidTapAgent==='function'&&raidTapAgent(AGENTS[o.userData.agent]))return;
   if(o.userData.agent!=null){const ag=AGENTS[o.userData.agent];tagAgent=ag;const t=$('#mtag');t.hidden=false;
     $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent=tierOf(spOf(ag.data).rar).n+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
     const w=ag.w; tween(.3,t=>w.position.y=Math.sin(t*Math.PI)*.4); return;}

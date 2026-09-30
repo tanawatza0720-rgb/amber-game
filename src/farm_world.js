@@ -397,6 +397,7 @@ function addAgent(data,at,pop){
   return ag;
 }
 function agentUpdate(ag,dt){
+  if(ag.hold)return; // ถูกควบคุมจากฉากพิเศษ (เช่น บุกปล้น)
   const w=ag.w, rig=ag.inner.userData.rig, A=ag.inner.userData;
   if(ag.fly){ag.ang+=dt*.22;const x=Math.cos(ag.ang)*ag.r,z=Math.sin(ag.ang)*ag.r*.8;w.position.set(x,4.2+Math.sin(ag.ang*3)*.6,z);w.rotation.y=Math.atan2(-Math.sin(ag.ang)*ag.r,Math.cos(ag.ang)*ag.r*.8);w.rotation.z=-.18;return;}
   if(ag.spider){const tg=rig.tg;
