@@ -28,7 +28,7 @@ const INFO={
     const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th><th>ไข่เทพ</th></tr>';
     [[4,'—','0.5%','0.8%'],[3,'2%','10%','15%'],[2,'15%','32%','84.2%'],[1,'83%','57.5%','—']].forEach(([r,a,b,g])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t);tr2.append(td);[a,b,g].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
     d.append(T); d.append(rows([['ระดับเทพเจ้า','ออกจากไข่ทองคำและไข่เทพ','#ff8ac4'],['การันตีระดับตำนานขึ้นไป (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
-    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]].concat(typeof godEggAct==='function'?godEggAct():[]));},
+    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ไข่ป่า ×1 · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ไข่ป่า ×10 · 1,000 เหรียญ',()=>hatchMulti('wild','ไข่ป่า'),'',S.coins<1000],['ไข่ทองคำ ×1 · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30],['ไข่ทองคำ ×10 · 300 อัมพร',()=>hatchMulti('gold','ไข่ทองคำ'),'gold',S.amber<300]].concat(typeof godEggAct==='function'?godEggAct():[]));},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
     const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
@@ -122,6 +122,27 @@ async function hatch(kind,name){
   particles(ep,ELEM[hel]?ELEM[hel].fx:col,40,2.6,.06,1.2);
   const ag=addAgent(d,[0,5.9],true); if(!ag.fly){ag.state='idle'; ag.wait=2.5;}
   toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' '+ELEM[hel].i+'ธาตุ'+hel+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
+  hatching=false;
+}
+// ฟักทีละ 10 ใบ: ฟักที่เซิร์ฟเวอร์ครั้งเดียว แล้วแสดงผลรวม (ตัวหายากสุดเล่นเอฟเฟกต์)
+async function hatchMulti(kind,name){
+  if(hatching)return; if(S.mons.length+10>S.slots){toast('ช่องเก็บไม่พอ ต้องว่างอย่างน้อย 10 ช่อง');return;}
+  hatching=true; closeSheet(); camTTo.set(0,0,5); distTo=FARM_ZMIN;
+  const shake=tween(1.8,t=>{hatchEggMat.emissiveIntensity=.25+t*3;hatchEgg.rotation.y+=.25+t*.8;hatchEgg.position.y=2.15+Math.sin(t*45)*.04*t;});
+  const r=await act('hatch_eggs',{kind,n:10}); await shake; hatchEggMat.emissiveIntensity=.25;
+  if(!r){hatching=false;return;}
+  bumpRes(kind==='gold'?'amber':'coins');
+  const L=r.list.map(x=>({...x,d:S.mons.find(m=>m.uid===Number(x.mon.id))||{uid:Number(x.mon.id),sp:x.mon.sp,lv:1,el:x.mon.el||null}})).sort((a,b)=>b.rar-a.rar);
+  const best=L[0].rar,col=tierOf(best).hx,ep=new THREE.Vector3(0,2.15,3.2);
+  flashBall(ep,col,best>=4?7:best>=3?6:5); particles(ep,col,best>=4?160:best>=3?110:80,3.4,.07,1.8); particles(ep,0xffffff,40,2.6,.05,1.3);
+  if(best>=4)shakeCam=.45;else if(best>=3)shakeCam=.25;
+  L.forEach((x,i)=>setTimeout(()=>{const ag=addAgent(x.d,[0,5.9],true);if(!ag.fly){ag.state='idle';ag.wait=2+i*.2;}},i*120));
+  const d=el('div','h10');
+  L.forEach(x=>{const c=icon(x.d);c.classList.add('r'+x.rar);d.append(c);});
+  const cnt=k=>L.filter(x=>x.rar===k).length;
+  const sum=[4,3,2,1].filter(k=>cnt(k)).map(k=>tierOf(k).n+' '+cnt(k)).join(' · ');
+  openSheet(name+' ×10',sum,d,[['ฟักอีก 10 ใบ',()=>hatchMulti(kind,name),kind==='gold'?'gold':'',kind==='gold'?S.amber<300:S.coins<1000],['ปิด',()=>closeSheet(),'ghost']]);
+  toast(best>=4?'ได้ระดับเทพเจ้า!!':best>=3?'ได้ระดับตำนาน!':'ฟักครบ 10 ใบแล้ว');
   hatching=false;
 }
 let shakeCam=0;

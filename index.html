@@ -370,6 +370,7 @@ body.visiting #rail,body.visiting #dock,body.visiting #rankBox,body.visiting #hi
 .tdRow.todo::before{content:"";position:absolute;left:-3px;top:-3px;width:10px;height:10px;border-radius:50%;background:#e8453c}
 .tdRow.done{opacity:.55}.tdIc{font-size:20px;width:26px;text-align:center}
 .tdTx{flex:1;min-width:0}.tdTx b{display:block;font-size:13px}.tdTx small{color:var(--muted);font-size:11.5px}
+.h10{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:4px 0 6px}.h10 .ic{width:100%!important}.h10 .ic.r4{box-shadow:0 0 0 2px #ff8ac4,0 0 14px #ff8ac4}.h10 .ic.r3{box-shadow:0 0 0 2px #ffc94d,0 0 10px #ffc94d}
 </style>
 
 <div id="view"></div>
@@ -1234,7 +1235,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -1319,12 +1320,10 @@ const LOCAL=(()=>{
     if(!D){ // สร้างใหม่ (ย้ายของเดิมจากเดโมถ้ามี)
       let old=null; try{old=JSON.parse(SafeStore.getItem('amber_farm_demo_v1'));}catch(e){}
       const now=Date.now();
-      D={name:(old&&old.name)||'ผู้เยี่ยมชม',lv:1,xp:0,coins:old?old.coins:1200,amber:old?old.amber:50,energy:old?Math.min(60,old.energy):45,energy_at:now,amber_at:now,
+      D={name:(old&&old.name)||'ผู้เยี่ยมชม',lv:1,xp:0,coins:old?old.coins:1200,amber:old?old.amber:600,energy:old?Math.min(60,old.energy):45,energy_at:now,amber_at:now,
         daily_streak:0,daily_last:null,hatch_count:0,pity:0,quest_day:null,quests:{},team:[],mons:[],nid:1};
-      const src=(old&&old.mons&&old.mons.length)?old.mons.map(m=>({sp:m.sp||(m.evo?'kazekiri':'kazemaru'),lv:m.lv})):[{sp:'kazekiri',lv:18},{sp:'kazemaru',lv:4},{sp:'kazemaru',lv:7},{sp:'kazemaru',lv:1}];
-      if(!src.some(m=>m.sp==='amateru'))src.push({sp:'amateru',lv:10});
-      if(!src.some(m=>m.sp==='kuroga'))src.push({sp:'kuroga',lv:10});
-      src.forEach(m=>D.mons.push({id:D.nid++,sp:m.sp,lv:m.lv}));
+      const src=(old&&old.mons&&old.mons.length)?old.mons.map(m=>({sp:m.sp||(m.evo?'kazekiri':'kazemaru'),lv:m.lv})):[{sp:'kuroga',lv:5,el:'ไฟ'},{sp:'kazekiri',lv:5,el:'น้ำ'},{sp:'morihime',lv:5,el:'ลม'}];
+      src.forEach(m=>D.mons.push({id:D.nid++,sp:m.sp,lv:m.lv,...(m.el?{el:m.el}:{})}));
       const ord=m=>({kazekiri:1,amateru:2}[m.sp]||3)*100-m.lv;
       D.team=[...D.mons].sort((a,b)=>ord(a)-ord(b)).slice(0,6).map(m=>m.id);
     }
@@ -1350,6 +1349,8 @@ const LOCAL=(()=>{
       const r=Math.random(); let t=r<ch[3]?4:r<ch[3]+ch[2]?3:r<ch[3]+ch[2]+ch[1]?2:1; if(kind==='gold'&&t<3&&D.pity>=C.pity_max)t=3;
       const pool=Object.keys(SPS).filter(k=>SPS[k].rar===t), sp=pool[Math.floor(Math.random()*pool.length)]||'kazemaru'; if(kind==='gold'&&t>=3)D.pity=0;
       const m={id:D.nid++,sp,lv:1,stars:0,el:EL_LIST[Math.floor(Math.random()*EL_LIST.length)]};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
+    hatch_eggs:({kind,n})=>{if(n!==1&&n!==10)fail('bad_count');if(D.mons.length+n>C.slots)fail('box_full');const c=n*(kind==='wild'?C.wild_cost:C.gold_cost);
+      if(kind==='wild'&&D.coins<c)fail('not_enough_coins');if(kind==='gold'&&D.amber<c)fail('not_enough_amber');const list=[];for(let i=0;i<n;i++)list.push(F.hatch_egg({kind}));return{list};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
     star_up:({mon_id,mat_ids})=>{const m=mon(mon_id);const st=m.stars||0;if(st>=STAR_MAX)fail('max_stars');const need=starCost(st+1);
@@ -3174,7 +3175,7 @@ const INFO={
     const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th><th>ไข่เทพ</th></tr>';
     [[4,'—','0.5%','0.8%'],[3,'2%','10%','15%'],[2,'15%','32%','84.2%'],[1,'83%','57.5%','—']].forEach(([r,a,b,g])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t);tr2.append(td);[a,b,g].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
     d.append(T); d.append(rows([['ระดับเทพเจ้า','ออกจากไข่ทองคำและไข่เทพ','#ff8ac4'],['การันตีระดับตำนานขึ้นไป (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
-    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ฟักไข่ป่า · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ฟักไข่ทองคำ · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30]].concat(typeof godEggAct==='function'?godEggAct():[]));},
+    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ไข่ป่า ×1 · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ไข่ป่า ×10 · 1,000 เหรียญ',()=>hatchMulti('wild','ไข่ป่า'),'',S.coins<1000],['ไข่ทองคำ ×1 · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30],['ไข่ทองคำ ×10 · 300 อัมพร',()=>hatchMulti('gold','ไข่ทองคำ'),'gold',S.amber<300]].concat(typeof godEggAct==='function'?godEggAct():[]));},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
     const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
@@ -3268,6 +3269,27 @@ async function hatch(kind,name){
   particles(ep,ELEM[hel]?ELEM[hel].fx:col,40,2.6,.06,1.2);
   const ag=addAgent(d,[0,5.9],true); if(!ag.fly){ag.state='idle'; ag.wait=2.5;}
   toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' '+ELEM[hel].i+'ธาตุ'+hel+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
+  hatching=false;
+}
+// ฟักทีละ 10 ใบ: ฟักที่เซิร์ฟเวอร์ครั้งเดียว แล้วแสดงผลรวม (ตัวหายากสุดเล่นเอฟเฟกต์)
+async function hatchMulti(kind,name){
+  if(hatching)return; if(S.mons.length+10>S.slots){toast('ช่องเก็บไม่พอ ต้องว่างอย่างน้อย 10 ช่อง');return;}
+  hatching=true; closeSheet(); camTTo.set(0,0,5); distTo=FARM_ZMIN;
+  const shake=tween(1.8,t=>{hatchEggMat.emissiveIntensity=.25+t*3;hatchEgg.rotation.y+=.25+t*.8;hatchEgg.position.y=2.15+Math.sin(t*45)*.04*t;});
+  const r=await act('hatch_eggs',{kind,n:10}); await shake; hatchEggMat.emissiveIntensity=.25;
+  if(!r){hatching=false;return;}
+  bumpRes(kind==='gold'?'amber':'coins');
+  const L=r.list.map(x=>({...x,d:S.mons.find(m=>m.uid===Number(x.mon.id))||{uid:Number(x.mon.id),sp:x.mon.sp,lv:1,el:x.mon.el||null}})).sort((a,b)=>b.rar-a.rar);
+  const best=L[0].rar,col=tierOf(best).hx,ep=new THREE.Vector3(0,2.15,3.2);
+  flashBall(ep,col,best>=4?7:best>=3?6:5); particles(ep,col,best>=4?160:best>=3?110:80,3.4,.07,1.8); particles(ep,0xffffff,40,2.6,.05,1.3);
+  if(best>=4)shakeCam=.45;else if(best>=3)shakeCam=.25;
+  L.forEach((x,i)=>setTimeout(()=>{const ag=addAgent(x.d,[0,5.9],true);if(!ag.fly){ag.state='idle';ag.wait=2+i*.2;}},i*120));
+  const d=el('div','h10');
+  L.forEach(x=>{const c=icon(x.d);c.classList.add('r'+x.rar);d.append(c);});
+  const cnt=k=>L.filter(x=>x.rar===k).length;
+  const sum=[4,3,2,1].filter(k=>cnt(k)).map(k=>tierOf(k).n+' '+cnt(k)).join(' · ');
+  openSheet(name+' ×10',sum,d,[['ฟักอีก 10 ใบ',()=>hatchMulti(kind,name),kind==='gold'?'gold':'',kind==='gold'?S.amber<300:S.coins<1000],['ปิด',()=>closeSheet(),'ghost']]);
+  toast(best>=4?'ได้ระดับเทพเจ้า!!':best>=3?'ได้ระดับตำนาน!':'ฟักครบ 10 ใบแล้ว');
   hatching=false;
 }
 let shakeCam=0;
@@ -4029,6 +4051,9 @@ if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VIS
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.09.30.2',date:'30 ก.ย. 2026',title:'ฟักไข่ ×10 และอัมพรเริ่มต้น 600 🥚',items:[
+    '🥚 ศาลฟักไข่กดฟักได้ทั้งทีละ 1 ใบ และทีละ 10 ใบ (ไข่ป่า ×10 · 1,000 เหรียญ / ไข่ทองคำ ×10 · 300 อัมพร) เรทเท่าเดิม',
+    '💎 ผู้เล่นใหม่เริ่มต้นด้วยอัมพร 600 · ผู้ที่เริ่มเล่นหลังรีเซ็ตแล้วได้รับเพิ่มให้ครบ 600']},
   {ver:'2026.09.30',date:'30 ก.ย. 2026',title:'เปิดเซิร์ฟเวอร์ใหม่ที่ amberlegend.com 🎉',items:[
     '🌐 ย้ายมาอยู่เว็บใหม่ amberlegend.com (หน้าเกม amberlegend.com/amber-land)',
     '🔄 รีเซ็ตเซิร์ฟเวอร์ ทุกคนเริ่มใหม่พร้อมกัน · ตัวเริ่มต้น: คุโรกะ (ไฟ) · คาเซะคิริ (น้ำ) · โมริฮิเมะ (ลม)',

@@ -301,3 +301,6 @@ python3 build_battle.py && cp battle.html ../battle.html
 - `PATCHES` (ใหม่สุดอยู่บน) → ป๊อปอัป `#newsPop` เด้งบนหน้าล็อกอินครั้งเดียวต่อเวอร์ชัน (localStorage `amber_news_seen`) · ปุ่มราง "อัปเดต" (`#rEvent`, badge `#bNews`) เปิดดูย้อนหลัง
 - `todoList()` รวมงานรายวัน (รางวัลรายวัน, ภารกิจ, อัมพร, รางวัลด่าน, ไข่เทพ, จดหมาย, ไฮดรา, สำรวจ, เยี่ยมเพื่อน, บุกปล้น) สถานะ todo/wait/done · ปุ่ม "วันนี้" (`#rToday`, badge `#bToday`) · `.reddot` บนปุ่มเพื่อน/สำรวจ/ฟักไข่
 - **ทุกครั้งที่อัปเดตเกม ให้เพิ่มรายการใน PATCHES**
+## ฟักไข่ ×10 + อัมพรเริ่มต้น 600 — `server/migrate_hatch10.sql`
+- RPC `hatch_eggs(kind, n)` (n = 1|10) เช็กเงิน/ช่องครบก่อน แล้วเรียก `hatch_egg` ซ้ำ n ครั้ง คืน `{list:[{mon,rar}], state}` · client `hatchMulti()` ใน farm_ui.js แสดงผล 10 ช่อง (`.h10`)
+- `players.amber` default 600 (`amber600` กันเติมซ้ำ)
