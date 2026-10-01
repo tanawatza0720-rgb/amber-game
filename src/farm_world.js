@@ -446,4 +446,8 @@ function applyState(st){
   S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null}));
   if(typeof renderHUD==='function')renderHUD();
 }
-function syncAgents(){AGENTS.forEach(a=>{scene.remove(a.w);});AGENTS.length=0;PICK.splice(0,PICK.length,...PICK.filter(o=>o.userData.agent==null));S.mons.forEach(d=>addAgent(d));}
+// มอนสเตอร์เดินเล่นในฟาร์ม: แสดงแค่ 12 ตัวที่พลังสูงสุด (เจ้าของสั่ง · ลดภาระเครื่องด้วย)
+const FARM_SHOW=12;
+const farmPow=d=>{try{return typeof power==='function'?power(d):d.lv;}catch(e){return d.lv||0;}};
+function syncAgents(){AGENTS.forEach(a=>{scene.remove(a.w);});AGENTS.length=0;PICK.splice(0,PICK.length,...PICK.filter(o=>o.userData.agent==null));
+  [...S.mons].sort((a,b)=>farmPow(b)-farmPow(a)).slice(0,FARM_SHOW).forEach(d=>addAgent(d));}

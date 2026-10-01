@@ -125,6 +125,7 @@ async function hatch(kind,name){
   const d=S.mons.find(m=>m.uid===Number(r.mon.id))||{uid:Number(r.mon.id),sp:r.mon.sp,lv:1,el:r.mon.el||null}; const hel=elOfMon(d);
   particles(ep,ELEM[hel]?ELEM[hel].fx:col,40,2.6,.06,1.2);
   const ag=addAgent(d,[0,5.9],true); if(!ag.fly){ag.state='idle'; ag.wait=2.5;}
+  setTimeout(()=>{if(AGENTS.length>FARM_SHOW&&!(typeof VISIT!=='undefined'&&VISIT.on))syncAgents();},9000);
   toast(name+' ฟักแล้ว! ได้'+SPEC[r.mon.sp].name+' '+ELEM[hel].i+'ธาตุ'+hel+' ระดับ'+tierOf(r.rar).n+(r.rar>=4?'!!':r.rar>=3?'!':' เดินออกมาในฟาร์มแล้ว'));
   if(r.rar>=3&&typeof pullFx==='function'){pullFx(r.rar,SPEC[r.mon.sp].name,ELEM[hel].i+' ธาตุ'+hel);PULL.last=0;setTimeout(pullsLoad,2500);}
   hatching=false;
@@ -142,6 +143,7 @@ async function hatchMulti(kind,name){
   flashBall(ep,col,best>=4?7:best>=3?6:5); particles(ep,col,best>=4?160:best>=3?110:80,3.4,.07,1.8); particles(ep,0xffffff,40,2.6,.05,1.3);
   if(best>=4)shakeCam=.45;else if(best>=3)shakeCam=.25;
   L.forEach((x,i)=>setTimeout(()=>{const ag=addAgent(x.d,[0,5.9],true);if(!ag.fly){ag.state='idle';ag.wait=2+i*.2;}},i*120));
+  setTimeout(()=>{if(AGENTS.length>FARM_SHOW&&!(typeof VISIT!=='undefined'&&VISIT.on))syncAgents();},10000);
   const d=el('div','h10');
   L.forEach(x=>{const c=icon(x.d);c.classList.add('r'+x.rar);d.append(c);});
   const cnt=k=>L.filter(x=>x.rar===k).length;
@@ -364,7 +366,7 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
 }
 
 // ดีบัก: index.html?dbg=1 เปิด window.__F (เข้าโหมดออฟไลน์เพื่อตรวจหน้าตาโดยไม่สร้างบัญชี)
-if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,get PORTAL(){return PORTAL;},camT,camTTo,setDist:d=>{distTo=d;},enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
+if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,get AGENTS(){return AGENTS;},get PORTAL(){return PORTAL;},camT,camTTo,setDist:d=>{distTo=d;},enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
 
 // แตะแถบพลังงาน = เปิดหน้ากวาดด่าน
 if($('#pEnergy')){const pe=$('#pEnergy');pe.style.cursor='pointer';pe.setAttribute('role','button');pe.setAttribute('tabindex','0');pe.setAttribute('aria-label','พลังงาน แตะเพื่อไปกวาดด่านที่หน้าต่อสู้');pe.onclick=()=>INFO.sweep();pe.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();INFO.sweep();}};}
