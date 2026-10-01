@@ -9,7 +9,7 @@ if(PHONE){document.body.classList.add('phone');try{if(localStorage.getItem('ipFo
   // จุดแดงเมื่อพับไว้แต่มีของให้เก็บ/กวาด
   setInterval(()=>{const c=$('#ipClaim'),w=$('#sw1');f.classList.toggle('dot',document.body.classList.contains('ipFold')&&((c&&!$('#ipChest').hidden&&!c.disabled)||(w&&!$('#ipSweep').hidden&&!w.disabled)));},1000);}}
 function makeBar(u){
-  if(PHONE&&!u.boss&&!u.raidBar){const f=document.createElement('div');f.className='fbar '+(u.side==='P'?'p':'e');f.innerHTML='<i></i>';ov.appendChild(f);u.footEl=f;}
+  if(PHONE&&!u.boss&&!u.raidBar)footMake(u);
   const b=document.createElement('div'); b.className='ubar '+(u.side==='P'?'p':'e')+(u.boss?' boss':''); b.hidden=true; ov.appendChild(b); u.barEl=b; u.stSig='';
   const r=document.createElement('div'); r.className='hrow2 '+(u.side==='P'?'p':'e')+(u.boss?' boss':'');
   r.innerHTML='<div class="rt"><span class="el"></span><span class="nm"></span><span class="lv"></span></div><div class="hp"><i></i><em></em></div>';
@@ -21,7 +21,20 @@ function makeBar(u){
 function updateBar(u){const r=u.row;if(!r)return;if(u.raidBar){u.raidBar(r);return;}const k=Math.max(0,u.hp/u.maxHp);
   r.querySelector('.hp i').style.width=(k*100)+'%'; r.querySelector('.hp em').textContent=u.hp+'/'+u.maxHp;
   r.classList.toggle('low',k>0&&k<.3); r.classList.toggle('dead',!u.alive||u.hp<=0);
-  if(u.footEl){u.footEl.firstChild.style.width=(k*100)+'%';u.footEl.classList.toggle('low',k>0&&k<.3);}}
+  if(u.foot)u.foot.material.uniforms.hp.value=k;}
+// มือถือ: หลอดเลือดแบ่งช่องบางๆ ตั้งตรงในฉาก 3D ด้านหลังตัวละคร (ตัวละครบังได้) หันเข้ากล้องเสมอ · สีอ่อน ไม่เด่นเกิน
+const FOOT_GEO=new THREE.PlaneGeometry(1,1);
+const FOOT_VS='varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}';
+const FOOT_FS='uniform float hp,low,t;uniform vec3 col;varying vec2 vU;void main(){'+
+  // หลอดแบ่งช่อง (10 ช่อง) กรอบเข้มบาง · เติมสีอ่อนตามเลือด · เลือดน้อยกะพริบ
+  'vec2 p=vU;float bx=step(p.x,.035)+step(.965,p.x)+step(p.y,.16)+step(.84,p.y);if(bx>0.){gl_FragColor=vec4(.08,.06,.04,.7);return;}'+
+  'float x=(p.x-.035)/.93;float seg=step(fract(x*10.),.06)*step(.02,x);bool f=x<=hp;'+
+  'vec3 c=f?mix(col,col*1.18,step(.55,p.y)):vec3(.14,.11,.08);float a=f?.85:.5;if(f&&low>.5)a*=.6+.4*sin(t*9.);c=mix(c,vec3(.08,.06,.04),seg*.8);'+
+  'gl_FragColor=vec4(c,a);}';
+function footMake(u){const m=new THREE.ShaderMaterial({vertexShader:FOOT_VS,fragmentShader:FOOT_FS,transparent:true,depthWrite:false,
+    uniforms:{hp:{value:1},low:{value:0},t:{value:0},col:{value:new THREE.Color(u.side==='P'?0xb9e6a6:0xf2b49c)}}});
+  const f=new THREE.Mesh(FOOT_GEO,m);const s=Math.min(2.2,Math.max(1,(u.rad||.45)/.45));f.scale.set(.9*s,.11*s,1);f.renderOrder=1;scene.add(f);u.foot=f;}
+const _fd=new THREE.Vector3();
 function rowGone(u){const r=u.row;if(!r)return;r.classList.add('dead');if(u.side==='E')setTimeout(()=>{r.classList.add('out');setTimeout(()=>r.remove(),400);},500);}
 // บัพ/ดีบัพที่ตัวละครได้รับ (คืนค่าเป็นรายการ [ไอคอน, คลาส, คำอธิบาย])
 function statusOf(u){const L=[];
@@ -396,10 +409,11 @@ function loop(){
   UNITS.forEach(u=>{if(!u.barEl)return;const on=u.alive&&renderStatus(u);u.barEl.hidden=!on;if(!on)return;
     const v=tmpV.copy(u.w.position).setY(u.barY||(u.evo?(u.boss?3.25:2.6):1.6)).project(camera);u.barEl.style.visibility=v.z>1||Math.abs(v.x)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
     u.barEl.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,-100%)`;});
-  // หลอดเลือดเล็กใต้เท้า (มือถือ)
-  if(PHONE)UNITS.forEach(u=>{const f=u.footEl;if(!f)return;if(!u.alive||!u.w.visible||u.hp<=0){f.style.visibility='hidden';return;}
-    const v=tmpV.copy(u.w.position).setY(Math.max(0,u.w.position.y-.05)).project(camera);f.style.visibility=v.z>1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
-    f.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,6px)`;});
+  // หลอดเลือดหลังตัว (มือถือ): ตั้งตรงด้านหลังตัวละครเมื่อมองจากกล้อง หันหน้าเข้ากล้องเสมอ
+  if(PHONE)UNITS.forEach(u=>{const f=u.foot;if(!f)return;f.visible=u.alive&&u.w.visible&&u.hp>0&&!(FOCUS&&!FOCUS.has(u));if(!f.visible)return;
+    _fd.subVectors(u.w.position,camera.position).setY(0).normalize().multiplyScalar(.3*f.scale.x/.9);
+    f.position.set(u.w.position.x+_fd.x,u.w.position.y+(u.barY?u.barY*.5:(u.evo?1.75:1.15)),u.w.position.z+_fd.z);f.quaternion.copy(camera.quaternion);
+    const U=f.material.uniforms;U.t.value=T;U.low.value=u.hp/u.maxHp<.3?1:0;});
   RTS.manual-=rdt; mapTick(T); sunFollow(LOOK); camUpdate(); const ck=1-Math.exp(-rdt*camK); CAM.lerp(CAMt,ck); LOOK.lerp(LOOKt,ck);
   camera.position.copy(CAM).add(tmpV.set(Math.sin(T*.3)*.06,Math.sin(T*.4)*.03,0));
   if(shake>.002){camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake;shake*=.86;}
