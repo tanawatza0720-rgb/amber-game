@@ -322,18 +322,30 @@ async function loadRank(force){
   try{RK.data=await api('race_ranking');RK.at=Date.now();renderRank();}catch(e){console.warn('ranking',e);}
   finally{RK.busy=false;}
 }
+const fmtK=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?0:1)+'M':n>=1e4?(n/1e3).toFixed(n>=1e5?0:1)+'K':fmt(n);
 function renderRank(){
   const box=$('#rankBox'),L=$('#rkList'),d=RK.data; if(!d||!d.races){box.hidden=true;return;}
   box.hidden=false; if($('#rRank'))$('#rRank').hidden=false; box.classList.toggle('open',RK.open); $('#rkHead').setAttribute('aria-expanded',RK.open); L.innerHTML='';
-  RACE_ORDER.forEach(r=>{const R=RACES[r],x=d.races[r]||{members:0,top:[]};
+  // เน้นพลังรวมของเผ่า: เรียงเผ่าตามพลังรวม มีแถบเทียบกับเผ่าที่นำ · ผู้นำเผ่าแสดงแค่ชื่อ (ไม่โชว์พลังรายคน)
+  const tribe=RACE_ORDER.some(r=>d.races[r]&&d.races[r].power!=null);
+  const order=tribe?[...RACE_ORDER].sort((a,b)=>((d.races[a]||{}).place||9)-((d.races[b]||{}).place||9)):RACE_ORDER;
+  const maxP=tribe?Math.max(1,...order.map(r=>(d.races[r]||{}).power||0)):1;
+  order.forEach(r=>{const R=RACES[r],x=d.races[r]||{members:0,top:[]};
     const w=el('div','rkRace'+(S.race===r?' mine':'')); w.style.setProperty('--rc',R.c);
-    const row=el('div','rkRow'); row.append(el('b',null,R.icon+' '+R.n),el('span',null,fmt(x.members)+' คน')); w.append(row);
+    const row=el('div','rkRow');
+    if(tribe){row.append(el('em','rkPl',['🥇','🥈','🥉','4'][(x.place||4)-1]||''),el('b',null,R.icon+' '+R.n),el('span',null,fmtK(x.power||0)));w.append(row);
+      const bar=el('div','rkBar'),fi=el('i');fi.style.width=Math.max(3,Math.round((x.power||0)/maxP*100))+'%';bar.append(fi);w.append(bar);
+      w.append(el('small','rkMem',fmt(x.members)+' คน'));}
+    else{row.append(el('b',null,R.icon+' '+R.n),el('span',null,fmt(x.members)+' คน'));w.append(row);}
     const ol=el('ol','rkTop');
     if(!x.top.length)ol.append(el('li','none','ยังไม่มีผู้เล่น'));
-    x.top.forEach((t,i)=>{const li=el('li',t.me?'me':null);li.append(el('em',null,['🥇','🥈','🥉'][i]),el('b',null,t.name),el('small',null,fmt(t.power)));li.title=t.name+' · พลังทีม '+fmt(t.power)+' · ด่าน '+t.stage;ol.append(li);});
+    x.top.forEach((t,i)=>{const li=el('li',t.me?'me':null);li.append(el('em',null,['🥇','🥈','🥉'][i]),el('b',null,t.name));if(!tribe)li.append(el('small',null,fmt(t.power)));li.title=t.name+' · ด่าน '+t.stage;ol.append(li);});
+    if(tribe&&x.top.length)ol.prepend(el('li','rkHd','ผู้นำเผ่า'));
     w.append(ol); L.append(w);});
-  if(d.me&&d.me.rank){const m=el('div','rkMe','คุณอยู่อันดับ '+d.me.rank+' ของ'+RACES[d.me.race].n);L.append(m);}
+  if(d.me&&d.me.share!=null){const p=d.me.share*100;L.append(el('div','rkMe','คุณช่วย'+RACES[d.me.race].n+' '+(p>=10?p.toFixed(0):p>=1?p.toFixed(1):p>0?'<1':'0')+'% ของพลังเผ่า 💪'));}
+  else if(d.me&&d.me.rank){const m=el('div','rkMe','คุณอยู่อันดับ '+d.me.rank+' ของ'+RACES[d.me.race].n);L.append(m);}
 }
+const rkHd=$('#rkHead');if(rkHd&&rkHd.firstChild&&rkHd.firstChild.nodeType===3)rkHd.firstChild.textContent='🏆 อันดับเผ่า (พลังรวม)';
 $('#rkHead').onclick=()=>{RK.open=!RK.open;try{localStorage.setItem('amber_rk',RK.open?'1':'0');}catch(e){}renderRank();loadRank();};
 setInterval(()=>{if(entered&&document.visibilityState==='visible')loadRank();},90000);
 document.addEventListener('visibilitychange',()=>{if(entered&&document.visibilityState==='visible')loadRank();});
@@ -346,4 +358,4 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
 }
 
 // ดีบัก: index.html?dbg=1 เปิด window.__F (เข้าโหมดออฟไลน์เพื่อตรวจหน้าตาโดยไม่สร้างบัญชี)
-if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,enterGame:()=>enterGame()};
+if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};

@@ -471,6 +471,13 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 #bAdd{position:relative}#bAdd.ask{background:linear-gradient(180deg,#8ff0c4,#3fb88f);border-color:#c8ffe6}
 #bAdd.ask::after{content:attr(data-ask);position:absolute;z-index:5;top:calc(100% + 8px);right:-46px;width:190px;white-space:normal;text-align:center;line-height:1.35;padding:6px 10px;border-radius:10px;background:rgba(20,40,32,.96);border:1px solid #8ff0c4;color:#dfffee;font-family:'Bai Jamjuree',sans-serif;font-weight:600;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none}
 #bAdd[hidden]{display:none}#bAdd:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+/* อันดับเผ่าแบบพลังรวม (renderRank) */
+.rkRace .rkRow b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rkPl{font-style:normal;width:18px;flex:none;text-align:center;font-size:12px;color:var(--muted)}
+.rkRow span{font-family:'Chakra Petch',sans-serif;font-weight:700;color:var(--rc,var(--amber));font-variant-numeric:tabular-nums}
+.rkBar{height:5px;margin:3px 0 1px;border-radius:3px;background:rgba(0,0,0,.4);overflow:hidden}.rkBar i{display:block;height:100%;background:var(--rc,var(--amber));border-radius:3px;transition:width .5s}
+.rkMem{display:block;font-size:10.5px;color:var(--muted)}
+.rkTop .rkHd{font-size:10.5px;color:var(--muted);padding-top:2px}
 </style>
 
 <div id="view"></div>

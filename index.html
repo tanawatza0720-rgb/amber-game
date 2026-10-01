@@ -471,6 +471,13 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 #bAdd{position:relative}#bAdd.ask{background:linear-gradient(180deg,#8ff0c4,#3fb88f);border-color:#c8ffe6}
 #bAdd.ask::after{content:attr(data-ask);position:absolute;z-index:5;top:calc(100% + 8px);right:-46px;width:190px;white-space:normal;text-align:center;line-height:1.35;padding:6px 10px;border-radius:10px;background:rgba(20,40,32,.96);border:1px solid #8ff0c4;color:#dfffee;font-family:'Bai Jamjuree',sans-serif;font-weight:600;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none}
 #bAdd[hidden]{display:none}#bAdd:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+/* อันดับเผ่าแบบพลังรวม (renderRank) */
+.rkRace .rkRow b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rkPl{font-style:normal;width:18px;flex:none;text-align:center;font-size:12px;color:var(--muted)}
+.rkRow span{font-family:'Chakra Petch',sans-serif;font-weight:700;color:var(--rc,var(--amber));font-variant-numeric:tabular-nums}
+.rkBar{height:5px;margin:3px 0 1px;border-radius:3px;background:rgba(0,0,0,.4);overflow:hidden}.rkBar i{display:block;height:100%;background:var(--rc,var(--amber));border-radius:3px;transition:width .5s}
+.rkMem{display:block;font-size:10.5px;color:var(--muted)}
+.rkTop .rkHd{font-size:10.5px;color:var(--muted);padding-top:2px}
 </style>
 
 <div id="view"></div>
@@ -3591,18 +3598,30 @@ async function loadRank(force){
   try{RK.data=await api('race_ranking');RK.at=Date.now();renderRank();}catch(e){console.warn('ranking',e);}
   finally{RK.busy=false;}
 }
+const fmtK=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?0:1)+'M':n>=1e4?(n/1e3).toFixed(n>=1e5?0:1)+'K':fmt(n);
 function renderRank(){
   const box=$('#rankBox'),L=$('#rkList'),d=RK.data; if(!d||!d.races){box.hidden=true;return;}
   box.hidden=false; if($('#rRank'))$('#rRank').hidden=false; box.classList.toggle('open',RK.open); $('#rkHead').setAttribute('aria-expanded',RK.open); L.innerHTML='';
-  RACE_ORDER.forEach(r=>{const R=RACES[r],x=d.races[r]||{members:0,top:[]};
+  // เน้นพลังรวมของเผ่า: เรียงเผ่าตามพลังรวม มีแถบเทียบกับเผ่าที่นำ · ผู้นำเผ่าแสดงแค่ชื่อ (ไม่โชว์พลังรายคน)
+  const tribe=RACE_ORDER.some(r=>d.races[r]&&d.races[r].power!=null);
+  const order=tribe?[...RACE_ORDER].sort((a,b)=>((d.races[a]||{}).place||9)-((d.races[b]||{}).place||9)):RACE_ORDER;
+  const maxP=tribe?Math.max(1,...order.map(r=>(d.races[r]||{}).power||0)):1;
+  order.forEach(r=>{const R=RACES[r],x=d.races[r]||{members:0,top:[]};
     const w=el('div','rkRace'+(S.race===r?' mine':'')); w.style.setProperty('--rc',R.c);
-    const row=el('div','rkRow'); row.append(el('b',null,R.icon+' '+R.n),el('span',null,fmt(x.members)+' คน')); w.append(row);
+    const row=el('div','rkRow');
+    if(tribe){row.append(el('em','rkPl',['🥇','🥈','🥉','4'][(x.place||4)-1]||''),el('b',null,R.icon+' '+R.n),el('span',null,fmtK(x.power||0)));w.append(row);
+      const bar=el('div','rkBar'),fi=el('i');fi.style.width=Math.max(3,Math.round((x.power||0)/maxP*100))+'%';bar.append(fi);w.append(bar);
+      w.append(el('small','rkMem',fmt(x.members)+' คน'));}
+    else{row.append(el('b',null,R.icon+' '+R.n),el('span',null,fmt(x.members)+' คน'));w.append(row);}
     const ol=el('ol','rkTop');
     if(!x.top.length)ol.append(el('li','none','ยังไม่มีผู้เล่น'));
-    x.top.forEach((t,i)=>{const li=el('li',t.me?'me':null);li.append(el('em',null,['🥇','🥈','🥉'][i]),el('b',null,t.name),el('small',null,fmt(t.power)));li.title=t.name+' · พลังทีม '+fmt(t.power)+' · ด่าน '+t.stage;ol.append(li);});
+    x.top.forEach((t,i)=>{const li=el('li',t.me?'me':null);li.append(el('em',null,['🥇','🥈','🥉'][i]),el('b',null,t.name));if(!tribe)li.append(el('small',null,fmt(t.power)));li.title=t.name+' · ด่าน '+t.stage;ol.append(li);});
+    if(tribe&&x.top.length)ol.prepend(el('li','rkHd','ผู้นำเผ่า'));
     w.append(ol); L.append(w);});
-  if(d.me&&d.me.rank){const m=el('div','rkMe','คุณอยู่อันดับ '+d.me.rank+' ของ'+RACES[d.me.race].n);L.append(m);}
+  if(d.me&&d.me.share!=null){const p=d.me.share*100;L.append(el('div','rkMe','คุณช่วย'+RACES[d.me.race].n+' '+(p>=10?p.toFixed(0):p>=1?p.toFixed(1):p>0?'<1':'0')+'% ของพลังเผ่า 💪'));}
+  else if(d.me&&d.me.rank){const m=el('div','rkMe','คุณอยู่อันดับ '+d.me.rank+' ของ'+RACES[d.me.race].n);L.append(m);}
 }
+const rkHd=$('#rkHead');if(rkHd&&rkHd.firstChild&&rkHd.firstChild.nodeType===3)rkHd.firstChild.textContent='🏆 อันดับเผ่า (พลังรวม)';
 $('#rkHead').onclick=()=>{RK.open=!RK.open;try{localStorage.setItem('amber_rk',RK.open?'1':'0');}catch(e){}renderRank();loadRank();};
 setInterval(()=>{if(entered&&document.visibilityState==='visible')loadRank();},90000);
 document.addEventListener('visibilitychange',()=>{if(entered&&document.visibilityState==='visible')loadRank();});
@@ -3615,7 +3634,7 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
 }
 
 // ดีบัก: index.html?dbg=1 เปิด window.__F (เข้าโหมดออฟไลน์เพื่อตรวจหน้าตาโดยไม่สร้างบัญชี)
-if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,enterGame:()=>enterGame()};
+if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
 
 /* ================= หน้าเลือกเผ่า (ครั้งแรกที่เข้าเกม · เลือกแล้วเปลี่ยนไม่ได้) =================
    เกาะลอยฟ้า 4 เผ่าหมุนเป็นวงล้อ แตะลูกศร/ปัดจอ/แตะไอคอนเพื่อดูแต่ละเผ่า */
@@ -4239,6 +4258,9 @@ if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VIS
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.01.4',date:'1 ต.ค. 2026',title:'อันดับเผ่าแบบพลังรวม 🏆',items:[
+    '🏆 อันดับเผ่าเรียงตามพลังรวมของทุกคนในเผ่า มีแถบเทียบให้เห็นว่าเผ่าไหนนำ',
+    '💪 ดูได้ว่าคุณช่วยเผ่าไปกี่ % · ผู้นำเผ่าแสดงแค่ชื่อ']},
   {ver:'2026.10.01.3',date:'1 ต.ค. 2026',title:'ขยายกระเป๋า + อันดับเผ่าในเมนู 🎒',items:[
     '🎒 ขยายคลังมอนสเตอร์ได้ทีละ 10 ช่อง กดปุ่ม + ข้างจำนวนช่องในคลัง (10 → 15 → 20 → 25 → 30 อัมพร) สูงสุด 80 ช่อง',
     '☰ ปุ่มเมนูบนมือถือกางลงด้านล่างทีละ 5 ปุ่ม เกินแล้วขึ้นแถวใหม่ทางขวา · อันดับเผ่าย้ายเข้าไปอยู่ในเมนู']},
