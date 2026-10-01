@@ -478,8 +478,6 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 .rkBar{height:5px;margin:3px 0 1px;border-radius:3px;background:rgba(0,0,0,.4);overflow:hidden}.rkBar i{display:block;height:100%;background:var(--rc,var(--amber));border-radius:3px;transition:width .5s}
 .rkMem{display:block;font-size:10.5px;color:var(--muted)}
 .rkTop .rkHd{font-size:10.5px;color:var(--muted);padding-top:2px}
-.swGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 2px}.swBox{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
-.swBox small{font-size:11.5px;color:var(--muted)}.swBox b{font-family:'Chakra Petch',sans-serif;font-size:18px;color:var(--amber);font-variant-numeric:tabular-nums}
 #pEnergy{cursor:pointer}#pEnergy:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
 </style>
 
@@ -1472,7 +1470,7 @@ const LOCAL=(()=>{
   const mon=id=>D.mons.find(m=>m.id===id)||fail('no_monster');
   const F={
     game_state:()=>state(),
-    sweep_claim:({n})=>{n=n||1;if(n<1||n>6)fail('bad_count');const cost=10*n;if(D.energy<cost)fail('not_enough_energy');if(D.energy>=C.energy_max)D.energy_at=Date.now();D.energy-=cost;const c=20*n*(5+2*(D.stage||0)),x=20*n;D.coins+=c;D.xp+=x;while(D.xp>=100){D.xp-=100;D.lv++;}return{n,coins:c,xp:x};},
+    sweep_claim:({n})=>{n=n||1;if(n<1||n>6)fail('bad_count');const cost=10*n;if(D.energy<cost)fail('not_enough_energy');if(D.energy>=C.energy_max)D.energy_at=Date.now();D.energy-=cost;const c=30*n*(5+2*(D.stage||0)),x=30*n;D.coins+=c;D.xp+=x;while(D.xp>=100){D.xp-=100;D.lv++;}return{n,coins:c,xp:x};},
     buy_bag:()=>{const n=D.bag_ext||0;if(n>=BAG.max)fail('bag_max');const c=BAG.cost(n);if(D.amber<c)fail('not_enough_amber');D.amber-=c;D.bag_ext=n+1;return{slots:slots(),cost:c};},
     set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>12)fail('bad_name');D.name=n;D.named=true;return{};},
     hatch_egg:({kind})=>{if(D.mons.length>=slots())fail('box_full');let ch;
@@ -3032,7 +3030,7 @@ const POLLEN=[];for(let i=0;i<40;i++){const s=glow(scene,0xfff6c8,.18,[(Math.ran
 const BIRDS=[];{const bm=new THREE.MeshBasicMaterial({color:0x2a2a33,side:THREE.DoubleSide});
   for(let i=0;i<7;i++){const g=new THREE.Group();const ws=[-1,1].map(sx=>{const w=new THREE.Mesh(new THREE.PlaneGeometry(.7,.18),bm);w.position.x=sx*.35;g.add(w);return w;});g.userData.w=ws;g.userData.p=[Math.random()*6,26+Math.random()*10,9+Math.random()*5,.12+Math.random()*.06];scene.add(g);BIRDS.push(g);}}
 function worldTick(dt,T){
-  WIND.value=T; if(typeof raceWorldTick==='function')raceWorldTick(dt,T); if(typeof raidTick==='function')raidTick(dt,T);
+  WIND.value=T; if(typeof raceWorldTick==='function')raceWorldTick(dt,T); if(typeof raidTick==='function')raidTick(dt,T); if(typeof portalTick==='function')portalTick(dt,T);
   streamT.offset.y-=dt*.6; edgeFallT.offset.y+=dt*1.6;
   clouds.forEach(c=>{if(!c.userData.v)return;c.position.x+=c.userData.v*dt;if(c.position.x>90)c.position.x=-90;});
   MIST.forEach(m=>{const [a,p]=m.userData.p;m.position.y=p.y+Math.sin(T*.8+a)*.4;m.material.opacity=.18+.12*Math.sin(T*1.3+a);});
@@ -3278,6 +3276,90 @@ function loadStatue(r){if(STATUE){RACE_DECO.remove(STATUE);STATUE=null;}const sr
     glow(w,new THREE.Color(RACES[r].c).getHex(),3.4,[0,(RACES[r].statueH||5.5)*.55,0],.22);RACE_DECO.add(w);BLOCK.push({x,z,r:Math.max(sz.x,sz.z)*s*.5+.3,race:1});STATUE=w;window.__statue=[x,z];});}
 function raceWorldTick(dt,T){RACE_TICKS.forEach(f=>f(dt,T));}
 
+/* ================= ประตูมิติขุมนรก (ฉากฟาร์ม · ขอบเกาะฝั่งตะวันตกเฉียงเหนือ) =================
+   ทางเข้าดันเจี้ยนขุมนรก: วงหลุมดำหมุนวน + ออร่าดำพวยพุ่งขึ้นจากขอบ + ควันดำลอยขึ้น + มือดำเล็ก ๆ ยื่นออกมา
+   ทั้งหมดเป็น shader เบา ๆ (ไม่มีไฟจริง/ไม่มี texture) · มือรวมเป็น geometry เดียว ใช้ material ร่วม
+   แตะที่วงประตู → openPortal() (ตอนนี้แจ้งว่าเร็ว ๆ นี้) · อัปเดตใน worldTick → portalTick */
+const PORTAL=(()=>{
+  const R=6.5, ANG=2.24, DIST=34, LOWF=matchMedia('(pointer:coarse)').matches;
+  const g=new THREE.Group(); g.position.set(Math.cos(ANG)*DIST,5.2,-Math.sin(ANG)*DIST); g.rotation.set(-.38,.32,0); scene.add(g);
+  const U={t:{value:0},R:{value:R},ps:{value:600}};
+  const NZ=`float h1(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h1(i),h1(i+vec2(1.,0.)),f.x),mix(h1(i+vec2(0.,1.)),h1(i+1.),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n2(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}`;
+  const VS=`varying vec2 vP;void main(){vP=position.xy;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
+  // 1) ออร่าดำพวยพุ่ง (วงแหวนรอบนอก เปลวยาวขึ้นด้านบน)
+  const aura=new THREE.Mesh(new THREE.RingGeometry(R*.9,R*2.3,96,6),new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,side:THREE.DoubleSide,vertexShader:VS,
+    fragmentShader:`uniform float t,R;varying vec2 vP;${NZ}
+void main(){vec2 p=vP/R;float r=length(p),d=r-1.;float up=max(0.,p.y/r);
+  float fl=fbm(vec2(p.x*2.6,p.y*1.5-t*1.5))*.75+fbm(vec2(atan(p.y,p.x)*4.,d*3.-t*1.1))*.45;
+  float ext=.18+.95*up*up+.25*fl;float m=smoothstep(ext,0.,d)*smoothstep(.3,.7,fl+.45*(1.-d/ext));
+  vec3 c=mix(vec3(.32,.06,.5),vec3(.015,0.,.03),smoothstep(.0,.45,m));
+  gl_FragColor=vec4(c,clamp(m*1.15,0.,.93)*smoothstep(-.1,.02,d));}`}));
+  aura.position.z=-.05; aura.renderOrder=1; g.add(aura);
+  // 2) หลุมดำหมุนวน
+  const disc=new THREE.Mesh(new THREE.CircleGeometry(R*1.12,72),new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,vertexShader:VS,
+    fragmentShader:`uniform float t,R;varying vec2 vP;${NZ}
+void main(){vec2 p=vP/R;float r=length(p),a=atan(p.y,p.x);
+  float sw=a+2.4/(r+.22)-t*.8;vec2 q=vec2(cos(sw),sin(sw))*r*3.;
+  float f=fbm(q+vec2(t*.12,0.));float arms=.5+.5*sin(sw*3.+f*5.);
+  float st=smoothstep(.42,.95,f*arms+.3*f);float dep=smoothstep(.08,.98,r);
+  vec3 c=vec3(.32,.07,.5)*st*dep*.9+vec3(.8,.25,.95)*pow(st,3.)*dep*.55;
+  vec2 sq=floor(q*5.);float sp=step(.988,h1(sq))*(.5+.5*sin(t*3.+h1(sq+3.)*20.))*dep;c+=vec3(.75,.55,1.)*sp*.7;
+  float rim=exp(-pow((r-1.)*7.,2.));c+=vec3(.55,.14,.85)*rim*(.55+.6*fbm(vec2(a*3.,t*.8)));
+  float al=r<1.?1.:(1.-smoothstep(1.,1.12,r))*(.55+.45*f);gl_FragColor=vec4(c,al);}`}));
+  disc.renderOrder=2; disc.userData.portal=1; g.add(disc); PICK.push(disc);
+  // 3) ควันดำลอยขึ้นจากขอบ (points)
+  const N=LOWF?70:140,sd=new Float32Array(N*3);for(let i=0;i<N;i++){sd[i*3]=Math.random()*6.283;sd[i*3+1]=Math.random();sd[i*3+2]=.18+Math.random()*.22;}
+  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));pg.setAttribute('sd',new THREE.BufferAttribute(sd,3));
+  const smoke=new THREE.Points(pg,new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,
+    vertexShader:`attribute vec3 sd;uniform float t,R,ps;varying float vA;
+void main(){float L=fract(t*sd.z+sd.y),a=sd.x;vec3 p=vec3(cos(a)*R,sin(a)*R,.1);
+  p.y+=L*R*(.6+.9*max(0.,sin(a))+.3*sin(a*5.));p.x+=sin(L*6.+a*5.)*.5+cos(a)*L*R*.2;
+  vA=(1.-L)*smoothstep(0.,.12,L);vec4 mv=modelViewMatrix*vec4(p,1.);gl_PointSize=(.9+1.8*L)*ps/-mv.z;gl_Position=projectionMatrix*mv;}`,
+    fragmentShader:`varying float vA;void main(){float d=length(gl_PointCoord-.5);float al=smoothstep(.5,.05,d)*vA*.8;if(al<.01)discard;
+  gl_FragColor=vec4(mix(vec3(.3,.07,.45),vec3(.01,0.,.02),smoothstep(.45,.12,d)),al);}`}));
+  smoke.frustumCulled=false; smoke.renderOrder=3; g.add(smoke);
+  // 4) มือดำเล็ก ๆ ยื่นออกมาจากหลุม (geometry เดียวกันทุกมือ · ขอบเรืองม่วงจาง ๆ)
+  const handGeo=(()=>{const tmp=new THREE.Group(),parts=[];
+    const add=(geo,pos,rot,par)=>{const m=new THREE.Mesh(geo);m.position.set(...pos);if(rot)m.rotation.set(...rot);(par||tmp).add(m);parts.push(m);return m;};
+    add(new THREE.CylinderGeometry(.11,.16,1.7,7),[0,.85,0]);
+    const palm=add(new THREE.SphereGeometry(.24,8,6),[0,1.9,0]);palm.scale.set(1,1.15,.45);
+    [-.15,-.05,.05,.15].forEach((x,i)=>{const len=i===1||i===2?.4:.33;
+      const f1=new THREE.Group();f1.position.set(x,2.1,0);f1.rotation.set(.35,0,-x*1.6);tmp.add(f1);
+      add(new THREE.CylinderGeometry(.035,.045,len,5),[0,len/2,0],null,f1);
+      const f2=new THREE.Group();f2.position.set(0,len,0);f2.rotation.set(.55,0,0);f1.add(f2);
+      add(new THREE.CylinderGeometry(.022,.035,len*.85,5),[0,len*.42,0],null,f2);
+      add(new THREE.ConeGeometry(.024,.14,4),[0,len*.85+.06,0],null,f2);});
+    const th=new THREE.Group();th.position.set(.2,1.82,.02);th.rotation.set(.3,0,-1.0);tmp.add(th);
+    add(new THREE.CylinderGeometry(.03,.045,.32,5),[0,.16,0],null,th);add(new THREE.ConeGeometry(.026,.13,4),[0,.38,0],null,th);
+    tmp.updateMatrixWorld(true);const P=[],Nn=[];
+    parts.forEach(m=>{const gg=m.geometry.clone().applyMatrix4(m.matrixWorld).toNonIndexed();P.push(...gg.attributes.position.array);Nn.push(...gg.attributes.normal.array);});
+    const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.Float32BufferAttribute(P,3));out.setAttribute('normal',new THREE.Float32BufferAttribute(Nn,3));return out;})();
+  const handMat=new THREE.ShaderMaterial({uniforms:U,
+    vertexShader:`varying vec3 vN,vV;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=-mv.xyz;gl_Position=projectionMatrix*mv;}`,
+    fragmentShader:`uniform float t;varying vec3 vN,vV;void main(){float fr=pow(1.-abs(dot(normalize(vN),normalize(vV))),2.2);
+  gl_FragColor=vec4(vec3(.02,0.,.035)+vec3(.55,.16,.85)*fr*(.75+.25*sin(t*2.)),1.);}`});
+  const HANDS=[],NH=LOWF?7:9,Y=new THREE.Vector3(0,1,0),q=new THREE.Quaternion(),q2=new THREE.Quaternion(),dv=new THREE.Vector3();
+  for(let i=0;i<NH;i++){const a=i/NH*6.283+(Math.random()-.5)*.5,rr=R*(.3+Math.random()*.45);
+    const m=new THREE.Mesh(handGeo,handMat);m.scale.setScalar(1.05+Math.random()*.45);g.add(m);
+    HANDS.push({m,base:new THREE.Vector3(Math.cos(a)*rr,Math.sin(a)*rr,0),dir:new THREE.Vector3(Math.cos(a)*.75,Math.sin(a)*.75,1).normalize(),ph:Math.random()*6.283,sp:.45+Math.random()*.35,a});}
+  function tick(dt,T){U.t.value=T;
+    U.ps.value=renderer.domElement.height*.5/Math.tan(camera.fov*Math.PI/360);
+    HANDS.forEach(h=>{const s=.5+.5*Math.sin(T*h.sp+h.ph),reach=-2.4+3.3*s*s+Math.sin(T*7+h.ph)*.04;
+      h.m.position.copy(h.base).addScaledVector(h.dir,reach);
+      dv.copy(h.dir);dv.x+=Math.sin(T*1.3+h.ph)*.18;dv.y+=Math.cos(T*1.1+h.ph)*.18;dv.normalize();
+      q.setFromUnitVectors(Y,dv);q2.setFromAxisAngle(Y,h.a+Math.sin(T*.9+h.ph)*.5);h.m.quaternion.copy(q).multiply(q2);});}
+  return {g,tick,disc};
+})();
+function portalTick(dt,T){PORTAL.tick(dt,T);}
+function openPortal(){
+  const d=el('div');
+  d.append(para('วงประตูมิติสีดำปรากฏขึ้นที่ขอบเกาะ… มีมือมากมายพยายามคว้าทุกสิ่งที่เข้าใกล้'));
+  d.append(para('ดันเจี้ยนขุมนรกกำลังจะเปิดเร็ว ๆ นี้ เตรียมทีมให้แข็งแกร่งไว้'));
+  openSheet('ขุมนรก','ประตูมิติลึกลับ',d,[['เร็ว ๆ นี้',()=>{},'',true]]);
+}
+
 /* ================= HUD & เมนู ================= */
 const fmt=n=>n.toLocaleString('en-US');
 function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
@@ -3321,21 +3403,10 @@ const INFO={
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
     const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,tierOf(spOf(m).rar).n+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},
-  // กวาดด่านด้วยพลังงาน: 10 ⚡ = รางวัลดันด่าน 20 นาที (server/migrate_energy_sweep.sql)
-  sweep:()=>{const d=el('div'),rate=S.rateC||(5+2*(S.stage||0)),per=Math.round(20*rate),n=Math.min(6,Math.floor(S.energy/10));
-    d.append(para('ใช้พลังงาน 10 ⚡ รับรางวัลเท่ากับดันด่าน 20 นาทีทันที (ไม่กระทบรางวัลสะสมเดิม) · พลังงานฟื้น 1 ⚡ ทุก 3 นาที'));
-    const g=el('div','swGrid');g.append(el('div','swBox',''),el('div','swBox',''));
-    g.children[0].append(el('small',null,'ต่อครั้ง'),el('b',null,'🪙 '+fmt(per)),el('small',null,'+20 EXP'));
-    g.children[1].append(el('small',null,'พลังงานตอนนี้'),el('b',null,'⚡ '+S.energy+'/'+S.energyMax),el('small',null,n?'กวาดได้ '+n+' ครั้ง':'ยังไม่พอ (ต้องมี 10)'));
-    d.append(g);
-    const go=async k=>{const r=await act('sweep_claim',{n:k});if(r){bumpRes('coins');bumpRes('energy');toast('กวาดด่าน '+k+' ครั้ง ได้ 🪙 '+fmt(r.coins)+' · EXP +'+r.xp);if(typeof renderHUD==='function')renderHUD();INFO.sweep();}};
-    const acts=[['กวาดด่าน ×1 · 10 ⚡',()=>go(1),'',S.energy<10]];
-    if(n>1)acts.push(['กวาดทั้งหมด ×'+n+' · '+(n*10)+' ⚡',()=>go(n),'gold',false]);
-    acts.push(['เติมพลังงาน +30 · 20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30');INFO.sweep();}},'ghost',S.amber<20]);
-    openSheet('กวาดด่าน ⚡','ด่านที่ผ่านแล้ว '+(S.stage||0)+' · ยิ่งด่านสูง เหรียญยิ่งเยอะ',d,acts);},
+  // กวาดด่านด้วยพลังงานอยู่ที่หน้าต่อสู้ (battle.html แผงดันด่าน) · ตรงนี้แค่พาไป
+  sweep:()=>{location.href='battle.html';},
   shop:()=>{const d=el('div');d.append(para('ของทุกชิ้นซื้อด้วยสกุลเงินในเกม'));
-    const items=[['พลังงาน +30 (ใช้กวาดด่าน)','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30 · แตะ ⚡ เพื่อกวาดด่าน');}}],
-      ['กวาดด่าน ⚡','10 พลังงาน',()=>INFO.sweep()],
+    const items=[['พลังงาน +30 (ใช้กวาดด่าน)','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30 · ไปกวาดด่านได้ที่หน้าต่อสู้');}}],
       ['ไข่ป่า ×1','100 เหรียญ',()=>{closeSheet();INFO.hatch();}]];
     const list=el('div','shop');items.forEach(([n,p,fn])=>{const r=el('button','sitem');r.append(el('span',null,n));r.append(el('b',null,p));r.onclick=fn;list.append(r);});d.append(list);
     openSheet('ร้านค้า','สินค้าเปลี่ยนทุกวัน',d,[]);},
@@ -3480,6 +3551,7 @@ function tap(cx,cy){
   if(o.userData.agent!=null){const ag=AGENTS[o.userData.agent];tagAgent=ag;const t=$('#mtag');t.hidden=false;
     $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent=tierOf(spOf(ag.data).rar).n+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
     const w=ag.w; tween(.3,t=>w.position.y=Math.sin(t*Math.PI)*.4); return;}
+  if(o.userData.portal&&typeof openPortal==='function'){openPortal();return;}
   if(o.userData.raid){openRaid();return;}
   if(o===amberBubble&&amberReady){collectAmber();return;}
   if(o.userData.pick)focusBuilding(o.userData.pick);
@@ -3651,10 +3723,10 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
 }
 
 // ดีบัก: index.html?dbg=1 เปิด window.__F (เข้าโหมดออฟไลน์เพื่อตรวจหน้าตาโดยไม่สร้างบัญชี)
-if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
+if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,get PORTAL(){return PORTAL;},camT,camTTo,setDist:d=>{distTo=d;},enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
 
 // แตะแถบพลังงาน = เปิดหน้ากวาดด่าน
-if($('#pEnergy')){const pe=$('#pEnergy');pe.style.cursor='pointer';pe.setAttribute('role','button');pe.setAttribute('tabindex','0');pe.setAttribute('aria-label','พลังงาน แตะเพื่อกวาดด่าน');pe.onclick=()=>INFO.sweep();pe.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();INFO.sweep();}};}
+if($('#pEnergy')){const pe=$('#pEnergy');pe.style.cursor='pointer';pe.setAttribute('role','button');pe.setAttribute('tabindex','0');pe.setAttribute('aria-label','พลังงาน แตะเพื่อไปกวาดด่านที่หน้าต่อสู้');pe.onclick=()=>INFO.sweep();pe.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();INFO.sweep();}};}
 
 /* ================= หน้าเลือกเผ่า (ครั้งแรกที่เข้าเกม · เลือกแล้วเปลี่ยนไม่ได้) =================
    เกาะลอยฟ้า 4 เผ่าหมุนเป็นวงล้อ แตะลูกศร/ปัดจอ/แตะไอคอนเพื่อดูแต่ละเผ่า */
@@ -4278,8 +4350,11 @@ if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VIS
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.01.6',date:'1 ต.ค. 2026',title:'ย้ายปุ่มกวาดด่านไปหน้าต่อสู้',items:[
+    '⚡ ปุ่มกวาดด่านอยู่ที่หน้าต่อสู้แล้ว (แผงดันด่านด้านล่าง ใต้รางวัลสะสม) กด ×1 หรือกวาดทั้งหมดทีเดียว',
+    '🛒 ร้านค้ายังซื้อพลังงาน +30 ได้เหมือนเดิม · แตะแถบพลังงานในฟาร์มจะพาไปหน้าต่อสู้']},
   {ver:'2026.10.01.5',date:'1 ต.ค. 2026',title:'พลังงาน ⚡ ใช้กวาดด่านได้แล้ว',items:[
-    '⚡ แตะแถบพลังงานมุมขวาบน → กวาดด่าน ใช้ 10 ⚡ รับรางวัลเท่ากับดันด่าน 20 นาทีทันที (เหรียญ + EXP)',
+    '⚡ กวาดด่าน ใช้ 10 ⚡ รับรางวัลเท่ากับดันด่าน 30 นาทีทันที (เหรียญ + EXP)',
     '🔁 กวาดทีเดียวหลายครั้งได้ · พลังงานฟื้น 1 ⚡ ทุก 3 นาที · ซื้อเพิ่มได้ที่ร้านค้า']},
   {ver:'2026.10.01.4',date:'1 ต.ค. 2026',title:'อันดับเผ่าแบบพลังรวม 🏆',items:[
     '🏆 อันดับเผ่าเรียงตามพลังรวมของทุกคนในเผ่า มีแถบเทียบให้เห็นว่าเผ่าไหนนำ',
