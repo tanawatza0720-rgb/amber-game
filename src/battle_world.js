@@ -23,10 +23,10 @@ const SPECIES={
   seiro:{name:'เซย์โร',evo:1,rig:'seiro',base:{hp:104,atk:34,def:15,spd:40}},
   kohaku:{name:'โคฮาคุ',evo:1,rig:'kohaku',ranged:1,base:{hp:96,atk:36,def:12,spd:40}},
   garok:{name:'กาโรค',evo:1,rig:'garok',base:{hp:124,atk:31,def:19,spd:30}},
-  phraiwan:{name:'ไพรวัลย์',evo:1,rig:'phraiwan',ranged:1,healer:1,base:{hp:150,atk:40,def:22,spd:48}},
+  phraiwan:{name:'ไพรวัลย์',evo:1,rig:'phraiwan',ranged:1,healer:1,base:{hp:112,atk:28,def:18,spd:40}},
   mortha:{name:'มอร์ธา',evo:1,rig:'mortha',ranged:1,healer:1,base:{hp:140,atk:42,def:20,spd:52}},
   sarael:{name:'ซาราเอล',evo:1,rig:'sarael',base:{hp:180,atk:78,def:24,spd:62}},
-  anubis:{name:'อนุบิส',evo:1,rig:'anubis',ranged:1,base:{hp:178,atk:80,def:22,spd:58}},
+  anubis:{name:'อนุบิส',evo:1,rig:'anubis',ranged:1,base:{hp:128,atk:50,def:15,spd:50}},
   yorugumo:{name:'โยรุกุโมะ',evo:1,spider:1,base:{hp:100,atk:34,def:14,spd:38}},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42}},
 };

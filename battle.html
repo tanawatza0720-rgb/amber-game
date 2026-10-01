@@ -1012,9 +1012,8 @@ const SKILLS={
   // สายฮีล: type 'heal' ฟื้นเลือดพวกเดียวกัน (target 'one' = ตัวที่เลือดเหลือน้อยสุด · 'all' = ทั้งทีม) ปริมาณ = พลังโจมตี × mult × 1.25
   phraiwan:[
     {id:'s1',name:'ใบไม้คมวายุ',desc:'ซัดใบไม้คมจากระยะไกลใส่ศัตรู 1 ตัว 100%',cd:0,type:'bolt',mult:1,target:'one'},
-    {id:'s2',name:'สายลมชุบชีวิต',desc:'ฟื้นเลือดทั้งทีม 80% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:.8,target:'all'},
-    {id:'s3',name:'พรแห่งพงไพร',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 240% ของพลังโจมตี และแก้อาการมึน · คูลดาวน์ 4',cd:4,type:'heal',mult:2.4,target:'one',cleanse:1},
-    {id:'s4',name:'รากไม้ค้ำชีวิต',desc:'ติดตัว: ทุก 3 วินาที ทั้งทีมฟื้นเลือด 2% ของเลือดสูงสุด',type:'passive',passive:{regen:.02}}],
+    {id:'s2',name:'สายลมชุบชีวิต',desc:'ฟื้นเลือดทั้งทีม 70% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:.7,target:'all'},
+    {id:'s3',name:'พรแห่งพงไพร',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 190% ของพลังโจมตี และแก้อาการมึน · คูลดาวน์ 4',cd:4,type:'heal',mult:1.9,target:'one',cleanse:1}],
   mortha:[
     {id:'s1',name:'หยดน้ำมนต์',desc:'สาดน้ำมนต์จากระยะไกลใส่ศัตรู 1 ตัว 100%',cd:0,type:'bolt',mult:1,target:'one'},
     {id:'s2',name:'ยาคืนวิญญาณ',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 180% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:1.8,target:'one'},
@@ -1032,10 +1031,10 @@ const SKILLS={
     {id:'s3',name:'ดิ่งสวรรค์ทัณฑ์',desc:'กางปีกดิ่งลงกระแทกศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
     {id:'s4',name:'ปีกโลหิตและแสง',desc:'ติดตัว: โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 35% · รับดาเมจลดลง 15% · โอกาสคริ +15%',type:'passive',passive:{dmgLow:.35,dr:.15,crit:.15}}],
   anubis:[
-    {id:'s1',name:'ลูกแก้ววิญญาณ',desc:'ยิงลูกแก้ววิญญาณจากระยะไกลใส่ศัตรู 1 ตัว 140%',cd:0,type:'bolt',mult:1.4,target:'one'},
-    {id:'s2',name:'คำสาปผืนทราย',desc:'ยิงคำสาปใส่ศัตรูสูงสุด 4 ตัว ตัวละ 100% · คูลดาวน์ 3',cd:3,type:'ranged',mult:1,target:'all'},
-    {id:'s3',name:'พายุทรายแห่งความตาย',desc:'เรียกพายุทรายถล่มศัตรูรอบเป้าหมาย 150% โอกาส 40% ทำให้มึน (ยืนร่ายจากระยะไกล) · คูลดาวน์ 4',cd:4,type:'rain',mult:1.5,target:'all',stun:.4},
-    {id:'s4',name:'ตาชั่งแห่งวิญญาณ',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 12% · โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 30% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.12,dmgLow:.3,crit:.1}}]
+    {id:'s1',name:'ลูกแก้ววิญญาณ',desc:'ยิงลูกแก้ววิญญาณจากระยะไกลใส่ศัตรู 1 ตัว 120%',cd:0,type:'bolt',mult:1.2,target:'one'},
+    {id:'s2',name:'คำสาปผืนทราย',desc:'ยิงคำสาปใส่ศัตรูสูงสุด 4 ตัว ตัวละ 80% · คูลดาวน์ 3',cd:3,type:'ranged',mult:.8,target:'all'},
+    {id:'s3',name:'พายุทรายแห่งความตาย',desc:'เรียกพายุทรายถล่มศัตรูรอบเป้าหมาย 105% โอกาส 35% ทำให้มึน (ยืนร่ายจากระยะไกล) · คูลดาวน์ 4',cd:4,type:'rain',mult:1.05,target:'all',stun:.35},
+    {id:'s4',name:'ตาชั่งแห่งวิญญาณ',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 8% · โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 25%',type:'passive',passive:{teamAtk:.08,dmgLow:.25}}]
 };
 const passiveOf=sp=>{const s=(SKILLS[sp]||[]).find(x=>x.type==='passive');return s?s.passive:null;};
 
@@ -1104,7 +1103,7 @@ function abyssBless(k){
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json?v=2',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -2713,10 +2712,10 @@ const SPECIES={
   seiro:{name:'เซย์โร',evo:1,rig:'seiro',base:{hp:104,atk:34,def:15,spd:40}},
   kohaku:{name:'โคฮาคุ',evo:1,rig:'kohaku',ranged:1,base:{hp:96,atk:36,def:12,spd:40}},
   garok:{name:'กาโรค',evo:1,rig:'garok',base:{hp:124,atk:31,def:19,spd:30}},
-  phraiwan:{name:'ไพรวัลย์',evo:1,rig:'phraiwan',ranged:1,healer:1,base:{hp:150,atk:40,def:22,spd:48}},
+  phraiwan:{name:'ไพรวัลย์',evo:1,rig:'phraiwan',ranged:1,healer:1,base:{hp:112,atk:28,def:18,spd:40}},
   mortha:{name:'มอร์ธา',evo:1,rig:'mortha',ranged:1,healer:1,base:{hp:140,atk:42,def:20,spd:52}},
   sarael:{name:'ซาราเอล',evo:1,rig:'sarael',base:{hp:180,atk:78,def:24,spd:62}},
-  anubis:{name:'อนุบิส',evo:1,rig:'anubis',ranged:1,base:{hp:178,atk:80,def:22,spd:58}},
+  anubis:{name:'อนุบิส',evo:1,rig:'anubis',ranged:1,base:{hp:128,atk:50,def:15,spd:50}},
   yorugumo:{name:'โยรุกุโมะ',evo:1,spider:1,base:{hp:100,atk:34,def:14,spd:38}},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42}},
 };

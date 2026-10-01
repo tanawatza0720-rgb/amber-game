@@ -1454,9 +1454,8 @@ const SKILLS={
   // สายฮีล: type 'heal' ฟื้นเลือดพวกเดียวกัน (target 'one' = ตัวที่เลือดเหลือน้อยสุด · 'all' = ทั้งทีม) ปริมาณ = พลังโจมตี × mult × 1.25
   phraiwan:[
     {id:'s1',name:'ใบไม้คมวายุ',desc:'ซัดใบไม้คมจากระยะไกลใส่ศัตรู 1 ตัว 100%',cd:0,type:'bolt',mult:1,target:'one'},
-    {id:'s2',name:'สายลมชุบชีวิต',desc:'ฟื้นเลือดทั้งทีม 80% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:.8,target:'all'},
-    {id:'s3',name:'พรแห่งพงไพร',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 240% ของพลังโจมตี และแก้อาการมึน · คูลดาวน์ 4',cd:4,type:'heal',mult:2.4,target:'one',cleanse:1},
-    {id:'s4',name:'รากไม้ค้ำชีวิต',desc:'ติดตัว: ทุก 3 วินาที ทั้งทีมฟื้นเลือด 2% ของเลือดสูงสุด',type:'passive',passive:{regen:.02}}],
+    {id:'s2',name:'สายลมชุบชีวิต',desc:'ฟื้นเลือดทั้งทีม 70% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:.7,target:'all'},
+    {id:'s3',name:'พรแห่งพงไพร',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 190% ของพลังโจมตี และแก้อาการมึน · คูลดาวน์ 4',cd:4,type:'heal',mult:1.9,target:'one',cleanse:1}],
   mortha:[
     {id:'s1',name:'หยดน้ำมนต์',desc:'สาดน้ำมนต์จากระยะไกลใส่ศัตรู 1 ตัว 100%',cd:0,type:'bolt',mult:1,target:'one'},
     {id:'s2',name:'ยาคืนวิญญาณ',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 180% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:1.8,target:'one'},
@@ -1474,10 +1473,10 @@ const SKILLS={
     {id:'s3',name:'ดิ่งสวรรค์ทัณฑ์',desc:'กางปีกดิ่งลงกระแทกศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
     {id:'s4',name:'ปีกโลหิตและแสง',desc:'ติดตัว: โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 35% · รับดาเมจลดลง 15% · โอกาสคริ +15%',type:'passive',passive:{dmgLow:.35,dr:.15,crit:.15}}],
   anubis:[
-    {id:'s1',name:'ลูกแก้ววิญญาณ',desc:'ยิงลูกแก้ววิญญาณจากระยะไกลใส่ศัตรู 1 ตัว 140%',cd:0,type:'bolt',mult:1.4,target:'one'},
-    {id:'s2',name:'คำสาปผืนทราย',desc:'ยิงคำสาปใส่ศัตรูสูงสุด 4 ตัว ตัวละ 100% · คูลดาวน์ 3',cd:3,type:'ranged',mult:1,target:'all'},
-    {id:'s3',name:'พายุทรายแห่งความตาย',desc:'เรียกพายุทรายถล่มศัตรูรอบเป้าหมาย 150% โอกาส 40% ทำให้มึน (ยืนร่ายจากระยะไกล) · คูลดาวน์ 4',cd:4,type:'rain',mult:1.5,target:'all',stun:.4},
-    {id:'s4',name:'ตาชั่งแห่งวิญญาณ',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 12% · โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 30% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.12,dmgLow:.3,crit:.1}}]
+    {id:'s1',name:'ลูกแก้ววิญญาณ',desc:'ยิงลูกแก้ววิญญาณจากระยะไกลใส่ศัตรู 1 ตัว 120%',cd:0,type:'bolt',mult:1.2,target:'one'},
+    {id:'s2',name:'คำสาปผืนทราย',desc:'ยิงคำสาปใส่ศัตรูสูงสุด 4 ตัว ตัวละ 80% · คูลดาวน์ 3',cd:3,type:'ranged',mult:.8,target:'all'},
+    {id:'s3',name:'พายุทรายแห่งความตาย',desc:'เรียกพายุทรายถล่มศัตรูรอบเป้าหมาย 105% โอกาส 35% ทำให้มึน (ยืนร่ายจากระยะไกล) · คูลดาวน์ 4',cd:4,type:'rain',mult:1.05,target:'all',stun:.35},
+    {id:'s4',name:'ตาชั่งแห่งวิญญาณ',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 8% · โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 25%',type:'passive',passive:{teamAtk:.08,dmgLow:.25}}]
 };
 const passiveOf=sp=>{const s=(SKILLS[sp]||[]).find(x=>x.type==='passive');return s?s.passive:null;};
 
@@ -1626,7 +1625,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
   const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
-  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:40},seiro:{rar:2,max:40},kohaku:{rar:2,max:40},garok:{rar:2,max:40},phraiwan:{rar:3,max:50},mortha:{rar:3,max:50},amateru:{rar:4,max:50},sarael:{rar:4,max:50},anubis:{rar:4,max:50}};
+  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:40},seiro:{rar:2,max:40},kohaku:{rar:2,max:40},garok:{rar:2,max:40},phraiwan:{rar:2,max:40},anubis:{rar:3,max:50},mortha:{rar:3,max:50},amateru:{rar:4,max:50},sarael:{rar:4,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
@@ -1696,7 +1695,7 @@ const LOCAL=(()=>{
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json?v=2',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -4963,14 +4962,14 @@ const SPEC={
     base:{hp:96,atk:36,def:12,spd:40},lore:'สาวจิ้งจอกผู้เฝ้าศาลเจ้าเก่ากลางป่า ลูกแก้วอำพันบนคทาของเธอเก็บเปลวไฟไว้นับร้อยปี ยิ่งหางฟูเท่าไรเวทยิ่งแรงเท่านั้น'},
   garok:{name:'กาโรค',title:'นักรบออร์กเผ่าภูผา',rar:2,el:'ดิน',elc:'#c89a5a',role:'ป้องกัน',evo:1,rig:'garok',maxLv:40,
     base:{hp:124,atk:31,def:19,spd:30},lore:'นักรบออร์กร่างยักษ์จากเผ่าภูผา เกราะไหล่แกะจากหินภูเขา ขวานหินในมือหนักจนต้องใช้สองคนยก แต่เขาเหวี่ยงได้ด้วยมือเดียว'},
-  phraiwan:{name:'ไพรวัลย์',title:'ปราชญ์เฒ่าแห่งพงไพร',rar:3,el:'ลม',elc:'#6fe0b0',role:'ฮีล',evo:1,rig:'phraiwan',maxLv:50,
-    base:{hp:150,atk:40,def:22,spd:48},lore:'ฤๅษีชราผู้อยู่กับป่ามาตั้งแต่ต้นอัมพรต้นแรกยังเป็นเมล็ด หมวกของเขามีดอกไม้บานไม่เคยเหี่ยว ลมหายใจของเขาทำให้บาดแผลกลายเป็นรากไม้แล้วสมานหาย'},
+  phraiwan:{name:'ไพรวัลย์',title:'ปราชญ์เฒ่าแห่งพงไพร',rar:2,el:'ลม',elc:'#6fe0b0',role:'ฮีล',evo:1,rig:'phraiwan',maxLv:40,
+    base:{hp:112,atk:28,def:18,spd:40},lore:'ฤๅษีชราผู้อยู่กับป่ามาตั้งแต่ต้นอัมพรต้นแรกยังเป็นเมล็ด หมวกของเขามีดอกไม้บานไม่เคยเหี่ยว ลมหายใจของเขาทำให้บาดแผลกลายเป็นรากไม้แล้วสมานหาย'},
   mortha:{name:'มอร์ธา',title:'แม่ชีผู้เฝ้าสุสาน',rar:3,el:'น้ำ',elc:'#5fb3ff',role:'ฮีล',evo:1,rig:'mortha',maxLv:50,
     base:{hp:140,atk:42,def:20,spd:52},lore:'แม่ชีสวมหน้ากากทองเหลืองผู้ภาวนาให้ดวงวิญญาณในสุสานเก่า ขวดยาที่เอวกลั่นจากน้ำตาของผู้จากไป หยดเดียวก็ปลุกนักรบที่ล้มให้ลุกขึ้นได้'},
   sarael:{name:'ซาราเอล',title:'เทพสงครามปีกโลหิตและแสง',rar:4,el:'แสง',elc:'#ffd36a',role:'จู่โจม',evo:1,rig:'sarael',maxLv:50,
     base:{hp:180,atk:78,def:24,spd:62},lore:'เทพสงครามไร้ใบหน้าผู้มีปีกสองสี ปีกขาวคือความเมตตา ปีกแดงคือการพิพากษา ไม่มีผู้ใดรู้ว่าปีกไหนจะกางก่อนจนกว่าจะสายเกินไป'},
-  anubis:{name:'อนุบิส',title:'เทพแห่งความตายแห่งผืนทราย',rar:4,el:'มืด',elc:'#b48cff',role:'เวทมนตร์',evo:1,rig:'anubis',maxLv:50,
-    base:{hp:178,atk:80,def:22,spd:58},lore:'เทพหัวหมาจิ้งจอกผู้ชั่งน้ำหนักดวงวิญญาณ คทาทองในมือเรียกพายุทรายจากทะเลทรายที่ไม่มีใครเคยกลับออกมา ศัตรูของเขาไม่ได้ตาย แค่ถูกพาไปที่อื่น'},
+  anubis:{name:'อนุบิส',title:'เทพแห่งความตายแห่งผืนทราย',rar:3,el:'มืด',elc:'#b48cff',role:'เวทมนตร์',evo:1,rig:'anubis',maxLv:50,
+    base:{hp:128,atk:50,def:15,spd:50},lore:'เทพหัวหมาจิ้งจอกผู้ชั่งน้ำหนักดวงวิญญาณ คทาทองในมือเรียกพายุทรายจากทะเลทรายที่ไม่มีใครเคยกลับออกมา ศัตรูของเขาไม่ได้ตาย แค่ถูกพาไปที่อื่น'},
   amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:4,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
     base:{hp:190,atk:74,def:26,spd:60},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ'},
 };// ธาตุและสกิลมาจาก gamedata.js

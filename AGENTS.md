@@ -86,9 +86,9 @@ python3 build_battle.py && cp battle.html ../battle.html
 | `seiro` | เซย์โร (หมาป่านักดาบ น้ำ) | หายาก | `szr/seiro_rig.json` | rig เอง (tools/rig) · ไม่มีอาวุธในโมเดล ใช้คาตานะยาวเล่มเดียวแบบคุโรกะ |
 | `kohaku` | โคฮาคุ (จิ้งจอกนักเวท ไฟ) | หายาก | `khk/kohaku_rig.json` + `weapon.jpg` | rig เอง · หางผูกกับสะโพก (BOX) · คทาจับแบบอาวุธด้ามยาว (`POLE`) · สายตีไกล (`SPECIES.ranged` → `u.reach=7.35` ยืนห่างศัตรู ~8 ม.): s1 `type:'bolt'` / s2 `ranged` ใช้ `rigCast` · s3 `type:'rain'` ใช้ `rigRain` |
 | `garok` | กาโรค (ออร์กถือขวาน ดิน) | หายาก | `grk/garok_rig.json` + `weapon.jpg` | rig เอง · ขวานจับแบบอาวุธด้ามยาว (`POLE`) |
-| `sarael` | ซาราเอล (เทพสงครามปีกสองสี แสง) | เทพเจ้า | `srl/sarael_rig.json` | rig เอง · ปีกผูกกับ Spine2 ด้วย BOX · สู้มือเปล่า (`NOWPN` ใน meshy_rig.js: ดาบใช้แค่กำมือ ไม่โชว์) |
-| `anubis` | อนุบิส (เทพหัวจิ้งจอก มืด) | เทพเจ้า | `anb/anubis_rig.json` + `weapon.jpg` | rig เอง · คทา `POLE` · สายตีไกลแบบโคฮาคุ (bolt/ranged/rain) · ตัดผ้าห้อยใต้แขนด้วย DROP |
-| `phraiwan` | ไพรวัลย์ (ปราชญ์เฒ่าพงไพร ลม) | ตำนาน | `prw/phraiwan_rig.json` + `weapon.jpg` | rig เอง · คทา `POLE` · **สายฮีล** |
+| `sarael` | ซาราเอล (เทพสงครามปีกเปลวไฟสองสี แสง) | เทพเจ้า | `srl/sarael_rig.json?v=2` | rig เอง · ปีกเส้นเปลว (tendril) ผูกกับ Spine2 ด้วย BOX · สู้มือเปล่า (`NOWPN` ใน meshy_rig.js: ดาบใช้แค่กำมือ ไม่โชว์) · โมเดลรอบ 2 (เจ้าของขอปีกแบบเส้นเปลว: Tripo Edit Image ยกแขนเป็น T-pose ก่อน Generate 3D, polycount 30000) |
+| `anubis` | อนุบิส (เทพหัวจิ้งจอก มืด) | ตำนาน | `anb/anubis_rig.json` + `weapon.jpg` | rig เอง · คทา `POLE` · สายตีไกลแบบโคฮาคุ (bolt/ranged/rain) · ตัดผ้าห้อยใต้แขนด้วย DROP |
+| `phraiwan` | ไพรวัลย์ (ปราชญ์เฒ่าพงไพร ลม) | หายาก (3 สกิล ไม่มีติดตัว) | `prw/phraiwan_rig.json` + `weapon.jpg` | rig เอง · คทา `POLE` · **สายฮีล** |
 | `mortha` | มอร์ธา (แม่ชีผู้เฝ้าสุสาน น้ำ) | ตำนาน | `mrt/mortha_rig.json` + `weapon.jpg` | rig เอง · คทาธง `POLE` · **สายฮีล** |
 
 - ไฟล์ `*_rig.json` = glTF JSON (buffer ฝังเป็น base64) + `baseColor*.jpg` ในโฟลเดอร์เดียวกัน, ชื่อกระดูกแบบ **Mixamo** (`mixamorig:Hips`, `...RightHand`, `...RightHandMiddle4` ใช้บอกทิศมือ, `...HeadTop_End`)
@@ -395,12 +395,12 @@ python3 build_battle.py && cp battle.html ../battle.html
 ## งานค้าง (ยังไม่ได้ทำ)
 - ขุมนรก: ไอเดียต่อ — เลือดค้างข้ามชั้น / ตัวที่ล้มใช้ไม่ได้จนรีเซ็ต (ยังไม่ได้ทำ เจ้าของยังไม่เลือก)
 
-## เทพเจ้าใหม่ + สายฮีล (ซาราเอล/อนุบิส/ไพรวัลย์/มอร์ธา) — `server/migrate_newchars3.sql`
+## ตัวละครใหม่ + สายฮีล (ซาราเอล เทพเจ้า · อนุบิส/มอร์ธา ตำนาน · ไพรวัลย์ หายาก — เจ้าของปรับระดับ 1 ต.ค. 2026) — `server/migrate_newchars3.sql`
 - โมเดล Tripo ของเราเอง (1 ต.ค. 2026): สร้างภาพ T-pose (Nano Banana) จากรูปอ้างอิงของเจ้าของ → Generate 3D (25000 ตัว / 6000 อาวุธ) → `tools/rig` · จุดข้อต่อใน `tools/rig/joints/j_{sarael,anubis,phraiwan,mortha}.json`
 - `selfrig2.py` เพิ่ม `NOCLOTH_X` (จุดที่ |x| เกินค่านี้ไม่นับเป็นผ้า/ผม — มือสีซีดเคยถูกจับเป็นผ้าแล้วยืด) และ `DROP` (ลบหน้าในกล่อง)
-- คำสั่งที่ใช้: ทุกตัว `NOCLOTH_X=.45 CUT=.5 CLOTH=tex.jpg` · ซาราเอล `BOX` ปีก (z<-0.09 นอกลำตัว → Spine2) · อนุบิส `DROP` ผ้าห้อยใต้แขน (|x|>.32, y .7–1.08) · WLEN คทา 1.45–1.55
+- คำสั่งที่ใช้: ทุกตัว `NOCLOTH_X=.45 CUT=.5 CLOTH=tex.jpg` · ซาราเอล `BOX` ปีกหลายกล่อง (หลังแขน z<-0.06, ข้างตัว |x|>.34 ใต้แขน, ปลาย |x|>.7 → Spine2) + ตั้งข้อต่อแขนเอง (autojoints จับปีกเป็นแขน) · อนุบิส `DROP` ผ้าห้อยใต้แขน (|x|>.32, y .7–1.08) · WLEN คทา 1.45–1.55
 - **สกิล type `heal`** (battle_rt.js `rigHeal`): target `one` = เพื่อนที่เลือด % น้อยสุด, `all` = ทั้งทีม · ปริมาณ `healAmt` = atk × mult × 1.25 × (1+healUp) · `cleanse` แก้มึน · AI ใช้เมื่อ `healWanted` (เดี่ยว: มีเพื่อน <70% · ทีม: <85% ≥2 ตัว หรือมี <50%) ใช้ได้ทุกระยะแม้ไม่มีศัตรูใกล้ · ไม้ตายฮีลกดเองได้ (queued)
 - ติดตัวใหม่: `regen` (ทุก 3 วิ ทั้งทีม +% เลือดสูงสุด) · `healUp` (ฮีลแรงขึ้น) · ในสงคราม ฝั่งที่ถูกกำหนดให้แพ้ ฮีลได้ 40%
-- `SPECIES.healer`/`ranged` ใน battle_world.js · pow: ซาราเอล 688 · อนุบิส 680 · ไพรวัลย์/มอร์ธา 472
+- `SPECIES.healer`/`ranged` ใน battle_world.js · pow: ซาราเอล 688 · อนุบิส 473 · มอร์ธา 472 · ไพรวัลย์ 358 (regen ติดตัวถูกเอาออกเพราะหายากไม่มีติดตัว — กลไก regen ยังอยู่ในโค้ด)
 - ดูโมเดลในคลังแบบ 3D ตอนทดสอบ: `index.html?dbg=1` → `__F.box3d('sarael')` / `__F.closeBox()` · ทดสอบสนาม: `battle.html?demo=sarael,anubis,phraiwan,mortha`
 - ⚠️ ไฟล์ rig ทุกตัวโหลดตอนเปิดเกม (`loadMeshy`) ตอนนี้ 11 ตัว ~22MB — ถ้ามือถือโหลดช้า ควรเปลี่ยนเป็นโหลดเฉพาะตัวที่มี
