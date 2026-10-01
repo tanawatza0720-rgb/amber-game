@@ -210,6 +210,17 @@ body.warAllies .hrow2.ally{display:none}
   #hpL{left:calc(8px + env(safe-area-inset-left,0px))}#hpR{right:calc(8px + env(safe-area-inset-right,0px))}
   #camHint{display:none}
 }
+/* มือถือ: พับแผงรางวัล/กวาดด่านได้ · เลือดเป็นหลอดเล็กใต้เท้า (บอสยังอยู่แผงข้าง) */
+#ipFold{display:none;flex:none;width:40px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--amber);font-size:18px;position:relative}
+#ipFold.dot::after{content:'';position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:#ff4a3a;box-shadow:0 0 6px #ff4a3a}
+body.phone #ipFold{display:block}
+body.phone.ipFold #ipChest,body.phone.ipFold #ipSweep,body.phone.ipFold .ipteam,body.phone.ipFold #ipTrial{display:none!important}
+.fbar{position:absolute;left:0;top:0;width:34px;height:5px;border-radius:3px;background:rgba(0,0,0,.6);border:1px solid rgba(0,0,0,.7);overflow:hidden;pointer-events:none;will-change:transform;display:none}
+.fbar i{display:block;height:100%;width:100%;background:linear-gradient(180deg,#7dffa8,#22b45c)}
+.fbar.e i{background:linear-gradient(180deg,#ff8f80,#d0301f)}
+.fbar.low i{animation:lowHp .8s infinite}
+body.phone .fbar{display:block}
+body.phone .hpcol .hrow2:not(.boss){display:none}
 </style>
 <div id="view"></div>
 <div id="ov"></div>
@@ -237,6 +248,7 @@ body.warAllies .hrow2.ally{display:none}
   <div class="iprow">
     <div class="ipst"><small>ผ่านแล้ว</small><b id="ipStage">-</b></div>
     <div class="ippw"><small>พลังทีม</small><b id="ipPow">0</b><span id="ipNeed"></span></div>
+    <button id="ipFold" type="button" aria-label="ซ่อน/แสดงรางวัลและกวาดด่าน">▾</button>
   </div>
   <button id="ipBoss" class="ipboss" hidden></button>
   <div id="ipChest" class="chest" hidden>

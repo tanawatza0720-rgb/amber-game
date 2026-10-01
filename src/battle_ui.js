@@ -1,7 +1,14 @@
 /* ================= แถบพลังชีวิตและตัวเลข ================= */
 const ov=$('#ov');
 // เหนือหัว: แสดงเฉพาะบัพ/ดีบัพ · เลือดอยู่ในแผงข้าง (ทีมเรา = ซ้าย, ศัตรู = ขวา)
+const PHONE=matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<=820;
+if(PHONE){document.body.classList.add('phone');try{if(localStorage.getItem('ipFold')==='1')document.body.classList.add('ipFold');}catch(e){}}
+{const f=$('#ipFold');if(f){const set=()=>{f.textContent=document.body.classList.contains('ipFold')?'▴':'▾';};set();
+  f.onclick=()=>{const on=document.body.classList.toggle('ipFold');try{localStorage.setItem('ipFold',on?'1':'0');}catch(e){}set();};
+  // จุดแดงเมื่อพับไว้แต่มีของให้เก็บ/กวาด
+  setInterval(()=>{const c=$('#ipClaim'),w=$('#sw1');f.classList.toggle('dot',document.body.classList.contains('ipFold')&&((c&&!$('#ipChest').hidden&&!c.disabled)||(w&&!$('#ipSweep').hidden&&!w.disabled)));},1000);}}
 function makeBar(u){
+  if(PHONE&&!u.boss&&!u.raidBar){const f=document.createElement('div');f.className='fbar '+(u.side==='P'?'p':'e');f.innerHTML='<i></i>';ov.appendChild(f);u.footEl=f;}
   const b=document.createElement('div'); b.className='ubar '+(u.side==='P'?'p':'e')+(u.boss?' boss':''); b.hidden=true; ov.appendChild(b); u.barEl=b; u.stSig='';
   const r=document.createElement('div'); r.className='hrow2 '+(u.side==='P'?'p':'e')+(u.boss?' boss':'');
   r.innerHTML='<div class="rt"><span class="el"></span><span class="nm"></span><span class="lv"></span></div><div class="hp"><i></i><em></em></div>';
@@ -12,7 +19,8 @@ function makeBar(u){
 }
 function updateBar(u){const r=u.row;if(!r)return;if(u.raidBar){u.raidBar(r);return;}const k=Math.max(0,u.hp/u.maxHp);
   r.querySelector('.hp i').style.width=(k*100)+'%'; r.querySelector('.hp em').textContent=u.hp+'/'+u.maxHp;
-  r.classList.toggle('low',k>0&&k<.3); r.classList.toggle('dead',!u.alive||u.hp<=0);}
+  r.classList.toggle('low',k>0&&k<.3); r.classList.toggle('dead',!u.alive||u.hp<=0);
+  if(u.footEl){u.footEl.firstChild.style.width=(k*100)+'%';u.footEl.classList.toggle('low',k>0&&k<.3);}}
 function rowGone(u){const r=u.row;if(!r)return;r.classList.add('dead');if(u.side==='E')setTimeout(()=>{r.classList.add('out');setTimeout(()=>r.remove(),400);},500);}
 // บัพ/ดีบัพที่ตัวละครได้รับ (คืนค่าเป็นรายการ [ไอคอน, คลาส, คำอธิบาย])
 function statusOf(u){const L=[];
@@ -387,6 +395,10 @@ function loop(){
   UNITS.forEach(u=>{if(!u.barEl)return;const on=u.alive&&renderStatus(u);u.barEl.hidden=!on;if(!on)return;
     const v=tmpV.copy(u.w.position).setY(u.barY||(u.evo?(u.boss?3.25:2.6):1.6)).project(camera);u.barEl.style.visibility=v.z>1||Math.abs(v.x)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
     u.barEl.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,-100%)`;});
+  // หลอดเลือดเล็กใต้เท้า (มือถือ)
+  if(PHONE)UNITS.forEach(u=>{const f=u.footEl;if(!f)return;if(!u.alive||!u.w.visible||u.hp<=0){f.style.visibility='hidden';return;}
+    const v=tmpV.copy(u.w.position).setY(Math.max(0,u.w.position.y-.05)).project(camera);f.style.visibility=v.z>1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
+    f.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,6px)`;});
   RTS.manual-=rdt; mapTick(T); sunFollow(LOOK); camUpdate(); const ck=1-Math.exp(-rdt*camK); CAM.lerp(CAMt,ck); LOOK.lerp(LOOKt,ck);
   camera.position.copy(CAM).add(tmpV.set(Math.sin(T*.3)*.06,Math.sin(T*.4)*.03,0));
   if(shake>.002){camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake;shake*=.86;}

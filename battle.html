@@ -210,6 +210,17 @@ body.warAllies .hrow2.ally{display:none}
   #hpL{left:calc(8px + env(safe-area-inset-left,0px))}#hpR{right:calc(8px + env(safe-area-inset-right,0px))}
   #camHint{display:none}
 }
+/* มือถือ: พับแผงรางวัล/กวาดด่านได้ · เลือดเป็นหลอดเล็กใต้เท้า (บอสยังอยู่แผงข้าง) */
+#ipFold{display:none;flex:none;width:40px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--amber);font-size:18px;position:relative}
+#ipFold.dot::after{content:'';position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:#ff4a3a;box-shadow:0 0 6px #ff4a3a}
+body.phone #ipFold{display:block}
+body.phone.ipFold #ipChest,body.phone.ipFold #ipSweep,body.phone.ipFold .ipteam,body.phone.ipFold #ipTrial{display:none!important}
+.fbar{position:absolute;left:0;top:0;width:34px;height:5px;border-radius:3px;background:rgba(0,0,0,.6);border:1px solid rgba(0,0,0,.7);overflow:hidden;pointer-events:none;will-change:transform;display:none}
+.fbar i{display:block;height:100%;width:100%;background:linear-gradient(180deg,#7dffa8,#22b45c)}
+.fbar.e i{background:linear-gradient(180deg,#ff8f80,#d0301f)}
+.fbar.low i{animation:lowHp .8s infinite}
+body.phone .fbar{display:block}
+body.phone .hpcol .hrow2:not(.boss){display:none}
 </style>
 <div id="view"></div>
 <div id="ov"></div>
@@ -237,6 +248,7 @@ body.warAllies .hrow2.ally{display:none}
   <div class="iprow">
     <div class="ipst"><small>ผ่านแล้ว</small><b id="ipStage">-</b></div>
     <div class="ippw"><small>พลังทีม</small><b id="ipPow">0</b><span id="ipNeed"></span></div>
+    <button id="ipFold" type="button" aria-label="ซ่อน/แสดงรางวัลและกวาดด่าน">▾</button>
   </div>
   <button id="ipBoss" class="ipboss" hidden></button>
   <div id="ipChest" class="chest" hidden>
@@ -2781,7 +2793,7 @@ function makeUnit(side,def,slot){
 const BLOBTEX=canvasTex(128,(x,s)=>{const g=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,'rgba(0,0,0,.85)');g.addColorStop(.45,'rgba(0,0,0,.45)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,s,s);});
 function addBlob(u){const r=u.evo?(u.boss?.95:.72):.62;const b=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:BLOBTEX,transparent:true,depthWrite:false,opacity:.6,fog:false}));b.rotation.x=-Math.PI/2;b.renderOrder=1;scene.add(b);u.blob=b;}
 function blobUpdate(){UNITS.forEach(u=>{if(!u.blob)return;const w=u.w;u.blob.visible=w.visible;u.blob.position.set(w.position.x,.025,w.position.z);const h=Math.max(0,w.position.y);u.blob.material.opacity=.6*Math.max(0,1-h/2.2);u.blob.scale.setScalar(1-Math.min(.4,h*.12));});}
-function removeUnit(u){scene.remove(u.w);u.bar.remove();if(u.row)u.row.remove();if(u.blob){scene.remove(u.blob);u.blob.geometry.dispose();u.blob.material.dispose();}}
+function removeUnit(u){scene.remove(u.w);u.bar.remove();if(u.row)u.row.remove();if(u.footEl)u.footEl.remove();if(u.blob){scene.remove(u.blob);u.blob.geometry.dispose();u.blob.material.dispose();}}
 
 /* ================= แอนิเมชันต่อสู้ ================= */
 const tmpV=new THREE.Vector3();
@@ -3676,7 +3688,14 @@ async function meteor(c){
 /* ================= แถบพลังชีวิตและตัวเลข ================= */
 const ov=$('#ov');
 // เหนือหัว: แสดงเฉพาะบัพ/ดีบัพ · เลือดอยู่ในแผงข้าง (ทีมเรา = ซ้าย, ศัตรู = ขวา)
+const PHONE=matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<=820;
+if(PHONE){document.body.classList.add('phone');try{if(localStorage.getItem('ipFold')==='1')document.body.classList.add('ipFold');}catch(e){}}
+{const f=$('#ipFold');if(f){const set=()=>{f.textContent=document.body.classList.contains('ipFold')?'▴':'▾';};set();
+  f.onclick=()=>{const on=document.body.classList.toggle('ipFold');try{localStorage.setItem('ipFold',on?'1':'0');}catch(e){}set();};
+  // จุดแดงเมื่อพับไว้แต่มีของให้เก็บ/กวาด
+  setInterval(()=>{const c=$('#ipClaim'),w=$('#sw1');f.classList.toggle('dot',document.body.classList.contains('ipFold')&&((c&&!$('#ipChest').hidden&&!c.disabled)||(w&&!$('#ipSweep').hidden&&!w.disabled)));},1000);}}
 function makeBar(u){
+  if(PHONE&&!u.boss&&!u.raidBar){const f=document.createElement('div');f.className='fbar '+(u.side==='P'?'p':'e');f.innerHTML='<i></i>';ov.appendChild(f);u.footEl=f;}
   const b=document.createElement('div'); b.className='ubar '+(u.side==='P'?'p':'e')+(u.boss?' boss':''); b.hidden=true; ov.appendChild(b); u.barEl=b; u.stSig='';
   const r=document.createElement('div'); r.className='hrow2 '+(u.side==='P'?'p':'e')+(u.boss?' boss':'');
   r.innerHTML='<div class="rt"><span class="el"></span><span class="nm"></span><span class="lv"></span></div><div class="hp"><i></i><em></em></div>';
@@ -3687,7 +3706,8 @@ function makeBar(u){
 }
 function updateBar(u){const r=u.row;if(!r)return;if(u.raidBar){u.raidBar(r);return;}const k=Math.max(0,u.hp/u.maxHp);
   r.querySelector('.hp i').style.width=(k*100)+'%'; r.querySelector('.hp em').textContent=u.hp+'/'+u.maxHp;
-  r.classList.toggle('low',k>0&&k<.3); r.classList.toggle('dead',!u.alive||u.hp<=0);}
+  r.classList.toggle('low',k>0&&k<.3); r.classList.toggle('dead',!u.alive||u.hp<=0);
+  if(u.footEl){u.footEl.firstChild.style.width=(k*100)+'%';u.footEl.classList.toggle('low',k>0&&k<.3);}}
 function rowGone(u){const r=u.row;if(!r)return;r.classList.add('dead');if(u.side==='E')setTimeout(()=>{r.classList.add('out');setTimeout(()=>r.remove(),400);},500);}
 // บัพ/ดีบัพที่ตัวละครได้รับ (คืนค่าเป็นรายการ [ไอคอน, คลาส, คำอธิบาย])
 function statusOf(u){const L=[];
@@ -4062,6 +4082,10 @@ function loop(){
   UNITS.forEach(u=>{if(!u.barEl)return;const on=u.alive&&renderStatus(u);u.barEl.hidden=!on;if(!on)return;
     const v=tmpV.copy(u.w.position).setY(u.barY||(u.evo?(u.boss?3.25:2.6):1.6)).project(camera);u.barEl.style.visibility=v.z>1||Math.abs(v.x)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
     u.barEl.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,-100%)`;});
+  // หลอดเลือดเล็กใต้เท้า (มือถือ)
+  if(PHONE)UNITS.forEach(u=>{const f=u.footEl;if(!f)return;if(!u.alive||!u.w.visible||u.hp<=0){f.style.visibility='hidden';return;}
+    const v=tmpV.copy(u.w.position).setY(Math.max(0,u.w.position.y-.05)).project(camera);f.style.visibility=v.z>1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
+    f.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,6px)`;});
   RTS.manual-=rdt; mapTick(T); sunFollow(LOOK); camUpdate(); const ck=1-Math.exp(-rdt*camK); CAM.lerp(CAMt,ck); LOOK.lerp(LOOKt,ck);
   camera.position.copy(CAM).add(tmpV.set(Math.sin(T*.3)*.06,Math.sin(T*.4)*.03,0));
   if(shake>.002){camera.position.x+=(Math.random()-.5)*shake;camera.position.y+=(Math.random()-.5)*shake;shake*=.86;}
