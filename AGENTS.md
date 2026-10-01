@@ -336,9 +336,9 @@ python3 build_battle.py && cp battle.html ../battle.html
 - ⚠️ ฟังก์ชันใหม่ที่เช็กช่องว่างต้องใช้ `public._slots(u)` ไม่ใช่ `_c('slots')`
 - `migrate_bag.sql` รันบนฐานข้อมูลจริงแล้ว 1 ต.ค. 2026
 - client: ปุ่ม `#bAdd` (+) ในหัวคลัง แตะครั้งแรกแสดงราคา แตะซ้ำภายใน 4 วิ = ซื้อ · ออฟไลน์ (`LOCAL.buy_bag`) กติกาเดียวกัน
-## พลังงาน ⚡ = กวาดด่าน — `server/migrate_energy_sweep.sql`, `INFO.sweep` ใน farm_ui.js
+## พลังงาน ⚡ = กวาดด่าน — `server/migrate_energy_sweep.sql`, ปุ่มอยู่หน้าต่อสู้ (`sweepRender`/`doSweep` ใน battle_ui.js)
 - ก่อน 1 ต.ค. 2026 พลังงานไม่มีที่ใช้ (มีแค่ `battle_start` ของระบบด่านเก่าที่ไม่ได้เรียกแล้ว)
 - `sweep_claim(n)` n=1–6 ใช้ 10 ⚡/ครั้ง ได้รางวัลเท่าดันด่าน idle 30 นาที/ครั้ง (`_sweep_c`: cost 10, sec 1800 · อัตรา 1:3 ตามเจ้าของ) สูตรเดียวกับ `idle_claim` · ไม่แตะ `idle_at` · รันบนฐานข้อมูลจริงแล้ว 1 ต.ค. 2026
-- client: แตะแถบพลังงาน `#pEnergy` / ร้านค้า → หน้ากวาดด่าน (×1, ×ทั้งหมด, เติมพลังงาน) · รายการใน `todoList` · ออฟไลน์ `LOCAL.sweep_claim`
+- client: ปุ่มกวาดด่านอยู่ **หน้าต่อสู้** (`#ipSweep` ในแผง `#idle` ใต้รางวัลสะสม: ×1 และ ×ทั้งหมดสูงสุด 6 · พลังงานนับต่อเองจาก `energy_next`) — เจ้าของสั่งไม่ให้อยู่ในร้านค้า · ร้านค้าฟาร์มขายแค่พลังงาน +30 · แตะ `#pEnergy`/รายการ `todoList` (`INFO.sweep`) = ไป battle.html · ออฟไลน์ `LOCAL.sweep_claim` · ดีบัก `__B.BN`/`__B.idleRender` (?dbg=1)
 ## งานค้าง (ยังไม่ได้ทำ)
 - (ว่าง)
