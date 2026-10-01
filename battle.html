@@ -179,6 +179,14 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
 /* มือถือ: ตัวหนังสือแผงเลือดใหญ่ขึ้นให้อ่านง่าย */
 @media (max-width:600px){.hpcol{width:156px}.hrow2 .rt{font-size:12px}.hrow2 .el{font-size:12px}.hrow2 .lv{font-size:11px}.hp{height:12px}.hp em{font-size:10px;line-height:12px}#raceChip b{font-size:11px}}
+/* แนวนอนบนมือถือ (จอเตี้ย): แผงด่านไว้กลางล่างระหว่างแถบเลือดสองฝั่ง ย่อให้เตี้ย · แถบเลือดไม่ล้นจอ */
+@media (orientation:landscape) and (max-height:520px){
+  #idle{left:50%;right:auto;transform:translateX(-50%);width:min(380px,calc(100vw - 2 * 172px));bottom:calc(6px + env(safe-area-inset-bottom,0px));padding:8px 10px;gap:6px}
+  #idle .ipst b,#idle .ippw b{font-size:16px}#ipTrial,.ipteam{display:none}
+  .hpcol{max-height:calc(100vh - 80px - env(safe-area-inset-top,0px));overflow:hidden}
+  #hpL{left:calc(8px + env(safe-area-inset-left,0px))}#hpR{right:calc(8px + env(safe-area-inset-right,0px))}
+  #camHint{display:none}
+}
 </style>
 <div id="view"></div>
 <div id="ov"></div>

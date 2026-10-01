@@ -116,7 +116,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .nameRow{display:flex;gap:8px;margin-top:8px}
 .nameRow input{flex:1;min-width:0;height:40px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--bone);font:inherit;padding:0 12px;user-select:text;-webkit-user-select:text}
 /* ===== หน้าเข้าสู่ระบบ ===== */
-body.preLogin #top,body.preLogin #rail,body.preLogin #dock,body.preLogin #hint,body.preLogin #mtag,body.preLogin #sheet,body.preLogin #loadMsg{display:none!important}
+body.preLogin #top,body.preLogin #rail,body.preLogin #menuBtn,body.preLogin #dock,body.preLogin #hint,body.preLogin #mtag,body.preLogin #sheet,body.preLogin #loadMsg{display:none!important}
 #login{position:fixed;inset:0;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;overflow:hidden;padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));
   background:radial-gradient(ellipse 70% 45% at 50% 30%,rgba(20,10,4,.55),transparent 75%),linear-gradient(180deg,rgba(30,16,6,.6) 0%,rgba(20,11,5,.35) 40%,rgba(14,8,4,.8) 72%,rgba(10,6,3,.94) 100%);transition:opacity .45s}
 #login.bye{opacity:0;pointer-events:none}
@@ -165,9 +165,9 @@ body.preLogin #top,body.preLogin #rail,body.preLogin #dock,body.preLogin #hint,b
 @media (max-height:640px){.lgLogo{width:56px;height:56px;border-radius:18px}.lgLogo svg{width:34px;height:34px}.lgTag,.lgChips{display:none}}
 @media (prefers-reduced-motion:reduce){.lgCard,.lgHead,.lgChips,.lgLogo,.lgRays{animation:none}.lgFx{display:none}.lgWait::before{animation:none}}
 /* ===== คลังมอนสเตอร์ (หน้าต่างไอคอน) ===== */
-body.boxOpen #top,body.boxOpen #rail,body.boxOpen #dock,body.boxOpen #hint,body.boxOpen #mtag,body.boxOpen #sheet{display:none!important}
+body.boxOpen #top,body.boxOpen #rail,body.boxOpen #menuBtn,body.boxOpen #dock,body.boxOpen #hint,body.boxOpen #mtag,body.boxOpen #sheet{display:none!important}
 #racePick{position:fixed;inset:0;z-index:8;pointer-events:auto;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
-body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,body.raceOpen #mtag{visibility:hidden}
+body.raceOpen #top,body.raceOpen #rail,body.raceOpen #menuBtn,body.raceOpen #dock,body.raceOpen #hint,body.raceOpen #mtag{visibility:hidden}
 .rpTop{text-align:center;text-shadow:0 2px 8px #000}.rpTop h1{margin:0;font-family:'Chakra Petch',sans-serif;font-size:24px;color:#ffe6b8}.rpTop p{margin:4px 0 0;font-size:12px;color:#d8cfe8}
 #rpLoad{margin-top:6px;font-size:12px;color:#ffd9a0}
 .rpArr{position:absolute;top:42%;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(10,8,16,.55);color:#fff;font-size:26px;line-height:1}
@@ -341,7 +341,7 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #dock,body.raceOpen #hint,b
 .frBtns{display:flex;gap:5px;flex:none}
 .fb{border-radius:9px;padding:6px 10px;font-family:inherit;font-weight:700;font-size:12px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--bone);white-space:nowrap}
 .fb.main{background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;border-color:#ffd9a0}.fb.ghost{color:var(--muted)}.fb:disabled{opacity:.4}
-body.visiting #rail,body.visiting #dock,body.visiting #rankBox,body.visiting #hint{display:none!important}
+body.visiting #rail,body.visiting #menuBtn,body.visiting #dock,body.visiting #rankBox,body.visiting #hint{display:none!important}
 #visitBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:4;width:min(440px,calc(100% - 20px));background:rgba(30,23,17,.94);border:1px solid var(--amber);border-radius:16px;padding:10px 12px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
 #visitBar[hidden]{display:none}
 .vbHead{display:flex;align-items:center;gap:10px}.vbHead>div{flex:1;min-width:0}.vbHead b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vbHead small{font-size:11px;color:var(--muted)}
@@ -420,7 +420,46 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 @keyframes pfPop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){#pullBar{animation:none}.pfRays{display:none}.pfCard{animation:pfFade 2.4s ease-in forwards}}
 /* มือถือ: ป้ายปุ่มราง/แถบล่างใหญ่ขึ้นให้อ่านง่าย */
-@media (max-width:520px){.rbtn{font-size:12px}.nbtn{font-size:12px}.nbtn.big{font-size:13px}}
+@media (max-width:520px){.rbtn{font-size:12px}.nbtn{font-size:12px;width:60px;white-space:nowrap}.nbtn.big{font-size:13px;width:68px}}
+/* ===== ปุ่มเมนูรวม + จอเล็กแนวตั้ง/แนวนอน (farm_menu.js) ===== */
+#menuBtn{display:none}
+@media (max-width:760px),(max-height:520px){
+  #menuBtn{display:flex;position:fixed;z-index:4;left:12px;top:calc(70px + env(safe-area-inset-top,0px));width:52px;cursor:pointer;color:var(--bone)}
+  #menuBtn .mbIc{width:28px;height:28px;display:grid;align-content:center;gap:5px;padding:0 4px}
+  #menuBtn .mbIc i{display:block;height:3px;border-radius:2px;background:var(--amber);transition:transform .22s,opacity .22s}
+  body.menuOpen #menuBtn{background:linear-gradient(180deg,#ffc56a,#d9822b);color:#2a1606;border-color:#ffd9a0}
+  body.menuOpen #menuBtn .mbIc i{background:#2a1606}
+  body.menuOpen #menuBtn .mbIc i:nth-child(1){transform:translateY(8px) rotate(45deg)}
+  body.menuOpen #menuBtn .mbIc i:nth-child(2){opacity:0}
+  body.menuOpen #menuBtn .mbIc i:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
+  #menuBtn .mbDot{position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#e8453c;border:2px solid #fff3;box-shadow:0 0 6px rgba(232,69,60,.8)}
+  #menuBtn .mbDot[hidden]{display:none}
+  #rail{top:calc(132px + env(safe-area-inset-top,0px));flex-wrap:wrap;align-content:flex-start;gap:8px;max-height:calc(100vh - 132px - 110px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+    visibility:hidden;pointer-events:none;transition:visibility 0s .22s;z-index:4}
+  #rail .rbtn{opacity:0;transform:translateY(-10px) scale(.92);transition:opacity .18s,transform .22s cubic-bezier(.2,1.4,.4,1);transition-delay:0s}
+  body.menuOpen #rail,body.guideOn #rail{visibility:visible;pointer-events:auto;transition:none}
+  body.menuOpen #rail .rbtn,body.guideOn #rail .rbtn{opacity:1;transform:none;transition-delay:calc(var(--i,0) * 28ms)}
+}
+@media (prefers-reduced-motion:reduce){#rail .rbtn,#menuBtn .mbIc i{transition:none!important}}
+/* แนวนอนบนมือถือ (จอเตี้ย): แถบบนบาง เหรียญเรียงแนวนอน แถบล่างเล็กลง หน้าต่างข้อมูลชิดขวาเต็มความสูง */
+@media (orientation:landscape) and (max-height:520px){
+  #top{padding:calc(6px + env(safe-area-inset-top,0px)) calc(10px + env(safe-area-inset-right,0px)) 0 calc(10px + env(safe-area-inset-left,0px))}
+  .profile{padding:4px 10px 4px 4px;gap:8px}#ava{width:34px;height:34px;font-size:17px}#pname{font-size:13px}
+  .res{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:5px;max-width:62vw}
+  .pill{min-width:0;font-size:13px;padding:2px 10px 2px 3px}.pill svg{width:20px;height:20px}
+  #rankBox{flex-basis:100%;max-width:176px;margin-left:auto;max-height:calc(100vh - 140px)}
+  #menuBtn{top:calc(56px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px))}
+  #rail{left:calc(70px + env(safe-area-inset-left,0px));top:calc(56px + env(safe-area-inset-top,0px));max-height:calc(100vh - 56px - 70px - env(safe-area-inset-bottom,0px))}
+  #dock{bottom:calc(6px + env(safe-area-inset-bottom,0px));padding:4px;gap:4px;border-radius:14px}
+  .nbtn{width:58px;padding:5px 2px 4px}.nbtn svg{width:24px;height:24px}.nbtn.big{width:66px;padding:8px 2px 5px;margin-top:-10px}
+  #sheet{left:auto;right:calc(8px + env(safe-area-inset-right,0px));transform:none;top:calc(8px + env(safe-area-inset-top,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
+    width:min(460px,56vw);max-height:none;animation:upR .22s ease-out;z-index:6}
+  #toast{top:calc(52px + env(safe-area-inset-top,0px))}
+  #pullBar{bottom:auto;top:calc(52px + env(safe-area-inset-top,0px));width:min(420px,46vw)}
+  #visitBar{left:auto;right:calc(8px + env(safe-area-inset-right,0px));transform:none;width:min(420px,52vw);bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  #hint{display:none}
+}
+@keyframes upR{from{opacity:0;transform:translateX(16px)}}
 </style>
 
 <div id="view"></div>

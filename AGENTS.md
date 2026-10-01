@@ -326,5 +326,9 @@ python3 build_battle.py && cp battle.html ../battle.html
 ## มือถือ: viewport — `src/farm_shell.html`, `src/battle_shell.html`
 - ทั้งสองหน้าต้องขึ้นต้นด้วย `<!doctype html>` + `<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">` (ก่อน 1 ต.ค. 2026 ไม่มี มือถือเลยแสดงแบบจอกว้าง 980px ทุกอย่างเล็กลง ~2.6 เท่า และ media query มือถือไม่ทำงาน) · ห้ามลบ
 - ทดสอบขนาดมือถือ: เบราว์เซอร์ตั้ง viewport 375×812 แล้วเช็ก `innerWidth` ต้องได้ 375 และ `document.compatMode` = `CSS1Compat`
+## ปุ่มเมนูรวม + แนวนอน — `src/farm_menu.js`, ท้าย CSS ใน `farm_shell.html` / `battle_shell.html`
+- จอเล็ก `(max-width:760px),(max-height:520px)`: `#rail` พับไว้ใต้ `#menuBtn` (☰) · `body.menuOpen` = กาง · แตะปุ่ม/ที่ว่าง/Esc = พับ · `.mbDot` จุดแดงรวมจาก badge/`.reddot` ในราง · คู่มือ (`body.guideOn`) กางรางค้าง · ปุ่มใหม่ในรางใส่ใน `#rail` ตามปกติ จะเข้าเมนูเอง
+- แนวนอนจอเตี้ย `(orientation:landscape) and (max-height:520px)`: แถบบนบาง/เหรียญเรียงแถว, รางกางเป็น 2 คอลัมน์, `#sheet` ชิดขวาเต็มความสูง, สนามรบ `#idle` อยู่กลางล่างระหว่างแถบเลือด
+- ตรวจหน้าตาโดยไม่สร้างบัญชี: `index.html?dbg=1` แล้วเรียก `__F.enterOffline();__F.enterGame()` (เซฟในเครื่อง ลบ `localStorage.amber_local_v2` เมื่อเสร็จ)
 ## งานค้าง (ยังไม่ได้ทำ)
 - (ว่าง)

@@ -344,3 +344,6 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
     if(entered){$('#loadMsg').hidden=true; syncAgents(); onboard();}
   });
 }
+
+// ดีบัก: index.html?dbg=1 เปิด window.__F (เข้าโหมดออฟไลน์เพื่อตรวจหน้าตาโดยไม่สร้างบัญชี)
+if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,enterGame:()=>enterGame()};
