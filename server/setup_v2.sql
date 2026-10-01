@@ -2964,7 +2964,7 @@ grant execute on function public.sweep_claim(int) to authenticated;
 --       (ทีมเริ่มต้น ~1.7k ผ่านได้ราว 8–9 ชั้น · ชั้น 50 ต้องทีมระดับท็อปเกือบเต็ม)
 --     ผลแพ้ชนะมาจากการต่อสู้จริงในเครื่อง แต่เซิร์ฟเวอร์กันโกง: พลังทีม × 1.05 ต้อง ≥ 85% ของพลังที่ชั้นต้องการ
 --     และต้องสู้อย่างน้อย 15 วินาที (เหมือนด่านบอส) · ไต่ได้ทีละชั้นเท่านั้น
---   - รางวัลผ่านชั้น (ครั้งแรกของสัปดาห์): เหรียญ 200 + 80×ชั้น · ชั้นบอสได้อัมพร 30/50/80/120/200
+--   - รางวัลผ่านชั้น (ครั้งแรกของสัปดาห์): เหรียญ 200 + 80×ชั้น + อัมพร 2 ทุกชั้น · ชั้นบอสได้อัมพรเพิ่ม 30/50/80/120/200
 --     ชั้น 50 ได้ "กล่องลึกลับ" เพิ่ม: อัมพร 150 + ไข่เทพ 1 ใบ (25% เป็นไข่เทพการันตี) — หน้าเกมไม่บอกล่วงหน้า
 -- =====================================================================
 create table if not exists public.abyss_runs (
@@ -2989,7 +2989,7 @@ create or replace function public._abyss_need(f int) returns int language sql im
 create or replace function public._abyss_reward(f int) returns jsonb language sql immutable as $$
   select jsonb_build_object('f', f, 'need', public._abyss_need(f), 'boss', f % 10 = 0,
     'coins', 200 + 80 * f,
-    'amber', case f when 10 then 30 when 20 then 50 when 30 then 80 when 40 then 120 when 50 then 200 else 0 end,
+    'amber', 2 + case f when 10 then 30 when 20 then 50 when 30 then 80 when 40 then 120 when 50 then 200 else 0 end,
     'box', f = 50) $$;
 
 -- สถานะขุมนรกของผู้เล่น + รางวัลทุกชั้น + อันดับสัปดาห์นี้

@@ -11,7 +11,7 @@ async function abRpc(fn,a){
   if(!ABY_FAKE)return brpc(fn,a);
   const need=f=>Math.round(1300*Math.pow(1.06,f-1)*(f%10===0?1.15:1)),bl=(location.search.match(/[?&]bless=([^&]+)/)||[])[1]||'atk';
   if(fn==='abyss_start')return {battle_id:'x',floor:abyFakeF,need:need(abyFakeF),bless:decodeURIComponent(bl),fresh:true,reward:{}};
-  if(fn==='abyss_finish'){const ok=a.won,f=abyFakeF;if(ok)abyFakeF++;return {won:ok,floor:f,coins:200+80*f,amber:(({10:30,20:50,30:80,40:120,50:200})[f]||0)+(f===50&&ok?150:0),box:f===50&&ok?{amber:150,egg:'sure'}:null,next:ok?(f<50?f+1:null):f,need_next:need(ok?f+1:f)};}
+  if(fn==='abyss_finish'){const ok=a.won,f=abyFakeF;if(ok)abyFakeF++;return {won:ok,floor:f,coins:200+80*f,amber:2+(({10:30,20:50,30:80,40:120,50:200})[f]||0)+(f===50&&ok?150:0),box:f===50&&ok?{amber:150,egg:'sure'}:null,next:ok?(f<50?f+1:null):f,need_next:need(ok?f+1:f)};}
 }
 const abyssZi=f=>Math.min(4,Math.floor((Math.max(1,f)-1)/10));
 // ด่านของชั้น f (พลังศัตรูอิงพลังที่ชั้นต้องการจากเซิร์ฟเวอร์)
@@ -137,6 +137,7 @@ async function abyssResult(win){
       if(res.box){const bx=res.box;r.className='win';$('#rTitle').textContent='🎁 เปิดกล่องลึกลับ!';shake=.3;
         row('ในกล่อง',(bx.egg==='sure'?'ไข่เทพการันตี':'ไข่เทพ')+' 1 ใบ + อัมพร '+fmtN(bx.amber));
         $('#rStarsNote').textContent='พิชิตขุมนรกครบ 50 ชั้น! ไข่เทพฟักได้ที่ศาลฟักไข่ในฟาร์ม';}
+      if(res.floor===5&&!res.box)setTimeout(abyssPrank,900);
       else if(res.next)$('#rStarsNote').textContent='ชั้นต่อไป '+res.next+' ('+abyssZone(res.next).n+') ต้องการพลัง ~'+fmtN(res.need_next);}
     else if(win&&res.weak){r.className='lose';$('#rTitle').textContent='ผลไม่ผ่าน';note.textContent='ทีมยังอ่อนเกินไปสำหรับชั้นนี้';
       row('พลังทีม',fmtN(res.power)+' / ต้องมีอย่างน้อย '+fmtN(res.min_power));$('#rStarsNote').textContent='อัปเลเวลหรืออัปดาวทีมในฟาร์มให้พลังถึงเกณฑ์ แล้วลองใหม่';}
@@ -146,4 +147,23 @@ async function abyssResult(win){
   const go=res?res.next:f;
   if(go){nxt.hidden=false;nxt.textContent=res&&res.won?'⚔ ลงชั้น '+go:'↻ ลองชั้น '+go+' อีกครั้ง';nxt.disabled=false;
     nxt.onclick=()=>{nxt.disabled=true;abyssFloor();};}
+}
+
+/* ---------- มุกชั้น 5: กล่องลึกลับปลอม (เจ้าของสั่ง · ไม่มีของจริง ฝั่งหน้าเกมล้วน) ----------
+   ผ่านชั้น 5 → กล่องเด้งขึ้นมา กดเปิด → "รับวาร์ปไป <รหัส>" · รหัสเป็นของแต่งขึ้นเอง ไม่ใช่รหัสสินค้าจริง แก้รายการที่ PRANK_CODES */
+const PRANK_CODES=['AMBR-985','KHUM-555','HYDR-404','JING-069','NARK-777','PAAA-123','KAZE-888','MEOW-321','LAVA-999','WARP-001'];
+function abyssPrank(){
+  if(document.getElementById('prank'))return;
+  const o=document.createElement('div');o.id='prank';
+  o.innerHTML='<div class="pk"><div class="pkBox">🎁</div><h3>กล่องลึกลับ</h3><p>ไม่รู้ว่ามีของวิเศษอะไรอยู่ด้านใน…</p><button class="pkGo">เปิดกล่อง</button></div>';
+  document.body.appendChild(o);
+  const card=o.querySelector('.pk'),btn=o.querySelector('.pkGo');
+  btn.onclick=()=>{
+    if(btn.dataset.done){o.remove();return;}
+    btn.disabled=true;card.classList.add('shake');
+    setTimeout(()=>{card.classList.remove('shake');card.classList.add('open');shake=Math.max(shake,.25);
+      const c=PRANK_CODES[Math.floor(Math.random()*PRANK_CODES.length)];
+      card.querySelector('.pkBox').textContent='✨';card.querySelector('h3').textContent='รับวาร์ปไป';
+      card.querySelector('p').innerHTML='';const b=document.createElement('b');b.className='pkCode';b.textContent=c;card.querySelector('p').append(b);
+      btn.textContent='555 ไปต่อ';btn.dataset.done=1;btn.disabled=false;},1100);};
 }

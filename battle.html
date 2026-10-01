@@ -168,6 +168,17 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
 @keyframes slidein{from{transform:translateX(30px);opacity:0}}
 /* ผลลัพธ์ */
 #result .card{text-align:center;animation:pop .3s ease}
+#prank{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:rgba(6,3,10,.72)}
+#prank .pk{width:min(320px,100%);text-align:center;background:linear-gradient(170deg,#2a1640,#120a1c);border:1px solid #c070ff;border-radius:18px;padding:20px 18px;box-shadow:0 0 30px rgba(192,112,255,.4);animation:pop .3s ease}
+#prank .pkBox{font-size:64px;line-height:1.1;animation:pkBob 1.4s ease-in-out infinite}
+#prank h3{margin:8px 0 4px;font-family:'Chakra Petch',sans-serif;font-size:22px;color:#e6c8ff}
+#prank p{margin:0 0 14px;color:var(--muted);font-size:14px;min-height:20px}
+#prank .pkCode{display:inline-block;font-family:'Chakra Petch',monospace;font-size:30px;letter-spacing:2px;color:#ffd24a;text-shadow:0 0 14px rgba(255,200,80,.7);animation:pop .35s ease}
+#prank .pkGo{width:100%;height:46px;border-radius:12px;border:1px solid #e6c8ff;background:linear-gradient(180deg,#d9a8ff,#8a4ad0);color:#fff;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:16px}
+#prank .pk.shake{animation:pkShake .12s linear infinite}
+@keyframes pkBob{50%{transform:translateY(-6px) rotate(-4deg)}}
+@keyframes pkShake{25%{transform:translateX(-5px) rotate(-2deg)}75%{transform:translateX(5px) rotate(2deg)}}
+@media (prefers-reduced-motion:reduce){#prank .pkBox,#prank .pk.shake{animation:none}}
 #rTitle{font-size:34px;font-weight:700;margin:0}
 #result.win #rTitle{color:#ffd24a;text-shadow:0 0 16px rgba(255,180,60,.6)}
 #result.lose #rTitle{color:#ff8a7a}
@@ -4195,7 +4206,7 @@ async function abRpc(fn,a){
   if(!ABY_FAKE)return brpc(fn,a);
   const need=f=>Math.round(1300*Math.pow(1.06,f-1)*(f%10===0?1.15:1)),bl=(location.search.match(/[?&]bless=([^&]+)/)||[])[1]||'atk';
   if(fn==='abyss_start')return {battle_id:'x',floor:abyFakeF,need:need(abyFakeF),bless:decodeURIComponent(bl),fresh:true,reward:{}};
-  if(fn==='abyss_finish'){const ok=a.won,f=abyFakeF;if(ok)abyFakeF++;return {won:ok,floor:f,coins:200+80*f,amber:(({10:30,20:50,30:80,40:120,50:200})[f]||0)+(f===50&&ok?150:0),box:f===50&&ok?{amber:150,egg:'sure'}:null,next:ok?(f<50?f+1:null):f,need_next:need(ok?f+1:f)};}
+  if(fn==='abyss_finish'){const ok=a.won,f=abyFakeF;if(ok)abyFakeF++;return {won:ok,floor:f,coins:200+80*f,amber:2+(({10:30,20:50,30:80,40:120,50:200})[f]||0)+(f===50&&ok?150:0),box:f===50&&ok?{amber:150,egg:'sure'}:null,next:ok?(f<50?f+1:null):f,need_next:need(ok?f+1:f)};}
 }
 const abyssZi=f=>Math.min(4,Math.floor((Math.max(1,f)-1)/10));
 // ด่านของชั้น f (พลังศัตรูอิงพลังที่ชั้นต้องการจากเซิร์ฟเวอร์)
@@ -4321,6 +4332,7 @@ async function abyssResult(win){
       if(res.box){const bx=res.box;r.className='win';$('#rTitle').textContent='🎁 เปิดกล่องลึกลับ!';shake=.3;
         row('ในกล่อง',(bx.egg==='sure'?'ไข่เทพการันตี':'ไข่เทพ')+' 1 ใบ + อัมพร '+fmtN(bx.amber));
         $('#rStarsNote').textContent='พิชิตขุมนรกครบ 50 ชั้น! ไข่เทพฟักได้ที่ศาลฟักไข่ในฟาร์ม';}
+      if(res.floor===5&&!res.box)setTimeout(abyssPrank,900);
       else if(res.next)$('#rStarsNote').textContent='ชั้นต่อไป '+res.next+' ('+abyssZone(res.next).n+') ต้องการพลัง ~'+fmtN(res.need_next);}
     else if(win&&res.weak){r.className='lose';$('#rTitle').textContent='ผลไม่ผ่าน';note.textContent='ทีมยังอ่อนเกินไปสำหรับชั้นนี้';
       row('พลังทีม',fmtN(res.power)+' / ต้องมีอย่างน้อย '+fmtN(res.min_power));$('#rStarsNote').textContent='อัปเลเวลหรืออัปดาวทีมในฟาร์มให้พลังถึงเกณฑ์ แล้วลองใหม่';}
@@ -4330,6 +4342,25 @@ async function abyssResult(win){
   const go=res?res.next:f;
   if(go){nxt.hidden=false;nxt.textContent=res&&res.won?'⚔ ลงชั้น '+go:'↻ ลองชั้น '+go+' อีกครั้ง';nxt.disabled=false;
     nxt.onclick=()=>{nxt.disabled=true;abyssFloor();};}
+}
+
+/* ---------- มุกชั้น 5: กล่องลึกลับปลอม (เจ้าของสั่ง · ไม่มีของจริง ฝั่งหน้าเกมล้วน) ----------
+   ผ่านชั้น 5 → กล่องเด้งขึ้นมา กดเปิด → "รับวาร์ปไป <รหัส>" · รหัสเป็นของแต่งขึ้นเอง ไม่ใช่รหัสสินค้าจริง แก้รายการที่ PRANK_CODES */
+const PRANK_CODES=['AMBR-985','KHUM-555','HYDR-404','JING-069','NARK-777','PAAA-123','KAZE-888','MEOW-321','LAVA-999','WARP-001'];
+function abyssPrank(){
+  if(document.getElementById('prank'))return;
+  const o=document.createElement('div');o.id='prank';
+  o.innerHTML='<div class="pk"><div class="pkBox">🎁</div><h3>กล่องลึกลับ</h3><p>ไม่รู้ว่ามีของวิเศษอะไรอยู่ด้านใน…</p><button class="pkGo">เปิดกล่อง</button></div>';
+  document.body.appendChild(o);
+  const card=o.querySelector('.pk'),btn=o.querySelector('.pkGo');
+  btn.onclick=()=>{
+    if(btn.dataset.done){o.remove();return;}
+    btn.disabled=true;card.classList.add('shake');
+    setTimeout(()=>{card.classList.remove('shake');card.classList.add('open');shake=Math.max(shake,.25);
+      const c=PRANK_CODES[Math.floor(Math.random()*PRANK_CODES.length)];
+      card.querySelector('.pkBox').textContent='✨';card.querySelector('h3').textContent='รับวาร์ปไป';
+      card.querySelector('p').innerHTML='';const b=document.createElement('b');b.className='pkCode';b.textContent=c;card.querySelector('p').append(b);
+      btn.textContent='555 ไปต่อ';btn.dataset.done=1;btn.disabled=false;},1100);};
 }
 
 })();

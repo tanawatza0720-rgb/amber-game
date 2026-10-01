@@ -28,15 +28,15 @@ function renderAbyss(A){
   if(A.box){let bx={};try{bx=typeof A.box==='string'?JSON.parse(A.box):A.box;}catch(e){}
     d.append(rows([['🎁 กล่องลึกลับสัปดาห์นี้','อัมพร '+fmt(bx.amber||0)+' + '+(bx.egg==='sure'?'ไข่เทพการันตี':'ไข่เทพ'),'#ffb347']]));}
   // รางวัลแต่ละชั้น (แบ่งตามโซน · กางโซนของชั้นถัดไปไว้)
-  d.append(el('h4','abH','รางวัลแต่ละชั้น (ได้เมื่อผ่านครั้งแรกของสัปดาห์)'));
+  d.append(el('h4','abH','รางวัลแต่ละชั้น (ได้เมื่อผ่านครั้งแรกของสัปดาห์ · ทุกชั้น +🔶2)'));
   ABYSS_ZONES.forEach((z,zi)=>{const a=zi*10+1,b=a+9,det=el('details','abZone');if(nx?(nx>=a&&nx<=b):zi===4)det.open=true;
     const sm=el('summary');sm.append(el('b',null,'ชั้น '+a+'–'+b+' · '+z.n));sm.append(el('span',null,z.el.map(e=>ELEM[e]?ELEM[e].i:'').join('')+' บอส: '+z.boss[1]+(F>=b?' ✓':'')));det.append(sm);
     const grid=el('div','abGrid');
     (A.floors||[]).slice(a-1,b).forEach(r=>{const t=el('div','abT'+(r.boss?' boss':'')+(r.box?' box':'')+(r.f<=F?' done':r.f===nx?' next':''));
       t.append(el('small',null,(r.boss?'👑 ':'')+'ชั้น '+r.f));
       if(r.box){t.append(el('b',null,'🎁 กล่องลึกลับ'));t.append(el('b',null,'🔶'+r.amber));}
-      else if(r.amber){t.append(el('b',null,'🔶'+r.amber));t.append(el('em',null,'🪙'+fmt(r.coins)));}
-      else t.append(el('b',null,'🪙'+fmt(r.coins)));
+      else if(r.boss){t.append(el('b',null,'🔶'+r.amber));t.append(el('em',null,'🪙'+fmt(r.coins)));}
+      else{t.append(el('b',null,'🪙'+fmt(r.coins)));t.append(el('em',null,'🔶'+r.amber));}
       t.title='ต้องการพลัง ~'+fmt(r.need);grid.append(t);});
     det.append(grid);d.append(det);});
   // อันดับสัปดาห์นี้
