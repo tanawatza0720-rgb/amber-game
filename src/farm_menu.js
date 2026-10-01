@@ -20,5 +20,11 @@ const MENU={open:false};
   // จุดแดงรวมบนปุ่มเมนู
   const dot=b.querySelector('.mbDot');
   setInterval(()=>{order();const on=[...rail.querySelectorAll('.rbtn')].some(x=>!x.hidden&&(x.classList.contains('reddot')||[...x.querySelectorAll('.badge')].some(y=>!y.hidden&&y.textContent.trim()&&y.textContent.trim()!=='0')));dot.hidden=!on;},700);
+  // อันดับเผ่าในเมนู (จอเล็ก): เปิดกล่องอันดับเป็นป๊อปอัป
+  const rk=$('#rRank'),box=$('#rankBox');
+  const rkSet=o=>{document.body.classList.toggle('rankPop',!!o);if(o&&typeof loadRank==='function')loadRank();};
+  if(rk)rk.addEventListener('click',()=>{rkSet(!document.body.classList.contains('rankPop'));});
+  document.addEventListener('pointerdown',e=>{if(document.body.classList.contains('rankPop')&&!e.target.closest('#rankBox,#rRank'))rkSet(false);});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')rkSet(false);});
   order();window.menuSet=set;
 })();

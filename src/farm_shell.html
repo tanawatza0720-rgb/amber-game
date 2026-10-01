@@ -422,8 +422,9 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 /* มือถือ: ป้ายปุ่มราง/แถบล่างใหญ่ขึ้นให้อ่านง่าย */
 @media (max-width:520px){.rbtn{font-size:12px}.nbtn{font-size:12px;width:60px;white-space:nowrap}.nbtn.big{font-size:13px;width:68px}}
 /* ===== ปุ่มเมนูรวม + จอเล็กแนวตั้ง/แนวนอน (farm_menu.js) ===== */
-#menuBtn{display:none}
+#menuBtn,#rRank{display:none}
 @media (max-width:760px),(max-height:520px){
+  #rRank:not([hidden]){display:flex}
   #menuBtn{display:flex;position:fixed;z-index:4;left:12px;top:calc(82px + env(safe-area-inset-top,0px));width:50px;cursor:pointer;color:var(--bone)}
   #menuBtn .mbIc{width:28px;height:28px;display:grid;align-content:center;gap:5px;padding:0 4px}
   #menuBtn .mbIc i{display:block;height:3px;border-radius:2px;background:var(--amber);transition:transform .22s,opacity .22s}
@@ -434,11 +435,15 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   body.menuOpen #menuBtn .mbIc i:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
   #menuBtn .mbDot{position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#e8453c;border:2px solid #fff3;box-shadow:0 0 6px rgba(232,69,60,.8)}
   #menuBtn .mbDot[hidden]{display:none}
-  /* กางออกไปทางขวาของปุ่มเมนู แถวละ 5 ปุ่ม เกินแล้วขึ้นแถวใหม่ */
-  #rail{left:70px;top:calc(82px + env(safe-area-inset-top,0px));display:grid;grid-template-columns:repeat(5,50px);grid-auto-rows:min-content;gap:6px;max-height:none;
+  /* กางลงด้านล่างใต้ปุ่มเมนู คอลัมน์ละ 5 ปุ่ม เกินแล้วขึ้นคอลัมน์ใหม่ทางขวา */
+  #rail{left:12px;top:calc(146px + env(safe-area-inset-top,0px));display:grid;grid-template-rows:repeat(5,min-content);grid-auto-flow:column;grid-auto-columns:50px;gap:6px;max-height:none;
     visibility:hidden;pointer-events:none;transition:visibility 0s .22s;z-index:4}
-  #rail .rbtn{width:50px;opacity:0;transform:translateX(-12px) scale(.92);transition:opacity .18s,transform .22s cubic-bezier(.2,1.4,.4,1);transition-delay:0s}
+  #rail .rbtn{width:50px;opacity:0;transform:translateY(-12px) scale(.92);transition:opacity .18s,transform .22s cubic-bezier(.2,1.4,.4,1);transition-delay:0s}
   #rail .rbtn[hidden]{display:none}
+  /* อันดับเผ่า: ย้ายเข้าเมนู แสดงเป็นป๊อปอัปเมื่อกด */
+  #rankBox{display:none!important}
+  body.rankPop #rankBox:not([hidden]){display:block!important;position:fixed;z-index:6;left:50%;top:50%;transform:translate(-50%,-50%);width:min(300px,calc(100vw - 32px));max-height:calc(100vh - 40px);padding:8px 12px 10px;font-size:13px;box-shadow:0 18px 50px rgba(0,0,0,.55);background:rgba(30,23,17,.96)}
+  body.rankPop #rankBox .rkTop{display:grid}body.rankPop #rankBox .rkMe{display:block}body.rankPop #rkArrow{display:none}
   body.menuOpen #rail,body.guideOn #rail{visibility:visible;pointer-events:auto;transition:none}
   body.menuOpen #rail .rbtn,body.guideOn #rail .rbtn{opacity:1;transform:none;transition-delay:calc(var(--i,0) * 28ms)}
 }
@@ -449,9 +454,8 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   .profile{padding:4px 10px 4px 4px;gap:8px}#ava{width:34px;height:34px;font-size:17px}#pname{font-size:13px}
   .res{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:5px;max-width:62vw}
   .pill{min-width:0;font-size:13px;padding:2px 10px 2px 3px}.pill svg{width:20px;height:20px}
-  #rankBox{flex-basis:100%;max-width:176px;margin-left:auto;max-height:calc(100vh - 140px)}
   #menuBtn{top:calc(62px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px))}
-  #rail{left:calc(68px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px))}
+  #rail{left:calc(68px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px));grid-template-rows:repeat(4,min-content)}
   #dock{bottom:calc(6px + env(safe-area-inset-bottom,0px));padding:4px;gap:4px;border-radius:14px}
   .nbtn{width:64px;padding:5px 2px 4px;white-space:nowrap}.nbtn svg{width:24px;height:24px}.nbtn.big{width:66px;padding:8px 2px 5px;margin-top:-10px}
   #sheet{left:auto;right:calc(8px + env(safe-area-inset-right,0px));transform:none;top:calc(8px + env(safe-area-inset-top,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
@@ -462,6 +466,11 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   #hint{display:none}
 }
 @keyframes upR{from{opacity:0;transform:translateX(16px)}}
+/* ปุ่ม + ขยายกระเป๋า (monbox.js bagBtn) */
+#bAdd{margin-left:8px;min-width:30px;height:30px;padding:0 9px;border-radius:15px;border:1px solid #ffd9a0;background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2a1606;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(217,130,43,.45)}
+#bAdd{position:relative}#bAdd.ask{background:linear-gradient(180deg,#8ff0c4,#3fb88f);border-color:#c8ffe6}
+#bAdd.ask::after{content:attr(data-ask);position:absolute;z-index:5;top:calc(100% + 8px);right:-46px;width:190px;white-space:normal;text-align:center;line-height:1.35;padding:6px 10px;border-radius:10px;background:rgba(20,40,32,.96);border:1px solid #8ff0c4;color:#dfffee;font-family:'Bai Jamjuree',sans-serif;font-weight:600;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none}
+#bAdd[hidden]{display:none}#bAdd:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
 </style>
 
 <div id="view"></div>
@@ -488,6 +497,7 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   <button class="rbtn" id="rFriend" hidden><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6" fill="#9fd8ff"/><path d="M2.5 20c.6-4 3.2-6 6.5-6s5.9 2 6.5 6z" fill="#5fa8e0"/><circle cx="16.5" cy="9" r="3" fill="#ffd36a"/><path d="M13 20c.4-3.3 2.2-5 4.5-5s4.1 1.7 4.5 5z" fill="#e0a53a"/></svg>เพื่อน<span class="badge" id="bFriend" hidden></span></button>
   <button class="rbtn" id="rExp" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#2a4a5e" stroke="#9fd8ff" stroke-width="1.5"/><path d="M12 4l2.6 8L12 20l-2.6-8z" fill="#ff6a4a"/><path d="M12 12 14.6 12 12 20 9.4 12z" fill="#e9eef5"/><circle cx="12" cy="12" r="1.4" fill="#ffd34d"/></svg>สำรวจ<span class="badge" id="bExp" hidden></span><i class="rhp"><i id="rExpBar"></i></i></button>
   <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M3 10v4l3 .5V9.5z" fill="#c9a24a"/><path d="M6 9.5 17 5v14L6 14.5z" fill="#ffc94d"/><path d="M8 14.8 9.5 20h2.6l-1.2-4.8" fill="#e9dcc0"/><path d="M19.5 9.5c1 .8 1 4.2 0 5" stroke="#ffd34d" stroke-width="1.6" fill="none"/></svg>อัปเดต<span class="badge" id="bNews" hidden>N</span></button>
+  <button class="rbtn" id="rRank" hidden><svg viewBox="0 0 24 24"><path d="M7 3h10v5a5 5 0 0 1-10 0z" fill="#ffc94d"/><path d="M7 5H4a3 3 0 0 0 3 4M17 5h3a3 3 0 0 1-3 4" stroke="#d9a23a" stroke-width="1.6" fill="none"/><rect x="10.5" y="12" width="3" height="5" fill="#d9a23a"/><rect x="7" y="17" width="10" height="4" rx="1" fill="#8a6a44"/></svg>อันดับ</button>
   <button class="rbtn" id="rGuide"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 1 .2V21a3 3 0 0 0-1-.2H4z" fill="#e9dcc0"/><path d="M20 4h-7a3 3 0 0 0-1 .2V21a3 3 0 0 1 1-.2h7z" fill="#d8c69c"/><path d="M6 8h4M6 11h4M14 8h4M14 11h4" stroke="#8a6a44" stroke-width="1.4"/></svg>คู่มือ</button>
 </div>
 
@@ -515,7 +525,7 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 </div>
 <div id="box" hidden>
   <div class="bWin" role="dialog" aria-label="มอนสเตอร์">
-    <div class="bBar"><h2>มอนสเตอร์ <b id="bCount"></b></h2><button id="bClose" aria-label="ปิด">×</button></div>
+    <div class="bBar"><h2>มอนสเตอร์ <b id="bCount"></b></h2><button id="bAdd" type="button" hidden>+</button><button id="bClose" aria-label="ปิด">×</button></div>
     <div class="bBody">
       <div class="bLeft"><div id="bList"></div></div>
       <div class="bRight">

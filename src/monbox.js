@@ -116,7 +116,16 @@ function makeThumb(sp,el){
 function boxSpark(p,color,n,speed){for(let i=0;i<n;i++){const g=glow(bScene,color,.18,[p.x,p.y,p.z],1);const v=new THREE.Vector3((Math.random()-.5),Math.random()*.9+.2,(Math.random()-.5)).normalize().multiplyScalar(speed*(.4+Math.random()*.8));const p0=g.position.clone();
   tween(.9+Math.random()*.5,k=>{g.position.copy(p0).addScaledVector(v,k*1.2);g.position.y-=k*k*.6;g.material.opacity=1-k;}).then(()=>{bScene.remove(g);g.material.dispose();});}}
 /* ---------- หน้าต่างมอนสเตอร์ ---------- */
-const CAP=30, stars=n=>tierOf(n).n;
+const stars=n=>tierOf(n).n; let bagAsk=0;
+// ปุ่ม + ขยายกระเป๋า (แตะครั้งแรก = ดูราคา แตะซ้ำภายใน 4 วิ = ซื้อ)
+function bagBtn(){const b=$('#bAdd');if(!b)return;const g=S.bag;
+  if(!g||g.bag_cost==null){b.hidden=true;return;} b.hidden=false;
+  b.classList.toggle('ask',!!bagAsk);b.textContent=bagAsk?'✓':'+';b.dataset.ask='แตะ ✓ อีกครั้งเพื่อขยาย +'+g.bag_step+' ช่อง · '+g.bag_cost+' อัมพร';
+  b.setAttribute('aria-label','ขยายกระเป๋า +'+g.bag_step+' ช่อง ราคา '+g.bag_cost+' อัมพร');}
+async function bagBuy(){const g=S.bag;if(!g||g.bag_cost==null)return;
+  if(!bagAsk){bagAsk=setTimeout(()=>{bagAsk=0;bagBtn();},4000);bagBtn();return;}
+  clearTimeout(bagAsk);bagAsk=0;if(S.amber<g.bag_cost){toast('อัมพรไม่พอ ต้องใช้ '+g.bag_cost+' อัมพร');bagBtn();return;}
+  const r=await act('buy_bag');bagBtn();if(r){if(typeof bumpRes==='function')bumpRes('amber');toast('ขยายกระเป๋าแล้ว! ตอนนี้มี '+r.slots+' ช่อง 🎒');renderBox();}}
 const FLAG='<svg viewBox="0 0 12 12"><path d="M3 1v10M3 1.5h6l-1.6 2.2L9 6H3" fill="#2b1808" stroke="#2b1808" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 const PAW='<svg viewBox="0 0 24 24" fill="#ffd9a0"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="6" cy="10" r="2.2"/><circle cx="10" cy="6.5" r="2.2"/><circle cx="14" cy="6.5" r="2.2"/><circle cx="18" cy="10" r="2.2"/></svg>';
 let boxSort='power', boxTab='info';
@@ -153,11 +162,11 @@ function renderTeam(){
 }
 function sorted(){return[...S.mons].sort((a,b)=>boxSort==='lv'?b.lv-a.lv:boxSort==='rar'?(spOf(b).rar-spOf(a).rar||b.lv-a.lv):boxSort==='new'?b.uid-a.uid:power(b)-power(a));}
 function renderBox(){
-  $('#bCount').textContent=S.mons.length+'/'+CAP;
+  $('#bCount').textContent=S.mons.length+'/'+S.slots; bagBtn();
   renderTeam();
   const g=$('#bList'); g.innerHTML='';
   sorted().forEach(m=>{const c=icon(m,m.uid===BOX.detail?'sel':'');c.dataset.uid=m.uid;c.onclick=()=>selectMon(m.uid);g.append(c);});
-  for(let i=S.mons.length;i<CAP;i++){const e=el('div','ic empty');e.innerHTML=PAW;g.append(e);}
+  for(let i=S.mons.length;i<S.slots;i++){const e=el('div','ic empty');e.innerHTML=PAW;g.append(e);}
   $('#bSort').value=boxSort;
   renderDetail();
 }
@@ -284,3 +293,5 @@ function boxFrame(dt,T){
 $('#nMons').onclick=openBox;
 
 startFarm();
+
+if($('#bAdd'))$('#bAdd').onclick=bagBuy;

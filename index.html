@@ -422,8 +422,9 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 /* มือถือ: ป้ายปุ่มราง/แถบล่างใหญ่ขึ้นให้อ่านง่าย */
 @media (max-width:520px){.rbtn{font-size:12px}.nbtn{font-size:12px;width:60px;white-space:nowrap}.nbtn.big{font-size:13px;width:68px}}
 /* ===== ปุ่มเมนูรวม + จอเล็กแนวตั้ง/แนวนอน (farm_menu.js) ===== */
-#menuBtn{display:none}
+#menuBtn,#rRank{display:none}
 @media (max-width:760px),(max-height:520px){
+  #rRank:not([hidden]){display:flex}
   #menuBtn{display:flex;position:fixed;z-index:4;left:12px;top:calc(82px + env(safe-area-inset-top,0px));width:50px;cursor:pointer;color:var(--bone)}
   #menuBtn .mbIc{width:28px;height:28px;display:grid;align-content:center;gap:5px;padding:0 4px}
   #menuBtn .mbIc i{display:block;height:3px;border-radius:2px;background:var(--amber);transition:transform .22s,opacity .22s}
@@ -434,11 +435,15 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   body.menuOpen #menuBtn .mbIc i:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
   #menuBtn .mbDot{position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#e8453c;border:2px solid #fff3;box-shadow:0 0 6px rgba(232,69,60,.8)}
   #menuBtn .mbDot[hidden]{display:none}
-  /* กางออกไปทางขวาของปุ่มเมนู แถวละ 5 ปุ่ม เกินแล้วขึ้นแถวใหม่ */
-  #rail{left:70px;top:calc(82px + env(safe-area-inset-top,0px));display:grid;grid-template-columns:repeat(5,50px);grid-auto-rows:min-content;gap:6px;max-height:none;
+  /* กางลงด้านล่างใต้ปุ่มเมนู คอลัมน์ละ 5 ปุ่ม เกินแล้วขึ้นคอลัมน์ใหม่ทางขวา */
+  #rail{left:12px;top:calc(146px + env(safe-area-inset-top,0px));display:grid;grid-template-rows:repeat(5,min-content);grid-auto-flow:column;grid-auto-columns:50px;gap:6px;max-height:none;
     visibility:hidden;pointer-events:none;transition:visibility 0s .22s;z-index:4}
-  #rail .rbtn{width:50px;opacity:0;transform:translateX(-12px) scale(.92);transition:opacity .18s,transform .22s cubic-bezier(.2,1.4,.4,1);transition-delay:0s}
+  #rail .rbtn{width:50px;opacity:0;transform:translateY(-12px) scale(.92);transition:opacity .18s,transform .22s cubic-bezier(.2,1.4,.4,1);transition-delay:0s}
   #rail .rbtn[hidden]{display:none}
+  /* อันดับเผ่า: ย้ายเข้าเมนู แสดงเป็นป๊อปอัปเมื่อกด */
+  #rankBox{display:none!important}
+  body.rankPop #rankBox:not([hidden]){display:block!important;position:fixed;z-index:6;left:50%;top:50%;transform:translate(-50%,-50%);width:min(300px,calc(100vw - 32px));max-height:calc(100vh - 40px);padding:8px 12px 10px;font-size:13px;box-shadow:0 18px 50px rgba(0,0,0,.55);background:rgba(30,23,17,.96)}
+  body.rankPop #rankBox .rkTop{display:grid}body.rankPop #rankBox .rkMe{display:block}body.rankPop #rkArrow{display:none}
   body.menuOpen #rail,body.guideOn #rail{visibility:visible;pointer-events:auto;transition:none}
   body.menuOpen #rail .rbtn,body.guideOn #rail .rbtn{opacity:1;transform:none;transition-delay:calc(var(--i,0) * 28ms)}
 }
@@ -449,9 +454,8 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   .profile{padding:4px 10px 4px 4px;gap:8px}#ava{width:34px;height:34px;font-size:17px}#pname{font-size:13px}
   .res{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:5px;max-width:62vw}
   .pill{min-width:0;font-size:13px;padding:2px 10px 2px 3px}.pill svg{width:20px;height:20px}
-  #rankBox{flex-basis:100%;max-width:176px;margin-left:auto;max-height:calc(100vh - 140px)}
   #menuBtn{top:calc(62px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px))}
-  #rail{left:calc(68px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px))}
+  #rail{left:calc(68px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px));grid-template-rows:repeat(4,min-content)}
   #dock{bottom:calc(6px + env(safe-area-inset-bottom,0px));padding:4px;gap:4px;border-radius:14px}
   .nbtn{width:64px;padding:5px 2px 4px;white-space:nowrap}.nbtn svg{width:24px;height:24px}.nbtn.big{width:66px;padding:8px 2px 5px;margin-top:-10px}
   #sheet{left:auto;right:calc(8px + env(safe-area-inset-right,0px));transform:none;top:calc(8px + env(safe-area-inset-top,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
@@ -462,6 +466,11 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   #hint{display:none}
 }
 @keyframes upR{from{opacity:0;transform:translateX(16px)}}
+/* ปุ่ม + ขยายกระเป๋า (monbox.js bagBtn) */
+#bAdd{margin-left:8px;min-width:30px;height:30px;padding:0 9px;border-radius:15px;border:1px solid #ffd9a0;background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2a1606;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(217,130,43,.45)}
+#bAdd{position:relative}#bAdd.ask{background:linear-gradient(180deg,#8ff0c4,#3fb88f);border-color:#c8ffe6}
+#bAdd.ask::after{content:attr(data-ask);position:absolute;z-index:5;top:calc(100% + 8px);right:-46px;width:190px;white-space:normal;text-align:center;line-height:1.35;padding:6px 10px;border-radius:10px;background:rgba(20,40,32,.96);border:1px solid #8ff0c4;color:#dfffee;font-family:'Bai Jamjuree',sans-serif;font-weight:600;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none}
+#bAdd[hidden]{display:none}#bAdd:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
 </style>
 
 <div id="view"></div>
@@ -488,6 +497,7 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   <button class="rbtn" id="rFriend" hidden><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6" fill="#9fd8ff"/><path d="M2.5 20c.6-4 3.2-6 6.5-6s5.9 2 6.5 6z" fill="#5fa8e0"/><circle cx="16.5" cy="9" r="3" fill="#ffd36a"/><path d="M13 20c.4-3.3 2.2-5 4.5-5s4.1 1.7 4.5 5z" fill="#e0a53a"/></svg>เพื่อน<span class="badge" id="bFriend" hidden></span></button>
   <button class="rbtn" id="rExp" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#2a4a5e" stroke="#9fd8ff" stroke-width="1.5"/><path d="M12 4l2.6 8L12 20l-2.6-8z" fill="#ff6a4a"/><path d="M12 12 14.6 12 12 20 9.4 12z" fill="#e9eef5"/><circle cx="12" cy="12" r="1.4" fill="#ffd34d"/></svg>สำรวจ<span class="badge" id="bExp" hidden></span><i class="rhp"><i id="rExpBar"></i></i></button>
   <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M3 10v4l3 .5V9.5z" fill="#c9a24a"/><path d="M6 9.5 17 5v14L6 14.5z" fill="#ffc94d"/><path d="M8 14.8 9.5 20h2.6l-1.2-4.8" fill="#e9dcc0"/><path d="M19.5 9.5c1 .8 1 4.2 0 5" stroke="#ffd34d" stroke-width="1.6" fill="none"/></svg>อัปเดต<span class="badge" id="bNews" hidden>N</span></button>
+  <button class="rbtn" id="rRank" hidden><svg viewBox="0 0 24 24"><path d="M7 3h10v5a5 5 0 0 1-10 0z" fill="#ffc94d"/><path d="M7 5H4a3 3 0 0 0 3 4M17 5h3a3 3 0 0 1-3 4" stroke="#d9a23a" stroke-width="1.6" fill="none"/><rect x="10.5" y="12" width="3" height="5" fill="#d9a23a"/><rect x="7" y="17" width="10" height="4" rx="1" fill="#8a6a44"/></svg>อันดับ</button>
   <button class="rbtn" id="rGuide"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 1 .2V21a3 3 0 0 0-1-.2H4z" fill="#e9dcc0"/><path d="M20 4h-7a3 3 0 0 0-1 .2V21a3 3 0 0 1 1-.2h7z" fill="#d8c69c"/><path d="M6 8h4M6 11h4M14 8h4M14 11h4" stroke="#8a6a44" stroke-width="1.4"/></svg>คู่มือ</button>
 </div>
 
@@ -515,7 +525,7 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 </div>
 <div id="box" hidden>
   <div class="bWin" role="dialog" aria-label="มอนสเตอร์">
-    <div class="bBar"><h2>มอนสเตอร์ <b id="bCount"></b></h2><button id="bClose" aria-label="ปิด">×</button></div>
+    <div class="bBar"><h2>มอนสเตอร์ <b id="bCount"></b></h2><button id="bAdd" type="button" hidden>+</button><button id="bClose" aria-label="ปิด">×</button></div>
     <div class="bBody">
       <div class="bLeft"><div id="bList"></div></div>
       <div class="bRight">
@@ -1343,7 +1353,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={bag_max:'ขยายกระเป๋าได้สูงสุดแล้ว',pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -1423,6 +1433,8 @@ const LOCAL=(()=>{
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
   const fail=c=>{throw Object.assign(new Error(c),{code:c});};
+  // กระเป๋า: +10 ช่องต่อครั้ง สูงสุด 5 ครั้ง ราคา 10+5×ครั้ง อัมพร (ตรงกับ migrate_bag.sql)
+  const BAG={step:10,max:5,cost:n=>10+5*n}, slots=()=>C.slots+BAG.step*(D.bag_ext||0);
   function load(){
     try{D=JSON.parse(SafeStore.getItem(KEY));}catch(e){D=null;}
     if(!D){ // สร้างใหม่ (ย้ายของเดิมจากเดโมถ้ามี)
@@ -1446,18 +1458,19 @@ const LOCAL=(()=>{
   function state(){const now=Date.now();return{player:{name:D.name,lv:D.lv,xp:D.xp,coins:D.coins,amber:D.amber,energy:D.energy,energy_max:C.energy_max,
     energy_next:D.energy>=C.energy_max?0:Math.max(0,C.energy_sec-Math.floor((now-D.energy_at)/1000)),energy_sec:C.energy_sec,
     amber_in:Math.max(0,Math.ceil((D.amber_at-now)/1000)),daily_streak:D.daily_streak,daily_claimed:D.daily_last===today(),hatch_count:D.hatch_count,
-    race:D.race||null,pity:D.pity,pity_max:C.pity_max,quests:{...D.quests},team:[...D.team],slots:C.slots,named:!!D.named,uid:'ในเครื่องนี้'},monsters:D.mons.map(m=>({...m}))};}
+    race:D.race||null,pity:D.pity,pity_max:C.pity_max,quests:{...D.quests},team:[...D.team],slots:slots(),bag:{bag_ext:D.bag_ext||0,bag_max:BAG.max,bag_step:BAG.step,bag_cost:(D.bag_ext||0)>=BAG.max?null:BAG.cost(D.bag_ext||0)},named:!!D.named,uid:'ในเครื่องนี้'},monsters:D.mons.map(m=>({...m}))};}
   const mon=id=>D.mons.find(m=>m.id===id)||fail('no_monster');
   const F={
     game_state:()=>state(),
+    buy_bag:()=>{const n=D.bag_ext||0;if(n>=BAG.max)fail('bag_max');const c=BAG.cost(n);if(D.amber<c)fail('not_enough_amber');D.amber-=c;D.bag_ext=n+1;return{slots:slots(),cost:c};},
     set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>12)fail('bad_name');D.name=n;D.named=true;return{};},
-    hatch_egg:({kind})=>{if(D.mons.length>=C.slots)fail('box_full');let ch;
+    hatch_egg:({kind})=>{if(D.mons.length>=slots())fail('box_full');let ch;
       if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=[.83,.15,.02,0];}
       else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=[.575,.32,.10,.005];}else fail('bad_egg');
       const r=Math.random(); let t=r<ch[3]?4:r<ch[3]+ch[2]?3:r<ch[3]+ch[2]+ch[1]?2:1; if(kind==='gold'&&t<3&&D.pity>=C.pity_max)t=3;
       const pool=Object.keys(SPS).filter(k=>SPS[k].rar===t), sp=pool[Math.floor(Math.random()*pool.length)]||'kazemaru'; if(kind==='gold'&&t>=3)D.pity=0;
       const m={id:D.nid++,sp,lv:1,stars:0,el:EL_LIST[Math.floor(Math.random()*EL_LIST.length)]};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
-    hatch_eggs:({kind,n})=>{if(n!==1&&n!==10)fail('bad_count');if(D.mons.length+n>C.slots)fail('box_full');const c=n*(kind==='wild'?C.wild_cost:C.gold_cost);
+    hatch_eggs:({kind,n})=>{if(n!==1&&n!==10)fail('bad_count');if(D.mons.length+n>slots())fail('box_full');const c=n*(kind==='wild'?C.wild_cost:C.gold_cost);
       if(kind==='wild'&&D.coins<c)fail('not_enough_coins');if(kind==='gold'&&D.amber<c)fail('not_enough_amber');const list=[];for(let i=0;i<n;i++)list.push(F.hatch_egg({kind}));return{list};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
@@ -3094,7 +3107,7 @@ const save=()=>{SafeStore.setItem('amber_mail_read',S.mailRead?'1':'0');};
 function applyState(st){
   if(!st||!st.player)return; const p=st.player;
   Object.assign(S,{name:p.name,lv:p.lv,xp:p.xp,coins:p.coins,amber:p.amber,energy:p.energy,energyMax:p.energy_max,energyNext:p.energy_next,energySec:p.energy_sec,
-    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now(),mailNew:p.mail_new||0,race:p.race||null});
+    amberIn:p.amber_in,daily:p.daily_streak,dailyClaimed:!!p.daily_claimed,quests:p.quests||{},team:(p.team||[]).map(Number),pity:p.pity,pityMax:p.pity_max,slots:p.slots,bag:p.bag||null,named:!!p.named,uid:p.uid||'',stage:p.stage||0,power:p.power||0,need:p.need||0,boss:!!p.boss,idleSec:p.idle_sec||0,idleMax:p.idle_max||28800,rateC:p.rate_c||0,idleAt:Date.now(),mailNew:p.mail_new||0,race:p.race||null});
   if(S.race&&typeof applyRaceTheme==='function')applyRaceTheme(S.race);
   S.mons=(st.monsters||[]).map(m=>({uid:Number(m.id),sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null}));
   if(typeof renderHUD==='function')renderHUD();
@@ -3573,14 +3586,14 @@ function enterGame(){
 /* ---------- อันดับเผ่า (ใต้เหรียญอัมพร): สมาชิกแต่ละเผ่า + TOP 3 (server/migrate_ranking.sql) ---------- */
 const RK={data:null,at:0,busy:false,open:(()=>{try{const v=localStorage.getItem('amber_rk');if(v)return v==='1';}catch(e){}return innerWidth>=700;})()};
 async function loadRank(force){
-  if(NET.mode!=='online'){$('#rankBox').hidden=true;return;}
+  if(NET.mode!=='online'){$('#rankBox').hidden=true;if($('#rRank'))$('#rRank').hidden=true;return;}
   if(RK.busy||(!force&&Date.now()-RK.at<60000))return; RK.busy=true;
   try{RK.data=await api('race_ranking');RK.at=Date.now();renderRank();}catch(e){console.warn('ranking',e);}
   finally{RK.busy=false;}
 }
 function renderRank(){
   const box=$('#rankBox'),L=$('#rkList'),d=RK.data; if(!d||!d.races){box.hidden=true;return;}
-  box.hidden=false; box.classList.toggle('open',RK.open); $('#rkHead').setAttribute('aria-expanded',RK.open); L.innerHTML='';
+  box.hidden=false; if($('#rRank'))$('#rRank').hidden=false; box.classList.toggle('open',RK.open); $('#rkHead').setAttribute('aria-expanded',RK.open); L.innerHTML='';
   RACE_ORDER.forEach(r=>{const R=RACES[r],x=d.races[r]||{members:0,top:[]};
     const w=el('div','rkRace'+(S.race===r?' mine':'')); w.style.setProperty('--rc',R.c);
     const row=el('div','rkRow'); row.append(el('b',null,R.icon+' '+R.n),el('span',null,fmt(x.members)+' คน')); w.append(row);
@@ -4226,6 +4239,9 @@ if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VIS
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.01.3',date:'1 ต.ค. 2026',title:'ขยายกระเป๋า + อันดับเผ่าในเมนู 🎒',items:[
+    '🎒 ขยายคลังมอนสเตอร์ได้ทีละ 10 ช่อง กดปุ่ม + ข้างจำนวนช่องในคลัง (10 → 15 → 20 → 25 → 30 อัมพร) สูงสุด 80 ช่อง',
+    '☰ ปุ่มเมนูบนมือถือกางลงด้านล่างทีละ 5 ปุ่ม เกินแล้วขึ้นแถวใหม่ทางขวา · อันดับเผ่าย้ายเข้าไปอยู่ในเมนู']},
   {ver:'2026.10.01.2',date:'1 ต.ค. 2026',title:'เล่นได้ทั้งแนวตั้งและแนวนอน + ปุ่มเมนูรวม ☰',items:[
     '☰ บนมือถือ ปุ่มด้านซ้าย (วันนี้ รายวัน จดหมาย เพื่อน สำรวจ ไฮดรา ฯลฯ) รวมไว้ในปุ่ม "เมนู" แตะแล้วกางออก มีจุดแดงบอกเมื่อมีของให้รับ',
     '📱 หมุนจอเป็นแนวนอนได้ทั้งฟาร์มและสนามรบ แถบบนบางลง หน้าต่างข้อมูลชิดขวา ไม่บังเกาะ']},
@@ -4408,6 +4424,12 @@ const MENU={open:false};
   // จุดแดงรวมบนปุ่มเมนู
   const dot=b.querySelector('.mbDot');
   setInterval(()=>{order();const on=[...rail.querySelectorAll('.rbtn')].some(x=>!x.hidden&&(x.classList.contains('reddot')||[...x.querySelectorAll('.badge')].some(y=>!y.hidden&&y.textContent.trim()&&y.textContent.trim()!=='0')));dot.hidden=!on;},700);
+  // อันดับเผ่าในเมนู (จอเล็ก): เปิดกล่องอันดับเป็นป๊อปอัป
+  const rk=$('#rRank'),box=$('#rankBox');
+  const rkSet=o=>{document.body.classList.toggle('rankPop',!!o);if(o&&typeof loadRank==='function')loadRank();};
+  if(rk)rk.addEventListener('click',()=>{rkSet(!document.body.classList.contains('rankPop'));});
+  document.addEventListener('pointerdown',e=>{if(document.body.classList.contains('rankPop')&&!e.target.closest('#rankBox,#rRank'))rkSet(false);});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')rkSet(false);});
   order();window.menuSet=set;
 })();
 
@@ -4529,7 +4551,16 @@ function makeThumb(sp,el){
 function boxSpark(p,color,n,speed){for(let i=0;i<n;i++){const g=glow(bScene,color,.18,[p.x,p.y,p.z],1);const v=new THREE.Vector3((Math.random()-.5),Math.random()*.9+.2,(Math.random()-.5)).normalize().multiplyScalar(speed*(.4+Math.random()*.8));const p0=g.position.clone();
   tween(.9+Math.random()*.5,k=>{g.position.copy(p0).addScaledVector(v,k*1.2);g.position.y-=k*k*.6;g.material.opacity=1-k;}).then(()=>{bScene.remove(g);g.material.dispose();});}}
 /* ---------- หน้าต่างมอนสเตอร์ ---------- */
-const CAP=30, stars=n=>tierOf(n).n;
+const stars=n=>tierOf(n).n; let bagAsk=0;
+// ปุ่ม + ขยายกระเป๋า (แตะครั้งแรก = ดูราคา แตะซ้ำภายใน 4 วิ = ซื้อ)
+function bagBtn(){const b=$('#bAdd');if(!b)return;const g=S.bag;
+  if(!g||g.bag_cost==null){b.hidden=true;return;} b.hidden=false;
+  b.classList.toggle('ask',!!bagAsk);b.textContent=bagAsk?'✓':'+';b.dataset.ask='แตะ ✓ อีกครั้งเพื่อขยาย +'+g.bag_step+' ช่อง · '+g.bag_cost+' อัมพร';
+  b.setAttribute('aria-label','ขยายกระเป๋า +'+g.bag_step+' ช่อง ราคา '+g.bag_cost+' อัมพร');}
+async function bagBuy(){const g=S.bag;if(!g||g.bag_cost==null)return;
+  if(!bagAsk){bagAsk=setTimeout(()=>{bagAsk=0;bagBtn();},4000);bagBtn();return;}
+  clearTimeout(bagAsk);bagAsk=0;if(S.amber<g.bag_cost){toast('อัมพรไม่พอ ต้องใช้ '+g.bag_cost+' อัมพร');bagBtn();return;}
+  const r=await act('buy_bag');bagBtn();if(r){if(typeof bumpRes==='function')bumpRes('amber');toast('ขยายกระเป๋าแล้ว! ตอนนี้มี '+r.slots+' ช่อง 🎒');renderBox();}}
 const FLAG='<svg viewBox="0 0 12 12"><path d="M3 1v10M3 1.5h6l-1.6 2.2L9 6H3" fill="#2b1808" stroke="#2b1808" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 const PAW='<svg viewBox="0 0 24 24" fill="#ffd9a0"><ellipse cx="12" cy="16" rx="5" ry="4.2"/><circle cx="6" cy="10" r="2.2"/><circle cx="10" cy="6.5" r="2.2"/><circle cx="14" cy="6.5" r="2.2"/><circle cx="18" cy="10" r="2.2"/></svg>';
 let boxSort='power', boxTab='info';
@@ -4566,11 +4597,11 @@ function renderTeam(){
 }
 function sorted(){return[...S.mons].sort((a,b)=>boxSort==='lv'?b.lv-a.lv:boxSort==='rar'?(spOf(b).rar-spOf(a).rar||b.lv-a.lv):boxSort==='new'?b.uid-a.uid:power(b)-power(a));}
 function renderBox(){
-  $('#bCount').textContent=S.mons.length+'/'+CAP;
+  $('#bCount').textContent=S.mons.length+'/'+S.slots; bagBtn();
   renderTeam();
   const g=$('#bList'); g.innerHTML='';
   sorted().forEach(m=>{const c=icon(m,m.uid===BOX.detail?'sel':'');c.dataset.uid=m.uid;c.onclick=()=>selectMon(m.uid);g.append(c);});
-  for(let i=S.mons.length;i<CAP;i++){const e=el('div','ic empty');e.innerHTML=PAW;g.append(e);}
+  for(let i=S.mons.length;i<S.slots;i++){const e=el('div','ic empty');e.innerHTML=PAW;g.append(e);}
   $('#bSort').value=boxSort;
   renderDetail();
 }
@@ -4697,6 +4728,8 @@ function boxFrame(dt,T){
 $('#nMons').onclick=openBox;
 
 startFarm();
+
+if($('#bAdd'))$('#bAdd').onclick=bagBuy;
 
 })();
 </script>

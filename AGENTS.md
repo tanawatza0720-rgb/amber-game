@@ -327,8 +327,12 @@ python3 build_battle.py && cp battle.html ../battle.html
 - ทั้งสองหน้าต้องขึ้นต้นด้วย `<!doctype html>` + `<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">` (ก่อน 1 ต.ค. 2026 ไม่มี มือถือเลยแสดงแบบจอกว้าง 980px ทุกอย่างเล็กลง ~2.6 เท่า และ media query มือถือไม่ทำงาน) · ห้ามลบ
 - ทดสอบขนาดมือถือ: เบราว์เซอร์ตั้ง viewport 375×812 แล้วเช็ก `innerWidth` ต้องได้ 375 และ `document.compatMode` = `CSS1Compat`
 ## ปุ่มเมนูรวม + แนวนอน — `src/farm_menu.js`, ท้าย CSS ใน `farm_shell.html` / `battle_shell.html`
-- จอเล็ก `(max-width:760px),(max-height:520px)`: `#rail` พับไว้ใต้ `#menuBtn` (☰) กางออกทางขวาแบบ grid แถวละ 5 ปุ่ม · `body.menuOpen` = กาง · แตะปุ่ม/ที่ว่าง/Esc = พับ · `.mbDot` จุดแดงรวมจาก badge/`.reddot` ในราง · คู่มือ (`body.guideOn`) กางรางค้าง · ปุ่มใหม่ในรางใส่ใน `#rail` ตามปกติ จะเข้าเมนูเอง
+- จอเล็ก `(max-width:760px),(max-height:520px)`: `#rail` พับไว้ใต้ `#menuBtn` (☰) กางลงล่างคอลัมน์ละ 5 ปุ่ม (แนวนอน 4) เกินแล้วขึ้นคอลัมน์ใหม่ทางขวา · อันดับเผ่า `#rRank` ในเมนู เปิด `#rankBox` เป็นป๊อปอัป (`body.rankPop`) และ `#rankBox` บนแถบบนซ่อนในจอเล็ก · `body.menuOpen` = กาง · แตะปุ่ม/ที่ว่าง/Esc = พับ · `.mbDot` จุดแดงรวมจาก badge/`.reddot` ในราง · คู่มือ (`body.guideOn`) กางรางค้าง · ปุ่มใหม่ในรางใส่ใน `#rail` ตามปกติ จะเข้าเมนูเอง
 - แนวนอนจอเตี้ย `(orientation:landscape) and (max-height:520px)`: แถบบนบาง/เหรียญเรียงแถว, `#sheet` ชิดขวาเต็มความสูง, สนามรบ `#idle` อยู่กลางล่างระหว่างแถบเลือด
 - ตรวจหน้าตาโดยไม่สร้างบัญชี: `index.html?dbg=1` แล้วเรียก `__F.enterOffline();__F.enterGame()` (เซฟในเครื่อง ลบ `localStorage.amber_local_v2` เมื่อเสร็จ)
+## ขยายกระเป๋า (คลังมอนสเตอร์) — `server/migrate_bag.sql`, `bagBtn/bagBuy` ใน monbox.js
+- `players.bag_ext` ครั้งละ +10 ช่อง สูงสุด 5 ครั้ง (30 → 80) ราคา `_bag_cost(n)` = 10+5n อัมพร (`_bag_c`) · `_slots(u)` แทน `_c('slots')` ในทุกฟังก์ชัน (_state, hatch_egg, hatch_eggs, hatch_god_egg, friend_raid) · RPC `buy_bag()` · `_state.player.bag` = {bag_ext,bag_max,bag_step,bag_cost}
+- ⚠️ ฟังก์ชันใหม่ที่เช็กช่องว่างต้องใช้ `public._slots(u)` ไม่ใช่ `_c('slots')`
+- client: ปุ่ม `#bAdd` (+) ในหัวคลัง แตะครั้งแรกแสดงราคา แตะซ้ำภายใน 4 วิ = ซื้อ · ออฟไลน์ (`LOCAL.buy_bag`) กติกาเดียวกัน
 ## งานค้าง (ยังไม่ได้ทำ)
 - (ว่าง)

@@ -7,7 +7,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
+const ERR={bag_max:'ขยายกระเป๋าได้สูงสุดแล้ว',pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -87,6 +87,8 @@ const LOCAL=(()=>{
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
   const fail=c=>{throw Object.assign(new Error(c),{code:c});};
+  // กระเป๋า: +10 ช่องต่อครั้ง สูงสุด 5 ครั้ง ราคา 10+5×ครั้ง อัมพร (ตรงกับ migrate_bag.sql)
+  const BAG={step:10,max:5,cost:n=>10+5*n}, slots=()=>C.slots+BAG.step*(D.bag_ext||0);
   function load(){
     try{D=JSON.parse(SafeStore.getItem(KEY));}catch(e){D=null;}
     if(!D){ // สร้างใหม่ (ย้ายของเดิมจากเดโมถ้ามี)
@@ -110,18 +112,19 @@ const LOCAL=(()=>{
   function state(){const now=Date.now();return{player:{name:D.name,lv:D.lv,xp:D.xp,coins:D.coins,amber:D.amber,energy:D.energy,energy_max:C.energy_max,
     energy_next:D.energy>=C.energy_max?0:Math.max(0,C.energy_sec-Math.floor((now-D.energy_at)/1000)),energy_sec:C.energy_sec,
     amber_in:Math.max(0,Math.ceil((D.amber_at-now)/1000)),daily_streak:D.daily_streak,daily_claimed:D.daily_last===today(),hatch_count:D.hatch_count,
-    race:D.race||null,pity:D.pity,pity_max:C.pity_max,quests:{...D.quests},team:[...D.team],slots:C.slots,named:!!D.named,uid:'ในเครื่องนี้'},monsters:D.mons.map(m=>({...m}))};}
+    race:D.race||null,pity:D.pity,pity_max:C.pity_max,quests:{...D.quests},team:[...D.team],slots:slots(),bag:{bag_ext:D.bag_ext||0,bag_max:BAG.max,bag_step:BAG.step,bag_cost:(D.bag_ext||0)>=BAG.max?null:BAG.cost(D.bag_ext||0)},named:!!D.named,uid:'ในเครื่องนี้'},monsters:D.mons.map(m=>({...m}))};}
   const mon=id=>D.mons.find(m=>m.id===id)||fail('no_monster');
   const F={
     game_state:()=>state(),
+    buy_bag:()=>{const n=D.bag_ext||0;if(n>=BAG.max)fail('bag_max');const c=BAG.cost(n);if(D.amber<c)fail('not_enough_amber');D.amber-=c;D.bag_ext=n+1;return{slots:slots(),cost:c};},
     set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>12)fail('bad_name');D.name=n;D.named=true;return{};},
-    hatch_egg:({kind})=>{if(D.mons.length>=C.slots)fail('box_full');let ch;
+    hatch_egg:({kind})=>{if(D.mons.length>=slots())fail('box_full');let ch;
       if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=[.83,.15,.02,0];}
       else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=[.575,.32,.10,.005];}else fail('bad_egg');
       const r=Math.random(); let t=r<ch[3]?4:r<ch[3]+ch[2]?3:r<ch[3]+ch[2]+ch[1]?2:1; if(kind==='gold'&&t<3&&D.pity>=C.pity_max)t=3;
       const pool=Object.keys(SPS).filter(k=>SPS[k].rar===t), sp=pool[Math.floor(Math.random()*pool.length)]||'kazemaru'; if(kind==='gold'&&t>=3)D.pity=0;
       const m={id:D.nid++,sp,lv:1,stars:0,el:EL_LIST[Math.floor(Math.random()*EL_LIST.length)]};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
-    hatch_eggs:({kind,n})=>{if(n!==1&&n!==10)fail('bad_count');if(D.mons.length+n>C.slots)fail('box_full');const c=n*(kind==='wild'?C.wild_cost:C.gold_cost);
+    hatch_eggs:({kind,n})=>{if(n!==1&&n!==10)fail('bad_count');if(D.mons.length+n>slots())fail('box_full');const c=n*(kind==='wild'?C.wild_cost:C.gold_cost);
       if(kind==='wild'&&D.coins<c)fail('not_enough_coins');if(kind==='gold'&&D.amber<c)fail('not_enough_amber');const list=[];for(let i=0;i<n;i++)list.push(F.hatch_egg({kind}));return{list};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
