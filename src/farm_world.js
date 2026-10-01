@@ -355,7 +355,7 @@ const POLLEN=[];for(let i=0;i<40;i++){const s=glow(scene,0xfff6c8,.18,[(Math.ran
 const BIRDS=[];{const bm=new THREE.MeshBasicMaterial({color:0x2a2a33,side:THREE.DoubleSide});
   for(let i=0;i<7;i++){const g=new THREE.Group();const ws=[-1,1].map(sx=>{const w=new THREE.Mesh(new THREE.PlaneGeometry(.7,.18),bm);w.position.x=sx*.35;g.add(w);return w;});g.userData.w=ws;g.userData.p=[Math.random()*6,26+Math.random()*10,9+Math.random()*5,.12+Math.random()*.06];scene.add(g);BIRDS.push(g);}}
 function worldTick(dt,T){
-  WIND.value=T; if(typeof raceWorldTick==='function')raceWorldTick(dt,T); if(typeof raidTick==='function')raidTick(dt,T); if(typeof portalTick==='function')portalTick(dt,T); if(typeof colTick==='function')colTick(dt,T);
+  WIND.value=T; if(typeof raceWorldTick==='function')raceWorldTick(dt,T); if(typeof raidTick==='function')raidTick(dt,T); if(typeof portalTick==='function')portalTick(dt,T); if(typeof colTick==='function')colTick(dt,T); if(typeof altarTick==='function')altarTick(dt,T);
   streamT.offset.y-=dt*.6; edgeFallT.offset.y+=dt*1.6;
   clouds.forEach(c=>{if(!c.userData.v)return;c.position.x+=c.userData.v*dt;if(c.position.x>90)c.position.x=-90;});
   MIST.forEach(m=>{const [a,p]=m.userData.p;m.position.y=p.y+Math.sin(T*.8+a)*.4;m.material.opacity=.18+.12*Math.sin(T*1.3+a);});

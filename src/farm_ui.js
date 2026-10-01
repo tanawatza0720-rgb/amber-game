@@ -113,11 +113,12 @@ $('#rEvent').onclick=()=>openSheet('กิจกรรม','',para('กิจก
 /* ---------- ฟักไข่ในฟาร์ม (เซิร์ฟเวอร์สุ่มผล) ---------- */
 let hatching=false;
 async function hatch(kind,name){
-  if(hatching)return; hatching=true; closeSheet(); camTTo.set(0,0,5); distTo=FARM_ZMIN;
+  if(hatching)return; if(typeof altarOverflow==='function'&&altarOverflow(1,()=>hatch(kind,name)))return;
+  hatching=true; closeSheet(); camTTo.set(0,0,5); distTo=FARM_ZMIN;
   const shake=tween(1.4,t=>{hatchEggMat.emissiveIntensity=.25+t*2.5;hatchEgg.rotation.y+=.2+t*.6;hatchEgg.position.y=2.15+Math.sin(t*40)*.03*t;});
-  const r=await act(kind==='god'?'hatch_god_egg':'hatch_egg',kind==='god'?{}:{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
+  const r=await act(kind==='god'?'hatch_god_egg':kind==='soulgold'?'soul_buy':'hatch_egg',kind==='god'?{}:kind==='soulgold'?{item:'gold'}:{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
-  if(kind==='god'){if(r.stage&&typeof stageApply==='function')stageApply(r.stage);}else bumpRes(kind==='gold'?'amber':'coins');
+  if(kind==='soulgold'){if(typeof ALT!=='undefined'&&r.souls!=null)ALT.souls=r.souls;}else if(kind==='god'){if(r.stage&&typeof stageApply==='function')stageApply(r.stage);}else bumpRes(kind==='gold'?'amber':'coins');
   const col=tierOf(r.rar).hx;
   const ep=new THREE.Vector3(0,2.15,3.2);
   flashBall(ep,col,r.rar>=4?6:r.rar>=3?5:4); particles(ep,col,r.rar>=4?120:r.rar>=3?85:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
@@ -132,7 +133,7 @@ async function hatch(kind,name){
 }
 // ฟักทีละ 10 ใบ: ฟักที่เซิร์ฟเวอร์ครั้งเดียว แล้วแสดงผลรวม (ตัวหายากสุดเล่นเอฟเฟกต์)
 async function hatchMulti(kind,name){
-  if(hatching)return; if(S.mons.length+10>S.slots){toast('ช่องเก็บไม่พอ ต้องว่างอย่างน้อย 10 ช่อง');return;}
+  if(hatching)return; if(S.mons.length+10>S.slots){if(typeof altarOverflow==='function'&&altarOverflow(10,()=>hatchMulti(kind,name)))return;toast('ช่องเก็บไม่พอ ต้องว่างอย่างน้อย 10 ช่อง');return;}
   hatching=true; closeSheet(); camTTo.set(0,0,5); distTo=FARM_ZMIN;
   const shake=tween(1.8,t=>{hatchEggMat.emissiveIntensity=.25+t*3;hatchEgg.rotation.y+=.25+t*.8;hatchEgg.position.y=2.15+Math.sin(t*45)*.04*t;});
   const r=await act('hatch_eggs',{kind,n:10}); await shake; hatchEggMat.emissiveIntensity=.25;

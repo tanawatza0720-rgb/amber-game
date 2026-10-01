@@ -410,3 +410,11 @@ python3 build_battle.py && cp battle.html ../battle.html
 - สีประจำตัวทับสีธาตุ `FX_SIG` (เช่น ซาราเอล ส้มไฟ/ขาว) · ชิ้นส่วน: `fxSlash` (แถบจันทร์เสี้ยว shader กวาดแล้วจาง) · `fxImpact` (แฟลช + เส้นพุ่ง + วง) · `fxRune` (วงเวท canvas) · `fxPillar` (เสาแสง shader) · `fxLeapTele`/`fxLeapLand` (วงเตือน → เสา คลื่น รอยแตก เศษหิน `fxElement` ตามธาตุ) · `fxCometTrail`/`fxBoltHit` · `fxMeteorTrail`/`fxRainLand`/`fxRainEnd` (อนุบิส = พายุทราย) · `fxHealCast`/`fxHealOn` · `fxUltStart` (ไม้ตายทุกแบบยกเว้นฮีล) · `fxScreen` แฟลชจอ `#fxFlash` **ปิดแล้ว** (เจ้าของไม่ชอบ) · แฟลชขาวตอนโดนเปลี่ยนเป็นสีธาตุ · `FX_BRIGHT=.6` คุมความสว่างสไปรต์ทั้งหมด · เสาแสงไม่มีแกนขาวแล้ว (มือถือกล้องใกล้ เสาเคยทำจอขาว)
 - จุดเรียกอยู่ใน battle_rt.js (`rtUse`, `rigCast`, `rigRain`, `rigHeal`) · สไปรต์เอฟเฟกต์ `depthTest:false` (กล้องมองจากบน ถ้าทดสอบความลึกครึ่งล่างจมพื้นจนแทบมองไม่เห็น) · ไม่สร้างไฟ · geometry/texture ใช้ร่วม `FX2G`/`FX2T` material ต่อชิ้นแล้ว dispose
 - ทดสอบ (?dbg=1): `__B.use(sp,'s1'|'s2'|'s3')` สั่งใช้สกิล · `__B.slow(k)` ปรับเวลาเกม (แช่แข็งถ่ายภาพ: `slow(.0001)`) · `__B.fx.*` เรียกชิ้นเอฟเฟกต์ตรง · ⚠️ ทางลาก (sword trail) เดิมใน swiftshader เป็นแผ่นสามเหลี่ยมขาวเพราะเฟรมต่ำ ไม่ใช่บั๊กของชุดนี้
+
+## แท่นบูชาวิญญาณ (1 ต.ค. 2026) — `src/farm_altar.js` (build ต่อจาก farm_war.js) · `server/migrate_altar.sql`
+- RPC: `altar_state()` · `soul_sacrifice(ids bigint[])` (1–200 ตัว ทุกตัวต้องเป็น rar 1 + stars 0 + ไม่อยู่ในทีม ไม่งั้นยกเลิกทั้งชุด: altar_count/altar_team/altar_bad) · `soul_buy('gold'|'god')` (gold = เติมอัมพรเท่า gold_cost แล้วเรียก hatch_egg('gold') ในธุรกรรมเดียว → อัตรา/pity เดียวกัน · กระเป๋าเต็ม = box_full ย้อนทั้งหมด) · แลกอัมพรใช้ `soul_exchange` เดิม
+- วิญญาณที่ได้: `_soul_of(lv)` Lv<10 = 1 · ≥10 = 2 · ราคาใน `_altar_c` (gold 30 · god 200 · batch 200)
+- ไคลเอนต์: building 'altar' (ตำแหน่งแรกที่ว่างจาก spots ในไฟล์) · `INFO.altar=openAltar` · ออนไลน์เท่านั้น · `hatch('soulgold',…)` = ฟักไข่ทองด้วยวิญญาณ
+- กระเป๋าเต็ม: `hatch()`/`hatchMulti()` เรียก `altarOverflow(need,retry)` ก่อน → ชีตเสนอสังเวยตัวทั่วไปที่ไม่ได้ใช้ทั้งหมดแล้วฟักต่อ
+- ไฟวิญญาณใช้ NormalBlending (additive บนหญ้าสว่างกลายเป็นสีขาว) · ไม่มี flashBall
+- ดีบัก `index.html?dbg=1`: `__F.altar(souls,lvBelow)` · `__F.altarFull()` · `__F.burst(n)` · `__F.cam(x,z,dist)`
