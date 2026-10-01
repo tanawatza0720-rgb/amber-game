@@ -57,7 +57,8 @@ const fxFlashTex=()=>fxCanvasTex('flash',(g,S)=>{const c=S/2,grd=g.createRadialG
 const fxSprite=(color,size,pos,op,map)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:map||fxFlashTex(),color,transparent:true,opacity:op==null?1:op,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,fog:false}));s.renderOrder=20;s.scale.set(size,size,1);s.position.copy(pos);return fxAdd(s);};
 const fxN=n=>Math.max(1,Math.round(n*(LOW?.45:1)));
 // แฟลชจอ (DOM) สีจาง ๆ ตอนไม้ตาย/โดนแรง
-function fxScreen(color,o){const e=document.getElementById('fxFlash');if(!e)return;const c=new THREE.Color(color);
+function fxScreen(color,o){return; // ปิดแฟลชจอ (เจ้าของไม่ชอบ 1 ต.ค. 2026)
+  const e=document.getElementById('fxFlash');if(!e)return;const c=new THREE.Color(color);
   e.style.background=`radial-gradient(circle at 50% 55%,rgba(255,255,255,${.55*(o||1)}),rgba(${c.r*255|0},${c.g*255|0},${c.b*255|0},${.35*(o||1)}) 45%,rgba(0,0,0,0) 80%)`;
   e.classList.remove('on');void e.offsetWidth;e.classList.add('on');}
 
@@ -80,8 +81,8 @@ function fxSlash(u,t,opt){
 /* ---------- ระเบิดตอนโดน: แฟลช + เส้นพุ่งรอบทิศ + วงกระแทก ---------- */
 function fxImpact(pos,u,opt){
   opt=opt||{}; const [c1,c2]=u?fxCol(u):[opt.c||0xffffff,0xffffff], K=(u?fxK(u):1)*(opt.k||1);
-  const f=fxSprite(c2,1.6*K,pos,1), f2=fxSprite(c1,2.8*K,pos,.7);
-  tween(.22,k=>{f.scale.setScalar(1.6*K*(1+k*.6));f.material.opacity=1-k;f2.scale.setScalar(2.8*K*(1+k*.4));f2.material.opacity=.7*(1-k);}).then(()=>fxKill(f,f2));
+  const f=fxSprite(c2,1.1*K,pos,.55), f2=fxSprite(c1,2.2*K,pos,.5);
+  tween(.22,k=>{f.scale.setScalar(1.1*K*(1+k*.6));f.material.opacity=.55*(1-k);f2.scale.setScalar(2.2*K*(1+k*.4));f2.material.opacity=.5*(1-k);}).then(()=>fxKill(f,f2));
   const n=fxN(opt.rays||7);
   for(let i=0;i<n;i++){const s=fxSprite(i%2?c1:c2,1,pos,1);const a=Math.random()*6.283,L=(.9+Math.random()*.9)*K;
     s.material.rotation=a; s.scale.set(.16*K,L,1);
