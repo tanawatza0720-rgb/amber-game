@@ -41,7 +41,7 @@ const FX_ARC_FS='uniform vec3 c1,c2;uniform float k,f;varying vec2 vU;void main(
 // เสาแสง: ทรงกระบอกเปิด จางขึ้นบน มีริ้วเลื่อนขึ้น
 const FX_COL_VS='varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}';
 const FX_COL_FS='uniform vec3 c1,c2;uniform float t,o;varying vec2 vU;void main(){float y=vU.y;float st=.6+.4*sin(vU.x*37.7+t*3.)*sin(vU.x*12.6-t*2.);'+
-  'float a=(1.-y)*(1.-y)*smoothstep(0.,.08,y)*o*(.55+.45*st);float stripe=smoothstep(.85,1.,fract(y*3.-t*1.6));gl_FragColor=vec4(mix(c1,c2,.35+.5*stripe),a*(1.+stripe));}';
+  'float a=(1.-y)*(1.-y)*smoothstep(0.,.08,y)*o*.45*(.55+.45*st);float stripe=smoothstep(.85,1.,fract(y*3.-t*1.6));gl_FragColor=vec4(mix(c1,c2,.2+.35*stripe),a*(1.+.5*stripe));}';
 const fxCylGeo=()=>FX2G.cyl||(FX2G.cyl=new THREE.CylinderGeometry(1,1,1,28,1,true).translate(0,.5,0));
 const fxPlane=()=>FX2G.plane||(FX2G.plane=new THREE.PlaneGeometry(1,1));
 const fxCone=()=>FX2G.cone||(FX2G.cone=new THREE.ConeGeometry(.22,1,6).translate(0,.5,0));
@@ -54,7 +54,8 @@ const fxBasic=(color,op,map)=>new THREE.MeshBasicMaterial({color,map:map||null,t
 // แสงแฟลช: แกนขาวจัด ขอบจางเร็ว (สว่างกว่า TX.glow)
 const fxFlashTex=()=>fxCanvasTex('flash',(g,S)=>{const c=S/2,grd=g.createRadialGradient(c,c,0,c,c,c);grd.addColorStop(0,'rgba(255,255,255,1)');grd.addColorStop(.18,'rgba(255,255,255,.95)');grd.addColorStop(.4,'rgba(255,255,255,.4)');grd.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=grd;g.fillRect(0,0,S,S);},128);
 // สไปรต์เอฟเฟกต์: ไม่ทดสอบความลึก (กล้องมองจากบนลงล่าง ครึ่งล่างของสไปรต์จะจมพื้นถ้าทดสอบ)
-const fxSprite=(color,size,pos,op,map)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:map||fxFlashTex(),color,transparent:true,opacity:op==null?1:op,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,fog:false}));s.renderOrder=20;s.scale.set(size,size,1);s.position.copy(pos);return fxAdd(s);};
+const FX_BRIGHT=.6; // ความสว่างรวมของเอฟเฟกต์ (เจ้าของไม่อยากให้จอขาวจ้า)
+const fxSprite=(color,size,pos,op,map)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:map||fxFlashTex(),color,transparent:true,opacity:(op==null?1:op)*FX_BRIGHT,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,fog:false}));s.renderOrder=20;s.scale.set(size,size,1);s.position.copy(pos);return fxAdd(s);};
 const fxN=n=>Math.max(1,Math.round(n*(LOW?.45:1)));
 // แฟลชจอ (DOM) สีจาง ๆ ตอนไม้ตาย/โดนแรง
 function fxScreen(color,o){return; // ปิดแฟลชจอ (เจ้าของไม่ชอบ 1 ต.ค. 2026)
@@ -81,13 +82,13 @@ function fxSlash(u,t,opt){
 /* ---------- ระเบิดตอนโดน: แฟลช + เส้นพุ่งรอบทิศ + วงกระแทก ---------- */
 function fxImpact(pos,u,opt){
   opt=opt||{}; const [c1,c2]=u?fxCol(u):[opt.c||0xffffff,0xffffff], K=(u?fxK(u):1)*(opt.k||1);
-  const f=fxSprite(c2,1.1*K,pos,.55), f2=fxSprite(c1,2.2*K,pos,.5);
-  tween(.22,k=>{f.scale.setScalar(1.1*K*(1+k*.6));f.material.opacity=.55*(1-k);f2.scale.setScalar(2.2*K*(1+k*.4));f2.material.opacity=.5*(1-k);}).then(()=>fxKill(f,f2));
+  const f=fxSprite(c1,1*K,pos,.6), f2=fxSprite(c1,1.8*K,pos,.4);
+  tween(.22,k=>{f.scale.setScalar(1*K*(1+k*.6));f.material.opacity=(.55*(1-k))*FX_BRIGHT;f2.scale.setScalar(1.8*K*(1+k*.4));f2.material.opacity=(.5*(1-k))*FX_BRIGHT;}).then(()=>fxKill(f,f2));
   const n=fxN(opt.rays||7);
   for(let i=0;i<n;i++){const s=fxSprite(i%2?c1:c2,1,pos,1);const a=Math.random()*6.283,L=(.9+Math.random()*.9)*K;
     s.material.rotation=a; s.scale.set(.16*K,L,1);
     const off=new THREE.Vector3(-Math.sin(a),Math.cos(a),0);
-    tween(.26+Math.random()*.1,k=>{s.position.copy(pos).addScaledVector(off,k*L*.6);s.scale.y=L*(1-k*.6);s.material.opacity=1-k;},easeOut).then(()=>fxKill(s));}
+    tween(.26+Math.random()*.1,k=>{s.position.copy(pos).addScaledVector(off,k*L*.6);s.scale.y=L*(1-k*.6);s.material.opacity=(1-k)*FX_BRIGHT;},easeOut).then(()=>fxKill(s));}
   if(!opt.noRing)fxRing(pos,c1,.9*K,.45);
 }
 // วงคลื่นที่พื้น
@@ -104,8 +105,7 @@ function fxPillar(pos,c1,c2,r,h,dur){
   const m=new THREE.ShaderMaterial({vertexShader:FX_COL_VS,fragmentShader:FX_COL_FS,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
     uniforms:{c1:{value:new THREE.Color(c1)},c2:{value:new THREE.Color(c2)},t:{value:0},o:{value:0}}});
   const p=new THREE.Mesh(fxCylGeo(),m);p.position.copy(pos).setY(0);p.scale.set(r,h,r);fxAdd(p);
-  const core=new THREE.Mesh(fxCylGeo(),m.clone());core.material.uniforms.c1.value=new THREE.Color(c2);core.position.copy(p.position);core.scale.set(r*.35,h*1.05,r*.35);fxAdd(core);
-  return tween(dur,k=>{const o=k<.15?k/.15:1-(k-.15)/.85;[m,core.material].forEach(x=>{x.uniforms.t.value=k*dur*3;x.uniforms.o.value=o;});p.scale.x=p.scale.z=r*(1+k*.5);},).then(()=>{fxKill(p,core);});
+  return tween(dur,k=>{const o=k<.15?k/.15:1-(k-.15)/.85;m.uniforms.t.value=k*dur*3;m.uniforms.o.value=o*.6;p.scale.x=p.scale.z=r*(1+k*.5);},).then(()=>{fxKill(p);});
 }
 
 /* ---------- ไม้ตาย: แฟลชจอ + ระเบิดพลังรอบตัวก่อนออกท่า ---------- */
@@ -113,9 +113,9 @@ function fxUltStart(u){
   if(!fxOn(u))return; const [c1,c2]=fxCol(u),K=fxK(u),p=u.w.position.clone();
   fxRune(p,c1,2.2*K,.9,2.4); fxRing(p,c2,1.1*K,.5);
   const n=fxN(14);for(let i=0;i<n;i++){const a=i/n*6.283,s=fxSprite(i%2?c1:c2,.22*K,p.clone().add(new THREE.Vector3(Math.cos(a)*.9*K,.1,Math.sin(a)*.9*K)),1);
-    tween(.7,k=>{const r=.9*K*(1-k*.8);s.position.set(p.x+Math.cos(a+k*3)*r,.1+k*2.2*K,p.z+Math.sin(a+k*3)*r);s.material.opacity=1-k*k;}).then(()=>fxKill(s));}
+    tween(.7,k=>{const r=.9*K*(1-k*.8);s.position.set(p.x+Math.cos(a+k*3)*r,.1+k*2.2*K,p.z+Math.sin(a+k*3)*r);s.material.opacity=(1-k*k)*FX_BRIGHT;}).then(()=>fxKill(s));}
   if(u.side==='P'||u.boss)fxScreen(c1,fxTier(u)>=4?1:.7);
-  if(fxTier(u)>=4)fxPillar(p,c1,c2,.8*K,5*K,.9);
+  if(fxTier(u)>=4)fxPillar(p,c1,c2,.6*K,4*K,.8);
 }
 
 /* ---------- กระโดดฟัน/ดิ่งลง ---------- */
@@ -141,29 +141,29 @@ function fxLeapLand(u,c){
 function fxElement(el,c,u,K){
   const [c1,c2]=fxCol(u);
   if(el==='ไฟ'){const n=fxN(10);for(let i=0;i<n;i++){const a=Math.random()*6.283,r=Math.random()*1.6*K,s=fxSprite(i%3?0xff7a1a:0xffd27a,.7*K,c.clone().add(new THREE.Vector3(Math.cos(a)*r,.2,Math.sin(a)*r)),.9);
-      const d=.6+Math.random()*.5;tween(d,k=>{s.position.y=.2+k*2.4*K;s.scale.setScalar(.7*K*(1-k*.6));s.material.opacity=.9*(1-k);}).then(()=>fxKill(s));}}
+      const d=.6+Math.random()*.5;tween(d,k=>{s.position.y=.2+k*2.4*K;s.scale.setScalar(.7*K*(1-k*.6));s.material.opacity=(.9*(1-k))*FX_BRIGHT;}).then(()=>fxKill(s));}}
   else if(el==='น้ำ'){const n=fxN(16);for(let i=0;i<n;i++){const a=i/n*6.283,s=fxSprite(i%2?0x8fe4ff:0xeaffff,.28*K,c.clone().setY(.2),1);const v=new THREE.Vector3(Math.cos(a)*2.4*K,4+Math.random()*2,Math.sin(a)*2.4*K);
-      tween(.8,k=>{s.position.set(c.x+v.x*k*.5,.2+v.y*k*.5-4.9*k*k*.5*1.6,c.z+v.z*k*.5);s.material.opacity=1-k;}).then(()=>fxKill(s));}
+      tween(.8,k=>{s.position.set(c.x+v.x*k*.5,.2+v.y*k*.5-4.9*k*k*.5*1.6,c.z+v.z*k*.5);s.material.opacity=(1-k)*FX_BRIGHT;}).then(()=>fxKill(s));}
       fxPillar(c,0x3aa8ff,0xeaffff,.4*K,3*K,.6);}
   else if(el==='ลม'){const n=fxN(18);for(let i=0;i<n;i++){const ph=i/n*6.283,s=fxSprite(i%2?0x8ff0c8:0xf0fff6,.3*K,c,.9);
-      tween(1,k=>{const r=(.5+k*1.2)*K,a=ph+k*9;s.position.set(c.x+Math.cos(a)*r,.2+k*3*K*(.4+(i%5)/8),c.z+Math.sin(a)*r);s.material.opacity=.9*(1-k);}).then(()=>fxKill(s));}}
+      tween(1,k=>{const r=(.5+k*1.2)*K,a=ph+k*9;s.position.set(c.x+Math.cos(a)*r,.2+k*3*K*(.4+(i%5)/8),c.z+Math.sin(a)*r);s.material.opacity=(.9*(1-k))*FX_BRIGHT;}).then(()=>fxKill(s));}}
   else if(el==='ดิน'){const n=fxN(7),mat=new THREE.MeshLambertMaterial({color:0x6a5236,flatShading:true});const sp=[];
       for(let i=0;i<n;i++){const a=i/n*6.283+Math.random()*.4,r=(.8+Math.random()*.7)*K,m=new THREE.Mesh(fxCone(),mat);m.position.set(c.x+Math.cos(a)*r,0,c.z+Math.sin(a)*r);
         m.rotation.set(Math.sin(a)*.35,0,-Math.cos(a)*.35);m.scale.set(K,.01,K);fxAdd(m);sp.push(m);}
       tween(.25,k=>sp.forEach(m=>m.scale.y=k*1.4*K),easeOut).then(()=>wait(500)).then(()=>tween(.35,k=>sp.forEach(m=>m.scale.y=1.4*K*(1-k)))).then(()=>{sp.forEach(m=>scene.remove(m));mat.dispose();});}
   else if(el==='แสง'){const n=fxN(8);for(let i=0;i<n;i++){const a=i/n*3.14,s=new THREE.Mesh(fxPlane(),fxBasic(0xfff6c0,0,fxStreakTex()));s.position.copy(c).setY(2.2*K);s.rotation.y=a;s.scale.set(.5*K,4.4*K,1);fxAdd(s);
-      tween(.7,k=>{s.material.opacity=Math.sin(k*Math.PI)*.9;s.rotation.y=a+k*.6;}).then(()=>fxKill(s));}}
+      tween(.7,k=>{s.material.opacity=(Math.sin(k*Math.PI)*.9)*FX_BRIGHT;s.rotation.y=a+k*.6;}).then(()=>fxKill(s));}}
   else if(el==='มืด'){const v=fxSprite(0x5a1ab8,3.2*K,c.clone().setY(.8),.9),v2=fxSprite(0xc890ff,1.2*K,c.clone().setY(.8),1);
-      tween(.6,k=>{v.scale.setScalar(3.2*K*(1-k*.85));v.material.opacity=.9*(1-k*.5);v2.material.opacity=1-k;}).then(()=>{fxKill(v,v2);fxImpact(c.clone().setY(.8),null,{c:0xb070ff,k:1.4*K});});}
+      tween(.6,k=>{v.scale.setScalar(3.2*K*(1-k*.85));v.material.opacity=(.9*(1-k*.5))*FX_BRIGHT;v2.material.opacity=(1-k)*FX_BRIGHT;}).then(()=>{fxKill(v,v2);fxImpact(c.clone().setY(.8),null,{c:0xb070ff,k:1.4*K});});}
 }
 // ขนนกเปลวไฟสองสี (ซาราเอล)
 function fxFeathers(p,K){const n=fxN(18);for(let i=0;i<n;i++){const s=fxSprite(i%2?0xfff2d0:0xff3a2a,.32*K,p,1);s.scale.set(.14*K,.5*K,1);const a=Math.random()*6.283,up=Math.random()*2+1;
   const v=new THREE.Vector3(Math.cos(a)*3*K,up,Math.sin(a)*3*K);s.material.rotation=Math.random()*6;
-  tween(1.2,k=>{s.position.set(p.x+v.x*k,p.y+v.y*k-1.2*k*k,p.z+v.z*k);s.material.rotation+=.08;s.material.opacity=1-k;}).then(()=>fxKill(s));}}
+  tween(1.2,k=>{s.position.set(p.x+v.x*k,p.y+v.y*k-1.2*k*k,p.z+v.z*k);s.material.rotation+=.08;s.material.opacity=(1-k)*FX_BRIGHT;}).then(()=>fxKill(s));}}
 
 /* ---------- ลูกพลังมีหางดาวหาง (ใช้แทนลูกไฟเดิมใน rigCast) ---------- */
 function fxCometTrail(u,g,k){if(!fxOn(u)||Math.random()>(LOW?.35:.8))return;const [c1,c2]=fxCol(u),s=fxSprite(Math.random()<.5?c1:c2,.32*fxK(u),g.position,.85);
-  tween(.35,q=>{s.scale.setScalar(.32*fxK(u)*(1-q));s.material.opacity=.85*(1-q);}).then(()=>fxKill(s));}
+  tween(.35,q=>{s.scale.setScalar(.32*fxK(u)*(1-q));s.material.opacity=(.85*(1-q))*FX_BRIGHT;}).then(()=>fxKill(s));}
 function fxBoltHit(u,pos){if(!fxOn(u))return;fxImpact(pos,u,{k:.9,rays:6});}
 
 /* ---------- ฝนดาวตก/พายุทราย ---------- */
@@ -171,14 +171,14 @@ function fxMeteorTrail(u,g){fxCometTrail(u,g);if(fxOn(u)&&fxTier(u)>=3&&Math.ran
 function fxRainLand(u,pos){if(!fxOn(u))return;fxImpact(pos,u,{k:1,rays:8});fxRing(pos,fxCol(u)[0],.9*fxK(u),.45);}
 function fxRainEnd(u,c){if(!fxOn(u))return;const [c1,c2]=fxCol(u),K=fxK(u);
   if(u.sp==='anubis'){const n=fxN(26);for(let i=0;i<n;i++){const ph=Math.random()*6.283,s=fxSprite(i%3?0xe8c47a:0x9a5cff,(.35+Math.random()*.4)*K,c,.8);
-      tween(1.4,k=>{const r=(.4+k*2)*K,a=ph+k*7;s.position.set(c.x+Math.cos(a)*r,.2+k*3.4*K*((i%7)/7+.3),c.z+Math.sin(a)*r);s.material.opacity=.8*Math.sin(k*Math.PI);}).then(()=>fxKill(s));}}
+      tween(1.4,k=>{const r=(.4+k*2)*K,a=ph+k*7;s.position.set(c.x+Math.cos(a)*r,.2+k*3.4*K*((i%7)/7+.3),c.z+Math.sin(a)*r);s.material.opacity=(.8*Math.sin(k*Math.PI))*FX_BRIGHT;}).then(()=>fxKill(s));}}
   fxPillar(c,c1,c2,.9*K,3.2*K,.8); fxRune(c,c1,3*K,1,1.8); if(u.side==='P')fxScreen(c1,.6);}
 
 /* ---------- ฮีล ---------- */
 function fxHealCast(u){const [c1,c2]=fxCol(u),K=fxK(u)||1,p=u.w.position.clone();fxRune(p,c1,2.2*K,1,1.4);fxPillar(p,c1,c2,.5*K,2.6*K,.8);}
 function fxHealOn(u,f){const [c1,c2]=fxCol(u),p=f.w.position.clone();fxRune(p,c1,1.5,.8,2);fxPillar(p,c1,c2,.38,2.2,.7);
   const n=fxN(10);for(let i=0;i<n;i++){const ph=i/n*6.283,s=fxSprite(i%2?c1:c2,.18,p,1);
-    tween(.9,k=>{const a=ph+k*6,r=.55*(1-k*.4);s.position.set(p.x+Math.cos(a)*r,.1+k*2,p.z+Math.sin(a)*r);s.material.opacity=1-k;}).then(()=>fxKill(s));}}
+    tween(.9,k=>{const a=ph+k*6,r=.55*(1-k*.4);s.position.set(p.x+Math.cos(a)*r,.1+k*2,p.z+Math.sin(a)*r);s.material.opacity=(1-k)*FX_BRIGHT;}).then(()=>fxKill(s));}}
 
 /* ---------- ไฟลุกที่พื้นหลังมังกรพ่นไฟ / ดิ่งลง ---------- */
 function fxDragonGround(u,c){if(!fxOn(u))return;fxLeapLand(u,c);}
