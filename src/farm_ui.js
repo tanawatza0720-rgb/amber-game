@@ -189,6 +189,7 @@ function tap(cx,cy){
   if(o.userData.agent!=null){const ag=AGENTS[o.userData.agent];tagAgent=ag;const t=$('#mtag');t.hidden=false;
     $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent=tierOf(spOf(ag.data).rar).n+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
     const w=ag.w; tween(.3,t=>w.position.y=Math.sin(t*Math.PI)*.4); return;}
+  if(o.userData.portal&&typeof openPortal==='function'){openPortal();return;}
   if(o.userData.raid){openRaid();return;}
   if(o===amberBubble&&amberReady){collectAmber();return;}
   if(o.userData.pick)focusBuilding(o.userData.pick);
@@ -360,7 +361,7 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
 }
 
 // ดีบัก: index.html?dbg=1 เปิด window.__F (เข้าโหมดออฟไลน์เพื่อตรวจหน้าตาโดยไม่สร้างบัญชี)
-if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
+if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,get PORTAL(){return PORTAL;},camT,camTTo,setDist:d=>{distTo=d;},enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
 
 // แตะแถบพลังงาน = เปิดหน้ากวาดด่าน
 if($('#pEnergy')){const pe=$('#pEnergy');pe.style.cursor='pointer';pe.setAttribute('role','button');pe.setAttribute('tabindex','0');pe.setAttribute('aria-label','พลังงาน แตะเพื่อไปกวาดด่านที่หน้าต่อสู้');pe.onclick=()=>INFO.sweep();pe.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();INFO.sweep();}};}

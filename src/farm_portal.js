@@ -1,0 +1,83 @@
+/* ================= ประตูมิติขุมนรก (ฉากฟาร์ม · ขอบเกาะฝั่งตะวันตกเฉียงเหนือ) =================
+   ทางเข้าดันเจี้ยนขุมนรก: วงหลุมดำหมุนวน + ออร่าดำพวยพุ่งขึ้นจากขอบ + ควันดำลอยขึ้น + มือดำเล็ก ๆ ยื่นออกมา
+   ทั้งหมดเป็น shader เบา ๆ (ไม่มีไฟจริง/ไม่มี texture) · มือรวมเป็น geometry เดียว ใช้ material ร่วม
+   แตะที่วงประตู → openPortal() (ตอนนี้แจ้งว่าเร็ว ๆ นี้) · อัปเดตใน worldTick → portalTick */
+const PORTAL=(()=>{
+  const R=6.2, ANG=2.2, DIST=29.5, LOWF=matchMedia('(pointer:coarse)').matches;
+  const g=new THREE.Group(); g.position.set(Math.cos(ANG)*DIST,6.2,-Math.sin(ANG)*DIST); g.rotation.set(-.42,.3,0); scene.add(g);
+  const U={t:{value:0},R:{value:R},ps:{value:600}};
+  const NZ=`float h1(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h1(i),h1(i+vec2(1.,0.)),f.x),mix(h1(i+vec2(0.,1.)),h1(i+1.),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n2(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}`;
+  const VS=`varying vec2 vP;void main(){vP=position.xy;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
+  // 1) ออร่าดำพวยพุ่ง (วงแหวนรอบนอก เปลวยาวขึ้นด้านบน)
+  const aura=new THREE.Mesh(new THREE.RingGeometry(R*.9,R*2.3,96,6),new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,side:THREE.DoubleSide,vertexShader:VS,
+    fragmentShader:`uniform float t,R;varying vec2 vP;${NZ}
+void main(){vec2 p=vP/R;float r=length(p),d=r-1.;float up=max(0.,p.y/r);
+  float fl=fbm(vec2(p.x*4.2,p.y*1.3-t*1.8))*.75+fbm(vec2(atan(p.y,p.x)*4.,d*3.-t*1.1))*.45;
+  float ext=.16+1.25*pow(up,1.5)+.3*fl;float m=smoothstep(ext,0.,d)*smoothstep(.3,.7,fl+.45*(1.-d/ext));
+  vec3 c=mix(vec3(.32,.06,.5),vec3(.015,0.,.03),smoothstep(.0,.45,m));
+  gl_FragColor=vec4(c,clamp(m*1.15,0.,.93)*smoothstep(-.1,.02,d));}`}));
+  aura.position.z=-.05; aura.renderOrder=1; g.add(aura);
+  // 2) หลุมดำหมุนวน
+  const disc=new THREE.Mesh(new THREE.CircleGeometry(R*1.12,72),new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,vertexShader:VS,
+    fragmentShader:`uniform float t,R;varying vec2 vP;${NZ}
+void main(){vec2 p=vP/R;float r=length(p),a=atan(p.y,p.x);
+  float sw=a+2.4/(r+.22)-t*.8;vec2 q=vec2(cos(sw),sin(sw))*r*3.;
+  float f=fbm(q+vec2(t*.12,0.));float arms=.5+.5*sin(sw*3.+f*5.);
+  float st=smoothstep(.42,.95,f*arms+.3*f);float dep=smoothstep(.08,.98,r);
+  vec3 c=vec3(.32,.07,.5)*st*dep*.9+vec3(.8,.25,.95)*pow(st,3.)*dep*.55;
+  vec2 sq=floor(q*5.);float sp=step(.988,h1(sq))*(.5+.5*sin(t*3.+h1(sq+3.)*20.))*dep;c+=vec3(.75,.55,1.)*sp*.7;
+  float rim=exp(-pow((r-1.)*7.,2.));c+=vec3(.55,.14,.85)*rim*(.55+.6*fbm(vec2(a*3.,t*.8)));
+  float al=r<1.?1.:(1.-smoothstep(1.,1.12,r))*(.55+.45*f);gl_FragColor=vec4(c,al);}`}));
+  disc.renderOrder=2; disc.userData.portal=1; g.add(disc); PICK.push(disc);
+  // 3) ควันดำลอยขึ้นจากขอบ (points)
+  const N=LOWF?70:140,sd=new Float32Array(N*3);for(let i=0;i<N;i++){sd[i*3]=Math.random()*6.283;sd[i*3+1]=Math.random();sd[i*3+2]=.18+Math.random()*.22;}
+  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));pg.setAttribute('sd',new THREE.BufferAttribute(sd,3));
+  const smoke=new THREE.Points(pg,new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,
+    vertexShader:`attribute vec3 sd;uniform float t,R,ps;varying float vA;
+void main(){float L=fract(t*sd.z+sd.y),a=sd.x;vec3 p=vec3(cos(a)*R,sin(a)*R,.1);
+  p.y+=L*R*(.6+.9*max(0.,sin(a))+.3*sin(a*5.));p.x+=sin(L*6.+a*5.)*.5+cos(a)*L*R*.2;
+  vA=(1.-L)*smoothstep(0.,.12,L);vec4 mv=modelViewMatrix*vec4(p,1.);gl_PointSize=(.9+1.8*L)*ps/-mv.z;gl_Position=projectionMatrix*mv;}`,
+    fragmentShader:`varying float vA;void main(){float d=length(gl_PointCoord-.5);float al=smoothstep(.5,.05,d)*vA*.8;if(al<.01)discard;
+  gl_FragColor=vec4(mix(vec3(.3,.07,.45),vec3(.01,0.,.02),smoothstep(.45,.12,d)),al);}`}));
+  smoke.frustumCulled=false; smoke.renderOrder=3; g.add(smoke);
+  // 4) มือดำเล็ก ๆ ยื่นออกมาจากหลุม (geometry เดียวกันทุกมือ · ขอบเรืองม่วงจาง ๆ)
+  const handGeo=(()=>{const tmp=new THREE.Group(),parts=[];
+    const add=(geo,pos,rot,par)=>{const m=new THREE.Mesh(geo);m.position.set(...pos);if(rot)m.rotation.set(...rot);(par||tmp).add(m);parts.push(m);return m;};
+    add(new THREE.CylinderGeometry(.11,.16,1.7,7),[0,.85,0]);
+    const palm=add(new THREE.SphereGeometry(.24,8,6),[0,1.9,0]);palm.scale.set(1,1.15,.45);
+    [-.15,-.05,.05,.15].forEach((x,i)=>{const len=i===1||i===2?.4:.33;
+      const f1=new THREE.Group();f1.position.set(x,2.1,0);f1.rotation.set(.35,0,-x*1.6);tmp.add(f1);
+      add(new THREE.CylinderGeometry(.035,.045,len,5),[0,len/2,0],null,f1);
+      const f2=new THREE.Group();f2.position.set(0,len,0);f2.rotation.set(.55,0,0);f1.add(f2);
+      add(new THREE.CylinderGeometry(.022,.035,len*.85,5),[0,len*.42,0],null,f2);
+      add(new THREE.ConeGeometry(.024,.14,4),[0,len*.85+.06,0],null,f2);});
+    const th=new THREE.Group();th.position.set(.2,1.82,.02);th.rotation.set(.3,0,-1.0);tmp.add(th);
+    add(new THREE.CylinderGeometry(.03,.045,.32,5),[0,.16,0],null,th);add(new THREE.ConeGeometry(.026,.13,4),[0,.38,0],null,th);
+    tmp.updateMatrixWorld(true);const P=[],Nn=[];
+    parts.forEach(m=>{const gg=m.geometry.clone().applyMatrix4(m.matrixWorld).toNonIndexed();P.push(...gg.attributes.position.array);Nn.push(...gg.attributes.normal.array);});
+    const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.Float32BufferAttribute(P,3));out.setAttribute('normal',new THREE.Float32BufferAttribute(Nn,3));return out;})();
+  const handMat=new THREE.ShaderMaterial({uniforms:U,
+    vertexShader:`varying vec3 vN,vV;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=-mv.xyz;gl_Position=projectionMatrix*mv;}`,
+    fragmentShader:`uniform float t;varying vec3 vN,vV;void main(){float fr=pow(1.-abs(dot(normalize(vN),normalize(vV))),2.2);
+  gl_FragColor=vec4(vec3(.05,.01,.08)+vec3(.75,.25,1.)*fr*(1.+.3*sin(t*2.)),1.);}`});
+  const HANDS=[],NH=LOWF?7:9,Y=new THREE.Vector3(0,1,0),q=new THREE.Quaternion(),q2=new THREE.Quaternion(),dv=new THREE.Vector3();
+  for(let i=0;i<NH;i++){const a=i/NH*6.283+(Math.random()-.5)*.5,rr=R*(.45+Math.random()*.4);
+    const m=new THREE.Mesh(handGeo,handMat);m.scale.setScalar(1.35+Math.random()*.5);g.add(m);
+    HANDS.push({m,base:new THREE.Vector3(Math.cos(a)*rr,Math.sin(a)*rr,0),dir:new THREE.Vector3(Math.cos(a)*1.1,Math.sin(a)*1.1,.8).normalize(),ph:Math.random()*6.283,sp:.45+Math.random()*.35,a});}
+  function tick(dt,T){U.t.value=T;
+    U.ps.value=renderer.domElement.height*.5/Math.tan(camera.fov*Math.PI/360);
+    HANDS.forEach(h=>{const s=.5+.5*Math.sin(T*h.sp+h.ph),reach=-2.6+4.6*s*s+Math.sin(T*7+h.ph)*.04;
+      h.m.position.copy(h.base).addScaledVector(h.dir,reach);
+      dv.copy(h.dir);dv.x+=Math.sin(T*1.3+h.ph)*.18;dv.y+=Math.cos(T*1.1+h.ph)*.18;dv.normalize();
+      q.setFromUnitVectors(Y,dv);q2.setFromAxisAngle(Y,h.a+Math.sin(T*.9+h.ph)*.5);h.m.quaternion.copy(q).multiply(q2);});}
+  return {g,tick,disc};
+})();
+function portalTick(dt,T){PORTAL.tick(dt,T);}
+function openPortal(){
+  const d=el('div');
+  d.append(para('วงประตูมิติสีดำปรากฏขึ้นที่ขอบเกาะ… มีมือมากมายพยายามคว้าทุกสิ่งที่เข้าใกล้'));
+  d.append(para('ดันเจี้ยนขุมนรกกำลังจะเปิดเร็ว ๆ นี้ เตรียมทีมให้แข็งแกร่งไว้'));
+  openSheet('ขุมนรก','ประตูมิติลึกลับ',d,[['เร็ว ๆ นี้',()=>{},'',true]]);
+}
