@@ -1,7 +1,8 @@
 /* ================= แถบพลังชีวิตและตัวเลข ================= */
 const ov=$('#ov');
 // เหนือหัว: แสดงเฉพาะบัพ/ดีบัพ · เลือดอยู่ในแผงข้าง (ทีมเรา = ซ้าย, ศัตรู = ขวา)
-const PHONE=matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<=820;
+// มือถือ: จอสัมผัส (pointer:coarse / hover:none / มีจุดสัมผัส) และจอเล็ก (เผื่อเบราว์เซอร์ในแอป/โหมดเดสก์ท็อปที่รายงานค่าแปลก)
+const PHONE=(matchMedia('(pointer:coarse)').matches||matchMedia('(hover:none)').matches||navigator.maxTouchPoints>0)&&(Math.min(screen.width,screen.height)<=820||Math.min(innerWidth,innerHeight)<=600);
 if(PHONE){document.body.classList.add('phone');try{if(localStorage.getItem('ipFold')==='1')document.body.classList.add('ipFold');}catch(e){}}
 {const f=$('#ipFold');if(f){const set=()=>{f.textContent=document.body.classList.contains('ipFold')?'▴':'▾';};set();
   f.onclick=()=>{const on=document.body.classList.toggle('ipFold');try{localStorage.setItem('ipFold',on?'1':'0');}catch(e){}set();};
@@ -337,7 +338,7 @@ let camMode={type:'wide'}, camK=2.5;
 // ซูมเข้าในสนามรบได้ไม่ใกล้เกินไป (ลดภาระเครื่อง)
 const BT_ZMIN=45; var BT_ZMAX=75;
 // มือถือ (จอสัมผัส จอเล็ก): กล้องมุมสูงซูมเข้า 2 เท่า (เจ้าของสั่ง · เดิมไกลไป) — ระยะ RTS.dist คงเดิม คูณตอนวางกล้อง
-const CAM_K=(matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<=820)?.5:1;
+const CAM_K=PHONE?.5:1;
 const RTS={tgt:new THREE.Vector3(-4,0,0),auto:new THREE.Vector3(),dist:55,base:55,pitch:.95,yaw:.3,manual:0,zoomed:false}; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
 const camWide=()=>{camMode={type:'wide'};camK=3;};
 const camOver=(u,focus,far)=>{camMode={type:'over',u,focus,far:far||0};camK=3.2;};
