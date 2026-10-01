@@ -216,6 +216,8 @@ body.warAllies .hrow2.ally{display:none}
 body.phone #ipFold{display:block}
 body.phone.ipFold #ipChest,body.phone.ipFold #ipSweep,body.phone.ipFold .ipteam,body.phone.ipFold #ipTrial{display:none!important}
 body.phone .hpcol .hrow2:not(.boss){display:none}
+#fxFlash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:4;mix-blend-mode:screen}
+#fxFlash.on{animation:fxFl .55s ease-out}@keyframes fxFl{0%{opacity:1}100%{opacity:0}}
 .fbar{position:absolute;left:0;top:0;width:30px;height:1.5px;border-radius:2px;background:rgba(36,26,16,.5);border:1px solid rgba(20,14,8,.75);overflow:hidden;pointer-events:none;display:none;box-sizing:content-box}
 .fbar i{display:block;height:100%;width:100%;background:linear-gradient(180deg,#c4ecb4,#98d184);transition:width .25s}
 .fbar.e i{background:linear-gradient(180deg,#f6c2ae,#e29a82)}
@@ -224,6 +226,7 @@ body.phone .fbar{display:block}
 </style>
 <div id="view"></div>
 <div id="ov"></div>
+<div id="fxFlash"></div>
 <div id="raceChip" hidden><span class="ic"></span><div><b></b><div class="rb"><i></i></div></div></div>
 <div id="hpL" class="hpcol"></div><div id="hpR" class="hpcol"></div>
 <div id="stageMsg" hidden></div>

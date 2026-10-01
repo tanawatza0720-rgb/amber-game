@@ -404,3 +404,9 @@ python3 build_battle.py && cp battle.html ../battle.html
 - `SPECIES.healer`/`ranged` ใน battle_world.js · pow: ซาราเอล 688 · อนุบิส 473 · มอร์ธา 472 · ไพรวัลย์ 358 (regen ติดตัวถูกเอาออกเพราะหายากไม่มีติดตัว — กลไก regen ยังอยู่ในโค้ด)
 - ดูโมเดลในคลังแบบ 3D ตอนทดสอบ: `index.html?dbg=1` → `__F.box3d('sarael')` / `__F.closeBox()` · ทดสอบสนาม: `battle.html?demo=sarael,anubis,phraiwan,mortha`
 - ⚠️ ไฟล์ rig ทุกตัวโหลดตอนเปิดเกม (`loadMeshy`) ตอนนี้ 11 ตัว ~22MB — ถ้ามือถือโหลดช้า ควรเปลี่ยนเป็นโหลดเฉพาะตัวที่มี
+
+## เอฟเฟกต์สกิลชุดใหญ่ — `src/battle_fx2.js` (build ต่อจาก battle_rt.js)
+- ใช้กับตัวหายากขึ้นไป (`FX_RAR`: หายาก 2 · ตำนาน 3 · เทพเจ้า 4 → `fxK` ขนาด 1/1.3/1.65, บอส ×1.2) · ตัวทั่วไปใช้เอฟเฟกต์เดิม · มือถือ (`LOW`) ศัตรูธรรมดาใช้แบบเดิมและจำนวนชิ้นลด (`fxN`)
+- สีประจำตัวทับสีธาตุ `FX_SIG` (เช่น ซาราเอล ส้มไฟ/ขาว) · ชิ้นส่วน: `fxSlash` (แถบจันทร์เสี้ยว shader กวาดแล้วจาง) · `fxImpact` (แฟลช + เส้นพุ่ง + วง) · `fxRune` (วงเวท canvas) · `fxPillar` (เสาแสง shader) · `fxLeapTele`/`fxLeapLand` (วงเตือน → เสา คลื่น รอยแตก เศษหิน `fxElement` ตามธาตุ) · `fxCometTrail`/`fxBoltHit` · `fxMeteorTrail`/`fxRainLand`/`fxRainEnd` (อนุบิส = พายุทราย) · `fxHealCast`/`fxHealOn` · `fxUltStart` (ไม้ตายทุกแบบยกเว้นฮีล) · `fxScreen` แฟลชจอ `#fxFlash`
+- จุดเรียกอยู่ใน battle_rt.js (`rtUse`, `rigCast`, `rigRain`, `rigHeal`) · สไปรต์เอฟเฟกต์ `depthTest:false` (กล้องมองจากบน ถ้าทดสอบความลึกครึ่งล่างจมพื้นจนแทบมองไม่เห็น) · ไม่สร้างไฟ · geometry/texture ใช้ร่วม `FX2G`/`FX2T` material ต่อชิ้นแล้ว dispose
+- ทดสอบ (?dbg=1): `__B.use(sp,'s1'|'s2'|'s3')` สั่งใช้สกิล · `__B.slow(k)` ปรับเวลาเกม (แช่แข็งถ่ายภาพ: `slow(.0001)`) · `__B.fx.*` เรียกชิ้นเอฟเฟกต์ตรง · ⚠️ ทางลาก (sword trail) เดิมใน swiftshader เป็นแผ่นสามเหลี่ยมขาวเพราะเฟรมต่ำ ไม่ใช่บั๊กของชุดนี้

@@ -56,8 +56,9 @@ async function rigCast(u,foes,clip,onHitOne,o){
   shake=Math.max(shake,o.fast?.02:.06);
   await Promise.all(foes.map((f,i)=>new Promise(res=>setTimeout(async()=>{
     const from=src(),g=glow(scene,c,.45,from.toArray(),1),to=f.w.position.clone().setY(.9),mid=from.clone().lerp(to,.5).add(new THREE.Vector3(0,1,0));
-    await tween(.4,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));if(Math.random()<.5*FXK)particles(g.position,c,1,.3,.05,.2,.6);},t=>t);
-    scene.remove(g);g.material.dispose();particles(to,c,Math.round(14*FXK)||4,2,.08,.3,.9);
+    if(fxOn(u))g.scale.setScalar(.45*fxK(u)*1.6);
+    await tween(.4,k=>{const a=from.clone().lerp(mid,k),b=mid.clone().lerp(to,k);g.position.copy(a.lerp(b,k));fxCometTrail(u,g);if(Math.random()<.5*FXK)particles(g.position,c,1,.3,.05,.2,.6);},t=>t);
+    scene.remove(g);g.material.dispose();particles(to,c,Math.round(14*FXK)||4,2,.08,.3,.9);fxBoltHit(u,to);
     if(f.alive)onHitOne(f); res();},i*120/SPEED))));
   await wait(220);
 }
@@ -66,13 +67,14 @@ async function rigRain(u,t,foes,clip,onHitOne){
   const A=u.inner.userData,sp=1.3,inf=clip&&A.clipInfo?A.clipInfo(clip):null; if(inf)A.play(clip,{speed:sp,fade:.1});
   const c=elFx(u),src=castSrc(u),g0=glow(scene,c,.4,src.toArray(),1);
   await tween(.5,k=>{g0.position.copy(castSrc(u)).y+=k*1.2;g0.scale.setScalar(.3+k*1.4);}); scene.remove(g0);g0.material.dispose();
-  const cen=t.w.position.clone().setY(0), list=foes.length?foes:[t];
+  const cen=t.w.position.clone().setY(0), list=foes.length?foes:[t]; fxLeapTele(u,cen);
   await Promise.all(list.map((f,i)=>new Promise(res=>setTimeout(async()=>{
     const to=f.w.position.clone().setY(.5),from=to.clone().add(new THREE.Vector3(-1.2,7,0)),g=glow(scene,c,.7,from.toArray(),1);
-    await tween(.38,k=>{g.position.lerpVectors(from,to,k*k);if(Math.random()<.5*FXK)particles(g.position,c,1,.3,.05,.3,.5);});
-    scene.remove(g);g.material.dispose();particles(to,c,Math.round(18*FXK)||5,2.2,.09,.4,.9);
+    if(fxOn(u))g.scale.setScalar(.7*fxK(u)*1.5);
+    await tween(.38,k=>{g.position.lerpVectors(from,to,k*k);fxMeteorTrail(u,g);if(Math.random()<.5*FXK)particles(g.position,c,1,.3,.05,.3,.5);});
+    scene.remove(g);g.material.dispose();particles(to,c,Math.round(18*FXK)||5,2.2,.09,.4,.9);fxRainLand(u,to);
     if(f.alive)onHitOne(f); res();},i*140/SPEED))));
-  shockRing(cen,c); shake=Math.max(shake,.18); particles(tmpV.copy(cen).setY(.2),c,Math.round(22*FXK)||6,2.4,.08,.5,.9);
+  shockRing(cen,c); shake=Math.max(shake,.18); particles(tmpV.copy(cen).setY(.2),c,Math.round(22*FXK)||6,2.4,.08,.5,.9); fxRainEnd(u,cen);
   await wait(250);
 }
 /* ฮีล: ยืนร่ายที่เดิม ดวงไฟเขียวจากปลายคทาลอยไปหาเพื่อนทีละดวง แล้วมีวงแสงที่เท้า */
@@ -83,12 +85,12 @@ async function rigHeal(u,s){
   if(inf)A.play(clip,{speed:sp,fade:.1});
   const c=0x8dffb0, g0=glow(scene,c,.4,castSrc(u).toArray(),1);
   await tween(.45,k=>{g0.position.copy(castSrc(u));g0.scale.setScalar(.3+k*1.3);}); scene.remove(g0);g0.material.dispose();
-  shockRing(tmpV.copy(u.w.position).setY(.05),c);
+  shockRing(tmpV.copy(u.w.position).setY(.05),c); fxHealCast(u);
   await Promise.all(list.map((f,i)=>new Promise(res=>setTimeout(async()=>{
     const from=castSrc(u),g=glow(scene,c,.35,from.toArray(),1),to=()=>f.w.position.clone().setY(1.1);
     await tween(.32,k=>{g.position.lerpVectors(from,to(),k);g.position.y+=Math.sin(k*Math.PI)*.8;});
     scene.remove(g);g.material.dispose();
-    if(f.alive){healUnit(f,healAmt(u,f,s.mult));if(s.cleanse&&(f.stun||f.stunT>0)){f.stun=0;f.stunT=Math.min(f.stunT,.01);}
+    if(f.alive){fxHealOn(u,f);healUnit(f,healAmt(u,f,s.mult));if(s.cleanse&&(f.stun||f.stunT>0)){f.stun=0;f.stunT=Math.min(f.stunT,.01);}
       shockRing(tmpV.copy(f.w.position).setY(.05),c);particles(tmpV.copy(f.w.position).setY(.2),c,Math.round(14*FXK)||4,1.2,.07,1.8,1);}
     res();},i*90/SPEED))));
   await wait(200);
@@ -149,6 +151,7 @@ async function rtUse(u,s,t){
   try{
     if(s.id!=='s1'){
       popNum(u,s.name,'info');
+      if(s===ultOf(u)&&s.type!=='heal')fxUltStart(u);
       if(u.side==='P'&&s===ultOf(u)){const k=$('#skname');k.textContent=s.name;k.className='p';k.hidden=false;setTimeout(()=>{if(k.textContent===s.name)k.hidden=true;},900);}
     }
     if(u.dragon&&s.type!=='melee'){}else if(t)await faceTo(u,t.w.position,.08);
@@ -157,24 +160,25 @@ async function rtUse(u,s,t){
     if(u.dragon&&u.side==='P'&&s===ultOf(u))await dragonRoar(u,450);
     if(s.type==='heal'){await rigHeal(u,s);}
     else if(u.spider){
-      if(s.type==='ranged')await spiderCast(u,near(t.w.position,4.5),f=>dealHit(u,f,s));
-      else if(s.type==='leap'){const fs=near(t.w.position,3.2),c=t.w.position.clone().setY(0);await spiderLeap(u,c,fs,hitAll(fs));}
+      if(s.type==='ranged')await spiderCast(u,near(t.w.position,4.5),f=>{fxBoltHit(u,f.w.position.clone().setY(.8));dealHit(u,f,s);});
+      else if(s.type==='leap'){const fs=near(t.w.position,3.2),c=t.w.position.clone().setY(0);fxLeapTele(u,c);await spiderLeap(u,c,fs,()=>{fxLeapLand(u,c);hitAll(fs)();});}
       else{const n=s.type==='melee3'?3:1;for(let i=0;i<n&&t.alive;i++)await spiderStrike(u,t,()=>{if(t.alive)dealHit(u,t,s);});}
     } else if(s.type==='melee'&&u.dragon){
       const r=Math.random(), f=()=>{if(t.alive)dealHit(u,t,s);};
       const gf=near(t.w.position,3.2);
       if(r<.26)await dragonSwoop(u,t,f); else if(r<.46)await strike(u,0,f); else if(r<.64&&gf.length>1)await dragonGust(u,gf,o=>{if(o.alive)dealHit(u,o,{...s,mult:s.mult*.7});}); else if(r<.84)await dragonClaw(u,t,()=>{if(t.alive)dealHit(u,t,{...s,mult:s.mult*.55});}); else await dragonTail(u,t,()=>near(t.w.position,2.6).forEach(o=>dealHit(u,o,{...s,mult:s.mult*.8})));
     } else if(s.type==='melee'&&AN){
-      const ls=AN.s1; await clipStrike(u,ls[Math.floor(Math.random()*ls.length)],1.35,()=>{if(t.alive){dealHit(u,t,s);hitStop();}});
+      const ls=AN.s1; await clipStrike(u,ls[Math.floor(Math.random()*ls.length)],1.35,()=>{if(t.alive){fxSlash(u,t);dealHit(u,t,s);hitStop();}});
     } else if(s.type==='melee'){
-      await strike(u,Math.random()<.5?0:1,()=>{if(t.alive)dealHit(u,t,s);});
+      await strike(u,Math.random()<.5?0:1,()=>{if(t.alive){fxSlash(u,t);dealHit(u,t,s);}});
     } else if(s.type==='melee3'){
-      if(AN)await clipStrike(u,AN.s2,1.25,()=>{if(t.alive)dealHit(u,t,s);},true);
-      else if(u.inner.userData.play)await strikeCombo(u,()=>{if(t.alive)dealHit(u,t,s);});
+      let hi=0; const sl=()=>{if(t.alive){fxSlash(u,t,{tilt:[-.9,.9,0][hi%3],k:hi%3===2?1.25:1,big:hi%3===2});hi++;dealHit(u,t,s);}};
+      if(AN)await clipStrike(u,AN.s2,1.25,sl,true);
+      else if(u.inner.userData.play)await strikeCombo(u,sl);
       else for(let i=0;i<3&&t.alive;i++)await strike(u,i,()=>dealHit(u,t,s));
     } else if(s.type==='ranged'&&u.dragon){
       const fs=near(t.w.position,4.5); await faceTo(u,t.w.position,.2);
-      if(Math.random()<.5)await dragonBreath(u,fs,hitAll(fs)); else await dragonStrafe(u,fs,o=>{if(o.alive)dealHit(u,o,s);});
+      if(Math.random()<.5)await dragonBreath(u,fs,()=>{fs.forEach(o=>fxImpact(o.w.position.clone().setY(.8),u,{k:.8}));hitAll(fs)();}); else await dragonStrafe(u,fs,o=>{if(o.alive){fxImpact(o.w.position.clone().setY(.8),u,{k:.7});dealHit(u,o,s);}});
     } else if(s.type==='bolt'){
       await rigCast(u,[t],AN&&hasClip(u,AN.bolt)?AN.bolt:null,f=>dealHit(u,f,s),{fast:1});
     } else if(s.type==='rain'){
@@ -187,15 +191,15 @@ async function rtUse(u,s,t){
         throwAt(u,f).then(()=>{if(f.alive)dealHit(u,f,s);}); await wait(170); poseTo([[r.R.a.rotation,'z',-2.3],[r.R.a.rotation,'x',-.2]],.1);}
       await wait(300);
     } else if(s.type==='leap'){
-      const fs=near(t.w.position,3.2), c=t.w.position.clone().setY(0);
-      if(u.dragon){await dragonDive(u,c,fs,hitAll(fs));}
+      const fs=near(t.w.position,3.2), c=t.w.position.clone().setY(0); fxLeapTele(u,c);
+      if(u.dragon){await dragonDive(u,c,fs,()=>{fxLeapLand(u,c);hitAll(fs)();});}
       else{
         const dir=u.side==='P'?1:-1, land=c.clone(); land.x-=dir*(t.rad+u.reach*.6);
         const A=u.inner.userData;
         if(A.play){const nm=AN&&hasClip(u,AN.s3)?AN.s3:'leap',inf=A.clipInfo(nm),sp=1.15,from=u.w.position.clone();A.play(nm,{speed:sp,fade:.08});
           await tween(inf.main/sp,k=>{u.w.position.lerpVectors(from,land,k);u.w.position.y=Math.sin(k*Math.PI)*.6;},easeIO); u.w.position.y=0;}
         else await hop(u,land,.5,2.2);
-        shockRing(c,elFx(u)); shake=Math.max(shake,.2); particles(tmpV.copy(c).setY(.1),0xb8a888,20,1.8,.3,-.2,.5); particles(tmpV.copy(c).setY(.6),elFx(u),16,1.6,.07,.4,.8);
+        fxLeapLand(u,c); shockRing(c,elFx(u)); shake=Math.max(shake,.2); particles(tmpV.copy(c).setY(.1),0xb8a888,20,1.8,.3,-.2,.5); particles(tmpV.copy(c).setY(.6),elFx(u),16,1.6,.07,.4,.8);
         hitArc(tmpV.copy(c).setY(1),Math.PI/2,elFx(u),1.5);
         hitAll(fs)(); await wait(380);
       }
