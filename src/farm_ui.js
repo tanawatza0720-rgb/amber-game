@@ -19,6 +19,8 @@ function openSheet(title,sub,body,actions){
 }
 function closeSheet(){sheet.hidden=true;selRing.visible=false;}
 $('#shClose').onclick=closeSheet;
+if($('#sheetBg'))$('#sheetBg').onclick=closeSheet;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sheet.hidden)closeSheet();});
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 function rows(list){const d=el('div','rows');list.forEach(([a,b,c])=>{const r=el('div','row');r.append(el('span',null,a));const v=el('b',null,b);if(c)v.style.color=c;r.append(v);d.append(r);});return d;}
 function para(t){return el('p','ptxt',t);}
