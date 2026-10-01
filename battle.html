@@ -1026,9 +1026,9 @@ const SKILLS={
     {id:'s3',name:'ดิ่งฟ้าถล่ม',desc:'บินขึ้นฟ้าแล้วดิ่งลงกระแทกศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
     {id:'s4',name:'หัวใจมังกรอัมพร',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 15% · อามาเทรุรับดาเมจลดลง 25% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.15,dr:.25,crit:.1}}],
   sarael:[
-    {id:'s1',name:'กรงเล็บพิพากษา',desc:'ฟาดกรงเล็บใส่ศัตรู 1 ตัว 140%',cd:0,type:'melee',mult:1.4,target:'one'},
-    {id:'s2',name:'พายุขนนกสองสี',desc:'ฟาด 3 ครั้ง ครั้งละ 95% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.95,target:'one'},
-    {id:'s3',name:'ดิ่งสวรรค์ทัณฑ์',desc:'กางปีกดิ่งลงกระแทกศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
+    {id:'s1',name:'ดาบเพลิงพิพากษา',desc:'ฟันดาบเพลิงใส่ศัตรู 1 ตัว 140%',cd:0,type:'melee',mult:1.4,target:'one'},
+    {id:'s2',name:'พายุเปลวสองสี',desc:'ฟัน 3 ครั้ง ครั้งละ 95% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.95,target:'one'},
+    {id:'s3',name:'ดิ่งสวรรค์ทัณฑ์',desc:'กางปีกเปลวไฟดิ่งลงฟันศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
     {id:'s4',name:'ปีกโลหิตและแสง',desc:'ติดตัว: โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 35% · รับดาเมจลดลง 15% · โอกาสคริ +15%',type:'passive',passive:{dmgLow:.35,dr:.15,crit:.15}}],
   anubis:[
     {id:'s1',name:'ลูกแก้ววิญญาณ',desc:'ยิงลูกแก้ววิญญาณจากระยะไกลใส่ศัตรู 1 ตัว 120%',cd:0,type:'bolt',mult:1.2,target:'one'},
@@ -1103,7 +1103,7 @@ function abyssBless(k){
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json?v=2',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json?v=4',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -1158,8 +1158,10 @@ function makeFist(root,hands){
     sw.position.add(new THREE.Vector3(...U[sd].shift));
   });
 }
-const POLE={morihime:1,kohaku:1,garok:1,anubis:1,phraiwan:1,mortha:1};
-const NOWPN={sarael:1}; // สู้มือเปล่า (กรงเล็บ) ไม่ถือดาบ // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
+const POLE={morihime:1,kohaku:1,garok:1,anubis:1,phraiwan:1,mortha:1}; // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
+const NOWPN={}; // สู้มือเปล่า: ดาบใช้แค่กำมือ ไม่โชว์
+const SWORD={sarael:.07}; // ดาบจากโมเดล (ส่งออกแนวตั้ง ปลายดาบชี้ลง): จับที่ด้าม ห่างปลายด้าม = ค่านี้ × ความยาว
+const FLOAT={sarael:.5}; // เทพลอยตัว: ยกตัวสูงจากพื้น (หน่วยโมเดล สะโพก=.9) ไม่เดิน ใช้ท่ายืนแทนท่าวิ่ง/เดิน
 function buildMeshyEvo(m,key){
   key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
   const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
@@ -1271,7 +1273,8 @@ function buildMeshyEvo(m,key){
   function clipW(bi,b,baseW){const D=sampleD(CS.cur,bi,new THREE.Quaternion());
     if(CS.prev&&CS.fade<1){const Dp=sampleD(CS.prev,bi,_qb);D.copy(Dp.slerp(D,CS.fade));}
     return D.multiply(CS.Qal[bi]).multiply(b.userData.W);}
-  function play(name,o){o=o||{};if(!CS||!MXA.clips[name])return Promise.resolve();
+  function play(name,o){o=o||{};if(FLOAT[key]&&(name==='run'||name==='walk')){name='idle';o={...o,loop:true,speed:1};}
+    if(!CS||!MXA.clips[name])return Promise.resolve();
     if(CS.cur&&CS.cur.done)CS.cur.done();
     CS.prev=CS.cur; CS.fade=CS.prev?0:1; CS.fadeDur=o.fade==null?.12:o.fade;
     return new Promise(res=>{CS.cur={name,t:o.from||0,loop:!!o.loop,hold:!!o.hold,speed:o.speed||1,done:res};CS.wT=1;});}
@@ -1289,7 +1292,7 @@ function buildMeshyEvo(m,key){
   const mt=mats();
   const swR=prop?null:katana(R.hd,mt); if(swR){swR.position.set(0,-.04,0); swR.rotation.set(-.35,0,1.95);}
   const swL=prop?null:katana(L.hd,mt); if(swL){swL.position.set(0,-.04,0); swL.rotation.set(-.1,0,Math.PI+.1);}
-  if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||!!POLE[key];}
+  if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||!!POLE[key]||!!SWORD[key];}
   else{m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;}
   if(key==='kuroga'||key==='seiro'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ/เซย์โร: ดาบยาวเล่มเดียว
   if(NOWPN[key])m.userData.swords=[]; // ดาบยังใช้กำมือ แต่ไม่โชว์
@@ -1330,7 +1333,7 @@ function buildMeshyEvo(m,key){
     swordPose={restP:prop.position.clone(),restQ:prop.quaternion.clone(),drawP,drawQ,blend:0};
   }
   // อาวุธด้ามยาว (หอกโมริฮิเมะ · คทาโคฮาคุ · ขวานกาโรค): จับตามแกนการจับของท่า Mixamo (ปลายที่กว้างกว่าออกทางเดียวกับใบดาบ)
-  if(POLE[key]&&prop&&CS&&MXA.grip&&MXA.grip.R){
+  if((POLE[key]||SWORD[key])&&prop&&CS&&MXA.grip&&MXA.grip.R){
     const P=prop.geometry.attributes.position,n=P.count,v=new THREE.Vector3(),c=new THREE.Vector3();
     for(let i=0;i<n;i++)c.add(v.fromBufferAttribute(P,i));c.multiplyScalar(1/n);
     const a=new THREE.Vector3(),b=new THREE.Vector3();let d0=-1;
@@ -1341,11 +1344,11 @@ function buildMeshyEvo(m,key){
     const sp=[0,0],cn=[0,0],w=new THREE.Vector3();
     for(let i=0;i<n;i++){v.fromBufferAttribute(P,i);const t=v.clone().sub(a).dot(ax)/L;const e=t<.15?0:t>.85?1:-1;if(e<0)continue;
       w.copy(v).sub(a).addScaledVector(ax,-t*L);sp[e]+=w.length();cn[e]++;}
-    const tipAtB=sp[1]/Math.max(1,cn[1])>sp[0]/Math.max(1,cn[0]);
+    const tipAtB=SWORD[key]?b.y<a.y:sp[1]/Math.max(1,cn[1])>sp[0]/Math.max(1,cn[0]); // ดาบ: ปลายดาบคือปลายล่าง
     const tipL=tipAtB?b:a, dir=tipAtB?ax.clone():ax.clone().negate();
     m.updateMatrixWorld(true);
     const hl=prop.worldToLocal(B.rHand.getWorldPosition(new THREE.Vector3()));
-    const tg=THREE.MathUtils.clamp(hl.clone().sub(a).dot(ax)/L,.2,.8), gripL=a.clone().addScaledVector(ax,tg*L);
+    const tg=SWORD[key]?(tipAtB?SWORD[key]:1-SWORD[key]):THREE.MathUtils.clamp(hl.clone().sub(a).dot(ax)/L,.2,.8), gripL=a.clone().addScaledVector(ax,tg*L);
     const bi=MXA.bones.indexOf('RightHand'),Fi=CS.Qal[bi].clone().multiply(B.rHand.userData.W).invert();
     const G=MXA.grip.R,bladeDir=new THREE.Vector3(...G.blade),edge=new THREE.Vector3(...G.edge);
     const x=new THREE.Vector3().crossVectors(bladeDir,edge),Qs=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,bladeDir,edge));
@@ -1373,7 +1376,9 @@ function buildMeshyEvo(m,key){
   if(!gripFix(B.lHand,'L',swL))B.lHand.attach(swL);
   makeFist(root,[[B.rHand,swR,'R'],[B.lHand,swL,'L']]);}
   if(CS){play('idle',{loop:true,from:Math.random()*2});CS.w=CS.wT=1;}
+  const FL=FLOAT[key]; let flY=0; if(FL){root.userData.fy=root.position.y;}
   m.userData.idle=T=>{
+    if(FL){const dead=CS&&CS.cur&&CS.cur.name==='death';flY+=((dead?0:FL+Math.sin(T*1.5)*.06)-flY)*.08;root.position.y=root.userData.fy+flY;}
     let dt=0; if(CS){dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}
     breath=Math.sin(T*2)*.025;
     m.position.y+=Math.sin(T*2)*.008; m.position.x+=Math.sin(T*.9)*.012;

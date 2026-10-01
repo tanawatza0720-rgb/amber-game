@@ -86,7 +86,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 | `seiro` | เซย์โร (หมาป่านักดาบ น้ำ) | หายาก | `szr/seiro_rig.json` | rig เอง (tools/rig) · ไม่มีอาวุธในโมเดล ใช้คาตานะยาวเล่มเดียวแบบคุโรกะ |
 | `kohaku` | โคฮาคุ (จิ้งจอกนักเวท ไฟ) | หายาก | `khk/kohaku_rig.json` + `weapon.jpg` | rig เอง · หางผูกกับสะโพก (BOX) · คทาจับแบบอาวุธด้ามยาว (`POLE`) · สายตีไกล (`SPECIES.ranged` → `u.reach=7.35` ยืนห่างศัตรู ~8 ม.): s1 `type:'bolt'` / s2 `ranged` ใช้ `rigCast` · s3 `type:'rain'` ใช้ `rigRain` |
 | `garok` | กาโรค (ออร์กถือขวาน ดิน) | หายาก | `grk/garok_rig.json` + `weapon.jpg` | rig เอง · ขวานจับแบบอาวุธด้ามยาว (`POLE`) |
-| `sarael` | ซาราเอล (เทพสงครามปีกเปลวไฟสองสี แสง) | เทพเจ้า | `srl/sarael_rig.json?v=2` | rig เอง · ปีกเส้นเปลว (tendril) ผูกกับ Spine2 ด้วย BOX · สู้มือเปล่า (`NOWPN` ใน meshy_rig.js: ดาบใช้แค่กำมือ ไม่โชว์) · โมเดลรอบ 2 (เจ้าของขอปีกแบบเส้นเปลว: Tripo Edit Image ยกแขนเป็น T-pose ก่อน Generate 3D, polycount 30000) |
+| `sarael` | ซาราเอล (เทพสงครามปีกเปลวไฟสองสี แสง) | เทพเจ้า | `srl/sarael_rig.json?v=4` + `weapon.jpg` | rig เอง · ปีกเส้นเปลว (tendril) ผูกกับ Spine2 ด้วย BOX · ตัดเขาขาว 3 อันบนหัวด้วย `DROP` (กรองสีขาว `white`) · **ลอยตัว** (`FLOAT` ใน meshy_rig.js: ยกตัว .5 + ลอยขึ้นลง, ท่าวิ่ง/เดิน → ท่ายืน, ตายแล้วค่อยลงพื้น) · ถือดาบเพลิง (`SWORD` ใน meshy_rig.js: ใช้เส้นทาง POLE แต่ปลายดาบ=ปลายล่างของโมเดลดาบ จับห่างปลายด้าม 7%) · โมเดลรอบ 2 (Tripo Edit Image ยกแขนเป็น T-pose ก่อน Generate 3D, polycount 30000) |
 | `anubis` | อนุบิส (เทพหัวจิ้งจอก มืด) | ตำนาน | `anb/anubis_rig.json` + `weapon.jpg` | rig เอง · คทา `POLE` · สายตีไกลแบบโคฮาคุ (bolt/ranged/rain) · ตัดผ้าห้อยใต้แขนด้วย DROP |
 | `phraiwan` | ไพรวัลย์ (ปราชญ์เฒ่าพงไพร ลม) | หายาก (3 สกิล ไม่มีติดตัว) | `prw/phraiwan_rig.json` + `weapon.jpg` | rig เอง · คทา `POLE` · **สายฮีล** |
 | `mortha` | มอร์ธา (แม่ชีผู้เฝ้าสุสาน น้ำ) | ตำนาน | `mrt/mortha_rig.json` + `weapon.jpg` | rig เอง · คทาธง `POLE` · **สายฮีล** |
@@ -397,7 +397,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 
 ## ตัวละครใหม่ + สายฮีล (ซาราเอล เทพเจ้า · อนุบิส/มอร์ธา ตำนาน · ไพรวัลย์ หายาก — เจ้าของปรับระดับ 1 ต.ค. 2026) — `server/migrate_newchars3.sql`
 - โมเดล Tripo ของเราเอง (1 ต.ค. 2026): สร้างภาพ T-pose (Nano Banana) จากรูปอ้างอิงของเจ้าของ → Generate 3D (25000 ตัว / 6000 อาวุธ) → `tools/rig` · จุดข้อต่อใน `tools/rig/joints/j_{sarael,anubis,phraiwan,mortha}.json`
-- `selfrig2.py` เพิ่ม `NOCLOTH_X` (จุดที่ |x| เกินค่านี้ไม่นับเป็นผ้า/ผม — มือสีซีดเคยถูกจับเป็นผ้าแล้วยืด) และ `DROP` (ลบหน้าในกล่อง)
+- `selfrig2.py` `DROP` รับ `"white":0.55` = ลบเฉพาะจุดสีซีดในกล่อง · เพิ่ม `NOCLOTH_X` (จุดที่ |x| เกินค่านี้ไม่นับเป็นผ้า/ผม — มือสีซีดเคยถูกจับเป็นผ้าแล้วยืด) และ `DROP` (ลบหน้าในกล่อง)
 - คำสั่งที่ใช้: ทุกตัว `NOCLOTH_X=.45 CUT=.5 CLOTH=tex.jpg` · ซาราเอล `BOX` ปีกหลายกล่อง (หลังแขน z<-0.06, ข้างตัว |x|>.34 ใต้แขน, ปลาย |x|>.7 → Spine2) + ตั้งข้อต่อแขนเอง (autojoints จับปีกเป็นแขน) · อนุบิส `DROP` ผ้าห้อยใต้แขน (|x|>.32, y .7–1.08) · WLEN คทา 1.45–1.55
 - **สกิล type `heal`** (battle_rt.js `rigHeal`): target `one` = เพื่อนที่เลือด % น้อยสุด, `all` = ทั้งทีม · ปริมาณ `healAmt` = atk × mult × 1.25 × (1+healUp) · `cleanse` แก้มึน · AI ใช้เมื่อ `healWanted` (เดี่ยว: มีเพื่อน <70% · ทีม: <85% ≥2 ตัว หรือมี <50%) ใช้ได้ทุกระยะแม้ไม่มีศัตรูใกล้ · ไม้ตายฮีลกดเองได้ (queued)
 - ติดตัวใหม่: `regen` (ทุก 3 วิ ทั้งทีม +% เลือดสูงสุด) · `healUp` (ฮีลแรงขึ้น) · ในสงคราม ฝั่งที่ถูกกำหนดให้แพ้ ฮีลได้ 40%

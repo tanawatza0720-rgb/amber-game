@@ -91,7 +91,11 @@ if os.environ.get('CUT'):
     print('cut faces',(~keep).sum()); F=F[keep]
 # DROP: ลบหน้าที่ทุกจุดอยู่ในกล่อง (เช่น ผ้าห้อยใต้แขนที่ขยับแล้วดูแปลก)  [{"min":[..],"max":[..]}]
 for bx in json.loads(os.environ.get('DROP','[]')):
-    inb=np.all((V>=np.array(bx['min']))&(V<=np.array(bx['max'])),1); F=F[~inb[F].all(1)]; print('drop -> faces',len(F))
+    inb=np.all((V>=np.array(bx['min']))&(V<=np.array(bx['max'])),1)
+    if bx.get('white'):  # เฉพาะจุดสีขาว/ซีด ในกล่อง (เช่น เขาบนหัว แต่เก็บรัศมีไว้)
+        _t=np.asarray((getattr(m.visual,'image',None)).convert('RGB')).astype(float)/255;_h,_w,_=_t.shape
+        _c=_t[np.clip((1-UV[:,1]%1)*_h,0,_h-1).astype(int),np.clip((UV[:,0]%1)*_w,0,_w-1).astype(int)];inb&=_c.min(1)>bx['white']
+    F=F[~inb[F].all(1)]; print('drop -> faces',len(F))
 print('verts',len(V),'groups',G,'inside',inside.mean().round(2))
 # ---- glTF
 BIN=bytearray(); j={'asset':{'version':'2.0'},'scene':0,'scenes':[{'nodes':[0]}],'nodes':[],'meshes':[],'accessors':[],'bufferViews':[],'buffers':[],'skins':[],
