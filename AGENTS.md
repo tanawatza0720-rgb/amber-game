@@ -374,6 +374,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 - ผู้กำกับฉาก `warScale` (hook ใน dealHit เฉพาะ WAR_MODE): ฝั่งที่เซิร์ฟเวอร์ให้ชนะได้เปรียบดาเมจ + กันทีมเราล้มหมดก่อนเพื่อนมาครบ · ยึดศิลา (`WB.cap`) แพ้ไม่เกิน 82% · 90 วิ · ปุ่ม "ข้าม" = จบทันที
 - ฟาร์ม: เกาะโคลอสเซียม `war/colosseum.glb` ที่ (-41,1.5,6) + ไฟ/ควัน (`colTick`) · แตะเกาะ (`userData.war`) / ปุ่ม `#rWar` → `openWar()` · กลับจากสนามด้วย `?war=1` · รายการใน todoList · ดีบัก `__F.war(ข้อมูลแบบ arena_state)` · `battle.html?war=1&dbg=1&warfake=win|lose&races=god,beast&dr=human`
 - โมเดล Tripo (ของเราเอง): ย่อด้วย `tools/glb_shrink.py` (เก็บแค่ texture สี JPEG 1024/512, ตัด normal/roughness) 4MB → 0.3–0.8MB · ดาวน์โหลดจาก Tripo ผ่าน browser pane ลง Downloads แล้ว stage เข้ามา
+- `migrate_arena.sql` รันบนฐานข้อมูลจริงแล้ว 1 ต.ค. 2026 — ฟังก์ชัน 13 ตัวตรงกับที่ทดสอบ (md5), สิทธิ์ถูกต้อง
 - แก้บั๊กเก่า: `#result` ไม่มี z-index แถบเลือดข้างจอ (z 2) ทับหน้าผลบนมือถือทุกโหมด → `z-index:20`
 
 ## งานค้าง (ยังไม่ได้ทำ)
