@@ -174,6 +174,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 - รูปไอคอนในคลังแคชตาม `sp|el` (`makeThumb(sp, el)`) และมีป้ายธาตุมุมขวาบน · วัตถุดิบขึ้นดาวใช้ตัวซ้ำคนละธาตุได้
 
 ## กล้อง
+- มือถือ (จอสัมผัส ด้านสั้น ≤820px): `CAM_K=0.5` คูณระยะกล้องมุมสูงในสนามรบ = ซูมเข้า 2 เท่า (เจ้าของขอ 1 ต.ค. 2026) · `RTS.dist`/BT_ZMIN/BT_ZMAX ยังเป็นค่าเดิม
 - จำกัดการซูมเข้าเพื่อลดภาระเครื่อง: ฟาร์ม `FARM_ZMIN=56` ถึง `FARM_ZMAX=110` (farm_ui.js, camera.far=400) · สนามรบ `BT_ZMIN=45` ถึง `BT_ZMAX=75` (กล้องอัตโนมัติก็อยู่ในช่วงนี้), ระยะเริ่ม `RTS.base=55` (battle_ui.js), หมอกสนามรบ 110–420 (battle_map.js)
 
 ## เผ่า 4 เผ่า (server/migrate_race.sql · gamedata.js `RACES` · race_pick.js · battle_race.js)

@@ -4003,6 +4003,8 @@ const CAM=new THREE.Vector3(.6,5.2,10.2), LOOK=new THREE.Vector3(0,1,0), CAMt=CA
 let camMode={type:'wide'}, camK=2.5;
 // ซูมเข้าในสนามรบได้ไม่ใกล้เกินไป (ลดภาระเครื่อง)
 const BT_ZMIN=45; var BT_ZMAX=75;
+// มือถือ (จอสัมผัส จอเล็ก): กล้องมุมสูงซูมเข้า 2 เท่า (เจ้าของสั่ง · เดิมไกลไป) — ระยะ RTS.dist คงเดิม คูณตอนวางกล้อง
+const CAM_K=(matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<=820)?.5:1;
 const RTS={tgt:new THREE.Vector3(-4,0,0),auto:new THREE.Vector3(),dist:55,base:55,pitch:.95,yaw:.3,manual:0,zoomed:false}; const _cd=new THREE.Vector3(), _cr=new THREE.Vector3(), _cf=new THREE.Vector3();
 const camWide=()=>{camMode={type:'wide'};camK=3;};
 const camOver=(u,focus,far)=>{camMode={type:'over',u,focus,far:far||0};camK=3.2;};
@@ -4035,7 +4037,7 @@ function camUpdate(){
     const us=UNITS.filter(u=>u.alive);
     if(RTS.manual<=0&&us.length){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;us.forEach(u=>{const p=u.w.position;x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);z0=Math.min(z0,p.z);z1=Math.max(z1,p.z);});
       RTS.auto.set((x0+x1)/2,0,(z0+z1)/2); RTS.tgt.lerp(RTS.auto,.06); if(!RTS.zoomed)RTS.dist+=(Math.min(BT_ZMAX,Math.max(RTS.base,Math.max(x1-x0,(z1-z0)*1.6)*.95))-RTS.dist)*.03;}
-    const d=RTS.dist*(port?1.45:1), cp=Math.cos(RTS.pitch);
+    const d=RTS.dist*(port?1.45:1)*CAM_K, cp=Math.cos(RTS.pitch);
     CAMt.set(RTS.tgt.x+Math.sin(RTS.yaw)*cp*d, Math.sin(RTS.pitch)*d, RTS.tgt.z+Math.cos(RTS.yaw)*cp*d); LOOKt.copy(RTS.tgt).setY(.8);
   }
 }
@@ -4086,7 +4088,7 @@ addEventListener('resize',layout);
 /* ---------- ควบคุมกล้อง: ลากเพื่อเลื่อน ถ่าง/ล้อเมาส์เพื่อซูม ดับเบิลแตะให้กลับมาตามการต่อสู้ ---------- */
 document.body.classList.add('big');
 { const el=renderer.domElement, pts=new Map(); let pinch0=0, dist0=0, lastTap=0;
-  const pan=(dx,dy)=>{const k=RTS.dist*(camera.aspect<.9?1.45:1)*1.1/Math.max(300,view.clientHeight), cy=Math.cos(RTS.yaw), sy=Math.sin(RTS.yaw);
+  const pan=(dx,dy)=>{const k=RTS.dist*(camera.aspect<.9?1.45:1)*CAM_K*1.1/Math.max(300,view.clientHeight), cy=Math.cos(RTS.yaw), sy=Math.sin(RTS.yaw);
     RTS.tgt.x-=(dx*cy+dy*sy)*k; RTS.tgt.z-=(-dx*sy+dy*cy)*k*1.25; RTS.tgt.x=Math.max(-60,Math.min(70,RTS.tgt.x)); RTS.tgt.z=Math.max(-45,Math.min(45,RTS.tgt.z)); RTS.manual=6;};
   const zoom=f=>{RTS.dist=Math.max(BT_ZMIN,Math.min(BT_ZMAX,RTS.dist*f));RTS.zoomed=true;RTS.manual=Math.max(RTS.manual,3);};
   el.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){const [a,b]=[...pts.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);dist0=RTS.dist;}
@@ -4098,7 +4100,7 @@ document.body.classList.add('big');
   el.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.12:1/1.12);},{passive:false});
 }
 // ดีบัก: battle.html?dbg=1 เปิด window.__B (กล้อง/ยูนิต) ไว้ตรวจท่าทางตัวละครใกล้ ๆ
-if(/[?&]dbg=1/.test(location.search))window.__B={RTS,get UNITS(){return UNITS;},camera,MXA:typeof MXA!=='undefined'?MXA:null,setDist:d=>{RTS.dist=d;RTS.manual=99;},BN,idleRender,get AB(){return typeof AB!=='undefined'?AB:null},get WB(){return typeof WB!=='undefined'?WB:null},get AT(){return typeof AT!=='undefined'?AT:null},get MODE(){return MODE},get running(){return running}};
+if(/[?&]dbg=1/.test(location.search))window.__B={RTS,get UNITS(){return UNITS;},camera,MXA:typeof MXA!=='undefined'?MXA:null,setDist:d=>{RTS.dist=d;RTS.manual=99;},CAM_K,BN,idleRender,get AB(){return typeof AB!=='undefined'?AB:null},get WB(){return typeof WB!=='undefined'?WB:null},get AT(){return typeof AT!=='undefined'?AT:null},get MODE(){return MODE},get running(){return running}};
 
 /* ================= การรุกรานของไฮดรา: ฉากต่อสู้ (battle.html?raid=1) =================
    เซิร์ฟเวอร์คิดดาเมจตั้งแต่เริ่ม (raid_attack) · หน้าเกมเล่นฉากต่อสู้ 30 วินาที
