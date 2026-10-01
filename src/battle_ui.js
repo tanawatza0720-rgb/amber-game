@@ -192,7 +192,7 @@ function idleRender(){
   tl.textContent='';TEAM.forEach((d,i)=>{if(i)tl.append(' · ');const b=document.createElement('b');b.textContent=SPECIES[d.sp].name+' Lv'+d.lv;tl.append(b);});
   const pow=teamPow();
   $('#ipPow').textContent=fmtN(p?p.power:pow);
-  if(!p){$('#ipNeed').textContent='';$('#ipBoss').hidden=true;$('#ipChest').hidden=true;$('#ipTrial').hidden=false;$('#ipStage').textContent='-';return;}
+  if(!p){sweepRender(null);$('#ipNeed').textContent='';$('#ipBoss').hidden=true;$('#ipChest').hidden=true;$('#ipTrial').hidden=false;$('#ipStage').textContent='-';return;}
   $('#ipTrial').hidden=true;$('#ipChest').hidden=false;
   $('#ipStage').textContent=p.stage?stLabel(p.stage):'-';
   const ok=p.power>=p.need;
@@ -204,7 +204,31 @@ function idleRender(){
   $('#ipBar').style.width=(q.sec/q.max*100)+'%';
   $('#ipTime').textContent=(q.sec>=q.max?'เต็มแล้ว! ':'')+fmtDur(q.sec)+' / '+fmtDur(q.max)+' · 🪙 '+p.rate_c+'/นาที';
   $('#ipClaim').disabled=q.sec<60;
+  sweepRender(p);
 }
+// กวาดด่านด้วยพลังงาน (sweep_claim): 10 ⚡ = รางวัลดันด่าน 30 นาที · สูงสุด 6 ครั้งต่อการกด
+function energyNow(p){
+  const mx=p.energy_max||60,sec=p.energy_sec||180; let e=Number(p.energy||0);
+  if(e<mx&&p.energy_next!=null){const el=Math.floor((Date.now()-BN.at)/1000),first=Number(p.energy_next)||sec;if(el>=first)e=Math.min(mx,e+1+Math.floor((el-first)/sec));}
+  return {e,mx};
+}
+let SWBUSY=false;
+function sweepRender(p){
+  const box=$('#ipSweep'); if(!p){box.hidden=true;return;} box.hidden=false;
+  const {e,mx}=energyNow(p),per=30*(p.rate_c||5),n=Math.min(6,Math.floor(e/10));
+  $('#swEn').textContent='⚡ '+e+'/'+mx; $('#swPer').textContent='ครั้งละ 🪙 '+fmtN(per)+' · ✦ 30 exp';
+  const b1=$('#sw1'),ba=$('#swAll');
+  b1.innerHTML='กวาด ×1<small>10 ⚡</small>'; b1.disabled=SWBUSY||e<10;
+  ba.hidden=n<2; if(n>=2){ba.innerHTML='×'+n+'<small>'+(n*10)+' ⚡</small>';ba.dataset.n=n;} ba.disabled=SWBUSY;
+}
+async function doSweep(n){
+  if(SWBUSY||!n)return; SWBUSY=true; idleRender();
+  try{const r=await brpc('sweep_claim',{n});bnApply(r.state);bMsg('กวาดด่าน '+n+' ครั้ง ได้ 🪙 '+fmtN(r.coins)+' · ✦ '+fmtN(r.xp)+' exp');}
+  catch(e){bMsg(BERR[e.code]||BERR.network);}
+  finally{SWBUSY=false;idleRender();}
+}
+$('#sw1').onclick=()=>doSweep(1);
+$('#swAll').onclick=()=>doSweep(Number($('#swAll').dataset.n)||0);
 setInterval(()=>{if(!document.hidden)idleRender();},1000);
 async function idleLoop(){
   for(;;){

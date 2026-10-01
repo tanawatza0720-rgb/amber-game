@@ -139,6 +139,12 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
 .cbar{height:6px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden}.cbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffcf7a,#d9822b);transition:width .5s}
 #ipClaim{flex:none;width:72px;height:46px;border-radius:12px;border:1px solid #ffd9a0;background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;font-family:'Chakra Petch',sans-serif;font-weight:700}
 #ipClaim:disabled{filter:grayscale(.8);opacity:.6}
+.sweep{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.25);border-radius:12px;padding:6px 8px}
+.sinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.sinfo small{font-size:10px;color:var(--muted)}
+.sinfo b{font-size:14px;color:#9fd8ff;font-variant-numeric:tabular-nums}
+.sweep button{flex:none;min-width:58px;height:42px;padding:0 8px;border-radius:12px;border:1px solid #9fd8ff;background:linear-gradient(180deg,#5fb4ff,#2a5fb0);color:#fff;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;line-height:1.1}
+.sweep button small{display:block;font-size:10px;font-weight:600;opacity:.9}
+.sweep button:disabled{filter:grayscale(.8);opacity:.55}
 .trial{font-size:12px;color:#ffc27a;line-height:1.5}
 .ipteam{font-size:11px;color:var(--muted);line-height:1.5}.ipteam b{color:var(--bone);font-weight:600}.ipteam a{color:var(--amber)}
 #away .rr{margin-top:6px}
@@ -183,6 +189,7 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
 @media (orientation:landscape) and (max-height:520px){
   #idle{left:50%;right:auto;transform:translateX(-50%);width:min(380px,calc(100vw - 2 * 172px));bottom:calc(6px + env(safe-area-inset-bottom,0px));padding:8px 10px;gap:6px}
   #idle .ipst b,#idle .ippw b{font-size:16px}#ipTrial,.ipteam{display:none}
+  .sweep{padding:4px 6px}.sweep button{height:36px;min-width:52px;font-size:13px}#swPer{display:none}
   .hpcol{max-height:calc(100vh - 80px - env(safe-area-inset-top,0px));overflow:hidden}
   #hpL{left:calc(8px + env(safe-area-inset-left,0px))}#hpR{right:calc(8px + env(safe-area-inset-right,0px))}
   #camHint{display:none}
@@ -219,6 +226,10 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
   <div id="ipChest" class="chest" hidden>
     <div class="cinfo"><small>รางวัลสะสม (ได้แม้ปิดเกม)</small><b id="ipRew"></b><div class="cbar"><i id="ipBar"></i></div><small id="ipTime"></small></div>
     <button id="ipClaim">เก็บ</button>
+  </div>
+  <div id="ipSweep" class="sweep" hidden>
+    <div class="sinfo"><small>⚡ กวาดด่าน · 10 ⚡ = 30 นาที</small><b id="swEn">⚡ 0/60</b><small id="swPer"></small></div>
+    <button id="sw1" type="button">×1</button><button id="swAll" type="button" hidden>×2</button>
   </div>
   <div id="ipTrial" class="trial" hidden>โหมดทดลอง: ยังไม่ได้เข้าสู่ระบบ ดูการต่อสู้ได้แต่ไม่ได้รางวัล · เข้าสู่ระบบที่หน้าฟาร์มก่อน</div>
   <div class="ipteam">ทีม: <span id="ipTeam"></span> · <a href="index.html?back=1">จัดทีม/อัปเลเวลในฟาร์ม</a></div>
@@ -3211,7 +3222,7 @@ const SUPABASE_KEY='sb_publishable_FsTybeBpKC_v3gHQ4gnUHA_xhYmbBIt'; // publisha
 const BSTORE={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return null;}},setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){}}};
 let NO_DRAGON=false;
 const BN={sb:null,online:false,state:null,at:0,bid:null,t0:0};
-const BERR={not_ready:'ยังสะสมรางวัลไม่ถึง 1 นาที',too_fast:'จบด่านเร็วผิดปกติ',expired:'การต่อสู้นี้หมดเวลาแล้ว',boss_gate:'ต้องชนะบอสก่อน',no_boss:'ยังไม่ถึงด่านบอส',
+const BERR={not_enough_energy:'พลังงานไม่พอ (ต้องมี 10 ⚡ ต่อครั้ง)',bad_count:'จำนวนครั้งไม่ถูกต้อง',not_ready:'ยังสะสมรางวัลไม่ถึง 1 นาที',too_fast:'จบด่านเร็วผิดปกติ',expired:'การต่อสู้นี้หมดเวลาแล้ว',boss_gate:'ต้องชนะบอสก่อน',no_boss:'ยังไม่ถึงด่านบอส',
   already_finished:'บันทึกผลไปแล้ว',no_battle:'ไม่พบข้อมูลการต่อสู้นี้',
   session:'การเข้าสู่ระบบหมดอายุ กลับไปฟาร์มแล้วเข้าสู่ระบบใหม่',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง'};
 const bTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
@@ -3751,7 +3762,7 @@ function idleRender(){
   tl.textContent='';TEAM.forEach((d,i)=>{if(i)tl.append(' · ');const b=document.createElement('b');b.textContent=SPECIES[d.sp].name+' Lv'+d.lv;tl.append(b);});
   const pow=teamPow();
   $('#ipPow').textContent=fmtN(p?p.power:pow);
-  if(!p){$('#ipNeed').textContent='';$('#ipBoss').hidden=true;$('#ipChest').hidden=true;$('#ipTrial').hidden=false;$('#ipStage').textContent='-';return;}
+  if(!p){sweepRender(null);$('#ipNeed').textContent='';$('#ipBoss').hidden=true;$('#ipChest').hidden=true;$('#ipTrial').hidden=false;$('#ipStage').textContent='-';return;}
   $('#ipTrial').hidden=true;$('#ipChest').hidden=false;
   $('#ipStage').textContent=p.stage?stLabel(p.stage):'-';
   const ok=p.power>=p.need;
@@ -3763,7 +3774,31 @@ function idleRender(){
   $('#ipBar').style.width=(q.sec/q.max*100)+'%';
   $('#ipTime').textContent=(q.sec>=q.max?'เต็มแล้ว! ':'')+fmtDur(q.sec)+' / '+fmtDur(q.max)+' · 🪙 '+p.rate_c+'/นาที';
   $('#ipClaim').disabled=q.sec<60;
+  sweepRender(p);
 }
+// กวาดด่านด้วยพลังงาน (sweep_claim): 10 ⚡ = รางวัลดันด่าน 30 นาที · สูงสุด 6 ครั้งต่อการกด
+function energyNow(p){
+  const mx=p.energy_max||60,sec=p.energy_sec||180; let e=Number(p.energy||0);
+  if(e<mx&&p.energy_next!=null){const el=Math.floor((Date.now()-BN.at)/1000),first=Number(p.energy_next)||sec;if(el>=first)e=Math.min(mx,e+1+Math.floor((el-first)/sec));}
+  return {e,mx};
+}
+let SWBUSY=false;
+function sweepRender(p){
+  const box=$('#ipSweep'); if(!p){box.hidden=true;return;} box.hidden=false;
+  const {e,mx}=energyNow(p),per=30*(p.rate_c||5),n=Math.min(6,Math.floor(e/10));
+  $('#swEn').textContent='⚡ '+e+'/'+mx; $('#swPer').textContent='ครั้งละ 🪙 '+fmtN(per)+' · ✦ 30 exp';
+  const b1=$('#sw1'),ba=$('#swAll');
+  b1.innerHTML='กวาด ×1<small>10 ⚡</small>'; b1.disabled=SWBUSY||e<10;
+  ba.hidden=n<2; if(n>=2){ba.innerHTML='×'+n+'<small>'+(n*10)+' ⚡</small>';ba.dataset.n=n;} ba.disabled=SWBUSY;
+}
+async function doSweep(n){
+  if(SWBUSY||!n)return; SWBUSY=true; idleRender();
+  try{const r=await brpc('sweep_claim',{n});bnApply(r.state);bMsg('กวาดด่าน '+n+' ครั้ง ได้ 🪙 '+fmtN(r.coins)+' · ✦ '+fmtN(r.xp)+' exp');}
+  catch(e){bMsg(BERR[e.code]||BERR.network);}
+  finally{SWBUSY=false;idleRender();}
+}
+$('#sw1').onclick=()=>doSweep(1);
+$('#swAll').onclick=()=>doSweep(Number($('#swAll').dataset.n)||0);
 setInterval(()=>{if(!document.hidden)idleRender();},1000);
 async function idleLoop(){
   for(;;){

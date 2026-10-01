@@ -6,7 +6,7 @@ const SUPABASE_KEY='sb_publishable_FsTybeBpKC_v3gHQ4gnUHA_xhYmbBIt'; // publisha
 const BSTORE={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return null;}},setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){}}};
 let NO_DRAGON=false;
 const BN={sb:null,online:false,state:null,at:0,bid:null,t0:0};
-const BERR={not_ready:'ยังสะสมรางวัลไม่ถึง 1 นาที',too_fast:'จบด่านเร็วผิดปกติ',expired:'การต่อสู้นี้หมดเวลาแล้ว',boss_gate:'ต้องชนะบอสก่อน',no_boss:'ยังไม่ถึงด่านบอส',
+const BERR={not_enough_energy:'พลังงานไม่พอ (ต้องมี 10 ⚡ ต่อครั้ง)',bad_count:'จำนวนครั้งไม่ถูกต้อง',not_ready:'ยังสะสมรางวัลไม่ถึง 1 นาที',too_fast:'จบด่านเร็วผิดปกติ',expired:'การต่อสู้นี้หมดเวลาแล้ว',boss_gate:'ต้องชนะบอสก่อน',no_boss:'ยังไม่ถึงด่านบอส',
   already_finished:'บันทึกผลไปแล้ว',no_battle:'ไม่พบข้อมูลการต่อสู้นี้',
   session:'การเข้าสู่ระบบหมดอายุ กลับไปฟาร์มแล้วเข้าสู่ระบบใหม่',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง'};
 const bTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);

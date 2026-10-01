@@ -139,6 +139,12 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
 .cbar{height:6px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden}.cbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffcf7a,#d9822b);transition:width .5s}
 #ipClaim{flex:none;width:72px;height:46px;border-radius:12px;border:1px solid #ffd9a0;background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2b1808;font-family:'Chakra Petch',sans-serif;font-weight:700}
 #ipClaim:disabled{filter:grayscale(.8);opacity:.6}
+.sweep{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.25);border-radius:12px;padding:6px 8px}
+.sinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.sinfo small{font-size:10px;color:var(--muted)}
+.sinfo b{font-size:14px;color:#9fd8ff;font-variant-numeric:tabular-nums}
+.sweep button{flex:none;min-width:58px;height:42px;padding:0 8px;border-radius:12px;border:1px solid #9fd8ff;background:linear-gradient(180deg,#5fb4ff,#2a5fb0);color:#fff;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:14px;line-height:1.1}
+.sweep button small{display:block;font-size:10px;font-weight:600;opacity:.9}
+.sweep button:disabled{filter:grayscale(.8);opacity:.55}
 .trial{font-size:12px;color:#ffc27a;line-height:1.5}
 .ipteam{font-size:11px;color:var(--muted);line-height:1.5}.ipteam b{color:var(--bone);font-weight:600}.ipteam a{color:var(--amber)}
 #away .rr{margin-top:6px}
@@ -183,6 +189,7 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
 @media (orientation:landscape) and (max-height:520px){
   #idle{left:50%;right:auto;transform:translateX(-50%);width:min(380px,calc(100vw - 2 * 172px));bottom:calc(6px + env(safe-area-inset-bottom,0px));padding:8px 10px;gap:6px}
   #idle .ipst b,#idle .ippw b{font-size:16px}#ipTrial,.ipteam{display:none}
+  .sweep{padding:4px 6px}.sweep button{height:36px;min-width:52px;font-size:13px}#swPer{display:none}
   .hpcol{max-height:calc(100vh - 80px - env(safe-area-inset-top,0px));overflow:hidden}
   #hpL{left:calc(8px + env(safe-area-inset-left,0px))}#hpR{right:calc(8px + env(safe-area-inset-right,0px))}
   #camHint{display:none}
@@ -219,6 +226,10 @@ a.hb{display:grid;place-items:center;text-decoration:none;color:inherit}
   <div id="ipChest" class="chest" hidden>
     <div class="cinfo"><small>รางวัลสะสม (ได้แม้ปิดเกม)</small><b id="ipRew"></b><div class="cbar"><i id="ipBar"></i></div><small id="ipTime"></small></div>
     <button id="ipClaim">เก็บ</button>
+  </div>
+  <div id="ipSweep" class="sweep" hidden>
+    <div class="sinfo"><small>⚡ กวาดด่าน · 10 ⚡ = 30 นาที</small><b id="swEn">⚡ 0/60</b><small id="swPer"></small></div>
+    <button id="sw1" type="button">×1</button><button id="swAll" type="button" hidden>×2</button>
   </div>
   <div id="ipTrial" class="trial" hidden>โหมดทดลอง: ยังไม่ได้เข้าสู่ระบบ ดูการต่อสู้ได้แต่ไม่ได้รางวัล · เข้าสู่ระบบที่หน้าฟาร์มก่อน</div>
   <div class="ipteam">ทีม: <span id="ipTeam"></span> · <a href="index.html?back=1">จัดทีม/อัปเลเวลในฟาร์ม</a></div>
