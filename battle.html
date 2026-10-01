@@ -870,7 +870,7 @@ function elInfo(e){
   return {strong,weak};
 }
 // ธาตุประจำตัว (ภาพหลักของตัวละคร) · ตัวที่ฟักได้สุ่มธาตุได้ทั้ง 6 ธาตุ (เก็บใน monsters.el; ว่าง = ธาตุประจำตัว)
-const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ',seiro:'น้ำ',kohaku:'ไฟ',garok:'ดิน'};
+const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ',seiro:'น้ำ',kohaku:'ไฟ',garok:'ดิน',sarael:'แสง',anubis:'มืด',phraiwan:'ลม',mortha:'น้ำ'};
 const elOfMon=m=>(m&&m.el&&ELEM[m.el])?m.el:EL_OF[m&&m.sp];
 /* ================= ออร่าตามธาตุ =================
    ผิวตัวละครเป็นสีเดิม · ห่อด้วย "เปลือกออร่า" (ใช้กระดูกเดียวกับตัว จึงขยับตาม) ขอบเรืองเป็นเปลวไหวขึ้นด้านบน
@@ -1009,12 +1009,33 @@ const SKILLS={
     {id:'s2',name:'กรงเล็บเก้าชีวิต',desc:'ฟัน 3 ครั้ง ครั้งละ 80% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.8,target:'one'},
     {id:'s3',name:'ดาบจันทร์เสี้ยว',desc:'กระโดดฟันศัตรูรอบจุดตก 110% โอกาส 30% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.1,target:'all',stun:.3},
     {id:'s4',name:'เก้าชีวิต',desc:'ติดตัว: เมื่อเลือดหมดครั้งแรกจะรอดและฟื้นเลือด 35% (1 ครั้งต่อการต่อสู้) · โอกาสคริ +10%',type:'passive',passive:{revive:.35,crit:.1}}],
+  // สายฮีล: type 'heal' ฟื้นเลือดพวกเดียวกัน (target 'one' = ตัวที่เลือดเหลือน้อยสุด · 'all' = ทั้งทีม) ปริมาณ = พลังโจมตี × mult × 1.25
+  phraiwan:[
+    {id:'s1',name:'ใบไม้คมวายุ',desc:'ซัดใบไม้คมจากระยะไกลใส่ศัตรู 1 ตัว 100%',cd:0,type:'bolt',mult:1,target:'one'},
+    {id:'s2',name:'สายลมชุบชีวิต',desc:'ฟื้นเลือดทั้งทีม 80% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:.8,target:'all'},
+    {id:'s3',name:'พรแห่งพงไพร',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 240% ของพลังโจมตี และแก้อาการมึน · คูลดาวน์ 4',cd:4,type:'heal',mult:2.4,target:'one',cleanse:1},
+    {id:'s4',name:'รากไม้ค้ำชีวิต',desc:'ติดตัว: ทุก 3 วินาที ทั้งทีมฟื้นเลือด 2% ของเลือดสูงสุด',type:'passive',passive:{regen:.02}}],
+  mortha:[
+    {id:'s1',name:'หยดน้ำมนต์',desc:'สาดน้ำมนต์จากระยะไกลใส่ศัตรู 1 ตัว 100%',cd:0,type:'bolt',mult:1,target:'one'},
+    {id:'s2',name:'ยาคืนวิญญาณ',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 180% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:1.8,target:'one'},
+    {id:'s3',name:'บทสวดแห่งสุสาน',desc:'ฟื้นเลือดทั้งทีม 110% ของพลังโจมตี และแก้อาการมึนทั้งทีม · คูลดาวน์ 4',cd:4,type:'heal',mult:1.1,target:'all',cleanse:1},
+    {id:'s4',name:'ผ้าคลุมผู้ภาวนา',desc:'ติดตัว: ฮีลแรงขึ้น 25% · รับดาเมจลดลง 10%',type:'passive',passive:{healUp:.25,dr:.1}}],
   // ---------- เทพเจ้า ----------
   amateru:[
     {id:'s1',name:'กรงเล็บเพลิง',desc:'บินโฉบเข้าไปงับศัตรู 1 ตัว 140%',cd:0,type:'melee',mult:1.4,target:'one'},
     {id:'s2',name:'ลมหายใจอัมพร',desc:'พ่นไฟใส่ศัตรูรอบเป้าหมาย 100% · คูลดาวน์ 3',cd:3,type:'ranged',mult:1,target:'all'},
     {id:'s3',name:'ดิ่งฟ้าถล่ม',desc:'บินขึ้นฟ้าแล้วดิ่งลงกระแทกศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
-    {id:'s4',name:'หัวใจมังกรอัมพร',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 15% · อามาเทรุรับดาเมจลดลง 25% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.15,dr:.25,crit:.1}}]
+    {id:'s4',name:'หัวใจมังกรอัมพร',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 15% · อามาเทรุรับดาเมจลดลง 25% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.15,dr:.25,crit:.1}}],
+  sarael:[
+    {id:'s1',name:'กรงเล็บพิพากษา',desc:'ฟาดกรงเล็บใส่ศัตรู 1 ตัว 140%',cd:0,type:'melee',mult:1.4,target:'one'},
+    {id:'s2',name:'พายุขนนกสองสี',desc:'ฟาด 3 ครั้ง ครั้งละ 95% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.95,target:'one'},
+    {id:'s3',name:'ดิ่งสวรรค์ทัณฑ์',desc:'กางปีกดิ่งลงกระแทกศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
+    {id:'s4',name:'ปีกโลหิตและแสง',desc:'ติดตัว: โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 35% · รับดาเมจลดลง 15% · โอกาสคริ +15%',type:'passive',passive:{dmgLow:.35,dr:.15,crit:.15}}],
+  anubis:[
+    {id:'s1',name:'ลูกแก้ววิญญาณ',desc:'ยิงลูกแก้ววิญญาณจากระยะไกลใส่ศัตรู 1 ตัว 140%',cd:0,type:'bolt',mult:1.4,target:'one'},
+    {id:'s2',name:'คำสาปผืนทราย',desc:'ยิงคำสาปใส่ศัตรูสูงสุด 4 ตัว ตัวละ 100% · คูลดาวน์ 3',cd:3,type:'ranged',mult:1,target:'all'},
+    {id:'s3',name:'พายุทรายแห่งความตาย',desc:'เรียกพายุทรายถล่มศัตรูรอบเป้าหมาย 150% โอกาส 40% ทำให้มึน (ยืนร่ายจากระยะไกล) · คูลดาวน์ 4',cd:4,type:'rain',mult:1.5,target:'all',stun:.4},
+    {id:'s4',name:'ตาชั่งแห่งวิญญาณ',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 12% · โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 30% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.12,dmgLow:.3,crit:.1}}]
 };
 const passiveOf=sp=>{const s=(SKILLS[sp]||[]).find(x=>x.type==='passive');return s?s.passive:null;};
 
@@ -1083,7 +1104,7 @@ function abyssBless(k){
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -1093,7 +1114,7 @@ function loadRig(key,onProgress){
 }
 function loadMeshy(onProgress){
   const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
-  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),loadRig('seiro'),loadRig('kohaku'),loadRig('garok'),anims]).then(([g])=>{MESHY=g;return g;});
+  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),loadRig('seiro'),loadRig('kohaku'),loadRig('garok'),loadRig('sarael'),loadRig('anubis'),loadRig('phraiwan'),loadRig('mortha'),anims]).then(([g])=>{MESHY=g;return g;});
 }
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
 /* กำมือ: โมเดลจาก Meshy ไม่มีกระดูกนิ้ว มือจึงแบแข็ง -> ดัดนิ้วของเมชให้งอรอบด้ามดาบ (ทำครั้งเดียวต่อโมเดล)
@@ -1138,7 +1159,8 @@ function makeFist(root,hands){
     sw.position.add(new THREE.Vector3(...U[sd].shift));
   });
 }
-const POLE={morihime:1,kohaku:1,garok:1}; // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
+const POLE={morihime:1,kohaku:1,garok:1,anubis:1,phraiwan:1,mortha:1};
+const NOWPN={sarael:1}; // สู้มือเปล่า (กรงเล็บ) ไม่ถือดาบ // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
 function buildMeshyEvo(m,key){
   key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
   const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
@@ -1271,6 +1293,7 @@ function buildMeshyEvo(m,key){
   if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||!!POLE[key];}
   else{m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;}
   if(key==='kuroga'||key==='seiro'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ/เซย์โร: ดาบยาวเล่มเดียว
+  if(NOWPN[key])m.userData.swords=[]; // ดาบยังใช้กำมือ แต่ไม่โชว์
   const base=[
     [hips.position,'y',.88],[hips.rotation,'y',.12],[hips.rotation,'x',0],
     [torso.rotation,'x',.05],[torso.rotation,'y',-.04],[torso.rotation,'z',0],
@@ -2690,6 +2713,10 @@ const SPECIES={
   seiro:{name:'เซย์โร',evo:1,rig:'seiro',base:{hp:104,atk:34,def:15,spd:40}},
   kohaku:{name:'โคฮาคุ',evo:1,rig:'kohaku',ranged:1,base:{hp:96,atk:36,def:12,spd:40}},
   garok:{name:'กาโรค',evo:1,rig:'garok',base:{hp:124,atk:31,def:19,spd:30}},
+  phraiwan:{name:'ไพรวัลย์',evo:1,rig:'phraiwan',ranged:1,healer:1,base:{hp:150,atk:40,def:22,spd:48}},
+  mortha:{name:'มอร์ธา',evo:1,rig:'mortha',ranged:1,healer:1,base:{hp:140,atk:42,def:20,spd:52}},
+  sarael:{name:'ซาราเอล',evo:1,rig:'sarael',base:{hp:180,atk:78,def:24,spd:62}},
+  anubis:{name:'อนุบิส',evo:1,rig:'anubis',ranged:1,base:{hp:178,atk:80,def:22,spd:58}},
   yorugumo:{name:'โยรุกุโมะ',evo:1,spider:1,base:{hp:100,atk:34,def:14,spd:38}},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42}},
 };
@@ -2922,6 +2949,13 @@ function dealHit(att,t,skill){
   updateBar(t);
   if(t.hp<=0)die(t); else react(t,att.w.position.x);
 }
+/* ฮีล (สายฮีล type 'heal' และติดตัว regen): ปริมาณ = พลังโจมตี × mult × 1.25 (+healUp) · สงคราม: ฝั่งที่ถูกกำหนดให้แพ้ฮีลได้น้อยลง ให้ภาพตรงกับผลจากเซิร์ฟเวอร์ */
+function healAmt(h,t,mult){let v=h.atk*mult*1.25*(.95+Math.random()*.1)*(1+((h.pas&&h.pas.healUp)||0));
+  if(typeof WAR_MODE!=='undefined'&&WAR_MODE&&typeof WB!=='undefined'&&WB&&WB.live&&((WB.win&&t.side==='E')||(!WB.win&&t.side==='P')))v*=.4;
+  return Math.max(1,Math.round(v));}
+function healUnit(t,v,quiet){if(!t.alive||t.hp<=0)return 0;v=Math.min(Math.round(v),t.maxHp-t.hp);if(v<=0)return 0;t.hp+=v;updateBar(t);
+  if(!quiet){popNum(t,'+'+v,'heal');particles(tmpV.copy(t.w.position).setY(.4),0x8dffb0,Math.round(10*FXK)||3,.9,.06,1.6,.9);}return v;}
+const hurtPct=u=>u.hp/u.maxHp;
 // ท่าทางอิงความเร็วเกม (x1/x2)
 function poseTo(list,d,z){const k=Math.pow(5.2/Math.max(d,.06),2);list.forEach(([o,p,v])=>{const c=channel(o,p);c.t=v;c.k=k;c.z=z==null?.78:z;});return wait(d*1000);}
 
@@ -3463,10 +3497,35 @@ async function rigRain(u,t,foes,clip,onHitOne){
   shockRing(cen,c); shake=Math.max(shake,.18); particles(tmpV.copy(cen).setY(.2),c,Math.round(22*FXK)||6,2.4,.08,.5,.9);
   await wait(250);
 }
-const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'},seiro:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kohaku:{bolt:'slash',cast:'battlecry',rain:'powerup'},garok:{s1:['power','slash','slash2'],s2:'spin',s3:'jumpatk'}};
+/* ฮีล: ยืนร่ายที่เดิม ดวงไฟเขียวจากปลายคทาลอยไปหาเพื่อนทีละดวง แล้วมีวงแสงที่เท้า */
+async function rigHeal(u,s){
+  const A=u.inner.userData,mates=UNITS.filter(o=>o.alive&&o.side===u.side&&!o.raid);
+  const list=s.target==='all'?mates:[mates.reduce((a,b)=>hurtPct(b)<hurtPct(a)?b:a,mates[0])].filter(Boolean);
+  const clip=ANIM[u.sp]&&ANIM[u.sp].heal, inf=clip&&A.clipInfo&&hasClip(u,clip)?A.clipInfo(clip):null, sp=1.4;
+  if(inf)A.play(clip,{speed:sp,fade:.1});
+  const c=0x8dffb0, g0=glow(scene,c,.4,castSrc(u).toArray(),1);
+  await tween(.45,k=>{g0.position.copy(castSrc(u));g0.scale.setScalar(.3+k*1.3);}); scene.remove(g0);g0.material.dispose();
+  shockRing(tmpV.copy(u.w.position).setY(.05),c);
+  await Promise.all(list.map((f,i)=>new Promise(res=>setTimeout(async()=>{
+    const from=castSrc(u),g=glow(scene,c,.35,from.toArray(),1),to=()=>f.w.position.clone().setY(1.1);
+    await tween(.32,k=>{g.position.lerpVectors(from,to(),k);g.position.y+=Math.sin(k*Math.PI)*.8;});
+    scene.remove(g);g.material.dispose();
+    if(f.alive){healUnit(f,healAmt(u,f,s.mult));if(s.cleanse&&(f.stun||f.stunT>0)){f.stun=0;f.stunT=Math.min(f.stunT,.01);}
+      shockRing(tmpV.copy(f.w.position).setY(.05),c);particles(tmpV.copy(f.w.position).setY(.2),c,Math.round(14*FXK)||4,1.2,.07,1.8,1);}
+    res();},i*90/SPEED))));
+  await wait(200);
+}
+// ใช้ฮีลไหม: เดี่ยว = มีเพื่อนเลือด <70% · ทั้งทีม = เพื่อนเลือด <85% ตั้งแต่ 2 ตัว หรือมีตัว <50%
+const healWanted=(u,s)=>{const m=UNITS.filter(o=>o.alive&&o.side===u.side&&!o.raid);
+  return s.target==='all'?m.filter(o=>hurtPct(o)<.85).length>=2||m.some(o=>hurtPct(o)<.5):m.some(o=>hurtPct(o)<.7);};
+const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'},seiro:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kohaku:{bolt:'slash',cast:'battlecry',rain:'powerup'},anubis:{bolt:'slash',cast:'battlecry',rain:'powerup'},phraiwan:{bolt:'slash',heal:'powerup'},mortha:{bolt:'slash',heal:'battlecry'},sarael:{s1:['slash','power','slash2'],s2:'combo',s3:'jumpatk'},garok:{s1:['power','slash','slash2'],s2:'spin',s3:'jumpatk'}};
 function rtTick(dt,T){
   if(!RT)return;
   raceTick(dt);
+  // ติดตัว regen (ไพรวัลย์): ทุก 3 วินาที ทั้งทีมฟื้นเลือด % ของเลือดสูงสุด
+  UNITS.forEach(u=>{if(!u.alive||!u.pas||!u.pas.regen)return;u.regT=(u.regT||0)+dt;if(u.regT<3)return;u.regT=0;
+    UNITS.forEach(o=>{if(o.alive&&o.side===u.side&&!o.raid)healUnit(o,o.maxHp*u.pas.regen,true);});
+    particles(tmpV.copy(u.w.position).setY(.3),0x8dffb0,Math.round(6*FXK)||2,1.4,.05,1.2,.8);});
   UNITS.forEach(u=>{
     if(!u.alive||u.raid)return;
     if(u.stun&&u.dragon){u.stun=0;u.stunT=1.6;u.dizzy=1;stopMove(u,1);dragonSet(u,{droop:1,flapAmp:.25},.25);}
@@ -3478,6 +3537,10 @@ function rtTick(dt,T){
     if(u.atkT>0)u.atkT-=dt;
     if(u.busy)return;
     const [t,d]=nearestFoe(u);
+    { // สายฮีล: ฮีลได้ทุกระยะ แม้ยังไม่มีศัตรูใกล้
+      if(u.queued&&u.queued.type==='heal'){const s=u.queued;u.queued=null;stopMove(u);rtUse(u,s,t);return;} // กดไม้ตายฮีลเอง
+      const man=RT.manual&&u.side==='P'&&!AUTO, hs=u.skills.filter(s=>s.type==='heal'&&u.skT[s.id]<=0&&!(man&&s===ultOf(u))&&healWanted(u,s));
+      if(hs.length){stopMove(u);rtUse(u,hs[hs.length-1],t);return;}}
     if(u.patrol&&t){u.patrol=0;stopMove(u);}
     if(!t&&u.dragon){ // มังกร: บินวนลาดตระเวนเหนือจุดตั้งหลักระหว่างรอศัตรูระลอกใหม่
       const K=u.w.scale.x, a=T*.42+(u.slot||0), tx=u.home.x+Math.cos(a)*1.7*K, tz=u.home.z+Math.sin(a)*1.1*K;
@@ -3492,8 +3555,8 @@ function rtTick(dt,T){
     }
     if(!u.dodged&&u.hp<u.maxHp*.35&&d<3&&hasClip(u,'dodge')){u.dodged=1;stopMove(u,1);rtDodge(u,t);return;}
     const manual=RT.manual&&u.side==='P'&&!AUTO;
-    if(u.queued&&d<(u.ranged?9:8)){const s=u.queued;u.queued=null;stopMove(u);rtUse(u,s,t);return;}
-    const ready=u.skills.filter(s=>s.cd&&u.skT[s.id]<=0&&!(manual&&s===ultOf(u)));
+    if(u.queued&&u.queued.type!=='heal'&&d<(u.ranged?9:8)){const s=u.queued;u.queued=null;stopMove(u);rtUse(u,s,t);return;}
+    const ready=u.skills.filter(s=>s.cd&&u.skT[s.id]<=0&&!(manual&&s===ultOf(u))&&(s.type!=='heal'||healWanted(u,s)));
     if(ready.length&&d<(u.ranged?8.6:6.5)){stopMove(u);rtUse(u,ready[ready.length-1],t);return;}
     const range=t.rad+u.reach+.15;
     if(d>range){stepToward(u,t.w.position.x,t.w.position.z,d-range,dt,T);return;}
@@ -3510,11 +3573,12 @@ async function rtUse(u,s,t){
       popNum(u,s.name,'info');
       if(u.side==='P'&&s===ultOf(u)){const k=$('#skname');k.textContent=s.name;k.className='p';k.hidden=false;setTimeout(()=>{if(k.textContent===s.name)k.hidden=true;},900);}
     }
-    if(u.dragon&&s.type!=='melee'){}else await faceTo(u,t.w.position,.08);
+    if(u.dragon&&s.type!=='melee'){}else if(t)await faceTo(u,t.w.position,.08);
     const AN=ANIM[u.sp]&&u.inner.userData.play?ANIM[u.sp]:null;
     if(AN&&u.side==='P'&&s===ultOf(u)&&hasClip(u,'powerup')){u.inner.userData.play('powerup',{speed:1.8,fade:.1});particles(tmpV.copy(u.w.position).setY(1),0x9fe8ff,24,1.4,.06,1.2,.9);await wait(650);}
     if(u.dragon&&u.side==='P'&&s===ultOf(u))await dragonRoar(u,450);
-    if(u.spider){
+    if(s.type==='heal'){await rigHeal(u,s);}
+    else if(u.spider){
       if(s.type==='ranged')await spiderCast(u,near(t.w.position,4.5),f=>dealHit(u,f,s));
       else if(s.type==='leap'){const fs=near(t.w.position,3.2),c=t.w.position.clone().setY(0);await spiderLeap(u,c,fs,hitAll(fs));}
       else{const n=s.type==='melee3'?3:1;for(let i=0;i<n&&t.alive;i++)await spiderStrike(u,t,()=>{if(t.alive)dealHit(u,t,s);});}
@@ -3745,7 +3809,7 @@ function previewOrder(n){
 }
 function renderOrder(cur){
   const o=$('#order');o.innerHTML='';
-  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):({kazekiri:'คิริ',kazemaru:'มารุ',amateru:'มังกร',kuroga:'คุโร',hakuneko:'เนโกะ',morihime:'โมริ',yorugumo:'แมงมุม',seiro:'เซย์',kohaku:'โคฮา',garok:'กาโรค'}[u.sp]||'');o.appendChild(c);});
+  [cur,...previewOrder(5)].forEach((u,i)=>{const c=document.createElement('div');c.className='oc '+(u.side==='P'?'p':'e')+(i===0?' now':'')+(u.boss?' boss':'');c.textContent=u.side==='E'?(u.boss?'บอส':'ชาด'):({kazekiri:'คิริ',kazemaru:'มารุ',amateru:'มังกร',kuroga:'คุโร',hakuneko:'เนโกะ',morihime:'โมริ',yorugumo:'แมงมุม',seiro:'เซย์',kohaku:'โคฮา',garok:'กาโรค',sarael:'ซารา',anubis:'อนุบิส',phraiwan:'ไพร',mortha:'มอร์ธา'}[u.sp]||'');o.appendChild(c);});
 }
 
 /* ================= วงแหวนบอกตัวที่ถึงตาและเป้าหมาย ================= */

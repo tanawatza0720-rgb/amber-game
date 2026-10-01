@@ -2,7 +2,7 @@
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -12,7 +12,7 @@ function loadRig(key,onProgress){
 }
 function loadMeshy(onProgress){
   const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
-  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),loadRig('seiro'),loadRig('kohaku'),loadRig('garok'),anims]).then(([g])=>{MESHY=g;return g;});
+  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),loadRig('seiro'),loadRig('kohaku'),loadRig('garok'),loadRig('sarael'),loadRig('anubis'),loadRig('phraiwan'),loadRig('mortha'),anims]).then(([g])=>{MESHY=g;return g;});
 }
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
 /* กำมือ: โมเดลจาก Meshy ไม่มีกระดูกนิ้ว มือจึงแบแข็ง -> ดัดนิ้วของเมชให้งอรอบด้ามดาบ (ทำครั้งเดียวต่อโมเดล)
@@ -57,7 +57,8 @@ function makeFist(root,hands){
     sw.position.add(new THREE.Vector3(...U[sd].shift));
   });
 }
-const POLE={morihime:1,kohaku:1,garok:1}; // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
+const POLE={morihime:1,kohaku:1,garok:1,anubis:1,phraiwan:1,mortha:1};
+const NOWPN={sarael:1}; // สู้มือเปล่า (กรงเล็บ) ไม่ถือดาบ // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
 function buildMeshyEvo(m,key){
   key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
   const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
@@ -190,6 +191,7 @@ function buildMeshyEvo(m,key){
   if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||!!POLE[key];}
   else{m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;}
   if(key==='kuroga'||key==='seiro'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ/เซย์โร: ดาบยาวเล่มเดียว
+  if(NOWPN[key])m.userData.swords=[]; // ดาบยังใช้กำมือ แต่ไม่โชว์
   const base=[
     [hips.position,'y',.88],[hips.rotation,'y',.12],[hips.rotation,'x',0],
     [torso.rotation,'x',.05],[torso.rotation,'y',-.04],[torso.rotation,'z',0],

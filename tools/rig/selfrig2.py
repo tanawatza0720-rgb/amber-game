@@ -52,6 +52,7 @@ if CLOTH:
     wg=np.zeros(G); np.add.at(wg,inv,wv.astype(float)); cnt=np.bincount(inv,minlength=G); wg=wg/np.maximum(cnt,1)>.5
     cloth=wg&(Dn.min(1)>float(os.environ.get('CLOTH_K','1.0')))
     cloth|=(Dn.min(1)>float(os.environ.get('FAR_K','1.6')))&(GV[:,1]<1.25)
+    if os.environ.get('NOCLOTH_X'):cloth&=np.abs(GV[:,0])<float(os.environ['NOCLOTH_X'])  # มือสีซีด ไม่ใช่ผ้า
     y=GV[:,1]; tgt=np.zeros((G,len(SKIN)))
     def put(mask,n,val): tgt[mask,SKIN.index(n)]+=val[mask] if hasattr(val,'__len__') else val
     one=np.ones(G)
@@ -64,6 +65,7 @@ if CLOTH:
     put(cloth,'Hips',rest-lg)
     hr=np.zeros(G); np.add.at(hr,inv,((Cc[:,0]>.5)&(Cc[:,0]-Cc[:,2]>.12)&(Cc[:,1]<Cc[:,0])).astype(float)); hair=(hr/np.maximum(cnt,1)>.5)&(Dn.min(1)>float(os.environ.get('HAIR_K','.9')))&(y>1.0)
     hair&=~cloth|(y>1.1)
+    if os.environ.get('NOCLOTH_X'):hair&=np.abs(GV[:,0])<float(os.environ['NOCLOTH_X'])  # สีผิวที่มือไม่ใช่ผม
     tgt[hair]=0; fh=np.clip((y-1.2)/.2,0,1)
     put(hair,'Head',fh); put(hair,'Neck',(1-fh)*.35); put(hair,'Spine2',(1-fh)*.65)
     cloth=cloth|hair; print('hair groups',hair.sum())
@@ -87,6 +89,9 @@ if os.environ.get('CUT'):
         ids=[IDX[sd+'ForeArm'],IDX[sd+'Hand']]
         aw=(JW*np.isin(JI,ids)).sum(1); fa=aw[F]; keep&=~((fa.max(1)-fa.min(1))>float(os.environ.get('CUT')))
     print('cut faces',(~keep).sum()); F=F[keep]
+# DROP: ลบหน้าที่ทุกจุดอยู่ในกล่อง (เช่น ผ้าห้อยใต้แขนที่ขยับแล้วดูแปลก)  [{"min":[..],"max":[..]}]
+for bx in json.loads(os.environ.get('DROP','[]')):
+    inb=np.all((V>=np.array(bx['min']))&(V<=np.array(bx['max'])),1); F=F[~inb[F].all(1)]; print('drop -> faces',len(F))
 print('verts',len(V),'groups',G,'inside',inside.mean().round(2))
 # ---- glTF
 BIN=bytearray(); j={'asset':{'version':'2.0'},'scene':0,'scenes':[{'nodes':[0]}],'nodes':[],'meshes':[],'accessors':[],'bufferViews':[],'buffers':[],'skins':[],

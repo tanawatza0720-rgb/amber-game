@@ -75,10 +75,35 @@ async function rigRain(u,t,foes,clip,onHitOne){
   shockRing(cen,c); shake=Math.max(shake,.18); particles(tmpV.copy(cen).setY(.2),c,Math.round(22*FXK)||6,2.4,.08,.5,.9);
   await wait(250);
 }
-const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'},seiro:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kohaku:{bolt:'slash',cast:'battlecry',rain:'powerup'},garok:{s1:['power','slash','slash2'],s2:'spin',s3:'jumpatk'}};
+/* ฮีล: ยืนร่ายที่เดิม ดวงไฟเขียวจากปลายคทาลอยไปหาเพื่อนทีละดวง แล้วมีวงแสงที่เท้า */
+async function rigHeal(u,s){
+  const A=u.inner.userData,mates=UNITS.filter(o=>o.alive&&o.side===u.side&&!o.raid);
+  const list=s.target==='all'?mates:[mates.reduce((a,b)=>hurtPct(b)<hurtPct(a)?b:a,mates[0])].filter(Boolean);
+  const clip=ANIM[u.sp]&&ANIM[u.sp].heal, inf=clip&&A.clipInfo&&hasClip(u,clip)?A.clipInfo(clip):null, sp=1.4;
+  if(inf)A.play(clip,{speed:sp,fade:.1});
+  const c=0x8dffb0, g0=glow(scene,c,.4,castSrc(u).toArray(),1);
+  await tween(.45,k=>{g0.position.copy(castSrc(u));g0.scale.setScalar(.3+k*1.3);}); scene.remove(g0);g0.material.dispose();
+  shockRing(tmpV.copy(u.w.position).setY(.05),c);
+  await Promise.all(list.map((f,i)=>new Promise(res=>setTimeout(async()=>{
+    const from=castSrc(u),g=glow(scene,c,.35,from.toArray(),1),to=()=>f.w.position.clone().setY(1.1);
+    await tween(.32,k=>{g.position.lerpVectors(from,to(),k);g.position.y+=Math.sin(k*Math.PI)*.8;});
+    scene.remove(g);g.material.dispose();
+    if(f.alive){healUnit(f,healAmt(u,f,s.mult));if(s.cleanse&&(f.stun||f.stunT>0)){f.stun=0;f.stunT=Math.min(f.stunT,.01);}
+      shockRing(tmpV.copy(f.w.position).setY(.05),c);particles(tmpV.copy(f.w.position).setY(.2),c,Math.round(14*FXK)||4,1.2,.07,1.8,1);}
+    res();},i*90/SPEED))));
+  await wait(200);
+}
+// ใช้ฮีลไหม: เดี่ยว = มีเพื่อนเลือด <70% · ทั้งทีม = เพื่อนเลือด <85% ตั้งแต่ 2 ตัว หรือมีตัว <50%
+const healWanted=(u,s)=>{const m=UNITS.filter(o=>o.alive&&o.side===u.side&&!o.raid);
+  return s.target==='all'?m.filter(o=>hurtPct(o)<.85).length>=2||m.some(o=>hurtPct(o)<.5):m.some(o=>hurtPct(o)<.7);};
+const ANIM={kazekiri:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kuroga:{s1:['slash','power','slash2'],s2:'spin',s3:'jumpatk'},hakuneko:{s1:['slash','slash2','power'],s2:'combo',s3:'jumpatk'},morihime:{s1:['power','slash'],s2:'spin',s3:'leap'},seiro:{s1:['slash','slash2'],s2:'combo',s3:'leap'},kohaku:{bolt:'slash',cast:'battlecry',rain:'powerup'},anubis:{bolt:'slash',cast:'battlecry',rain:'powerup'},phraiwan:{bolt:'slash',heal:'powerup'},mortha:{bolt:'slash',heal:'battlecry'},sarael:{s1:['slash','power','slash2'],s2:'combo',s3:'jumpatk'},garok:{s1:['power','slash','slash2'],s2:'spin',s3:'jumpatk'}};
 function rtTick(dt,T){
   if(!RT)return;
   raceTick(dt);
+  // ติดตัว regen (ไพรวัลย์): ทุก 3 วินาที ทั้งทีมฟื้นเลือด % ของเลือดสูงสุด
+  UNITS.forEach(u=>{if(!u.alive||!u.pas||!u.pas.regen)return;u.regT=(u.regT||0)+dt;if(u.regT<3)return;u.regT=0;
+    UNITS.forEach(o=>{if(o.alive&&o.side===u.side&&!o.raid)healUnit(o,o.maxHp*u.pas.regen,true);});
+    particles(tmpV.copy(u.w.position).setY(.3),0x8dffb0,Math.round(6*FXK)||2,1.4,.05,1.2,.8);});
   UNITS.forEach(u=>{
     if(!u.alive||u.raid)return;
     if(u.stun&&u.dragon){u.stun=0;u.stunT=1.6;u.dizzy=1;stopMove(u,1);dragonSet(u,{droop:1,flapAmp:.25},.25);}
@@ -90,6 +115,10 @@ function rtTick(dt,T){
     if(u.atkT>0)u.atkT-=dt;
     if(u.busy)return;
     const [t,d]=nearestFoe(u);
+    { // สายฮีล: ฮีลได้ทุกระยะ แม้ยังไม่มีศัตรูใกล้
+      if(u.queued&&u.queued.type==='heal'){const s=u.queued;u.queued=null;stopMove(u);rtUse(u,s,t);return;} // กดไม้ตายฮีลเอง
+      const man=RT.manual&&u.side==='P'&&!AUTO, hs=u.skills.filter(s=>s.type==='heal'&&u.skT[s.id]<=0&&!(man&&s===ultOf(u))&&healWanted(u,s));
+      if(hs.length){stopMove(u);rtUse(u,hs[hs.length-1],t);return;}}
     if(u.patrol&&t){u.patrol=0;stopMove(u);}
     if(!t&&u.dragon){ // มังกร: บินวนลาดตระเวนเหนือจุดตั้งหลักระหว่างรอศัตรูระลอกใหม่
       const K=u.w.scale.x, a=T*.42+(u.slot||0), tx=u.home.x+Math.cos(a)*1.7*K, tz=u.home.z+Math.sin(a)*1.1*K;
@@ -104,8 +133,8 @@ function rtTick(dt,T){
     }
     if(!u.dodged&&u.hp<u.maxHp*.35&&d<3&&hasClip(u,'dodge')){u.dodged=1;stopMove(u,1);rtDodge(u,t);return;}
     const manual=RT.manual&&u.side==='P'&&!AUTO;
-    if(u.queued&&d<(u.ranged?9:8)){const s=u.queued;u.queued=null;stopMove(u);rtUse(u,s,t);return;}
-    const ready=u.skills.filter(s=>s.cd&&u.skT[s.id]<=0&&!(manual&&s===ultOf(u)));
+    if(u.queued&&u.queued.type!=='heal'&&d<(u.ranged?9:8)){const s=u.queued;u.queued=null;stopMove(u);rtUse(u,s,t);return;}
+    const ready=u.skills.filter(s=>s.cd&&u.skT[s.id]<=0&&!(manual&&s===ultOf(u))&&(s.type!=='heal'||healWanted(u,s)));
     if(ready.length&&d<(u.ranged?8.6:6.5)){stopMove(u);rtUse(u,ready[ready.length-1],t);return;}
     const range=t.rad+u.reach+.15;
     if(d>range){stepToward(u,t.w.position.x,t.w.position.z,d-range,dt,T);return;}
@@ -122,11 +151,12 @@ async function rtUse(u,s,t){
       popNum(u,s.name,'info');
       if(u.side==='P'&&s===ultOf(u)){const k=$('#skname');k.textContent=s.name;k.className='p';k.hidden=false;setTimeout(()=>{if(k.textContent===s.name)k.hidden=true;},900);}
     }
-    if(u.dragon&&s.type!=='melee'){}else await faceTo(u,t.w.position,.08);
+    if(u.dragon&&s.type!=='melee'){}else if(t)await faceTo(u,t.w.position,.08);
     const AN=ANIM[u.sp]&&u.inner.userData.play?ANIM[u.sp]:null;
     if(AN&&u.side==='P'&&s===ultOf(u)&&hasClip(u,'powerup')){u.inner.userData.play('powerup',{speed:1.8,fade:.1});particles(tmpV.copy(u.w.position).setY(1),0x9fe8ff,24,1.4,.06,1.2,.9);await wait(650);}
     if(u.dragon&&u.side==='P'&&s===ultOf(u))await dragonRoar(u,450);
-    if(u.spider){
+    if(s.type==='heal'){await rigHeal(u,s);}
+    else if(u.spider){
       if(s.type==='ranged')await spiderCast(u,near(t.w.position,4.5),f=>dealHit(u,f,s));
       else if(s.type==='leap'){const fs=near(t.w.position,3.2),c=t.w.position.clone().setY(0);await spiderLeap(u,c,fs,hitAll(fs));}
       else{const n=s.type==='melee3'?3:1;for(let i=0;i<n&&t.alive;i++)await spiderStrike(u,t,()=>{if(t.alive)dealHit(u,t,s);});}

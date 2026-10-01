@@ -1312,7 +1312,7 @@ function elInfo(e){
   return {strong,weak};
 }
 // ธาตุประจำตัว (ภาพหลักของตัวละคร) · ตัวที่ฟักได้สุ่มธาตุได้ทั้ง 6 ธาตุ (เก็บใน monsters.el; ว่าง = ธาตุประจำตัว)
-const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ',seiro:'น้ำ',kohaku:'ไฟ',garok:'ดิน'};
+const EL_OF={kazemaru:'ลม',kazekiri:'ลม',yorugumo:'มืด',morihime:'ดิน',kuroga:'มืด',hakuneko:'แสง',amateru:'ไฟ',seiro:'น้ำ',kohaku:'ไฟ',garok:'ดิน',sarael:'แสง',anubis:'มืด',phraiwan:'ลม',mortha:'น้ำ'};
 const elOfMon=m=>(m&&m.el&&ELEM[m.el])?m.el:EL_OF[m&&m.sp];
 /* ================= ออร่าตามธาตุ =================
    ผิวตัวละครเป็นสีเดิม · ห่อด้วย "เปลือกออร่า" (ใช้กระดูกเดียวกับตัว จึงขยับตาม) ขอบเรืองเป็นเปลวไหวขึ้นด้านบน
@@ -1451,12 +1451,33 @@ const SKILLS={
     {id:'s2',name:'กรงเล็บเก้าชีวิต',desc:'ฟัน 3 ครั้ง ครั้งละ 80% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.8,target:'one'},
     {id:'s3',name:'ดาบจันทร์เสี้ยว',desc:'กระโดดฟันศัตรูรอบจุดตก 110% โอกาส 30% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.1,target:'all',stun:.3},
     {id:'s4',name:'เก้าชีวิต',desc:'ติดตัว: เมื่อเลือดหมดครั้งแรกจะรอดและฟื้นเลือด 35% (1 ครั้งต่อการต่อสู้) · โอกาสคริ +10%',type:'passive',passive:{revive:.35,crit:.1}}],
+  // สายฮีล: type 'heal' ฟื้นเลือดพวกเดียวกัน (target 'one' = ตัวที่เลือดเหลือน้อยสุด · 'all' = ทั้งทีม) ปริมาณ = พลังโจมตี × mult × 1.25
+  phraiwan:[
+    {id:'s1',name:'ใบไม้คมวายุ',desc:'ซัดใบไม้คมจากระยะไกลใส่ศัตรู 1 ตัว 100%',cd:0,type:'bolt',mult:1,target:'one'},
+    {id:'s2',name:'สายลมชุบชีวิต',desc:'ฟื้นเลือดทั้งทีม 80% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:.8,target:'all'},
+    {id:'s3',name:'พรแห่งพงไพร',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 240% ของพลังโจมตี และแก้อาการมึน · คูลดาวน์ 4',cd:4,type:'heal',mult:2.4,target:'one',cleanse:1},
+    {id:'s4',name:'รากไม้ค้ำชีวิต',desc:'ติดตัว: ทุก 3 วินาที ทั้งทีมฟื้นเลือด 2% ของเลือดสูงสุด',type:'passive',passive:{regen:.02}}],
+  mortha:[
+    {id:'s1',name:'หยดน้ำมนต์',desc:'สาดน้ำมนต์จากระยะไกลใส่ศัตรู 1 ตัว 100%',cd:0,type:'bolt',mult:1,target:'one'},
+    {id:'s2',name:'ยาคืนวิญญาณ',desc:'ฟื้นเลือดตัวที่เลือดน้อยที่สุด 180% ของพลังโจมตี · คูลดาวน์ 3',cd:3,type:'heal',mult:1.8,target:'one'},
+    {id:'s3',name:'บทสวดแห่งสุสาน',desc:'ฟื้นเลือดทั้งทีม 110% ของพลังโจมตี และแก้อาการมึนทั้งทีม · คูลดาวน์ 4',cd:4,type:'heal',mult:1.1,target:'all',cleanse:1},
+    {id:'s4',name:'ผ้าคลุมผู้ภาวนา',desc:'ติดตัว: ฮีลแรงขึ้น 25% · รับดาเมจลดลง 10%',type:'passive',passive:{healUp:.25,dr:.1}}],
   // ---------- เทพเจ้า ----------
   amateru:[
     {id:'s1',name:'กรงเล็บเพลิง',desc:'บินโฉบเข้าไปงับศัตรู 1 ตัว 140%',cd:0,type:'melee',mult:1.4,target:'one'},
     {id:'s2',name:'ลมหายใจอัมพร',desc:'พ่นไฟใส่ศัตรูรอบเป้าหมาย 100% · คูลดาวน์ 3',cd:3,type:'ranged',mult:1,target:'all'},
     {id:'s3',name:'ดิ่งฟ้าถล่ม',desc:'บินขึ้นฟ้าแล้วดิ่งลงกระแทกศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
-    {id:'s4',name:'หัวใจมังกรอัมพร',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 15% · อามาเทรุรับดาเมจลดลง 25% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.15,dr:.25,crit:.1}}]
+    {id:'s4',name:'หัวใจมังกรอัมพร',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 15% · อามาเทรุรับดาเมจลดลง 25% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.15,dr:.25,crit:.1}}],
+  sarael:[
+    {id:'s1',name:'กรงเล็บพิพากษา',desc:'ฟาดกรงเล็บใส่ศัตรู 1 ตัว 140%',cd:0,type:'melee',mult:1.4,target:'one'},
+    {id:'s2',name:'พายุขนนกสองสี',desc:'ฟาด 3 ครั้ง ครั้งละ 95% ใส่ศัตรู 1 ตัว · คูลดาวน์ 3',cd:3,type:'melee3',mult:.95,target:'one'},
+    {id:'s3',name:'ดิ่งสวรรค์ทัณฑ์',desc:'กางปีกดิ่งลงกระแทกศัตรูรอบจุดตก 150% โอกาส 45% ทำให้มึน · คูลดาวน์ 4',cd:4,type:'leap',mult:1.5,target:'all',stun:.45},
+    {id:'s4',name:'ปีกโลหิตและแสง',desc:'ติดตัว: โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 35% · รับดาเมจลดลง 15% · โอกาสคริ +15%',type:'passive',passive:{dmgLow:.35,dr:.15,crit:.15}}],
+  anubis:[
+    {id:'s1',name:'ลูกแก้ววิญญาณ',desc:'ยิงลูกแก้ววิญญาณจากระยะไกลใส่ศัตรู 1 ตัว 140%',cd:0,type:'bolt',mult:1.4,target:'one'},
+    {id:'s2',name:'คำสาปผืนทราย',desc:'ยิงคำสาปใส่ศัตรูสูงสุด 4 ตัว ตัวละ 100% · คูลดาวน์ 3',cd:3,type:'ranged',mult:1,target:'all'},
+    {id:'s3',name:'พายุทรายแห่งความตาย',desc:'เรียกพายุทรายถล่มศัตรูรอบเป้าหมาย 150% โอกาส 40% ทำให้มึน (ยืนร่ายจากระยะไกล) · คูลดาวน์ 4',cd:4,type:'rain',mult:1.5,target:'all',stun:.4},
+    {id:'s4',name:'ตาชั่งแห่งวิญญาณ',desc:'ติดตัว: ทั้งทีมโจมตีแรงขึ้น 12% · โจมตีศัตรูที่เลือดต่ำกว่า 50% แรงขึ้น 30% · โอกาสคริ +10%',type:'passive',passive:{teamAtk:.12,dmgLow:.3,crit:.1}}]
 };
 const passiveOf=sp=>{const s=(SKILLS[sp]||[]).find(x=>x.type==='passive');return s?s.passive:null;};
 
@@ -1605,7 +1626,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
   const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
-  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:40},seiro:{rar:2,max:40},kohaku:{rar:2,max:40},garok:{rar:2,max:40},amateru:{rar:4,max:50}};
+  const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:40},seiro:{rar:2,max:40},kohaku:{rar:2,max:40},garok:{rar:2,max:40},phraiwan:{rar:3,max:50},mortha:{rar:3,max:50},amateru:{rar:4,max:50},sarael:{rar:4,max:50},anubis:{rar:4,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
   let D=null, nid=1;
@@ -1675,7 +1696,7 @@ const LOCAL=(()=>{
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -1685,7 +1706,7 @@ function loadRig(key,onProgress){
 }
 function loadMeshy(onProgress){
   const anims=fetch(MXA_URL).then(r=>r.ok?r.json():null).then(j=>{MXA=j;}).catch(()=>{});
-  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),loadRig('seiro'),loadRig('kohaku'),loadRig('garok'),anims]).then(([g])=>{MESHY=g;return g;});
+  return Promise.all([loadRig('kazekiri',onProgress),loadRig('kuroga'),loadRig('hakuneko'),loadRig('morihime'),loadRig('seiro'),loadRig('kohaku'),loadRig('garok'),loadRig('sarael'),loadRig('anubis'),loadRig('phraiwan'),loadRig('mortha'),anims]).then(([g])=>{MESHY=g;return g;});
 }
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_q3=new THREE.Quaternion(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3(),_m1=new THREE.Matrix4();
 /* กำมือ: โมเดลจาก Meshy ไม่มีกระดูกนิ้ว มือจึงแบแข็ง -> ดัดนิ้วของเมชให้งอรอบด้ามดาบ (ทำครั้งเดียวต่อโมเดล)
@@ -1730,7 +1751,8 @@ function makeFist(root,hands){
     sw.position.add(new THREE.Vector3(...U[sd].shift));
   });
 }
-const POLE={morihime:1,kohaku:1,garok:1}; // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
+const POLE={morihime:1,kohaku:1,garok:1,anubis:1,phraiwan:1,mortha:1};
+const NOWPN={sarael:1}; // สู้มือเปล่า (กรงเล็บ) ไม่ถือดาบ // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
 function buildMeshyEvo(m,key){
   key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
   const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
@@ -1863,6 +1885,7 @@ function buildMeshyEvo(m,key){
   if(prop){m.userData.swords=[prop];prop.visible=key==='hakuneko'||!!POLE[key];}
   else{m.userData.swords=[swR,swL]; swR.visible=swL.visible=false; swR.userData.trailK=swL.userData.trailK=.32;}
   if(key==='kuroga'||key==='seiro'){swR.scale.setScalar(1.22);m.userData.swords=[swR];} // คุโรกะ/เซย์โร: ดาบยาวเล่มเดียว
+  if(NOWPN[key])m.userData.swords=[]; // ดาบยังใช้กำมือ แต่ไม่โชว์
   const base=[
     [hips.position,'y',.88],[hips.rotation,'y',.12],[hips.rotation,'x',0],
     [torso.rotation,'x',.05],[torso.rotation,'y',-.04],[torso.rotation,'z',0],
@@ -3939,7 +3962,7 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
 }
 
 // ดีบัก: index.html?dbg=1 เปิด window.__F (เข้าโหมดออฟไลน์เพื่อตรวจหน้าตาโดยไม่สร้างบัญชี)
-if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,get AGENTS(){return AGENTS;},get PORTAL(){return PORTAL;},camT,camTTo,setDist:d=>{distTo=d;},enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
+if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,get AGENTS(){return AGENTS;},get PORTAL(){return PORTAL;},camT,camTTo,setDist:d=>{distTo=d;},enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();},box3d:sp=>{openBox();const m=S.mons.find(x=>x.sp===sp);if(m){BOX.detail=m.uid;open3d();}return !!m;},closeBox:()=>closeBox()};
 
 // แตะแถบพลังงาน = เปิดหน้ากวาดด่าน
 if($('#pEnergy')){const pe=$('#pEnergy');pe.style.cursor='pointer';pe.setAttribute('role','button');pe.setAttribute('tabindex','0');pe.setAttribute('aria-label','พลังงาน แตะเพื่อไปกวาดด่านที่หน้าต่อสู้');pe.onclick=()=>INFO.sweep();pe.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();INFO.sweep();}};}
@@ -4687,6 +4710,12 @@ if(window.__F)__F.war=d=>{WAR=Object.assign(d,{at:Date.now()});renderWar(WAR);};
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.01.12',date:'1 ต.ค. 2026',title:'เทพเจ้าใหม่ 2 + สายฮีล 2 ✨',items:[
+    '☀️ ซาราเอล (เทพเจ้า) เทพสงครามปีกโลหิตและแสง สายจู่โจมระยะประชิด กรงเล็บพิพากษาแรงสุดในเกม',
+    '🌙 อนุบิส (เทพเจ้า) เทพแห่งความตาย สายเวทระยะไกล เรียกพายุทรายถล่มศัตรูทั้งกลุ่ม',
+    '🌿 ไพรวัลย์ (ตำนาน) ปราชญ์เฒ่าแห่งพงไพร สายฮีลคนแรก ฮีลทั้งทีม + ฟื้นเลือดต่อเนื่อง',
+    '💧 มอร์ธา (ตำนาน) แม่ชีผู้เฝ้าสุสาน สายฮีล ช่วยตัวที่ใกล้ตาย และแก้อาการมึนทั้งทีม',
+    '🥚 ฟักได้จากไข่ทองคำและไข่เทพเหมือนตัวระดับเดียวกัน']},
   {ver:'2026.10.01.11',date:'1 ต.ค. 2026',title:'ฉากต่อสู้บนมือถือ 📱',items:[
     '🔍 กล้องฉากต่อสู้บนมือถือใกล้ขึ้น 2 เท่า (ถ่างนิ้วซูมออกได้เหมือนเดิม)',
     '❤️ หลอดเลือดแบบขีดเล็กๆ ใต้เท้ามอนสเตอร์ จอโล่งขึ้น (บอสยังแสดงแถบใหญ่ข้างจอ)','▾ พับแผงรางวัลสะสม/กวาดด่านเก็บได้ มีจุดแดงเตือนเมื่อมีของให้เก็บ']},
@@ -4934,6 +4963,14 @@ const SPEC={
     base:{hp:96,atk:36,def:12,spd:40},lore:'สาวจิ้งจอกผู้เฝ้าศาลเจ้าเก่ากลางป่า ลูกแก้วอำพันบนคทาของเธอเก็บเปลวไฟไว้นับร้อยปี ยิ่งหางฟูเท่าไรเวทยิ่งแรงเท่านั้น'},
   garok:{name:'กาโรค',title:'นักรบออร์กเผ่าภูผา',rar:2,el:'ดิน',elc:'#c89a5a',role:'ป้องกัน',evo:1,rig:'garok',maxLv:40,
     base:{hp:124,atk:31,def:19,spd:30},lore:'นักรบออร์กร่างยักษ์จากเผ่าภูผา เกราะไหล่แกะจากหินภูเขา ขวานหินในมือหนักจนต้องใช้สองคนยก แต่เขาเหวี่ยงได้ด้วยมือเดียว'},
+  phraiwan:{name:'ไพรวัลย์',title:'ปราชญ์เฒ่าแห่งพงไพร',rar:3,el:'ลม',elc:'#6fe0b0',role:'ฮีล',evo:1,rig:'phraiwan',maxLv:50,
+    base:{hp:150,atk:40,def:22,spd:48},lore:'ฤๅษีชราผู้อยู่กับป่ามาตั้งแต่ต้นอัมพรต้นแรกยังเป็นเมล็ด หมวกของเขามีดอกไม้บานไม่เคยเหี่ยว ลมหายใจของเขาทำให้บาดแผลกลายเป็นรากไม้แล้วสมานหาย'},
+  mortha:{name:'มอร์ธา',title:'แม่ชีผู้เฝ้าสุสาน',rar:3,el:'น้ำ',elc:'#5fb3ff',role:'ฮีล',evo:1,rig:'mortha',maxLv:50,
+    base:{hp:140,atk:42,def:20,spd:52},lore:'แม่ชีสวมหน้ากากทองเหลืองผู้ภาวนาให้ดวงวิญญาณในสุสานเก่า ขวดยาที่เอวกลั่นจากน้ำตาของผู้จากไป หยดเดียวก็ปลุกนักรบที่ล้มให้ลุกขึ้นได้'},
+  sarael:{name:'ซาราเอล',title:'เทพสงครามปีกโลหิตและแสง',rar:4,el:'แสง',elc:'#ffd36a',role:'จู่โจม',evo:1,rig:'sarael',maxLv:50,
+    base:{hp:180,atk:78,def:24,spd:62},lore:'เทพสงครามไร้ใบหน้าผู้มีปีกสองสี ปีกขาวคือความเมตตา ปีกแดงคือการพิพากษา ไม่มีผู้ใดรู้ว่าปีกไหนจะกางก่อนจนกว่าจะสายเกินไป'},
+  anubis:{name:'อนุบิส',title:'เทพแห่งความตายแห่งผืนทราย',rar:4,el:'มืด',elc:'#b48cff',role:'เวทมนตร์',evo:1,rig:'anubis',maxLv:50,
+    base:{hp:178,atk:80,def:22,spd:58},lore:'เทพหัวหมาจิ้งจอกผู้ชั่งน้ำหนักดวงวิญญาณ คทาทองในมือเรียกพายุทรายจากทะเลทรายที่ไม่มีใครเคยกลับออกมา ศัตรูของเขาไม่ได้ตาย แค่ถูกพาไปที่อื่น'},
   amateru:{name:'อามาเทรุ',title:'มังกรอัมพรเพลิง',rar:4,el:'ไฟ',elc:'#ff8a3a',role:'ทำลายล้าง',dragon:1,maxLv:50,
     base:{hp:190,atk:74,def:26,spd:60},lore:'มังกรในตำนานที่หลับใหลใต้ต้นอัมพรนับพันปี เกล็ดของมันร้อนดั่งถ่านที่ไม่เคยดับ'},
 };// ธาตุและสกิลมาจาก gamedata.js
@@ -4999,7 +5036,7 @@ function headOf(w,sp){
   return{p:p.add(new THREE.Vector3(F.dx*H,F.dy*H,0)),r:F.r*H};
 }
 // ปรับกรอบหน้าแต่ละสายพันธุ์ (สัดส่วนของความสูงตัว)
-const FACE={yorugumo:{dx:0,dy:.03,r:.16},hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},seiro:{dx:0,dy:.03,r:.15},kohaku:{dx:0,dy:.02,r:.16},garok:{dx:0,dy:.03,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
+const FACE={yorugumo:{dx:0,dy:.03,r:.16},hakuneko:{dx:0,dy:.02,r:.15},morihime:{dx:0,dy:.02,r:.15},seiro:{dx:0,dy:.03,r:.15},kohaku:{dx:0,dy:.02,r:.16},garok:{dx:0,dy:.03,r:.15},sarael:{dx:0,dy:.04,r:.15},anubis:{dx:0,dy:.06,r:.15},phraiwan:{dx:0,dy:.02,r:.16},mortha:{dx:0,dy:.05,r:.15},kuroga:{dx:-.03,dy:.03,r:.14},kazekiri:{dx:-.05,dy:.02,r:.14},amateru:{dx:-.07,dy:-.13,r:.21},kazemaru:{dx:.04,dy:.08,r:.36}};
 function makeThumb(sp,el){
   el=el||EL_OF[sp]; const key=sp+'|'+el;
   if(THUMB[key])return THUMB[key];

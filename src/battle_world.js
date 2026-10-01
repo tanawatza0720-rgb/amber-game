@@ -23,6 +23,10 @@ const SPECIES={
   seiro:{name:'เซย์โร',evo:1,rig:'seiro',base:{hp:104,atk:34,def:15,spd:40}},
   kohaku:{name:'โคฮาคุ',evo:1,rig:'kohaku',ranged:1,base:{hp:96,atk:36,def:12,spd:40}},
   garok:{name:'กาโรค',evo:1,rig:'garok',base:{hp:124,atk:31,def:19,spd:30}},
+  phraiwan:{name:'ไพรวัลย์',evo:1,rig:'phraiwan',ranged:1,healer:1,base:{hp:150,atk:40,def:22,spd:48}},
+  mortha:{name:'มอร์ธา',evo:1,rig:'mortha',ranged:1,healer:1,base:{hp:140,atk:42,def:20,spd:52}},
+  sarael:{name:'ซาราเอล',evo:1,rig:'sarael',base:{hp:180,atk:78,def:24,spd:62}},
+  anubis:{name:'อนุบิส',evo:1,rig:'anubis',ranged:1,base:{hp:178,atk:80,def:22,spd:58}},
   yorugumo:{name:'โยรุกุโมะ',evo:1,spider:1,base:{hp:100,atk:34,def:14,spd:38}},
   kazekiri:{name:'คาเซะคิริ',evo:1,base:{hp:102,atk:34,def:13,spd:42}},
 };
@@ -255,5 +259,12 @@ function dealHit(att,t,skill){
   updateBar(t);
   if(t.hp<=0)die(t); else react(t,att.w.position.x);
 }
+/* ฮีล (สายฮีล type 'heal' และติดตัว regen): ปริมาณ = พลังโจมตี × mult × 1.25 (+healUp) · สงคราม: ฝั่งที่ถูกกำหนดให้แพ้ฮีลได้น้อยลง ให้ภาพตรงกับผลจากเซิร์ฟเวอร์ */
+function healAmt(h,t,mult){let v=h.atk*mult*1.25*(.95+Math.random()*.1)*(1+((h.pas&&h.pas.healUp)||0));
+  if(typeof WAR_MODE!=='undefined'&&WAR_MODE&&typeof WB!=='undefined'&&WB&&WB.live&&((WB.win&&t.side==='E')||(!WB.win&&t.side==='P')))v*=.4;
+  return Math.max(1,Math.round(v));}
+function healUnit(t,v,quiet){if(!t.alive||t.hp<=0)return 0;v=Math.min(Math.round(v),t.maxHp-t.hp);if(v<=0)return 0;t.hp+=v;updateBar(t);
+  if(!quiet){popNum(t,'+'+v,'heal');particles(tmpV.copy(t.w.position).setY(.4),0x8dffb0,Math.round(10*FXK)||3,.9,.06,1.6,.9);}return v;}
+const hurtPct=u=>u.hp/u.maxHp;
 // ท่าทางอิงความเร็วเกม (x1/x2)
 function poseTo(list,d,z){const k=Math.pow(5.2/Math.max(d,.06),2);list.forEach(([o,p,v])=>{const c=channel(o,p);c.t=v;c.k=k;c.z=z==null?.78:z;});return wait(d*1000);}
