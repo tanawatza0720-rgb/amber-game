@@ -424,7 +424,7 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 /* ===== ปุ่มเมนูรวม + จอเล็กแนวตั้ง/แนวนอน (farm_menu.js) ===== */
 #menuBtn{display:none}
 @media (max-width:760px),(max-height:520px){
-  #menuBtn{display:flex;position:fixed;z-index:4;left:12px;top:calc(70px + env(safe-area-inset-top,0px));width:52px;cursor:pointer;color:var(--bone)}
+  #menuBtn{display:flex;position:fixed;z-index:4;left:12px;top:calc(82px + env(safe-area-inset-top,0px));width:50px;cursor:pointer;color:var(--bone)}
   #menuBtn .mbIc{width:28px;height:28px;display:grid;align-content:center;gap:5px;padding:0 4px}
   #menuBtn .mbIc i{display:block;height:3px;border-radius:2px;background:var(--amber);transition:transform .22s,opacity .22s}
   body.menuOpen #menuBtn{background:linear-gradient(180deg,#ffc56a,#d9822b);color:#2a1606;border-color:#ffd9a0}
@@ -434,9 +434,11 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   body.menuOpen #menuBtn .mbIc i:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
   #menuBtn .mbDot{position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#e8453c;border:2px solid #fff3;box-shadow:0 0 6px rgba(232,69,60,.8)}
   #menuBtn .mbDot[hidden]{display:none}
-  #rail{top:calc(132px + env(safe-area-inset-top,0px));flex-wrap:wrap;align-content:flex-start;gap:8px;max-height:calc(100vh - 132px - 110px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  /* กางออกไปทางขวาของปุ่มเมนู แถวละ 5 ปุ่ม เกินแล้วขึ้นแถวใหม่ */
+  #rail{left:70px;top:calc(82px + env(safe-area-inset-top,0px));display:grid;grid-template-columns:repeat(5,50px);grid-auto-rows:min-content;gap:6px;max-height:none;
     visibility:hidden;pointer-events:none;transition:visibility 0s .22s;z-index:4}
-  #rail .rbtn{opacity:0;transform:translateY(-10px) scale(.92);transition:opacity .18s,transform .22s cubic-bezier(.2,1.4,.4,1);transition-delay:0s}
+  #rail .rbtn{width:50px;opacity:0;transform:translateX(-12px) scale(.92);transition:opacity .18s,transform .22s cubic-bezier(.2,1.4,.4,1);transition-delay:0s}
+  #rail .rbtn[hidden]{display:none}
   body.menuOpen #rail,body.guideOn #rail{visibility:visible;pointer-events:auto;transition:none}
   body.menuOpen #rail .rbtn,body.guideOn #rail .rbtn{opacity:1;transform:none;transition-delay:calc(var(--i,0) * 28ms)}
 }
@@ -448,10 +450,10 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   .res{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:5px;max-width:62vw}
   .pill{min-width:0;font-size:13px;padding:2px 10px 2px 3px}.pill svg{width:20px;height:20px}
   #rankBox{flex-basis:100%;max-width:176px;margin-left:auto;max-height:calc(100vh - 140px)}
-  #menuBtn{top:calc(56px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px))}
-  #rail{left:calc(70px + env(safe-area-inset-left,0px));top:calc(56px + env(safe-area-inset-top,0px));max-height:calc(100vh - 56px - 70px - env(safe-area-inset-bottom,0px))}
+  #menuBtn{top:calc(62px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px))}
+  #rail{left:calc(68px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px))}
   #dock{bottom:calc(6px + env(safe-area-inset-bottom,0px));padding:4px;gap:4px;border-radius:14px}
-  .nbtn{width:58px;padding:5px 2px 4px}.nbtn svg{width:24px;height:24px}.nbtn.big{width:66px;padding:8px 2px 5px;margin-top:-10px}
+  .nbtn{width:64px;padding:5px 2px 4px;white-space:nowrap}.nbtn svg{width:24px;height:24px}.nbtn.big{width:66px;padding:8px 2px 5px;margin-top:-10px}
   #sheet{left:auto;right:calc(8px + env(safe-area-inset-right,0px));transform:none;top:calc(8px + env(safe-area-inset-top,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
     width:min(460px,56vw);max-height:none;animation:upR .22s ease-out;z-index:6}
   #toast{top:calc(52px + env(safe-area-inset-top,0px))}
