@@ -478,6 +478,9 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 .rkBar{height:5px;margin:3px 0 1px;border-radius:3px;background:rgba(0,0,0,.4);overflow:hidden}.rkBar i{display:block;height:100%;background:var(--rc,var(--amber));border-radius:3px;transition:width .5s}
 .rkMem{display:block;font-size:10.5px;color:var(--muted)}
 .rkTop .rkHd{font-size:10.5px;color:var(--muted);padding-top:2px}
+.swGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 2px}.swBox{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.swBox small{font-size:11.5px;color:var(--muted)}.swBox b{font-family:'Chakra Petch',sans-serif;font-size:18px;color:var(--amber);font-variant-numeric:tabular-nums}
+#pEnergy{cursor:pointer}#pEnergy:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
 </style>
 
 <div id="view"></div>
@@ -1469,6 +1472,7 @@ const LOCAL=(()=>{
   const mon=id=>D.mons.find(m=>m.id===id)||fail('no_monster');
   const F={
     game_state:()=>state(),
+    sweep_claim:({n})=>{n=n||1;if(n<1||n>6)fail('bad_count');const cost=10*n;if(D.energy<cost)fail('not_enough_energy');if(D.energy>=C.energy_max)D.energy_at=Date.now();D.energy-=cost;const c=30*n*(5+2*(D.stage||0)),x=30*n;D.coins+=c;D.xp+=x;while(D.xp>=100){D.xp-=100;D.lv++;}return{n,coins:c,xp:x};},
     buy_bag:()=>{const n=D.bag_ext||0;if(n>=BAG.max)fail('bag_max');const c=BAG.cost(n);if(D.amber<c)fail('not_enough_amber');D.amber-=c;D.bag_ext=n+1;return{slots:slots(),cost:c};},
     set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>12)fail('bad_name');D.name=n;D.named=true;return{};},
     hatch_egg:({kind})=>{if(D.mons.length>=slots())fail('box_full');let ch;
@@ -3317,8 +3321,21 @@ const INFO={
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
     const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,tierOf(spOf(m).rar).n+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},
+  // กวาดด่านด้วยพลังงาน: 10 ⚡ = รางวัลดันด่าน 30 นาที (server/migrate_energy_sweep.sql)
+  sweep:()=>{const d=el('div'),rate=S.rateC||(5+2*(S.stage||0)),per=Math.round(30*rate),n=Math.min(6,Math.floor(S.energy/10));
+    d.append(para('ใช้พลังงาน 10 ⚡ รับรางวัลเท่ากับดันด่าน 30 นาทีทันที (ไม่กระทบรางวัลสะสมเดิม) · พลังงานฟื้น 1 ⚡ ทุก 3 นาที'));
+    const g=el('div','swGrid');g.append(el('div','swBox',''),el('div','swBox',''));
+    g.children[0].append(el('small',null,'ต่อครั้ง'),el('b',null,'🪙 '+fmt(per)),el('small',null,'+30 EXP'));
+    g.children[1].append(el('small',null,'พลังงานตอนนี้'),el('b',null,'⚡ '+S.energy+'/'+S.energyMax),el('small',null,n?'กวาดได้ '+n+' ครั้ง':'ยังไม่พอ (ต้องมี 10)'));
+    d.append(g);
+    const go=async k=>{const r=await act('sweep_claim',{n:k});if(r){bumpRes('coins');bumpRes('energy');toast('กวาดด่าน '+k+' ครั้ง ได้ 🪙 '+fmt(r.coins)+' · EXP +'+r.xp);if(typeof renderHUD==='function')renderHUD();INFO.sweep();}};
+    const acts=[['กวาดด่าน ×1 · 10 ⚡',()=>go(1),'',S.energy<10]];
+    if(n>1)acts.push(['กวาดทั้งหมด ×'+n+' · '+(n*10)+' ⚡',()=>go(n),'gold',false]);
+    acts.push(['เติมพลังงาน +30 · 20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30');INFO.sweep();}},'ghost',S.amber<20]);
+    openSheet('กวาดด่าน ⚡','ด่านที่ผ่านแล้ว '+(S.stage||0)+' · ยิ่งด่านสูง เหรียญยิ่งเยอะ',d,acts);},
   shop:()=>{const d=el('div');d.append(para('ของทุกชิ้นซื้อด้วยสกุลเงินในเกม'));
-    const items=[['พลังงาน +30','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30');}}],
+    const items=[['พลังงาน +30 (ใช้กวาดด่าน)','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30 · แตะ ⚡ เพื่อกวาดด่าน');}}],
+      ['กวาดด่าน ⚡','10 พลังงาน',()=>INFO.sweep()],
       ['ไข่ป่า ×1','100 เหรียญ',()=>{closeSheet();INFO.hatch();}]];
     const list=el('div','shop');items.forEach(([n,p,fn])=>{const r=el('button','sitem');r.append(el('span',null,n));r.append(el('b',null,p));r.onclick=fn;list.append(r);});d.append(list);
     openSheet('ร้านค้า','สินค้าเปลี่ยนทุกวัน',d,[]);},
@@ -3635,6 +3652,9 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
 
 // ดีบัก: index.html?dbg=1 เปิด window.__F (เข้าโหมดออฟไลน์เพื่อตรวจหน้าตาโดยไม่สร้างบัญชี)
 if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
+
+// แตะแถบพลังงาน = เปิดหน้ากวาดด่าน
+if($('#pEnergy')){const pe=$('#pEnergy');pe.style.cursor='pointer';pe.setAttribute('role','button');pe.setAttribute('tabindex','0');pe.setAttribute('aria-label','พลังงาน แตะเพื่อกวาดด่าน');pe.onclick=()=>INFO.sweep();pe.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();INFO.sweep();}};}
 
 /* ================= หน้าเลือกเผ่า (ครั้งแรกที่เข้าเกม · เลือกแล้วเปลี่ยนไม่ได้) =================
    เกาะลอยฟ้า 4 เผ่าหมุนเป็นวงล้อ แตะลูกศร/ปัดจอ/แตะไอคอนเพื่อดูแต่ละเผ่า */
@@ -4258,6 +4278,9 @@ if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VIS
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.01.5',date:'1 ต.ค. 2026',title:'พลังงาน ⚡ ใช้กวาดด่านได้แล้ว',items:[
+    '⚡ แตะแถบพลังงานมุมขวาบน → กวาดด่าน ใช้ 10 ⚡ รับรางวัลเท่ากับดันด่าน 30 นาทีทันที (เหรียญ + EXP)',
+    '🔁 กวาดทีเดียวหลายครั้งได้ · พลังงานฟื้น 1 ⚡ ทุก 3 นาที · ซื้อเพิ่มได้ที่ร้านค้า']},
   {ver:'2026.10.01.4',date:'1 ต.ค. 2026',title:'อันดับเผ่าแบบพลังรวม 🏆',items:[
     '🏆 อันดับเผ่าเรียงตามพลังรวมของทุกคนในเผ่า มีแถบเทียบให้เห็นว่าเผ่าไหนนำ',
     '💪 ดูได้ว่าคุณช่วยเผ่าไปกี่ % · ผู้นำเผ่าแสดงแค่ชื่อ']},
@@ -4320,6 +4343,7 @@ function todoList(){
   L.push({ic:'🎁',n:'รับรางวัลเข้าเกมรายวัน',s:S.dailyClaimed?'done':'todo',t:S.dailyClaimed?'รับแล้ว':'รับได้เลย',go:()=>openDaily()});
   questList().forEach(q=>L.push({ic:'📜',n:'ภารกิจ: '+q.n,s:q.claimed?'done':q.cur>=q.need?'todo':'wait',
     t:q.claimed?'รับรางวัลแล้ว':q.cur>=q.need?'กดรับรางวัล '+q.r:Math.min(q.cur,q.need)+'/'+q.need,go:()=>openQuests()}));
+  L.push({ic:'⚡',n:'กวาดด่านด้วยพลังงาน',s:S.energy>=S.energyMax?'todo':S.energy>=10?'todo':'wait',t:S.energy>=10?'มี '+S.energy+' ⚡ กวาดได้ '+Math.min(6,Math.floor(S.energy/10))+' ครั้ง':'สะสมให้ถึง 10 ⚡',go:()=>INFO.sweep()});
   L.push({ic:'🌳',n:'เก็บอัมพรจากต้นไม้',s:amberReady?'todo':'wait',t:amberReady?'พร้อมเก็บ':'รอบถัดไป '+fmtTime(S.amberIn),go:()=>{closeSheet();focusBuilding('tree');}});
   if(on&&typeof STG!=='undefined'&&STG){
     if(STG.pending&&STG.pending.length)L.push({ic:'🏆',n:'รับรางวัลผ่านด่าน',s:'todo',t:STG.pending.length+' ขั้นรอรับ',go:()=>openStageRewards()});

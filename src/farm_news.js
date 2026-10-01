@@ -1,6 +1,9 @@
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.01.5',date:'1 ต.ค. 2026',title:'พลังงาน ⚡ ใช้กวาดด่านได้แล้ว',items:[
+    '⚡ แตะแถบพลังงานมุมขวาบน → กวาดด่าน ใช้ 10 ⚡ รับรางวัลเท่ากับดันด่าน 30 นาทีทันที (เหรียญ + EXP)',
+    '🔁 กวาดทีเดียวหลายครั้งได้ · พลังงานฟื้น 1 ⚡ ทุก 3 นาที · ซื้อเพิ่มได้ที่ร้านค้า']},
   {ver:'2026.10.01.4',date:'1 ต.ค. 2026',title:'อันดับเผ่าแบบพลังรวม 🏆',items:[
     '🏆 อันดับเผ่าเรียงตามพลังรวมของทุกคนในเผ่า มีแถบเทียบให้เห็นว่าเผ่าไหนนำ',
     '💪 ดูได้ว่าคุณช่วยเผ่าไปกี่ % · ผู้นำเผ่าแสดงแค่ชื่อ']},
@@ -63,6 +66,7 @@ function todoList(){
   L.push({ic:'🎁',n:'รับรางวัลเข้าเกมรายวัน',s:S.dailyClaimed?'done':'todo',t:S.dailyClaimed?'รับแล้ว':'รับได้เลย',go:()=>openDaily()});
   questList().forEach(q=>L.push({ic:'📜',n:'ภารกิจ: '+q.n,s:q.claimed?'done':q.cur>=q.need?'todo':'wait',
     t:q.claimed?'รับรางวัลแล้ว':q.cur>=q.need?'กดรับรางวัล '+q.r:Math.min(q.cur,q.need)+'/'+q.need,go:()=>openQuests()}));
+  L.push({ic:'⚡',n:'กวาดด่านด้วยพลังงาน',s:S.energy>=S.energyMax?'todo':S.energy>=10?'todo':'wait',t:S.energy>=10?'มี '+S.energy+' ⚡ กวาดได้ '+Math.min(6,Math.floor(S.energy/10))+' ครั้ง':'สะสมให้ถึง 10 ⚡',go:()=>INFO.sweep()});
   L.push({ic:'🌳',n:'เก็บอัมพรจากต้นไม้',s:amberReady?'todo':'wait',t:amberReady?'พร้อมเก็บ':'รอบถัดไป '+fmtTime(S.amberIn),go:()=>{closeSheet();focusBuilding('tree');}});
   if(on&&typeof STG!=='undefined'&&STG){
     if(STG.pending&&STG.pending.length)L.push({ic:'🏆',n:'รับรางวัลผ่านด่าน',s:'todo',t:STG.pending.length+' ขั้นรอรับ',go:()=>openStageRewards()});

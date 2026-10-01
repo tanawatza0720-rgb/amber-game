@@ -116,6 +116,7 @@ const LOCAL=(()=>{
   const mon=id=>D.mons.find(m=>m.id===id)||fail('no_monster');
   const F={
     game_state:()=>state(),
+    sweep_claim:({n})=>{n=n||1;if(n<1||n>6)fail('bad_count');const cost=10*n;if(D.energy<cost)fail('not_enough_energy');if(D.energy>=C.energy_max)D.energy_at=Date.now();D.energy-=cost;const c=30*n*(5+2*(D.stage||0)),x=30*n;D.coins+=c;D.xp+=x;while(D.xp>=100){D.xp-=100;D.lv++;}return{n,coins:c,xp:x};},
     buy_bag:()=>{const n=D.bag_ext||0;if(n>=BAG.max)fail('bag_max');const c=BAG.cost(n);if(D.amber<c)fail('not_enough_amber');D.amber-=c;D.bag_ext=n+1;return{slots:slots(),cost:c};},
     set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>12)fail('bad_name');D.name=n;D.named=true;return{};},
     hatch_egg:({kind})=>{if(D.mons.length>=slots())fail('box_full');let ch;

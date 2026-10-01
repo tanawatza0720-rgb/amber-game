@@ -41,8 +41,21 @@ const INFO={
   archive:()=>{const d=el('div');d.append(para('ที่เก็บและดูแลมอนสเตอร์ทั้งหมดของคุณ เลี้ยง อัปเลเวล วิวัฒนาการ และจัดทีม'));
     const list=el('div','mons');S.mons.forEach((m,i)=>{const c=el('div','mcard');c.append(el('b',null,spOf(m).name));c.append(el('span',null,tierOf(spOf(m).rar).n+' · Lv '+m.lv));list.append(c);});d.append(list);
     openSheet('หอคัมภีร์มอนสเตอร์','มีอยู่ '+S.mons.length+'/'+S.slots+' ตัว',d,[['เปิดคลังมอนสเตอร์',()=>openBox()]]);},
+  // กวาดด่านด้วยพลังงาน: 10 ⚡ = รางวัลดันด่าน 30 นาที (server/migrate_energy_sweep.sql)
+  sweep:()=>{const d=el('div'),rate=S.rateC||(5+2*(S.stage||0)),per=Math.round(30*rate),n=Math.min(6,Math.floor(S.energy/10));
+    d.append(para('ใช้พลังงาน 10 ⚡ รับรางวัลเท่ากับดันด่าน 30 นาทีทันที (ไม่กระทบรางวัลสะสมเดิม) · พลังงานฟื้น 1 ⚡ ทุก 3 นาที'));
+    const g=el('div','swGrid');g.append(el('div','swBox',''),el('div','swBox',''));
+    g.children[0].append(el('small',null,'ต่อครั้ง'),el('b',null,'🪙 '+fmt(per)),el('small',null,'+30 EXP'));
+    g.children[1].append(el('small',null,'พลังงานตอนนี้'),el('b',null,'⚡ '+S.energy+'/'+S.energyMax),el('small',null,n?'กวาดได้ '+n+' ครั้ง':'ยังไม่พอ (ต้องมี 10)'));
+    d.append(g);
+    const go=async k=>{const r=await act('sweep_claim',{n:k});if(r){bumpRes('coins');bumpRes('energy');toast('กวาดด่าน '+k+' ครั้ง ได้ 🪙 '+fmt(r.coins)+' · EXP +'+r.xp);if(typeof renderHUD==='function')renderHUD();INFO.sweep();}};
+    const acts=[['กวาดด่าน ×1 · 10 ⚡',()=>go(1),'',S.energy<10]];
+    if(n>1)acts.push(['กวาดทั้งหมด ×'+n+' · '+(n*10)+' ⚡',()=>go(n),'gold',false]);
+    acts.push(['เติมพลังงาน +30 · 20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30');INFO.sweep();}},'ghost',S.amber<20]);
+    openSheet('กวาดด่าน ⚡','ด่านที่ผ่านแล้ว '+(S.stage||0)+' · ยิ่งด่านสูง เหรียญยิ่งเยอะ',d,acts);},
   shop:()=>{const d=el('div');d.append(para('ของทุกชิ้นซื้อด้วยสกุลเงินในเกม'));
-    const items=[['พลังงาน +30','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30');}}],
+    const items=[['พลังงาน +30 (ใช้กวาดด่าน)','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30 · แตะ ⚡ เพื่อกวาดด่าน');}}],
+      ['กวาดด่าน ⚡','10 พลังงาน',()=>INFO.sweep()],
       ['ไข่ป่า ×1','100 เหรียญ',()=>{closeSheet();INFO.hatch();}]];
     const list=el('div','shop');items.forEach(([n,p,fn])=>{const r=el('button','sitem');r.append(el('span',null,n));r.append(el('b',null,p));r.onclick=fn;list.append(r);});d.append(list);
     openSheet('ร้านค้า','สินค้าเปลี่ยนทุกวัน',d,[]);},
@@ -359,3 +372,6 @@ function startFarm(){renderHUD(); layout(); loop(); distTo=68;
 
 // ดีบัก: index.html?dbg=1 เปิด window.__F (เข้าโหมดออฟไลน์เพื่อตรวจหน้าตาโดยไม่สร้างบัญชี)
 if(/[?&]dbg=1/.test(location.search))window.__F={enterOffline,enterGame:()=>enterGame(),rank:d=>{RK.data=d;RK.open=true;renderRank();}};
+
+// แตะแถบพลังงาน = เปิดหน้ากวาดด่าน
+if($('#pEnergy')){const pe=$('#pEnergy');pe.style.cursor='pointer';pe.setAttribute('role','button');pe.setAttribute('tabindex','0');pe.setAttribute('aria-label','พลังงาน แตะเพื่อกวาดด่าน');pe.onclick=()=>INFO.sweep();pe.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();INFO.sweep();}};}
