@@ -311,7 +311,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&BN.online
 setInterval(()=>{if(!document.hidden&&MODE==='idle')bnRefresh();},60000);
 $('#bAuto').onclick=()=>{AUTO=!AUTO;$('#bAuto').classList.toggle('on',AUTO);$('#bAuto').setAttribute('aria-pressed',AUTO);if(AUTO&&choose){const c=choose;choose=null;hideSkills();const [s]=aiChoose(actor);target=aiChoose(actor)[1];c(s);}};
 $('#bSpeed').onclick=()=>{SPEED=SPEED===1?2:1;$('#bSpeed').textContent='x'+SPEED;$('#bSpeed').classList.toggle('on',SPEED===2);};
-$('#bExit').onclick=()=>{if(MODE==='raid'){if(RB&&RB.live)RB.t=RAID_T;return;}if((MODE!=='boss'&&MODE!=='abyss')||!running)return;running=false;if(choose){const c=choose;choose=null;c(null);}actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;ultButtons(false);};
+$('#bExit').onclick=()=>{if(MODE==='raid'){if(RB&&RB.live)RB.t=RAID_T;return;}if(MODE==='war'){if(WB&&WB.live)WB.t=WAR_T;return;}if((MODE!=='boss'&&MODE!=='abyss')||!running)return;running=false;if(choose){const c=choose;choose=null;c(null);}actRing.visible=tgtRing.visible=false;$('#skname').hidden=true;ultButtons(false);};
 
 /* ---------- แตะเลือกเป้า ---------- */
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
@@ -374,7 +374,7 @@ function loop(){
   const rdt=Math.min(clock.getDelta(),.1), dt=rdt*SPEED*HS; T+=rdt;
   for(let i=tweens.length-1;i>=0;i--){const tw=tweens[i];tw.t+=dt;const k=Math.min(1,tw.t/tw.d);tw.fn(tw.ease(k));if(k>=1){tweens.splice(i,1);tw.r();}}
   for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.p.position.addScaledVector(q.v,dt);q.v.y-=dt*q.grav;q.v.multiplyScalar(q.grow?.96:1);q.life-=dt*q.decay;q.p.material.opacity=Math.max(0,q.life*q.o);if(q.grow)q.p.scale.multiplyScalar(1+dt*.9);if(q.life<=0){scene.remove(q.p);q.p.material.dispose();parts.splice(i,1);}}
-  rigUpdate(dt); rtTick(dt,T); if(typeof raidTick==='function')raidTick(dt); if(typeof realmTick==='function')realmTick(dt); if(typeof storyTick==='function')storyTick(dt); if(typeof abyssTick==='function')abyssTick(dt,T);
+  rigUpdate(dt); rtTick(dt,T); if(typeof raidTick==='function')raidTick(dt); if(typeof realmTick==='function')realmTick(dt); if(typeof storyTick==='function')storyTick(dt); if(typeof abyssTick==='function')abyssTick(dt,T); if(typeof WAR_MODE!=='undefined'&&WAR_MODE&&typeof warTick==='function')warTick(dt);
   UNITS.forEach(u=>{if(u.alive||u.w.visible)u.inner.userData.idle(T);});
   separate(); trailUpdate(); blobUpdate();
   falling.forEach((l,i)=>{l.position.y-=rdt*.35;l.position.x+=Math.sin(T+i)*rdt*.3;l.rotation.x+=rdt*(1.5+i%3);l.rotation.y+=rdt;if(l.position.y<.05)l.position.set((Math.random()-.5)*16,5+Math.random()*2,-6+Math.random()*10);});
@@ -403,6 +403,7 @@ Promise.all([loadMeshy(p=>{$('#loadMsg').textContent='กำลังโหล�
   $('#loadMsg').hidden=true; if(!g)USE_MESHY=false;
   if(RAID_MODE){raidStart();return;}
   if(typeof ABYSS_MODE!=='undefined'&&ABYSS_MODE){abyssStart();return;}
+  if(typeof WAR_MODE!=='undefined'&&WAR_MODE){warStart();return;}
   $('#hud').hidden=false; setBossUI(false); idleRender(); showAway(); idleLoop();
 });
 addEventListener('resize',layout);
@@ -422,4 +423,4 @@ document.body.classList.add('big');
   el.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.12:1/1.12);},{passive:false});
 }
 // ดีบัก: battle.html?dbg=1 เปิด window.__B (กล้อง/ยูนิต) ไว้ตรวจท่าทางตัวละครใกล้ ๆ
-if(/[?&]dbg=1/.test(location.search))window.__B={RTS,get UNITS(){return UNITS;},camera,MXA:typeof MXA!=='undefined'?MXA:null,setDist:d=>{RTS.dist=d;RTS.manual=99;},BN,idleRender,get AB(){return typeof AB!=='undefined'?AB:null},get AT(){return typeof AT!=='undefined'?AT:null},get MODE(){return MODE},get running(){return running}};
+if(/[?&]dbg=1/.test(location.search))window.__B={RTS,get UNITS(){return UNITS;},camera,MXA:typeof MXA!=='undefined'?MXA:null,setDist:d=>{RTS.dist=d;RTS.manual=99;},BN,idleRender,get AB(){return typeof AB!=='undefined'?AB:null},get WB(){return typeof WB!=='undefined'?WB:null},get AT(){return typeof AT!=='undefined'?AT:null},get MODE(){return MODE},get running(){return running}};

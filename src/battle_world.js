@@ -238,6 +238,7 @@ function dealHit(att,t,skill){
   if(tp.dr)d*=1-tp.dr;
   d=Math.max(1,Math.round(d));
   if(t.raid&&typeof raidScale==='function')d=raidScale(d); // บอสโลก: ตัวเลขรวมให้ตรงกับดาเมจจริงจากเซิร์ฟเวอร์
+  if(typeof WAR_MODE!=='undefined'&&WAR_MODE&&typeof warScale==='function')d=Math.max(1,Math.round(warScale(att,t,d))); // สงคราม: ภาพตรงกับผลจากเซิร์ฟเวอร์
   t.hp=Math.max(0,t.hp-d);
   if(att.leech&&att.alive){const h=Math.round(d*att.leech);att.hp=Math.min(att.maxHp,att.hp+h);updateBar(att);}
   popNum(t,d+(em>1?' ▲':em<1?' ▼':''),crit?'crit':em>1?'dmg adv':em<1?'dmg weak':'dmg');
