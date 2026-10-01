@@ -175,7 +175,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 
 ## กล้อง
 - มือถือ (จอสัมผัส ด้านสั้น ≤820px): `CAM_K=0.5` คูณระยะกล้องมุมสูงในสนามรบ = ซูมเข้า 2 เท่า (เจ้าของขอ 1 ต.ค. 2026) · `RTS.dist`/BT_ZMIN/BT_ZMAX ยังเป็นค่าเดิม
-- มือถือ (`PHONE` ใน battle_ui.js, `body.phone`): เลือดเป็นหลอดแนวตั้งบางๆ แบ่ง 10 ช่อง สีอ่อน เติมล่างขึ้นบน เป็น mesh 3D หันเข้ากล้อง วางด้านซ้ายแถวเท้าตัวละคร (`footMake`, `u.foot`, shader FOOT_FS · เจ้าของขอ "ซ้ายแถวๆ เท้า") · แผงข้าง `.hpcol` ซ่อนทุกแถวยกเว้นบอส · ปุ่ม `#ipFold` พับ #ipChest/#ipSweep (`body.ipFold`, จำใน localStorage) จุดแดงเมื่อมีของให้เก็บ/กวาด
+- มือถือ (`PHONE` ใน battle_ui.js, `body.phone`): เลือดเป็นเส้นบางๆ 3px สีอ่อนใต้เท้า `.fbar` (DOM, `footMake`, `u.foot`) ไม่มีกะพริบ · ลองแบบ 3D หลังตัว/ข้างซ้ายแล้วเจ้าของไม่ชอบ (1 ต.ค. 2026) · แผงข้าง `.hpcol` ซ่อนทุกแถวยกเว้นบอส · ปุ่ม `#ipFold` พับ #ipChest/#ipSweep (`body.ipFold`, จำใน localStorage) จุดแดงเมื่อมีของให้เก็บ/กวาด
 - จำกัดการซูมเข้าเพื่อลดภาระเครื่อง: ฟาร์ม `FARM_ZMIN=56` ถึง `FARM_ZMAX=110` (farm_ui.js, camera.far=400) · สนามรบ `BT_ZMIN=45` ถึง `BT_ZMAX=75` (กล้องอัตโนมัติก็อยู่ในช่วงนี้), ระยะเริ่ม `RTS.base=55` (battle_ui.js), หมอกสนามรบ 110–420 (battle_map.js)
 
 ## เผ่า 4 เผ่า (server/migrate_race.sql · gamedata.js `RACES` · race_pick.js · battle_race.js)
