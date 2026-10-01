@@ -3,8 +3,8 @@
    ทั้งหมดเป็น shader เบา ๆ (ไม่มีไฟจริง/ไม่มี texture) · มือรวมเป็น geometry เดียว ใช้ material ร่วม
    แตะที่วงประตู → openPortal() (ตอนนี้แจ้งว่าเร็ว ๆ นี้) · อัปเดตใน worldTick → portalTick */
 const PORTAL=(()=>{
-  const R=6.2, ANG=2.2, DIST=29.5, LOWF=matchMedia('(pointer:coarse)').matches;
-  const g=new THREE.Group(); g.position.set(Math.cos(ANG)*DIST,6.2,-Math.sin(ANG)*DIST); g.rotation.set(-.42,.3,0); scene.add(g);
+  const R=6.2, ANG=2.2, DIST=33, LOWF=matchMedia('(pointer:coarse)').matches;
+  const g=new THREE.Group(); g.position.set(Math.cos(ANG)*DIST,8.5,-Math.sin(ANG)*DIST); g.rotation.set(-.42,.3,0); scene.add(g);
   const U={t:{value:0},R:{value:R},ps:{value:600}};
   const NZ=`float h1(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h1(i),h1(i+vec2(1.,0.)),f.x),mix(h1(i+vec2(0.,1.)),h1(i+1.),f.x),f.y);}

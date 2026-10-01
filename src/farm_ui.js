@@ -171,7 +171,7 @@ const ptrs=new Map(); let downAt=null, moved=0, pinch0=0;
 const cv=renderer.domElement;
 cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});downAt={x:e.clientX,y:e.clientY};moved=0;if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);}});
 cv.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;
-  if(ptrs.size===1){const dx=e.clientX-p.x,dy=e.clientY-p.y;moved+=Math.abs(dx)+Math.abs(dy);const k=dist*.0017;camTTo.x-=dx*k;camTTo.z-=dy*k/Math.cos(PITCH)*.7;const r=Math.hypot(camTTo.x,camTTo.z);if(r>FARM_R-6)camTTo.multiplyScalar((FARM_R-6)/r);}
+  if(ptrs.size===1){const dx=e.clientX-p.x,dy=e.clientY-p.y;moved+=Math.abs(dx)+Math.abs(dy);const k=dist*.0017;camTTo.x-=dx*k;camTTo.z-=dy*k/Math.cos(PITCH)*.7;const r=Math.hypot(camTTo.x,camTTo.z);if(r>FARM_R-4)camTTo.multiplyScalar((FARM_R-4)/r);}
   p.x=e.clientX;p.y=e.clientY;
   if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0){distTo=Math.max(FARM_ZMIN,Math.min(FARM_ZMAX,distTo*pinch0/d));}pinch0=d;moved=99;}});
 const endPtr=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;if(ptrs.size===0&&downAt&&moved<8)tap(e.clientX,e.clientY);if(ptrs.size===0)downAt=null;};
