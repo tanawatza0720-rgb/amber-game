@@ -23,16 +23,23 @@ function warScale(att,t,d){
   return d;
 }
 /* ---------- ศิลาอัมพร ---------- */
-function warCrystal(){
+function warCrystal(race){
   const g=new THREE.Group(); g.position.copy(WAR_CRY);
   const cm=new THREE.MeshStandardMaterial({color:0xff8a1a,emissive:0xff5a00,emissiveIntensity:1.1,roughness:.25,metalness:0,transparent:true,opacity:.9});
   const c=new THREE.Mesh(new THREE.OctahedronGeometry(1.2,0),cm); c.scale.set(1,2.1,1); c.position.y=3.2; g.add(c);
   [[.9,.4,.6],[-.8,.3,-.5],[.2,.35,-1]].forEach(([x,s,z])=>{const m=new THREE.Mesh(new THREE.OctahedronGeometry(.6,0),cm);m.scale.set(s*1.4,s*3,s*1.4);m.position.set(x,s*1.5,z);m.rotation.z=x*.3;g.add(m);});
   const base=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.8,.6,10),new THREE.MeshStandardMaterial({color:0x5a4a3a,roughness:.9})); base.position.y=.3; g.add(base);
+  // แท่น = รูปปั้นประจำเผ่าของผู้ป้องกัน (ตัวเดียวกับในฟาร์ม) · ศิลาลอยเหนือหัวรูปปั้น
+  const R=race&&RACES[race];
+  if(R&&R.statue){try{new THREE.GLTFLoader().load(R.statue,m=>{const o=m.scene,H=6.5,b=new THREE.Box3().setFromObject(o),sz=b.getSize(new THREE.Vector3());
+    o.scale.setScalar(H/sz.y);const b2=new THREE.Box3().setFromObject(o);o.position.y=-b2.min.y+.5;o.rotation.y=-Math.PI/2;
+    o.traverse(x=>{if(x.isMesh){x.castShadow=true;x.receiveShadow=true;}});g.add(o);
+    if(WB&&WB.cry)WB.cry.top=H+2.4;
+    glow(g,new THREE.Color(R.c).getHex(),4,[0,H*.55,0],.25);},undefined,()=>{});}catch(e){}}
   const ring=new THREE.Mesh(new THREE.RingGeometry(5.6,6,64),new THREE.MeshBasicMaterial({color:0xffc070,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide}));
   ring.rotation.x=-Math.PI/2; ring.position.y=.08; g.add(ring);
   glow(g,0xffa040,6,[0,3.2,0],.55);
-  scene.add(g); return {g,c,ring,cm};
+  scene.add(g); return {g,c,ring,cm,top:3.2};
 }
 /* ---------- ฉากเปิดตัวทีมสมทบตามเผ่า ---------- */
 const WAR_GLB={};
@@ -112,7 +119,7 @@ function warRevive(){
 /* ---------- ลูปของโหมดสงคราม ---------- */
 function warTick(dt){
   if(!WB||MODE!=='war')return;
-  if(WB.cry){WB.cry.c.rotation.y+=dt*.8;WB.cry.c.position.y=3.2+Math.sin(performance.now()/600)*.15;WB.cry.ring.material.opacity=.25+.2*Math.sin(performance.now()/300);}
+  if(WB.cry){WB.cry.c.rotation.y+=dt*.8;WB.cry.c.position.y=WB.cry.top+Math.sin(performance.now()/600)*.15;WB.cry.ring.material.opacity=.25+.2*Math.sin(performance.now()/300);}
   if(!WB.live)return;
   WB.t+=dt;
   // ผู้ป้องกันเฝ้าศิลา จนกว่าฝั่งบุกจะเข้าใกล้
@@ -152,7 +159,7 @@ async function warStart(){
   document.body.classList.add('warOn');
   // ฉาก
   UNITS.forEach(removeUnit); UNITS=[]; PICKU=[]; RIGS=[]; clearTrails();
-  WB.cry=warCrystal();
+  WB.cry=warCrystal(D.race);
   running=true; RT={manual:true}; raceReset();
   TEAM.forEach((d,i)=>{const u=rtInit(makeUnit('P',d,i));u.w.position.x-=6;u.home.x=WAR_CRY.x-3;u.holdT=1.2;
     if(hasClip(u,'battlecry'))setTimeout(()=>u.alive&&u.inner.userData.play('battlecry',{speed:1.7,fade:.15}),150);else if(u.dragon)setTimeout(()=>u.alive&&dragonRoar(u,700),150);});

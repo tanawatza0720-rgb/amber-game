@@ -7,7 +7,7 @@ const COL=(()=>{
   const hit=new THREE.Mesh(new THREE.CylinderGeometry(9,6,12,12),new THREE.MeshBasicMaterial({visible:false}));hit.position.y=1;hit.userData.war=1;g.add(hit);PICK.push(hit);
   const fires=[],smokes=[],FIRE=[[-4,4.2,2],[3,3.6,-3],[5,5.2,2.5],[-2,2.6,-4.5],[0,4.8,4.5]];
   function addFx(top){
-    FIRE.forEach(([x,y,z],i)=>{const f=glow(g,i%2?0xff6a1a:0xffa030,2.4,[x,y*top,z],.9);f.userData.b=[f.scale.x,Math.random()*6];fires.push(f);});
+    FIRE.forEach(([x,y,z],i)=>{const f=glow(g,i%2?0xff6a1a:0xffa030,4.2,[x,y*top,z],.95);f.userData.b=[f.scale.x,Math.random()*6];fires.push(f);});
     const n=LOWF?4:7;
     for(let i=0;i<n;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:FT.cloud,color:0x3a3430,transparent:true,opacity:0,depthWrite:false}));
       const p=FIRE[i%FIRE.length];s.userData.b=[p[0],p[1]*top,p[2],Math.random()];g.add(s);smokes.push(s);}
