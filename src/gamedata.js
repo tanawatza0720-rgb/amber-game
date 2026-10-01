@@ -212,3 +212,26 @@ const RACES={
     desc:'ทุก 18 วินาที ทั้งทีมโจมตีแรงขึ้น 20% นาน 8 วินาที',
     lore:'ชาวนครหินผู้ยิ่งใหญ่ ธงศึกของพวกเขาปลุกใจนักรบให้ฮึกเหิม',glb:'race/human-city-island.glb',statue:'race/statue-human.glb'}};
 const RACE_ORDER=['god','undead','beast','human'];
+
+/* ================= ขุมนรก 50 ชั้น (server/migrate_abyss.sql) — ใช้ทั้งฟาร์มและสนามรบ =================
+   5 โซน โซนละ 10 ชั้น (ชั้น 10/20/30/40/50 = บอส) · ศัตรูเป็นธาตุประจำโซน (โซน 5 สลับ มืด/ไฟ) */
+const ABYSS_ZONES=[
+  {n:'ประตูมืด',el:['มืด'],fog:0x1a1028,hemi:[0xc8a8ff,0x140a20],tint:{dark:0x1a0f2a,skin:0x8a78b8,em:0x14002a,glow:0xb48aff},
+    minion:['kazemaru','วิญญาณหลงทาง'],mid:['kazekiri','ภูตเงา'],big:['kuroga','อัศวินเงา'],boss:['kuroga','ผู้เฝ้าประตูมืด']},
+  {n:'ทะเลเพลิง',el:['ไฟ'],fog:0x2a0a04,hemi:[0xffb08a,0x200604],tint:{dark:0x3a0c04,skin:0xff9a6a,em:0x3a0800,glow:0xff7a2a},
+    minion:['kazemaru','อสูรไฟจิ๋ว'],mid:['kohaku','จิ้งจอกเพลิง'],big:['garok','ยักษ์ลาวา'],boss:['amateru','มังกรเพลิงนรก','garok']},
+  {n:'ถ้ำวิญญาณน้ำแข็ง',el:['น้ำ'],fog:0x0c1e2c,hemi:[0xb8e8ff,0x081420],tint:{dark:0x10263a,skin:0xa8dcff,em:0x00142a,glow:0x8ad8ff},
+    minion:['kazemaru','วิญญาณน้ำแข็ง'],mid:['seiro','หมาป่าน้ำแข็ง'],big:['hakuneko','แม่มดหิมะ'],boss:['hakuneko','ราชินีวิญญาณน้ำแข็ง']},
+  {n:'ป้อมกระดูก',el:['ดิน'],fog:0x1a1e12,hemi:[0xe0f0b0,0x10140a],tint:{dark:0x2a2a1a,skin:0xe8e0c0,em:0x101400,glow:0xc8ff6a},
+    minion:['kazemaru','โครงกระดูก'],mid:['yorugumo','แมงมุมกระดูก'],big:['garok','อัศวินกระดูก'],boss:['garok','จอมพลกระดูก']},
+  {n:'บัลลังก์ราชาขุมนรก',el:['มืด','ไฟ'],fog:0x100206,hemi:[0xff8a9a,0x140206],tint:{dark:0x14020a,skin:0xc06070,em:0x2a0008,glow:0xff2a4a},
+    minion:['kazekiri','ทหารนรก'],mid:['kuroga','อัศวินนรก'],big:['hakuneko','นางพญาปีศาจ'],boss:['amateru','ราชาขุมนรก','kuroga']}];
+const abyssZone=f=>ABYSS_ZONES[Math.min(4,Math.floor((Math.max(1,f)-1)/10))];
+// พรประจำสัปดาห์ (+10% อย่างเดียว ไม่แรงเกิน) · el:<ธาตุ> = เฉพาะตัวละครธาตุนั้น โจมตีและเลือด +10%
+function abyssBless(k){
+  if(!k)return null;
+  if(k.indexOf('el:')===0){const e=k.slice(3);return {k,i:ELEM[e]?ELEM[e].i:'✨',n:'พรธาตุ'+e,d:'ตัวละครธาตุ'+e+' โจมตีและเลือด +10%',p:{atk:1.1,hp:1.1,el:e}};}
+  const B={atk:['⚔️','พรแห่งคมเขี้ยว','ทั้งทีมโจมตี +10%',{atk:1.1}],hp:['❤️','พรแห่งชีวิต','ทั้งทีมเลือด +10%',{hp:1.1}],
+    def:['🛡️','พรแห่งปราการ','ทั้งทีมป้องกัน +10%',{def:1.1}],spd:['💨','พรแห่งสายลม','ทั้งทีมความเร็ว +10%',{spd:1.1}]}[k];
+  return B?{k,i:B[0],n:B[1],d:B[2],p:B[3]}:null;
+}

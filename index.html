@@ -373,6 +373,35 @@ body.visiting #rail,body.visiting #menuBtn,body.visiting #dock,body.visiting #ra
 .stList{display:flex;flex-direction:column;gap:4px;max-height:128px;overflow:auto;margin:6px 0}
 .stRow{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.05);font-size:12px}.stRow span{color:var(--muted)}.stRow.boss{background:rgba(255,200,80,.12)}
 .sbtn.god{background:linear-gradient(180deg,#d9a8ff,#8a4ad0);color:#fff;border-color:#e6c8ff}
+/* ขุมนรก 50 ชั้น (farm_abyss.js) */
+.aby{display:grid;gap:10px}
+.abHero{background:linear-gradient(160deg,#1a0f28,#0c0812);border:1px solid rgba(180,138,255,.35);border-radius:12px;padding:10px 12px}
+.abTop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.abTop b{font-family:'Chakra Petch',sans-serif;font-size:17px;color:#d8b8ff}.abTop span{font-size:12px;color:var(--muted)}
+.abBar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin:8px 0 6px;overflow:hidden}.abBar i{display:block;height:100%;background:linear-gradient(90deg,#6a2ad0,#c070ff)}
+.abNeed{display:flex;justify-content:space-between;gap:8px;font-size:12px;flex-wrap:wrap}.abNeed em{font-style:normal;font-weight:700}
+.abGo{width:100%;margin-top:10px}
+.abNeed.ok em{color:var(--mint)}.abNeed.mid em{color:#ffd36a}.abNeed.low em{color:#ff9a8a}
+.abBless{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.abBless>i{font-style:normal;font-size:24px;flex:none}.abBless b{display:block;color:var(--amber)}.abBless small{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+.abBless.none b{color:var(--bone)}
+.abH{margin:4px 0 0;font-family:'Chakra Petch',sans-serif;font-size:13px;color:#d8b8ff}
+.abZone{background:rgba(255,255,255,.04);border-radius:10px;padding:2px 8px}
+.abZone summary{cursor:pointer;display:flex;justify-content:space-between;gap:6px;align-items:center;padding:7px 0;list-style:none;font-size:13px}
+.abZone summary::-webkit-details-marker{display:none}.abZone summary span{font-size:11px;color:var(--muted);text-align:right}
+.abZone summary::before{content:'▸';color:var(--muted);margin-right:2px}.abZone[open] summary::before{content:'▾'}.abZone summary b{flex:1}
+.abGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:0 0 8px}
+.abT{min-width:0;border:1px solid var(--line);border-radius:9px;padding:5px 2px;text-align:center;background:rgba(0,0,0,.25);display:flex;flex-direction:column;gap:1px}
+.abT small{font-size:10px;color:var(--muted);white-space:nowrap}.abT b{font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.abT em{font-style:normal;font-size:10px;color:var(--muted)}
+.abT.boss{border-color:rgba(255,179,71,.55);background:rgba(255,179,71,.08)}.abT.boss b{color:var(--amber)}
+.abT.box{border-color:#c070ff;background:rgba(160,80,255,.16)}.abT.box b:first-of-type{color:#e6c8ff;font-size:10.5px;white-space:normal}
+.abT.done{opacity:.45}.abT.done small::after{content:' ✓';color:var(--mint)}
+.abT.next{border-color:#c070ff;box-shadow:0 0 0 1px #c070ff inset;animation:abPulse 1.6s ease-in-out infinite}
+@keyframes abPulse{50%{box-shadow:0 0 0 1px #c070ff inset,0 0 10px rgba(192,112,255,.6)}}
+@media (prefers-reduced-motion:reduce){.abT.next{animation:none}}
+.abTop10{list-style:none;margin:0;padding:0;display:grid;gap:3px}.abTop10 li{display:flex;gap:6px;align-items:center;font-size:13px}
+.abTop10 li em{font-style:normal;width:22px;text-align:center}.abTop10 li b{flex:1;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.abTop10 li span{color:#d8b8ff;font-variant-numeric:tabular-nums}.abTop10 li.me b{color:var(--mint);font-weight:700}.abTop10 li.none{color:var(--muted)}
+.abMe{margin:0;font-size:12px;color:var(--mint)}
 
 .rbtn.reddot::after,.nbtn.reddot::after{content:"";position:absolute;top:-3px;right:-3px;width:12px;height:12px;border-radius:50%;background:#e8453c;border:2px solid #fff3;box-shadow:0 0 6px rgba(232,69,60,.7)}
 .nbtn{position:relative}
@@ -502,6 +531,7 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   <button class="rbtn" id="rDaily"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#d9482b"/><rect x="2" y="6" width="20" height="4" rx="1" fill="#f07a2a"/><rect x="10.5" y="6" width="3" height="15" fill="#ffd34d"/><path d="M12 6C9 1 5 4 8 6M12 6c3-5 7-2 4 0" stroke="#ffd34d" stroke-width="2" fill="none"/></svg>รายวัน<span class="badge" id="bDaily">!</span></button>
   <button class="rbtn" id="rMail"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" fill="#e9dcc0"/><path d="m2 6 10 7 10-7" stroke="#8a6a44" stroke-width="2" fill="none"/></svg>จดหมาย<span class="badge" id="bMail">2</span></button>
   <button class="rbtn" id="rRaid" hidden><svg viewBox="0 0 24 24"><path d="M3 15c3-1 5-4 6-8 1 3 3 4 5 4 2-3 5-4 7-4-2 2-3 4-3 7 2 0 3 1 3 3-3-1-6 0-9 2-3-2-6-3-9-4z" fill="#e0503a"/><circle cx="16" cy="10" r="1" fill="#ffd34d"/></svg>ไฮดรา<span class="badge" id="bRaid"></span><i class="rhp"><i id="rRaidHp"></i></i></button>
+  <button class="rbtn" id="rAbyss"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#0c0612" stroke="#a45cff" stroke-width="1.6"/><path d="M12 12c0-2 2-3 3.5-2s1.2 4-1.5 5-6-.5-6.5-3.5S10 5 13.5 5.5" stroke="#c99aff" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="1.6" fill="#000"/></svg>ขุมนรก</button>
   <button class="rbtn" id="rFriend" hidden><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6" fill="#9fd8ff"/><path d="M2.5 20c.6-4 3.2-6 6.5-6s5.9 2 6.5 6z" fill="#5fa8e0"/><circle cx="16.5" cy="9" r="3" fill="#ffd36a"/><path d="M13 20c.4-3.3 2.2-5 4.5-5s4.1 1.7 4.5 5z" fill="#e0a53a"/></svg>เพื่อน<span class="badge" id="bFriend" hidden></span></button>
   <button class="rbtn" id="rExp" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#2a4a5e" stroke="#9fd8ff" stroke-width="1.5"/><path d="M12 4l2.6 8L12 20l-2.6-8z" fill="#ff6a4a"/><path d="M12 12 14.6 12 12 20 9.4 12z" fill="#e9eef5"/><circle cx="12" cy="12" r="1.4" fill="#ffd34d"/></svg>สำรวจ<span class="badge" id="bExp" hidden></span><i class="rhp"><i id="rExpBar"></i></i></button>
   <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M3 10v4l3 .5V9.5z" fill="#c9a24a"/><path d="M6 9.5 17 5v14L6 14.5z" fill="#ffc94d"/><path d="M8 14.8 9.5 20h2.6l-1.2-4.8" fill="#e9dcc0"/><path d="M19.5 9.5c1 .8 1 4.2 0 5" stroke="#ffd34d" stroke-width="1.6" fill="none"/></svg>อัปเดต<span class="badge" id="bNews" hidden>N</span></button>
@@ -1351,6 +1381,29 @@ const RACES={
     desc:'ทุก 18 วินาที ทั้งทีมโจมตีแรงขึ้น 20% นาน 8 วินาที',
     lore:'ชาวนครหินผู้ยิ่งใหญ่ ธงศึกของพวกเขาปลุกใจนักรบให้ฮึกเหิม',glb:'race/human-city-island.glb',statue:'race/statue-human.glb'}};
 const RACE_ORDER=['god','undead','beast','human'];
+
+/* ================= ขุมนรก 50 ชั้น (server/migrate_abyss.sql) — ใช้ทั้งฟาร์มและสนามรบ =================
+   5 โซน โซนละ 10 ชั้น (ชั้น 10/20/30/40/50 = บอส) · ศัตรูเป็นธาตุประจำโซน (โซน 5 สลับ มืด/ไฟ) */
+const ABYSS_ZONES=[
+  {n:'ประตูมืด',el:['มืด'],fog:0x1a1028,hemi:[0xc8a8ff,0x140a20],tint:{dark:0x1a0f2a,skin:0x8a78b8,em:0x14002a,glow:0xb48aff},
+    minion:['kazemaru','วิญญาณหลงทาง'],mid:['kazekiri','ภูตเงา'],big:['kuroga','อัศวินเงา'],boss:['kuroga','ผู้เฝ้าประตูมืด']},
+  {n:'ทะเลเพลิง',el:['ไฟ'],fog:0x2a0a04,hemi:[0xffb08a,0x200604],tint:{dark:0x3a0c04,skin:0xff9a6a,em:0x3a0800,glow:0xff7a2a},
+    minion:['kazemaru','อสูรไฟจิ๋ว'],mid:['kohaku','จิ้งจอกเพลิง'],big:['garok','ยักษ์ลาวา'],boss:['amateru','มังกรเพลิงนรก','garok']},
+  {n:'ถ้ำวิญญาณน้ำแข็ง',el:['น้ำ'],fog:0x0c1e2c,hemi:[0xb8e8ff,0x081420],tint:{dark:0x10263a,skin:0xa8dcff,em:0x00142a,glow:0x8ad8ff},
+    minion:['kazemaru','วิญญาณน้ำแข็ง'],mid:['seiro','หมาป่าน้ำแข็ง'],big:['hakuneko','แม่มดหิมะ'],boss:['hakuneko','ราชินีวิญญาณน้ำแข็ง']},
+  {n:'ป้อมกระดูก',el:['ดิน'],fog:0x1a1e12,hemi:[0xe0f0b0,0x10140a],tint:{dark:0x2a2a1a,skin:0xe8e0c0,em:0x101400,glow:0xc8ff6a},
+    minion:['kazemaru','โครงกระดูก'],mid:['yorugumo','แมงมุมกระดูก'],big:['garok','อัศวินกระดูก'],boss:['garok','จอมพลกระดูก']},
+  {n:'บัลลังก์ราชาขุมนรก',el:['มืด','ไฟ'],fog:0x100206,hemi:[0xff8a9a,0x140206],tint:{dark:0x14020a,skin:0xc06070,em:0x2a0008,glow:0xff2a4a},
+    minion:['kazekiri','ทหารนรก'],mid:['kuroga','อัศวินนรก'],big:['hakuneko','นางพญาปีศาจ'],boss:['amateru','ราชาขุมนรก','kuroga']}];
+const abyssZone=f=>ABYSS_ZONES[Math.min(4,Math.floor((Math.max(1,f)-1)/10))];
+// พรประจำสัปดาห์ (+10% อย่างเดียว ไม่แรงเกิน) · el:<ธาตุ> = เฉพาะตัวละครธาตุนั้น โจมตีและเลือด +10%
+function abyssBless(k){
+  if(!k)return null;
+  if(k.indexOf('el:')===0){const e=k.slice(3);return {k,i:ELEM[e]?ELEM[e].i:'✨',n:'พรธาตุ'+e,d:'ตัวละครธาตุ'+e+' โจมตีและเลือด +10%',p:{atk:1.1,hp:1.1,el:e}};}
+  const B={atk:['⚔️','พรแห่งคมเขี้ยว','ทั้งทีมโจมตี +10%',{atk:1.1}],hp:['❤️','พรแห่งชีวิต','ทั้งทีมเลือด +10%',{hp:1.1}],
+    def:['🛡️','พรแห่งปราการ','ทั้งทีมป้องกัน +10%',{def:1.1}],spd:['💨','พรแห่งสายลม','ทั้งทีมความเร็ว +10%',{spd:1.1}]}[k];
+  return B?{k,i:B[0],n:B[1],d:B[2],p:B[3]}:null;
+}
 
 /* ================= เชื่อมต่อเซิร์ฟเวอร์ (Supabase) =================
    ออนไลน์: ทุกการใช้เหรียญ/อัมพร/สุ่มไข่/อัปเลเวล ให้เซิร์ฟเวอร์ตัดสิน (ดู setup_v2.sql)
@@ -3276,29 +3329,24 @@ function loadStatue(r){if(STATUE){RACE_DECO.remove(STATUE);STATUE=null;}const sr
     glow(w,new THREE.Color(RACES[r].c).getHex(),3.4,[0,(RACES[r].statueH||5.5)*.55,0],.22);RACE_DECO.add(w);BLOCK.push({x,z,r:Math.max(sz.x,sz.z)*s*.5+.3,race:1});STATUE=w;window.__statue=[x,z];});}
 function raceWorldTick(dt,T){RACE_TICKS.forEach(f=>f(dt,T));}
 
-/* ================= ประตูมิติขุมนรก (ฉากฟาร์ม · ขอบเกาะฝั่งตะวันตกเฉียงเหนือ) =================
-   ทางเข้าดันเจี้ยนขุมนรก: วงหลุมดำหมุนวน + ออร่าดำพวยพุ่งขึ้นจากขอบ + ควันดำลอยขึ้น + มือดำเล็ก ๆ ยื่นออกมา
-   ทั้งหมดเป็น shader เบา ๆ (ไม่มีไฟจริง/ไม่มี texture) · มือรวมเป็น geometry เดียว ใช้ material ร่วม
-   แตะที่วงประตู → openPortal() (ตอนนี้แจ้งว่าเร็ว ๆ นี้) · อัปเดตใน worldTick → portalTick */
-const PORTAL=(()=>{
-  const R=6.2, ANG=2.2, DIST=33, LOWF=matchMedia('(pointer:coarse)').matches;
-  const g=new THREE.Group(); g.position.set(Math.cos(ANG)*DIST,8.5,-Math.sin(ANG)*DIST); g.rotation.set(-.42,.3,0); scene.add(g);
-  const U={t:{value:0},R:{value:R},ps:{value:600}};
+/* ================= ของใช้ร่วมของขุมนรก (ฟาร์ม farm_portal.js + สนามรบ battle_abyss.js) =================
+   shader หลุมดำหมุนวน / ออร่าดำพวยพุ่ง / ควันดำ + มือดำ (geometry รวมชิ้นเดียว สร้างครั้งเดียวแล้วใช้ซ้ำ)
+   uniforms ที่ต้องส่ง: {t (เวลา), R (รัศมีวง), ps (ขนาดจุดควัน = ความสูงจอ/2/tan(fov/2))} */
+const ABYSS_FX=(()=>{
   const NZ=`float h1(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h1(i),h1(i+vec2(1.,0.)),f.x),mix(h1(i+vec2(0.,1.)),h1(i+1.),f.x),f.y);}
 float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n2(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}`;
   const VS=`varying vec2 vP;void main(){vP=position.xy;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
-  // 1) ออร่าดำพวยพุ่ง (วงแหวนรอบนอก เปลวยาวขึ้นด้านบน)
-  const aura=new THREE.Mesh(new THREE.RingGeometry(R*.9,R*2.3,96,6),new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,side:THREE.DoubleSide,vertexShader:VS,
+  // ออร่าดำพวยพุ่ง (วงแหวนรอบนอก เปลวยาวขึ้นด้าน +y ของวง)
+  const auraMat=U=>new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,side:THREE.DoubleSide,vertexShader:VS,
     fragmentShader:`uniform float t,R;varying vec2 vP;${NZ}
 void main(){vec2 p=vP/R;float r=length(p),d=r-1.;float up=max(0.,p.y/r);
   float fl=fbm(vec2(p.x*4.2,p.y*1.3-t*1.8))*.75+fbm(vec2(atan(p.y,p.x)*4.,d*3.-t*1.1))*.45;
   float ext=.16+1.25*pow(up,1.5)+.3*fl;float m=smoothstep(ext,0.,d)*smoothstep(.3,.7,fl+.45*(1.-d/ext));
   vec3 c=mix(vec3(.32,.06,.5),vec3(.015,0.,.03),smoothstep(.0,.45,m));
-  gl_FragColor=vec4(c,clamp(m*1.15,0.,.93)*smoothstep(-.1,.02,d));}`}));
-  aura.position.z=-.05; aura.renderOrder=1; g.add(aura);
-  // 2) หลุมดำหมุนวน
-  const disc=new THREE.Mesh(new THREE.CircleGeometry(R*1.12,72),new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,vertexShader:VS,
+  gl_FragColor=vec4(c,clamp(m*1.15,0.,.93)*smoothstep(-.1,.02,d));}`});
+  // หลุมดำหมุนวน (ตรงกลางทึบ ใช้ซ่อนส่วนของมือที่ยังอยู่ "ในหลุม")
+  const discMat=U=>new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,side:THREE.DoubleSide,vertexShader:VS,
     fragmentShader:`uniform float t,R;varying vec2 vP;${NZ}
 void main(){vec2 p=vP/R;float r=length(p),a=atan(p.y,p.x);
   float sw=a+2.4/(r+.22)-t*.8;vec2 q=vec2(cos(sw),sin(sw))*r*3.;
@@ -3307,21 +3355,21 @@ void main(){vec2 p=vP/R;float r=length(p),a=atan(p.y,p.x);
   vec3 c=vec3(.32,.07,.5)*st*dep*.9+vec3(.8,.25,.95)*pow(st,3.)*dep*.55;
   vec2 sq=floor(q*5.);float sp=step(.988,h1(sq))*(.5+.5*sin(t*3.+h1(sq+3.)*20.))*dep;c+=vec3(.75,.55,1.)*sp*.7;
   float rim=exp(-pow((r-1.)*7.,2.));c+=vec3(.55,.14,.85)*rim*(.55+.6*fbm(vec2(a*3.,t*.8)));
-  float al=r<1.?1.:(1.-smoothstep(1.,1.12,r))*(.55+.45*f);gl_FragColor=vec4(c,al);}`}));
-  disc.renderOrder=2; disc.userData.portal=1; g.add(disc); PICK.push(disc);
-  // 3) ควันดำลอยขึ้นจากขอบ (points)
-  const N=LOWF?70:140,sd=new Float32Array(N*3);for(let i=0;i<N;i++){sd[i*3]=Math.random()*6.283;sd[i*3+1]=Math.random();sd[i*3+2]=.18+Math.random()*.22;}
-  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));pg.setAttribute('sd',new THREE.BufferAttribute(sd,3));
-  const smoke=new THREE.Points(pg,new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,
+  float al=r<1.?1.:(1.-smoothstep(1.,1.12,r))*(.55+.45*f);gl_FragColor=vec4(c,al);}`});
+  // ควันดำลอยขึ้นจากขอบวง (points: attribute sd = มุม, เฟส, ความเร็ว)
+  const smokeMat=U=>new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,
     vertexShader:`attribute vec3 sd;uniform float t,R,ps;varying float vA;
 void main(){float L=fract(t*sd.z+sd.y),a=sd.x;vec3 p=vec3(cos(a)*R,sin(a)*R,.1);
   p.y+=L*R*(.6+.9*max(0.,sin(a))+.3*sin(a*5.));p.x+=sin(L*6.+a*5.)*.5+cos(a)*L*R*.2;
-  vA=(1.-L)*smoothstep(0.,.12,L);vec4 mv=modelViewMatrix*vec4(p,1.);gl_PointSize=(.9+1.8*L)*ps/-mv.z;gl_Position=projectionMatrix*mv;}`,
+  vA=(1.-L)*smoothstep(0.,.12,L);vec4 mv=modelViewMatrix*vec4(p,1.);gl_PointSize=(.9+1.8*L)*(R/6.)*ps/-mv.z;gl_Position=projectionMatrix*mv;}`,
     fragmentShader:`varying float vA;void main(){float d=length(gl_PointCoord-.5);float al=smoothstep(.5,.05,d)*vA*.8;if(al<.01)discard;
-  gl_FragColor=vec4(mix(vec3(.3,.07,.45),vec3(.01,0.,.02),smoothstep(.45,.12,d)),al);}`}));
-  smoke.frustumCulled=false; smoke.renderOrder=3; g.add(smoke);
-  // 4) มือดำเล็ก ๆ ยื่นออกมาจากหลุม (geometry เดียวกันทุกมือ · ขอบเรืองม่วงจาง ๆ)
-  const handGeo=(()=>{const tmp=new THREE.Group(),parts=[];
+  gl_FragColor=vec4(mix(vec3(.3,.07,.45),vec3(.01,0.,.02),smoothstep(.45,.12,d)),al);}`});
+  function smokePts(U,N){const sd=new Float32Array(N*3);for(let i=0;i<N;i++){sd[i*3]=Math.random()*6.283;sd[i*3+1]=Math.random();sd[i*3+2]=.18+Math.random()*.22;}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));g.setAttribute('sd',new THREE.BufferAttribute(sd,3));
+    const p=new THREE.Points(g,smokeMat(U));p.frustumCulled=false;return p;}
+  // มือดำ: แขนยาวตามแกน +y (โคนที่ y=0 ปลายเล็บ ~y=2.8) นิ้วเรียวงอ มีเล็บ
+  let HG=null;
+  function handGeo(){if(HG)return HG;const tmp=new THREE.Group(),parts=[];
     const add=(geo,pos,rot,par)=>{const m=new THREE.Mesh(geo);m.position.set(...pos);if(rot)m.rotation.set(...rot);(par||tmp).add(m);parts.push(m);return m;};
     add(new THREE.CylinderGeometry(.11,.16,1.7,7),[0,.85,0]);
     const palm=add(new THREE.SphereGeometry(.24,8,6),[0,1.9,0]);palm.scale.set(1,1.15,.45);
@@ -3333,19 +3381,34 @@ void main(){float L=fract(t*sd.z+sd.y),a=sd.x;vec3 p=vec3(cos(a)*R,sin(a)*R,.1);
       add(new THREE.ConeGeometry(.024,.14,4),[0,len*.85+.06,0],null,f2);});
     const th=new THREE.Group();th.position.set(.2,1.82,.02);th.rotation.set(.3,0,-1.0);tmp.add(th);
     add(new THREE.CylinderGeometry(.03,.045,.32,5),[0,.16,0],null,th);add(new THREE.ConeGeometry(.026,.13,4),[0,.38,0],null,th);
-    tmp.updateMatrixWorld(true);const P=[],Nn=[];
-    parts.forEach(m=>{const gg=m.geometry.clone().applyMatrix4(m.matrixWorld).toNonIndexed();P.push(...gg.attributes.position.array);Nn.push(...gg.attributes.normal.array);});
-    const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.Float32BufferAttribute(P,3));out.setAttribute('normal',new THREE.Float32BufferAttribute(Nn,3));return out;})();
-  const handMat=new THREE.ShaderMaterial({uniforms:U,
+    tmp.updateMatrixWorld(true);const P=[],N=[];
+    parts.forEach(m=>{const gg=m.geometry.clone().applyMatrix4(m.matrixWorld).toNonIndexed();P.push(...gg.attributes.position.array);N.push(...gg.attributes.normal.array);});
+    HG=new THREE.BufferGeometry();HG.setAttribute('position',new THREE.Float32BufferAttribute(P,3));HG.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));HG.computeBoundingSphere();return HG;}
+  // วัสดุมือ: ดำ ขอบเรืองม่วง (fresnel) ไม่ต้องใช้ไฟ
+  const handMat=U=>new THREE.ShaderMaterial({uniforms:U,
     vertexShader:`varying vec3 vN,vV;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=-mv.xyz;gl_Position=projectionMatrix*mv;}`,
     fragmentShader:`uniform float t;varying vec3 vN,vV;void main(){float fr=pow(1.-abs(dot(normalize(vN),normalize(vV))),2.2);
   gl_FragColor=vec4(vec3(.05,.01,.08)+vec3(.75,.25,1.)*fr*(1.+.3*sin(t*2.)),1.);}`});
-  const HANDS=[],NH=LOWF?7:9,Y=new THREE.Vector3(0,1,0),q=new THREE.Quaternion(),q2=new THREE.Quaternion(),dv=new THREE.Vector3();
+  const pointScale=(renderer,camera)=>renderer.domElement.height*.5/Math.tan(camera.fov*Math.PI/360);
+  return {NZ,VS,auraMat,discMat,smokeMat,smokePts,handGeo,handMat,pointScale};
+})();
+
+/* ================= ประตูมิติขุมนรก (ฉากฟาร์ม · ขอบเกาะฝั่งตะวันตกเฉียงเหนือ) =================
+   ทางเข้าดันเจี้ยนขุมนรก 50 ชั้น: วงหลุมดำหมุนวน + ออร่าดำพวยพุ่งขึ้นจากขอบ + ควันดำลอยขึ้น + มือดำเล็ก ๆ ยื่นออกมา
+   shader/มือ มาจาก abyss_fx.js (ใช้ร่วมกับสนามรบ) · แตะวงประตูหรือปุ่ม "ขุมนรก" บนแถบซ้าย → openPortal()
+   อัปเดตใน worldTick → portalTick · server/migrate_abyss.sql (abyss_state) */
+const PORTAL=(()=>{
+  const R=6.2, ANG=2.2, DIST=33, LOWF=matchMedia('(pointer:coarse)').matches;
+  const g=new THREE.Group(); g.position.set(Math.cos(ANG)*DIST,8.5,-Math.sin(ANG)*DIST); g.rotation.set(-.42,.3,0); scene.add(g);
+  const U={t:{value:0},R:{value:R},ps:{value:600}};
+  const aura=new THREE.Mesh(new THREE.RingGeometry(R*.9,R*2.3,96,6),ABYSS_FX.auraMat(U)); aura.position.z=-.05; aura.renderOrder=1; g.add(aura);
+  const disc=new THREE.Mesh(new THREE.CircleGeometry(R*1.12,72),ABYSS_FX.discMat(U)); disc.renderOrder=2; disc.userData.portal=1; g.add(disc); PICK.push(disc);
+  const smoke=ABYSS_FX.smokePts(U,LOWF?70:140); smoke.renderOrder=3; g.add(smoke);
+  const handMat=ABYSS_FX.handMat(U), HANDS=[], NH=LOWF?7:9, Y=new THREE.Vector3(0,1,0), q=new THREE.Quaternion(), q2=new THREE.Quaternion(), dv=new THREE.Vector3();
   for(let i=0;i<NH;i++){const a=i/NH*6.283+(Math.random()-.5)*.5,rr=R*(.45+Math.random()*.4);
-    const m=new THREE.Mesh(handGeo,handMat);m.scale.setScalar(1.35+Math.random()*.5);g.add(m);
+    const m=new THREE.Mesh(ABYSS_FX.handGeo(),handMat);m.scale.setScalar(1.35+Math.random()*.5);g.add(m);
     HANDS.push({m,base:new THREE.Vector3(Math.cos(a)*rr,Math.sin(a)*rr,0),dir:new THREE.Vector3(Math.cos(a)*1.1,Math.sin(a)*1.1,.8).normalize(),ph:Math.random()*6.283,sp:.45+Math.random()*.35,a});}
-  function tick(dt,T){U.t.value=T;
-    U.ps.value=renderer.domElement.height*.5/Math.tan(camera.fov*Math.PI/360);
+  function tick(dt,T){U.t.value=T; U.ps.value=ABYSS_FX.pointScale(renderer,camera);
     HANDS.forEach(h=>{const s=.5+.5*Math.sin(T*h.sp+h.ph),reach=-2.6+4.6*s*s+Math.sin(T*7+h.ph)*.04;
       h.m.position.copy(h.base).addScaledVector(h.dir,reach);
       dv.copy(h.dir);dv.x+=Math.sin(T*1.3+h.ph)*.18;dv.y+=Math.cos(T*1.1+h.ph)*.18;dv.normalize();
@@ -3353,12 +3416,7 @@ void main(){float L=fract(t*sd.z+sd.y),a=sd.x;vec3 p=vec3(cos(a)*R,sin(a)*R,.1);
   return {g,tick,disc};
 })();
 function portalTick(dt,T){PORTAL.tick(dt,T);}
-function openPortal(){
-  const d=el('div');
-  d.append(para('วงประตูมิติสีดำปรากฏขึ้นที่ขอบเกาะ… มีมือมากมายพยายามคว้าทุกสิ่งที่เข้าใกล้'));
-  d.append(para('ดันเจี้ยนขุมนรกกำลังจะเปิดเร็ว ๆ นี้ เตรียมทีมให้แข็งแกร่งไว้'));
-  openSheet('ขุมนรก','ประตูมิติลึกลับ',d,[['เร็ว ๆ นี้',()=>{},'',true]]);
-}
+
 
 /* ================= HUD & เมนู ================= */
 const fmt=n=>n.toLocaleString('en-US');
@@ -4347,9 +4405,76 @@ function openStageRewards(){
 setInterval(()=>{if(typeof entered!=='undefined'&&entered&&NET.mode==='online'&&document.visibilityState==='visible')loadStage();},120000);
 if(/[?&]dbg=1/.test(location.search))window.__stg={get STG(){return STG},get VISIT(){return VISIT},get GD(){return typeof GD!=='undefined'?GD:null},get entered(){return entered},NET};
 
+/* ================= ขุมนรก 50 ชั้น: หน้าข้อมูลในฟาร์ม (เปิดจากประตูมิติ farm_portal.js หรือปุ่ม #rAbyss) =================
+   server/migrate_abyss.sql: abyss_state() · เข้าสู้ที่ battle.html?abyss=1 (battle_abyss.js) · กลับมาด้วย ?portal=1 เปิดหน้านี้ให้เอง */
+var ABY=null;
+const abyDur=s=>{s=Math.max(0,s|0);const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return d?d+' วัน '+h+' ชม.':h?h+' ชม. '+m+' นาที':m+' นาที';};
+function abyssDot(){const b=$('#rAbyss');if(!b)return;b.classList.toggle('reddot',!!(ABY&&!ABY.joined&&NET.mode==='online'));}
+async function loadAbyss(){if(NET.mode!=='online')return null;try{ABY=await api('abyss_state');ABY.at=Date.now();}catch(e){console.warn('abyss',e);}abyssDot();return ABY;}
+function abyssGo(){closeSheet();location.href='battle.html?abyss=1';}
+async function openPortal(){
+  if(NET.mode!=='online'){openSheet('ขุมนรก','ประตูมิติลึกลับ',para('ต้องเชื่อมต่อเซิร์ฟเวอร์ก่อนจึงจะลงขุมนรกได้ (ผลและอันดับบันทึกบนเซิร์ฟเวอร์)'),[]);return;}
+  openSheet('ขุมนรก 50 ชั้น','กำลังเปิดประตูมิติ…',para('กำลังโหลด…'),[]);
+  const A=await loadAbyss(); if($('#shTitle').textContent!=='ขุมนรก 50 ชั้น')return;
+  if(!A){openSheet('ขุมนรก 50 ชั้น','',para('เชื่อมต่อขุมนรกไม่ได้ ลองใหม่อีกครั้ง'),[]);return;}
+  renderAbyss(A);
+}
+function renderAbyss(A){
+  const d=el('div','aby'), F=A.floor, nx=A.next, Z=nx?abyssZone(nx):abyssZone(50);
+  // ความคืบหน้า
+  const hero=el('div','abHero');
+  const top=el('div','abTop');top.append(el('b',null,'ผ่านแล้ว '+F+' / 50 ชั้น'));top.append(el('span',null,nx?'ชั้นต่อไป: '+nx+' · '+Z.n:'พิชิตครบทุกชั้นแล้ว!'));hero.append(top);
+  const bar=el('div','abBar');const bi=el('i');bi.style.width=(F*2)+'%';bar.append(bi);hero.append(bar);
+  if(nx){const need=A.need_next,pw=A.power,minp=Math.ceil(need*.85/1.05),st=pw>=need?['ok','พลังพอ']:pw>=minp?['mid','พอลุ้น ต้องใช้ฝีมือ']:['low','พลังยังไม่พอ'];
+    const pr=el('div','abNeed '+st[0]);pr.append(el('span',null,'ต้องการพลัง ~'+fmt(need)+' · ทีมคุณ '+fmt(pw)));pr.append(el('em',null,st[1]));hero.append(pr);}
+  if(nx){const go=el('button','sbtn gold abGo','⚔ ลงสู่ชั้น '+nx);go.onclick=abyssGo;hero.append(go);}
+  d.append(hero);
+  // พรประจำสัปดาห์
+  const B=abyssBless(A.bless), bl=el('div','abBless'+(B?'':' none'));
+  bl.append(el('i',null,B?B.i:'🎲'));const bt=el('div');bt.append(el('b',null,B?B.n:'พรประจำสัปดาห์'));bt.append(el('small',null,B?B.d+' · ใช้ได้จนถึงรีเซ็ต':'สุ่มพร 1 อย่าง (+10%) ให้ตอนเข้าสู้ครั้งแรกของสัปดาห์ ใช้ได้ทั้งสัปดาห์'));bl.append(bt);d.append(bl);
+  if(A.box){let bx={};try{bx=typeof A.box==='string'?JSON.parse(A.box):A.box;}catch(e){}
+    d.append(rows([['🎁 กล่องลึกลับสัปดาห์นี้','อัมพร '+fmt(bx.amber||0)+' + '+(bx.egg==='sure'?'ไข่เทพการันตี':'ไข่เทพ'),'#ffb347']]));}
+  // รางวัลแต่ละชั้น (แบ่งตามโซน · กางโซนของชั้นถัดไปไว้)
+  d.append(el('h4','abH','รางวัลแต่ละชั้น (ได้เมื่อผ่านครั้งแรกของสัปดาห์)'));
+  ABYSS_ZONES.forEach((z,zi)=>{const a=zi*10+1,b=a+9,det=el('details','abZone');if(nx?(nx>=a&&nx<=b):zi===4)det.open=true;
+    const sm=el('summary');sm.append(el('b',null,'ชั้น '+a+'–'+b+' · '+z.n));sm.append(el('span',null,z.el.map(e=>ELEM[e]?ELEM[e].i:'').join('')+' บอส: '+z.boss[1]+(F>=b?' ✓':'')));det.append(sm);
+    const grid=el('div','abGrid');
+    (A.floors||[]).slice(a-1,b).forEach(r=>{const t=el('div','abT'+(r.boss?' boss':'')+(r.box?' box':'')+(r.f<=F?' done':r.f===nx?' next':''));
+      t.append(el('small',null,(r.boss?'👑 ':'')+'ชั้น '+r.f));
+      if(r.box){t.append(el('b',null,'🎁 กล่องลึกลับ'));t.append(el('b',null,'🔶'+r.amber));}
+      else if(r.amber){t.append(el('b',null,'🔶'+r.amber));t.append(el('em',null,'🪙'+fmt(r.coins)));}
+      else t.append(el('b',null,'🪙'+fmt(r.coins)));
+      t.title='ต้องการพลัง ~'+fmt(r.need);grid.append(t);});
+    det.append(grid);d.append(det);});
+  // อันดับสัปดาห์นี้
+  d.append(el('h4','abH','อันดับสัปดาห์นี้'+(A.players?' · '+A.players+' คนลงไปแล้ว':'')));
+  const L=el('ol','abTop10');
+  if(!(A.top||[]).length)L.append(el('li','none','ยังไม่มีใครผ่านชั้นแรก เป็นคนแรกเลย!'));
+  (A.top||[]).forEach((r,i)=>{const li=el('li',r.me?'me':null);li.append(el('em',null,['🥇','🥈','🥉'][i]||String(i+1)));
+    li.append(el('b',null,(r.race&&RACES[r.race]?RACES[r.race].icon+' ':'')+r.name));li.append(el('span',null,'ชั้น '+r.floor));L.append(li);});
+  d.append(L);
+  if(A.rank)d.append(el('p','abMe','อันดับของคุณ: '+A.rank+(A.players?' จาก '+A.players+' คน':'')));
+  d.append(el('p','frNote','ไต่ได้ทีละชั้น · แพ้ไม่เสียอะไร ลองใหม่ได้ไม่จำกัด · ระวัง "มือดำ" ที่โผล่จากพื้นคว้าตัวละครให้มึนแล้วลากเข้าหาศัตรู ยิ่งลึกยิ่งบ่อย · รีเซ็ตคืนวันอาทิตย์เที่ยงคืน (เวลาไทย) ทุกคนเริ่มชั้น 1 ใหม่'));
+  const left=Math.max(0,A.reset_in-Math.floor((Date.now()-A.at)/1000));
+  openSheet('ขุมนรก 50 ชั้น','รีเซ็ตใน '+abyDur(left),d,nx?[['⚔ ลงสู่ชั้น '+nx,abyssGo,'gold']]:[['พิชิตครบ 50 ชั้นแล้ว · รอรีเซ็ต',()=>{},'',true]]);
+}
+if($('#rAbyss'))$('#rAbyss').onclick=()=>openPortal();
+if(window.__F)__F.abyss=d=>{ABY=Object.assign(d,{at:Date.now()});renderAbyss(ABY);};
+// เข้าเกม: เช็กว่าสัปดาห์นี้เข้าร่วมแล้วหรือยัง (จุดแดง) · กลับจากสนามรบด้วย ?portal=1 → เปิดหน้าขุมนรกให้เลย
+{let done=false;const t=setInterval(()=>{if(typeof entered==='undefined'||!entered)return;clearInterval(t);if(done)return;done=true;
+  if(NET.mode!=='online')return;
+  if(/[?&]portal=1/.test(location.search)){history.replaceState(null,'',location.pathname+location.search.replace(/([?&])portal=1&?/,'$1').replace(/[?&]$/,''));setTimeout(openPortal,600);}
+  else loadAbyss();},1000);}
+
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.01.8',date:'1 ต.ค. 2026',title:'เปิดขุมนรก 50 ชั้น! 🌀',items:[
+    '🌀 แตะประตูมิติที่ขอบเกาะ หรือปุ่ม "ขุมนรก" บนแถบซ้าย ลงไปสู้ทีละชั้น ยิ่งลึกศัตรูยิ่งแกร่ง · ชั้น 10/20/30/40/50 มีบอส',
+    '🎲 เข้าร่วมครั้งแรกของสัปดาห์ สุ่มรับพร 1 อย่าง (+10%) ใช้ได้ทั้งสัปดาห์',
+    '✋ ระวังมือดำที่โผล่จากพื้น คว้าตัวละครให้มึนแล้วลากเข้าหาศัตรู',
+    '🔶 ผ่านชั้นบอสได้อัมพร · ทุกชั้นได้เหรียญ · ชั้น 50 มีกล่องลึกลับรออยู่…',
+    '🏆 อันดับสัปดาห์ · รีเซ็ตทุกคืนวันอาทิตย์เที่ยงคืน ทุกคนเริ่มใหม่พร้อมกัน']},
   {ver:'2026.10.01.7',date:'1 ต.ค. 2026',title:'ประตูมิติปริศนาปรากฏขึ้น 🌀',items:[
     '🌀 วงประตูมิติสีดำปรากฏที่ขอบเกาะฝั่งตะวันตกเฉียงเหนือ มีบางอย่างพยายามคืบคลานออกมา…',
     '👁 แตะที่ประตูเพื่อดูรายละเอียด · ดันเจี้ยนขุมนรกจะเปิดเร็ว ๆ นี้']},

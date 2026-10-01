@@ -107,7 +107,7 @@ function makeUnit(side,def,slot){
   u.defLv=def.lv; u.defMul=def.mul||1;
   { // เงื่อนไขพิเศษของด่าน (battle_story.js)
     const M=side==='E'?def.mod:(typeof STORY!=='undefined'&&STORY.mod&&STORY.mod.p);
-    if(M){if(M.hp)u.maxHp=Math.round(u.maxHp*M.hp);if(M.atk)u.atk=Math.round(u.atk*M.atk);if(M.def)u.def=Math.round(u.def*M.def);if(M.spd)u.spd=Math.round(u.spd*M.spd);if(M.leech)u.leech=M.leech;
+    if(M&&!(M.el&&M.el!==(def.el||sp.el))){if(M.hp)u.maxHp=Math.round(u.maxHp*M.hp);if(M.atk)u.atk=Math.round(u.atk*M.atk);if(M.def)u.def=Math.round(u.def*M.def);if(M.spd)u.spd=Math.round(u.spd*M.spd);if(M.leech)u.leech=M.leech;
       if(M.size&&!sp.dragon){w.userData.k*=M.size;w.scale.setScalar(w.userData.k);}}}
   u.hp=u.maxHp; u.el=def.el||sp.el; u.pas=(u.skills.find(s=>s.type==='passive')||{}).passive||null; u.revived=false;
   const DK=sp.dragon?DRAGON_BATTLE_K:1; if(sp.dragon){w.scale.setScalar(DK);const R=inner.userData.rig;if(R&&R.st){R.st.alt=R.tg.alt=2.6;}}
