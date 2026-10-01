@@ -416,5 +416,5 @@ python3 build_battle.py && cp battle.html ../battle.html
 - วิญญาณที่ได้: `_soul_of(lv)` Lv<10 = 1 · ≥10 = 2 · ราคาใน `_altar_c` (gold 30 · god 200 · batch 200)
 - ไคลเอนต์: building 'altar' (ตำแหน่งแรกที่ว่างจาก spots ในไฟล์) · `INFO.altar=openAltar` · ออนไลน์เท่านั้น · `hatch('soulgold',…)` = ฟักไข่ทองด้วยวิญญาณ
 - กระเป๋าเต็ม: `hatch()`/`hatchMulti()` เรียก `altarOverflow(need,retry)` ก่อน → ชีตเสนอสังเวยตัวทั่วไปที่ไม่ได้ใช้ทั้งหมดแล้วฟักต่อ
-- ไฟวิญญาณใช้ NormalBlending (additive บนหญ้าสว่างกลายเป็นสีขาว) · ไม่มี flashBall
+- ไฟวิญญาณใช้ NormalBlending (additive บนหญ้าสว่างกลายเป็นสีขาว) · ไม่มี flashBall · เอฟเฟกต์ `fxTick`: วงเวท canvas 2 วง (ringO พื้น, ringI บนขั้น) · ม่านวิญญาณ (veil) · ดวงวิญญาณลอยขึ้น 14 ดวง · ผลึกลอย 3 ชิ้น · คลื่นวงตอนสังเวย (`waveNow`) · canvas texture ต้องตั้ง `sRGBEncoding` ไม่งั้นสีซีด
 - ดีบัก `index.html?dbg=1`: `__F.altar(souls,lvBelow)` · `__F.altarFull()` · `__F.burst(n)` · `__F.cam(x,z,dist)`
