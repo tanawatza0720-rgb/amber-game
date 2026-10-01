@@ -333,6 +333,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 ## ขยายกระเป๋า (คลังมอนสเตอร์) — `server/migrate_bag.sql`, `bagBtn/bagBuy` ใน monbox.js
 - `players.bag_ext` ครั้งละ +10 ช่อง สูงสุด 5 ครั้ง (30 → 80) ราคา `_bag_cost(n)` = 10+5n อัมพร (`_bag_c`) · `_slots(u)` แทน `_c('slots')` ในทุกฟังก์ชัน (_state, hatch_egg, hatch_eggs, hatch_god_egg, friend_raid) · RPC `buy_bag()` · `_state.player.bag` = {bag_ext,bag_max,bag_step,bag_cost}
 - ⚠️ ฟังก์ชันใหม่ที่เช็กช่องว่างต้องใช้ `public._slots(u)` ไม่ใช่ `_c('slots')`
+- `migrate_bag.sql` รันบนฐานข้อมูลจริงแล้ว 1 ต.ค. 2026
 - client: ปุ่ม `#bAdd` (+) ในหัวคลัง แตะครั้งแรกแสดงราคา แตะซ้ำภายใน 4 วิ = ซื้อ · ออฟไลน์ (`LOCAL.buy_bag`) กติกาเดียวกัน
 ## งานค้าง (ยังไม่ได้ทำ)
 - (ว่าง)
