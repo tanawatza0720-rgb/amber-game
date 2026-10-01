@@ -22,18 +22,18 @@ function updateBar(u){const r=u.row;if(!r)return;if(u.raidBar){u.raidBar(r);retu
   r.querySelector('.hp i').style.width=(k*100)+'%'; r.querySelector('.hp em').textContent=u.hp+'/'+u.maxHp;
   r.classList.toggle('low',k>0&&k<.3); r.classList.toggle('dead',!u.alive||u.hp<=0);
   if(u.foot)u.foot.material.uniforms.hp.value=k;}
-// มือถือ: หลอดเลือดแบ่งช่องบางๆ ตั้งตรงในฉาก 3D ด้านหลังตัวละคร (ตัวละครบังได้) หันเข้ากล้องเสมอ · สีอ่อน ไม่เด่นเกิน
+// มือถือ: หลอดเลือดแนวตั้งบางๆ แบ่งช่อง อยู่ด้านซ้ายของตัวละคร (มุมมองกล้อง) ในฉาก 3D หันเข้ากล้องเสมอ · สีอ่อน ไม่เด่นเกิน
 const FOOT_GEO=new THREE.PlaneGeometry(1,1);
 const FOOT_VS='varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}';
 const FOOT_FS='uniform float hp,low,t;uniform vec3 col;varying vec2 vU;void main(){'+
-  // หลอดแบ่งช่อง (10 ช่อง) กรอบเข้มบาง · เติมสีอ่อนตามเลือด · เลือดน้อยกะพริบ
-  'vec2 p=vU;float bx=step(p.x,.035)+step(.965,p.x)+step(p.y,.16)+step(.84,p.y);if(bx>0.){gl_FragColor=vec4(.08,.06,.04,.7);return;}'+
-  'float x=(p.x-.035)/.93;float seg=step(fract(x*10.),.06)*step(.02,x);bool f=x<=hp;'+
-  'vec3 c=f?mix(col,col*1.18,step(.55,p.y)):vec3(.14,.11,.08);float a=f?.85:.5;if(f&&low>.5)a*=.6+.4*sin(t*9.);c=mix(c,vec3(.08,.06,.04),seg*.8);'+
+  // หลอดตั้ง แบ่ง 10 ช่อง เติมจากล่างขึ้นบน · กรอบเข้มบาง · สีอ่อน · เลือดน้อยกะพริบ
+  'vec2 p=vU;float bx=step(p.y,.03)+step(.97,p.y)+step(p.x,.18)+step(.82,p.x);if(bx>0.){gl_FragColor=vec4(.08,.06,.04,.7);return;}'+
+  'float y=(p.y-.03)/.94;float seg=step(fract(y*10.),.07)*step(.02,y);bool f=y<=hp;'+
+  'vec3 c=f?mix(col*1.15,col,step(.5,p.x)):vec3(.14,.11,.08);float a=f?.85:.5;if(f&&low>.5)a*=.6+.4*sin(t*9.);c=mix(c,vec3(.08,.06,.04),seg*.8);'+
   'gl_FragColor=vec4(c,a);}';
 function footMake(u){const m=new THREE.ShaderMaterial({vertexShader:FOOT_VS,fragmentShader:FOOT_FS,transparent:true,depthWrite:false,
     uniforms:{hp:{value:1},low:{value:0},t:{value:0},col:{value:new THREE.Color(u.side==='P'?0xb9e6a6:0xf2b49c)}}});
-  const f=new THREE.Mesh(FOOT_GEO,m);const s=Math.min(2.2,Math.max(1,(u.rad||.45)/.45));f.scale.set(.9*s,.11*s,1);f.renderOrder=1;scene.add(f);u.foot=f;}
+  const f=new THREE.Mesh(FOOT_GEO,m);const s=Math.min(2.2,Math.max(1,(u.rad||.45)/.45));f.scale.set(.1*s,.55*s,1);f.renderOrder=1;scene.add(f);u.foot=f;}
 const _fd=new THREE.Vector3();
 function rowGone(u){const r=u.row;if(!r)return;r.classList.add('dead');if(u.side==='E')setTimeout(()=>{r.classList.add('out');setTimeout(()=>r.remove(),400);},500);}
 // บัพ/ดีบัพที่ตัวละครได้รับ (คืนค่าเป็นรายการ [ไอคอน, คลาส, คำอธิบาย])
@@ -409,10 +409,10 @@ function loop(){
   UNITS.forEach(u=>{if(!u.barEl)return;const on=u.alive&&renderStatus(u);u.barEl.hidden=!on;if(!on)return;
     const v=tmpV.copy(u.w.position).setY(u.barY||(u.evo?(u.boss?3.25:2.6):1.6)).project(camera);u.barEl.style.visibility=v.z>1||Math.abs(v.x)>1.1||(FOCUS&&!FOCUS.has(u))?'hidden':'';
     u.barEl.style.transform=`translate(${(v.x*.5+.5)*view.clientWidth}px,${(-v.y*.5+.5)*view.clientHeight}px) translate(-50%,-100%)`;});
-  // หลอดเลือดหลังตัว (มือถือ): ตั้งตรงด้านหลังตัวละครเมื่อมองจากกล้อง หันหน้าเข้ากล้องเสมอ
+  // หลอดเลือดแนวตั้งข้างซ้ายตัว (มือถือ) หันหน้าเข้ากล้องเสมอ
   if(PHONE)UNITS.forEach(u=>{const f=u.foot;if(!f)return;f.visible=u.alive&&u.w.visible&&u.hp>0&&!(FOCUS&&!FOCUS.has(u));if(!f.visible)return;
-    _fd.subVectors(u.w.position,camera.position).setY(0).normalize().multiplyScalar(.3*f.scale.x/.9);
-    f.position.set(u.w.position.x+_fd.x,u.w.position.y+(u.barY?u.barY*.5:(u.evo?1.75:1.15)),u.w.position.z+_fd.z);f.quaternion.copy(camera.quaternion);
+    const k=f.scale.y/.55;_fd.set(1,0,0).applyQuaternion(camera.quaternion).setY(0).normalize().multiplyScalar(-(u.rad||.45)-.06*k);
+    f.position.set(u.w.position.x+_fd.x,u.w.position.y+(u.barY?u.barY*.2:.3*k),u.w.position.z+_fd.z);f.quaternion.copy(camera.quaternion);
     const U=f.material.uniforms;U.t.value=T;U.low.value=u.hp/u.maxHp<.3?1:0;});
   RTS.manual-=rdt; mapTick(T); sunFollow(LOOK); camUpdate(); const ck=1-Math.exp(-rdt*camK); CAM.lerp(CAMt,ck); LOOK.lerp(LOOKt,ck);
   camera.position.copy(CAM).add(tmpV.set(Math.sin(T*.3)*.06,Math.sin(T*.4)*.03,0));
