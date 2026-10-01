@@ -402,6 +402,21 @@ body.visiting #rail,body.visiting #menuBtn,body.visiting #dock,body.visiting #ra
 .abTop10 li em{font-style:normal;width:22px;text-align:center}.abTop10 li b{flex:1;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .abTop10 li span{color:#d8b8ff;font-variant-numeric:tabular-nums}.abTop10 li.me b{color:var(--mint);font-weight:700}.abTop10 li.none{color:var(--muted)}
 .abMe{margin:0;font-size:12px;color:var(--mint)}
+/* สงครามแห่งการช่วงชิง (farm_war.js) */
+.war{display:grid;gap:10px}
+.wHero{background:linear-gradient(160deg,#3a1e10,#160c08);border:1px solid rgba(255,150,80,.35);border-radius:12px;padding:10px 12px}
+.wTop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.wTop b{font-family:'Chakra Petch',sans-serif;font-size:18px;color:#ffc27a}.wTop span{font-size:12px;color:var(--muted)}
+.wSub{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;margin-top:4px}.wSub span:first-child{color:var(--mint);font-weight:700}
+.wBless{margin:6px 0 0;font-size:12px;color:var(--amber);line-height:1.4}
+.wH{margin:4px 0 0;font-family:'Chakra Petch',sans-serif;font-size:13px;color:#ffc27a}
+.wCard{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:grid;gap:6px}
+.wCh{display:flex;align-items:center;gap:8px}.wCh em{font-style:normal;font-size:11px;font-weight:700;color:#1c1510;border-radius:6px;padding:1px 7px;flex:none}
+.wCh b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wCh span{font-size:12px;color:var(--muted);white-space:nowrap}
+.wTeam{display:flex;flex-wrap:wrap;gap:4px}.wMon{display:inline-flex;gap:3px;align-items:baseline;background:rgba(0,0,0,.3);border-radius:7px;padding:2px 6px;font-size:11px}
+.wMon i{font-style:normal}.wMon b{font-weight:600}.wMon small{color:var(--muted);font-size:10px}
+.wFt{display:flex;align-items:center;justify-content:space-between;gap:8px}.wFt span{font-size:11.5px;color:var(--muted);line-height:1.35}.wFt .sbtn{flex:none;min-width:84px;margin:0}
+.wDef{list-style:none;margin:0;padding:0;display:grid;gap:3px}.wDef li{display:flex;justify-content:space-between;gap:6px;font-size:12.5px}.wDef li.ok b{color:var(--mint)}.wDef li.bad b{color:#ff9a8a}
+.wRules{font-size:12px;color:var(--muted)}.wRules summary{cursor:pointer;color:var(--bone)}.wRules .ptxt{font-size:12px;margin:6px 0 0}
 
 .rbtn.reddot::after,.nbtn.reddot::after{content:"";position:absolute;top:-3px;right:-3px;width:12px;height:12px;border-radius:50%;background:#e8453c;border:2px solid #fff3;box-shadow:0 0 6px rgba(232,69,60,.7)}
 .nbtn{position:relative}
@@ -532,6 +547,7 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
   <button class="rbtn" id="rMail"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" fill="#e9dcc0"/><path d="m2 6 10 7 10-7" stroke="#8a6a44" stroke-width="2" fill="none"/></svg>จดหมาย<span class="badge" id="bMail">2</span></button>
   <button class="rbtn" id="rRaid" hidden><svg viewBox="0 0 24 24"><path d="M3 15c3-1 5-4 6-8 1 3 3 4 5 4 2-3 5-4 7-4-2 2-3 4-3 7 2 0 3 1 3 3-3-1-6 0-9 2-3-2-6-3-9-4z" fill="#e0503a"/><circle cx="16" cy="10" r="1" fill="#ffd34d"/></svg>ไฮดรา<span class="badge" id="bRaid"></span><i class="rhp"><i id="rRaidHp"></i></i></button>
   <button class="rbtn" id="rAbyss"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#0c0612" stroke="#a45cff" stroke-width="1.6"/><path d="M12 12c0-2 2-3 3.5-2s1.2 4-1.5 5-6-.5-6.5-3.5S10 5 13.5 5.5" stroke="#c99aff" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="1.6" fill="#000"/></svg>ขุมนรก</button>
+  <button class="rbtn" id="rWar"><svg viewBox="0 0 24 24"><path d="M3 20h18v2H3z" fill="#8a6a44"/><path d="M4 20V11l2-1.5L8 11v9M10 20v-8h4v8M16 20v-9l2-1.5 2 1.5v9" fill="#d8b888"/><path d="M5 6l3-3 1 4M15 5l3-2v5" stroke="#ff8a2a" stroke-width="1.6" fill="none"/><circle cx="12" cy="8" r="2.2" fill="#ffb347"/></svg>สงคราม</button>
   <button class="rbtn" id="rFriend" hidden><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6" fill="#9fd8ff"/><path d="M2.5 20c.6-4 3.2-6 6.5-6s5.9 2 6.5 6z" fill="#5fa8e0"/><circle cx="16.5" cy="9" r="3" fill="#ffd36a"/><path d="M13 20c.4-3.3 2.2-5 4.5-5s4.1 1.7 4.5 5z" fill="#e0a53a"/></svg>เพื่อน<span class="badge" id="bFriend" hidden></span></button>
   <button class="rbtn" id="rExp" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#2a4a5e" stroke="#9fd8ff" stroke-width="1.5"/><path d="M12 4l2.6 8L12 20l-2.6-8z" fill="#ff6a4a"/><path d="M12 12 14.6 12 12 20 9.4 12z" fill="#e9eef5"/><circle cx="12" cy="12" r="1.4" fill="#ffd34d"/></svg>สำรวจ<span class="badge" id="bExp" hidden></span><i class="rhp"><i id="rExpBar"></i></i></button>
   <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M3 10v4l3 .5V9.5z" fill="#c9a24a"/><path d="M6 9.5 17 5v14L6 14.5z" fill="#ffc94d"/><path d="M8 14.8 9.5 20h2.6l-1.2-4.8" fill="#e9dcc0"/><path d="M19.5 9.5c1 .8 1 4.2 0 5" stroke="#ffd34d" stroke-width="1.6" fill="none"/></svg>อัปเดต<span class="badge" id="bNews" hidden>N</span></button>

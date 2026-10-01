@@ -79,6 +79,8 @@ function todoList(){
   questList().forEach(q=>L.push({ic:'📜',n:'ภารกิจ: '+q.n,s:q.claimed?'done':q.cur>=q.need?'todo':'wait',
     t:q.claimed?'รับรางวัลแล้ว':q.cur>=q.need?'กดรับรางวัล '+q.r:Math.min(q.cur,q.need)+'/'+q.need,go:()=>openQuests()}));
   L.push({ic:'⚡',n:'กวาดด่านด้วยพลังงาน',s:S.energy>=S.energyMax?'todo':S.energy>=10?'todo':'wait',t:S.energy>=10?'มี '+S.energy+' ⚡ กวาดได้ '+Math.min(6,Math.floor(S.energy/10))+' ครั้ง':'สะสมให้ถึง 10 ⚡',go:()=>INFO.sweep()});
+  if(typeof WAR!=='undefined'&&WAR)L.push({ic:'⚔️',n:'สงครามแห่งการช่วงชิง',s:WAR.left>0?'todo':'done',t:WAR.left>0?'บุกได้อีก '+WAR.left+'/'+WAR.per_day+' ครั้ง':'บุกครบแล้ววันนี้',go:()=>openWar()});
+  if(typeof ABY!=='undefined'&&ABY)L.push({ic:'🌀',n:'ขุมนรก 50 ชั้น',s:ABY.floor>=50?'done':'todo',t:ABY.floor>=50?'พิชิตครบแล้วสัปดาห์นี้':'ผ่านแล้ว '+ABY.floor+'/50 ชั้น',go:()=>openPortal()});
   L.push({ic:'🌳',n:'เก็บอัมพรจากต้นไม้',s:amberReady?'todo':'wait',t:amberReady?'พร้อมเก็บ':'รอบถัดไป '+fmtTime(S.amberIn),go:()=>{closeSheet();focusBuilding('tree');}});
   if(on&&typeof STG!=='undefined'&&STG){
     if(STG.pending&&STG.pending.length)L.push({ic:'🏆',n:'รับรางวัลผ่านด่าน',s:'todo',t:STG.pending.length+' ขั้นรอรับ',go:()=>openStageRewards()});

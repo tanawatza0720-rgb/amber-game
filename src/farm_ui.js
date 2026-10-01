@@ -190,6 +190,7 @@ function tap(cx,cy){
     $('#mtName').textContent=spOf(ag.data).name; $('#mtInfo').textContent=tierOf(spOf(ag.data).rar).n+' · Lv '+ag.data.lv+' · '+(ag.state==='walk'?'กำลังเดินเล่น':'กำลังพักผ่อน');
     const w=ag.w; tween(.3,t=>w.position.y=Math.sin(t*Math.PI)*.4); return;}
   if(o.userData.portal&&typeof openPortal==='function'){openPortal();return;}
+  if(o.userData.war&&typeof openWar==='function'){openWar();return;}
   if(o.userData.raid){openRaid();return;}
   if(o===amberBubble&&amberReady){collectAmber();return;}
   if(o.userData.pick)focusBuilding(o.userData.pick);
