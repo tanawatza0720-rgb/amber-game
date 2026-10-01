@@ -11,6 +11,8 @@ PAR={'Hips':None,'Spine':'Hips','Spine1':'Spine','Spine2':'Spine1','Neck':'Spine
  'RightShoulder':'Spine2','RightArm':'RightShoulder','RightForeArm':'RightArm','RightHand':'RightForeArm','RightHandMiddle4':'RightHand',
  'LeftUpLeg':'Hips','LeftLeg':'LeftUpLeg','LeftFoot':'LeftLeg','LeftToeBase':'LeftFoot','LeftToe_End':'LeftToeBase',
  'RightUpLeg':'Hips','RightLeg':'RightUpLeg','RightFoot':'RightLeg','RightToeBase':'RightFoot','RightToe_End':'RightToeBase'}
+# EXTRA: กระดูกเพิ่ม (ไม่ใช่ Mixamo ท่าจะไม่ขยับมัน ให้โค้ดเกมขยับเอง เช่น ปีก) {"WingL":{"parent":"Spine2","pos":[x,y,z]}} · ใช้ใน BOX ได้
+for _n,_e in json.loads(os.environ.get('EXTRA','{}')).items(): PAR[_n]=_e['parent']; J[_n]=np.array(_e['pos'],float)
 NAMES=list(PAR.keys()); IDX={n:i for i,n in enumerate(NAMES)}
 END={'HeadTop_End','LeftHandMiddle4','RightHandMiddle4','LeftToe_End','RightToe_End'}
 KIDS={n:[k for k,p in PAR.items() if p==n] for n in NAMES}

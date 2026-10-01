@@ -1695,7 +1695,7 @@ const LOCAL=(()=>{
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json?v=4',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json?v=5',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -1969,8 +1969,13 @@ function buildMeshyEvo(m,key){
   makeFist(root,[[B.rHand,swR,'R'],[B.lHand,swL,'L']]);}
   if(CS){play('idle',{loop:true,from:Math.random()*2});CS.w=CS.wT=1;}
   const FL=FLOAT[key]; let flY=0; if(FL){root.userData.fy=root.position.y;}
+  // ปีกที่มีกระดูกของตัวเอง (WingL/WingR จาก tools/rig EXTRA): กระพือ/พลิ้วเบาๆ แรงขึ้นตอนออกท่าใหญ่
+  const WG=[bone('WingL'),bone('WingR')].filter(Boolean); let wAmp=1;
   m.userData.idle=T=>{
     if(FL){const dead=CS&&CS.cur&&CS.cur.name==='death';flY+=((dead?0:FL+Math.sin(T*1.5)*.06)-flY)*.08;root.position.y=root.userData.fy+flY;}
+    if(WG.length){const big=CS&&CS.cur&&/^(leap|jumpatk|powerup|battlecry|victory|spin)$/.test(CS.cur.name);wAmp+=((big?2.4:1)-wAmp)*.06;
+      const f=Math.sin(T*2.6),g=Math.sin(T*2.6-.9);
+      WG.forEach((w,i)=>{const s=i?-1:1;w.rotation.set(.05*g*wAmp,s*(.1+.1*f*wAmp),s*.08*f*wAmp);});}
     let dt=0; if(CS){dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}
     breath=Math.sin(T*2)*.025;
     m.position.y+=Math.sin(T*2)*.008; m.position.x+=Math.sin(T*.9)*.012;
@@ -4714,8 +4719,8 @@ if(window.__F)__F.war=d=>{WAR=Object.assign(d,{at:Date.now()});renderWar(WAR);};
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
-  {ver:'2026.10.01.13',date:'1 ต.ค. 2026',title:'ตัวละครใหม่ 4 ตัว + สายฮีล ✨',items:[
-    '☀️ ซาราเอล (เทพเจ้า) เทพสงครามปีกเปลวไฟสองสี ลอยอยู่กลางอากาศไม่แตะพื้น ถือดาบเพลิงพิพากษา สายจู่โจมระยะประชิด',
+  {ver:'2026.10.01.14',date:'1 ต.ค. 2026',title:'ตัวละครใหม่ 4 ตัว + สายฮีล ✨',items:[
+    '☀️ ซาราเอล (เทพเจ้า) เทพสงครามผู้ลอยอยู่เหนือพื้น ปีกเปลวไฟสองสีพลิ้วไหว ถือดาบเพลิงพิพากษา สายจู่โจมระยะประชิด',
     '🌙 อนุบิส (ตำนาน) เทพแห่งความตาย สายเวทระยะไกล เรียกพายุทรายถล่มศัตรูทั้งกลุ่ม',
     '💧 มอร์ธา (ตำนาน) แม่ชีผู้เฝ้าสุสาน สายฮีล ช่วยตัวที่ใกล้ตาย และแก้อาการมึนทั้งทีม',
     '🌿 ไพรวัลย์ (หายาก) ปราชญ์เฒ่าแห่งพงไพร สายฮีล ฮีลทั้งทีมและช่วยตัวที่เลือดน้อยสุด',
