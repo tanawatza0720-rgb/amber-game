@@ -468,7 +468,8 @@ body.visiting #pullBar,body.boxOpen #pullBar,body.guideOn #pullBar,body.raceOpen
 @keyframes upR{from{opacity:0;transform:translateX(16px)}}
 /* ปุ่ม + ขยายกระเป๋า (monbox.js bagBtn) */
 #bAdd{margin-left:8px;min-width:30px;height:30px;padding:0 9px;border-radius:15px;border:1px solid #ffd9a0;background:linear-gradient(180deg,#ffcf7a,#d9822b);color:#2a1606;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(217,130,43,.45)}
-#bAdd.ask{font-size:12px;background:linear-gradient(180deg,#8ff0c4,#3fb88f);border-color:#c8ffe6}
+#bAdd{position:relative}#bAdd.ask{background:linear-gradient(180deg,#8ff0c4,#3fb88f);border-color:#c8ffe6}
+#bAdd.ask::after{content:attr(data-ask);position:absolute;z-index:5;top:calc(100% + 8px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:6px 10px;border-radius:10px;background:rgba(20,40,32,.96);border:1px solid #8ff0c4;color:#dfffee;font-family:'Bai Jamjuree',sans-serif;font-weight:600;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none}
 #bAdd[hidden]{display:none}#bAdd:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
 </style>
 
@@ -4554,7 +4555,7 @@ const stars=n=>tierOf(n).n; let bagAsk=0;
 // ปุ่ม + ขยายกระเป๋า (แตะครั้งแรก = ดูราคา แตะซ้ำภายใน 4 วิ = ซื้อ)
 function bagBtn(){const b=$('#bAdd');if(!b)return;const g=S.bag;
   if(!g||g.bag_cost==null){b.hidden=true;return;} b.hidden=false;
-  b.classList.toggle('ask',!!bagAsk);b.textContent=bagAsk?'ยืนยัน +'+g.bag_step+' ช่อง · '+g.bag_cost+' อัมพร':'+';
+  b.classList.toggle('ask',!!bagAsk);b.textContent=bagAsk?'✓':'+';b.dataset.ask='แตะ ✓ อีกครั้งเพื่อขยาย +'+g.bag_step+' ช่อง · '+g.bag_cost+' อัมพร';
   b.setAttribute('aria-label','ขยายกระเป๋า +'+g.bag_step+' ช่อง ราคา '+g.bag_cost+' อัมพร');}
 async function bagBuy(){const g=S.bag;if(!g||g.bag_cost==null)return;
   if(!bagAsk){bagAsk=setTimeout(()=>{bagAsk=0;bagBtn();},4000);bagBtn();return;}
