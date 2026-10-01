@@ -4424,10 +4424,8 @@ function warModel(name){
 function fitModel(obj,size,axis){const b=new THREE.Box3().setFromObject(obj),s=new THREE.Vector3();b.getSize(s);const k=size/Math.max(.001,axis==='y'?s.y:Math.max(s.x,s.z));obj.scale.multiplyScalar(k);
   const b2=new THREE.Box3().setFromObject(obj);obj.position.y-=b2.min.y;return obj;}
 async function warEnter(race,pos,face){
-  if(race==='god'){ // ลำแสงทองฟาดลงจากฟ้า
-    if(typeof rlBeam==='function')rlBeam(pos,0xffd86a,70); shake=Math.max(shake,.3);
-    particles(pos.clone().setY(.5),0xfff0b0,30,4,.12,1);
-    await wait(500); return {pos};
+  if(race==='god'){ // ลำแสงจากฟ้า (แบบสะพานสายรุ้ง) ค้างอยู่ ทีมเดินออกมาจากในแสง มีควันฟุ้งรอบฐาน
+    await godBeam(pos); return {pos,beam:true};
   }
   if(race==='undead'){ // พื้นแตก หลุมศพ หมอกพวยพุ่ง
     const U={t:{value:0},R:{value:3},ps:{value:600}},disc=new THREE.Mesh(new THREE.CircleGeometry(3.4,40),ABYSS_FX.discMat(U));
@@ -4461,6 +4459,44 @@ async function warEnter(race,pos,face){
   setTimeout(()=>{tween(2.4,k=>{g.position.y=k*k*40;}).then(()=>scene.remove(g));},3400);
   return {pos,walk:true};
 }
+/* ลำแสงเทพ: แกนขาวจ้า + ม่านแสงฟ้าอ่อน (shader เส้นแสงไหลลง) · ฟาดลงจากฟ้า 0.25 วิ แล้วค้าง ~3.6 วิ ก่อนหรี่หาย
+   ควันฟุ้งออกรอบฐาน + ประกายแสงลอยขึ้น · คืน Promise เมื่อแสงถึงพื้น */
+const GB_VS=`varying vec3 vN,vV;varying float vY;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=-mv.xyz;vY=position.y;gl_Position=projectionMatrix*mv;}`;
+const GB_FS=`uniform float t,a,core;uniform vec3 c;varying vec3 vN,vV;varying float vY;
+float h(float x){return fract(sin(x*91.7)*43758.5);}
+void main(){float f=abs(dot(normalize(vN),normalize(vV)));float body=pow(f,core);
+  float streak=.75+.25*sin(vY*.35+t*14.)*sin(vY*.11-t*6.);float base=smoothstep(0.,6.,vY)*.6+.4;
+  float top=1.-smoothstep(60.,120.,vY);gl_FragColor=vec4(c*(1.+body*.6),body*streak*a*top*base);}`;
+function godBeam(pos){
+  const H=120,U={t:{value:0},a:{value:0},core:{value:1.6},c:{value:new THREE.Color(0xffffff)}},U2={t:U.t,a:{value:0},core:{value:.8},c:{value:new THREE.Color(0xbfe4ff)}};
+  const mk=(r,u)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,H,24,1,true),new THREE.ShaderMaterial({uniforms:u,vertexShader:GB_VS,fragmentShader:GB_FS,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));
+    m.geometry.translate(0,H/2,0);m.position.copy(pos).setY(0);scene.add(m);return m;};
+  const core=mk(1.1,U),halo=mk(3.2,U2),glowB=glow(scene,0xcfe8ff,11,[pos.x,1.2,pos.z],0);
+  // ม่านเรืองแสงนุ่ม ๆ รอบลำแสง (สไปรต์ยืดสูง)
+  const bloom=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xd8ecff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
+  bloom.scale.set(9,60,1);bloom.position.copy(pos).setY(28);scene.add(bloom);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(.3,.6,48),new THREE.MeshBasicMaterial({color:0xdff0ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2;ring.position.copy(pos).setY(.06);scene.add(ring);
+  const smokes=[],N=warLow()?7:14;
+  const t0=performance.now();let live=true;
+  const iv=setInterval(()=>{if(!live)return;U.t.value=(performance.now()-t0)/1000;
+    if(Math.random()<.6*FXK)particles(pos.clone().add(new THREE.Vector3((Math.random()-.5)*2.6,.3,(Math.random()-.5)*2.6)),Math.random()<.5?0xfff6d0:0xcfe8ff,2,.6,.08,-2.2,.9);},40);
+  [core,halo].forEach(m=>m.scale.y=.001);
+  // ฟาดลง (ยืดจากฟ้าลงพื้น)
+  return tween(.25,k=>{[core,halo].forEach(m=>{m.scale.y=Math.max(.001,k);m.position.y=H*(1-k);});U.a.value=k;U2.a.value=.55*k;},t=>t*t).then(()=>{
+    shake=Math.max(shake,.45); shockRing(pos.clone().setY(.07),0xdff0ff); shockRing(pos.clone().setY(.08),0xffe7a0);
+    glowB.material.opacity=.9; bloom.material.opacity=.55; particles(pos.clone().setY(.6),0xffffff,Math.round(40*FXK)||10,5,.12,.6);
+    // ควันฟุ้งออกรอบฐาน
+    for(let k=0;k<N;k++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.mist,color:0xe8eef8,transparent:true,opacity:.75,depthWrite:false}));
+      const a=k/N*6.283+Math.random()*.4;sp.position.copy(pos).setY(.8);sp.scale.setScalar(2.4);scene.add(sp);smokes.push({sp,a,v:3+Math.random()*2.5});}
+    tween(2.6,k=>{smokes.forEach(o=>{o.sp.position.set(pos.x+Math.cos(o.a)*o.v*k*1.6,.8+k*1.8,pos.z+Math.sin(o.a)*o.v*k*1.6);o.sp.scale.setScalar(2.4+k*4.5);o.sp.material.opacity=.75*(1-k);});
+      ring.scale.setScalar(1+k*9);ring.material.opacity=.9*(1-k);glowB.material.opacity=.9-.5*k;},t=>1-(1-t)*(1-t))
+      .then(()=>{smokes.forEach(o=>{scene.remove(o.sp);o.sp.material.dispose();});scene.remove(ring);ring.geometry.dispose();});
+    // ค้างแสงแล้วหรี่หาย
+    setTimeout(()=>{tween(.7,k=>{U.a.value=1-k;U2.a.value=.55*(1-k);core.scale.x=core.scale.z=1-k*.7;halo.scale.x=halo.scale.z=1-k*.5;glowB.material.opacity=.4*(1-k);bloom.material.opacity=.55*(1-k);})
+      .then(()=>{live=false;clearInterval(iv);[core,halo].forEach(m=>{scene.remove(m);m.geometry.dispose();m.material.dispose();});scene.remove(glowB);scene.remove(bloom);bloom.material.dispose();});},3600/SPEED);
+  });
+}
 async function warArrive(i){
   const A=WB.allies[i]; if(!A)return;
   const pos=new THREE.Vector3(-17,0,i?9:-9), face=Math.PI/2;
@@ -4471,7 +4507,14 @@ async function warArrive(i){
     const u=rtInit(makeUnit('P',d,0)); u.ally=1; if(u.row)u.row.classList.add('ally');
     const a=k/6*6.283, r=1.2+(k%2)*1.1, x=pos.x+Math.cos(a)*r, z=pos.z+Math.sin(a)*r;
     u.w.position.set(x,0,z); u.home.set(x+4,0,z); u.w.rotation.y=face;
-    if(E.rise){u.w.position.y=-1.8;u.holdT=1.2;tween(.9+k*.1,t=>u.w.position.y=-1.8*(1-t));}
+    if(E.beam){ // ยืนในลำแสงแล้วเดินออกมาทีละตัว พร้อมควันที่เท้า
+      const from=pos.clone().add(new THREE.Vector3((Math.random()-.5)*.6,0,(Math.random()-.5)*.6)),to=new THREE.Vector3(x,0,z);
+      u.w.position.copy(from);u.holdT=99;u.w.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);
+      setTimeout(()=>{if(!u.alive)return;const A=u.inner.userData;if(hasClip(u,'walk'))A.play('walk',{loop:true,fade:.15});
+        smoke(from.clone().setY(.3));
+        tween(1.3,t=>{u.w.position.lerpVectors(from,to,t);if(Math.random()<.15*FXK)particles(u.w.position.clone().setY(.2),0xe8eef8,2,.5,.22,-.2,.5);}).then(()=>{u.holdT=.3;if(A.play)A.play('idle',{loop:true,fade:.2});});},(500+k*260)/SPEED);
+    }
+    else if(E.rise){u.w.position.y=-1.8;u.holdT=1.2;tween(.9+k*.1,t=>u.w.position.y=-1.8*(1-t));}
     else if(E.walk){u.holdT=.3+k*.15;}
     else{u.holdT=.5;smoke(u.w.position.clone().setY(.4));}
   });
