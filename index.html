@@ -710,7 +710,7 @@ body.preLogin #sheetBg,body.boxOpen #sheetBg{display:none!important}
     <div class="evTop"><div class="evRing" id="evMain"></div><div class="evName" id="evName"></div><div class="evStars" id="evStars"></div><div class="evGain" id="evGain"></div></div>
     <div class="evBar"><b id="evCount"></b><button id="evAuto" title="เลือกอัตโนมัติ">↻</button></div>
     <div class="evPicked" id="evPicked"></div>
-    <div class="evHint">เลือกตัวซ้ำที่จะใช้เป็นอาหาร · ใช้ได้เฉพาะตัวที่ดาวไม่มากกว่าตัวหลัก และไม่อยู่ในทีม</div>
+    <div class="evHint" id="evHint">เลือกตัวซ้ำที่จะใช้เป็นอาหาร · ใช้ได้เฉพาะตัวที่ดาวไม่มากกว่าตัวหลัก และไม่อยู่ในทีม</div>
     <div class="evList" id="evList"></div>
     <button class="evGo" id="evGo">วิวัฒนาการ</button>
   </div></section>
@@ -1561,7 +1561,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={arena_refresh_limit:'วันนี้สุ่มเป้าใหม่ครบแล้ว',arena_limit:'วันนี้บุกครบ 5 ครั้งแล้ว',arena_offer:'เป้าหมายหมดอายุ ลองเปิดใหม่',bag_max:'ขยายกระเป๋าได้สูงสุดแล้ว',pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',altar_count:'เลือกได้ครั้งละ 1–200 ตัว',altar_team:'ตัวในทีมสังเวยไม่ได้',altar_bad:'สังเวยได้เฉพาะตัวระดับทั่วไปที่ไม่มีดาว',bad_item:'ไม่มีสินค้านี้',
+const ERR={arena_refresh_limit:'วันนี้สุ่มเป้าใหม่ครบแล้ว',arena_limit:'วันนี้บุกครบ 5 ครั้งแล้ว',arena_offer:'เป้าหมายหมดอายุ ลองเปิดใหม่',bag_max:'ขยายกระเป๋าได้สูงสุดแล้ว',pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',fuse_tier:'รวมร่างได้เฉพาะระดับทั่วไปหรือหายาก และต้องระดับเดียวกัน',fuse_level:'ทั้งสองตัวต้องเลเวลเต็ม',fuse_stars:'ทั้งสองตัวต้องดาวเต็ม 6 ดาว',evolve_closed:'เปลี่ยนร่างถูกแทนด้วยรวมร่างแล้ว',altar_count:'เลือกได้ครั้งละ 1–200 ตัว',altar_team:'ตัวในทีมสังเวยไม่ได้',altar_bad:'สังเวยได้เฉพาะตัวระดับทั่วไปที่ไม่มีดาว',bad_item:'ไม่มีสินค้านี้',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -1682,7 +1682,14 @@ const LOCAL=(()=>{
     hatch_eggs:({kind,n})=>{if(n!==1&&n!==10)fail('bad_count');if(D.mons.length+n>slots())fail('box_full');const c=n*(kind==='wild'?C.wild_cost:C.gold_cost);
       if(kind==='wild'&&D.coins<c)fail('not_enough_coins');if(kind==='gold'&&D.amber<c)fail('not_enough_amber');const list=[];for(let i=0;i<n;i++)list.push(F.hatch_egg({kind}));return{list};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
-    evolve_monster:({mon_id})=>{const m=mon(mon_id),s=SPS[m.sp];if(!s.to)fail('cannot_evolve');if(m.lv<s.max)fail('level_too_low');if(D.coins<s.cost)fail('not_enough_coins');D.coins-=s.cost;m.sp=s.to;m.lv=1;return{sp:m.sp};},
+    evolve_monster:()=>fail('evolve_closed'),
+    fuse_monsters:({a,b})=>{if(a==null||b==null||a===b)fail('same_monster');const x=mon(a),y=mon(b),r=SPS[x.sp].rar,up={1:1,2:.9}[r];
+      if(SPS[y.sp].rar!==r||up==null)fail('fuse_tier');if(x.lv<SPS[x.sp].max||y.lv<SPS[y.sp].max)fail('fuse_level');if((x.stars||0)<STAR_MAX||(y.stars||0)<STAR_MAX)fail('fuse_stars');
+      const t=Math.random()<up?r+1:r,pool=Object.keys(SPS).filter(k=>SPS[k].rar===t),sp=pool[Math.floor(Math.random()*pool.length)];if(!sp)fail('fuse_tier');
+      const w=EL_LIST.map(e=>e==='แสง'||e==='มืด'?.5:1);let q=Math.random()*w.reduce((p,c)=>p+c,0),ei=0;while(ei<w.length-1&&(q-=w[ei])>=0)ei++;
+      const m={id:D.nid++,sp,lv:1,stars:0,el:EL_LIST[ei]};D.mons=D.mons.filter(z=>z.id!==a&&z.id!==b);D.mons.push(m);
+      if(D.team.includes(a))D.team=D.team.map(z=>z===a?m.id:z).filter(z=>z!==b);else if(D.team.includes(b))D.team=D.team.map(z=>z===b?m.id:z);
+      return{mon:{...m},rar:t,from:r};},
     star_up:({mon_id,mat_ids})=>{const m=mon(mon_id);const st=m.stars||0;if(st>=STAR_MAX)fail('max_stars');const need=starCost(st+1);
       if(!Array.isArray(mat_ids)||mat_ids.length!==need||new Set(mat_ids).size!==need)fail('bad_material');
       const xs=mat_ids.map(id=>mon(id));if(xs.some(x=>x.id===m.id||x.sp!==m.sp))fail('not_same_species');if(xs.some(x=>D.team.includes(x.id)))fail('material_in_team');if(xs.some(x=>(x.stars||0)>st))fail('material_stronger');
@@ -4888,6 +4895,12 @@ if(window.__F)Object.assign(window.__F,{altar:(souls,sel)=>{Object.assign(ALT,{s
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.02.1',date:'2 ต.ค. 2026',title:'รวมร่าง! 🔀',items:[
+    '🔀 ปุ่ม "เปลี่ยนร่าง" เปลี่ยนเป็น "รวมร่าง": ใช้มอนสเตอร์ 2 ตัวที่ระดับเดียวกัน เลเวลเต็ม และดาวเต็ม (6 ดาว) รวมกันเป็นตัวใหม่แบบสุ่ม',
+    '🟢 ทั่วไป + ทั่วไป → ได้ระดับหายาก 100%',
+    '🔵 หายาก + หายาก → ตำนาน 90% · หายาก 10%',
+    '⚠️ ทั้งสองตัวจะหายไป ตัวใหม่เริ่มที่ Lv 1 · 0 ดาว สุ่มทั้งตัวละครและธาตุ · ถ้าตัวเดิมอยู่ในทีม ตัวใหม่เข้าทีมแทนให้',
+    '📦 เปิดคลัง → เลือกตัวที่เลเวลเต็ม+ดาวเต็ม → กด "รวมร่าง" → เลือกคู่ → แตะยืนยัน 2 ครั้ง']},
   {ver:'2026.10.01.16',date:'1 ต.ค. 2026',title:'แท่นบูชาวิญญาณ 👻🔥',items:[
     '🔥 แท่นบูชาวิญญาณใหม่กลางฟาร์ม: เลือกมอนสเตอร์ระดับทั่วไปหลายตัวแล้วสังเวยทีเดียว ได้วิญญาณ (Lv ต่ำกว่า 10 = 1 · Lv 10 ขึ้นไป = 2)',
     '⚡ ปุ่มเลือกด่วน: "เลือกทั้งหมด" และ "เลเวลต่ำกว่า 5"',
@@ -5284,7 +5297,7 @@ function icon(m,cls){const sp=spOf(m);const c=el('button','ic r'+sp.rar+(cls?' '
   const lv=el('span','lv'+(m.lv>=sp.maxLv?' max':''),m.lv+'');c.append(lv);
   if(m.stars){c.classList.add('hs');c.append(el('span','sr'+(m.stars>=STAR_MAX?' full':''),'★'.repeat(m.stars)));}
   if(S.team.includes(m.uid)){const t=el('span','tm');t.innerHTML=FLAG;c.append(t);}
-  if(sp.evolveTo&&m.lv>=sp.maxLv){const e=el('span','ev','↑');e.title='เปลี่ยนร่างได้';c.append(e);}
+  if(canFuse(m)&&fuseMates(m).some(canFuse)){const e=el('span','ev','↑');e.title='รวมร่างได้';c.append(e);}
   else if(canStar(m)){const e=el('span','ev','★');e.title='วิวัฒน์ (ขึ้นดาว) ได้';c.append(e);}
   {const me=elOfMon(m);const b=el('span','elb',ELEM[me].i);b.style.background=ELEM[me].c;c.append(b);c.title=sp.name+' ธาตุ'+me+' Lv'+m.lv+(m.stars?' ★'+m.stars:'');} return c;}
 // วัตถุดิบขึ้นดาว: ตัวซ้ำสายพันธุ์เดียวกันที่ไม่อยู่ในทีม และดาวไม่มากกว่าตัวหลัก เลือกตัวดาว/เลเวลต่ำสุดก่อน
@@ -5293,6 +5306,11 @@ function starMats(m){const need=starCost((m.stars||0)+1);
   const L=S.mons.filter(x=>isMat(m,x)).sort((a,b)=>(a.stars||0)-(b.stars||0)||a.lv-b.lv);
   return {need,list:L.slice(0,need),have:L.length};}
 const canStar=m=>(m.stars||0)<STAR_MAX&&starMats(m).have>=starMats(m).need;
+// รวมร่าง: 2 ตัวระดับเดียวกัน (ทั่วไป/หายาก) ที่เลเวลเต็ม + ดาวเต็ม → ตัวใหม่แบบสุ่ม (server/migrate_fusion.sql)
+const FUSE_UP={1:1,2:.9};
+const canFuse=m=>FUSE_UP[spOf(m).rar]!=null&&m.lv>=spOf(m).maxLv&&(m.stars||0)>=STAR_MAX;
+const fuseMates=m=>S.mons.filter(x=>x.uid!==m.uid&&spOf(x).rar===spOf(m).rar);
+const fuseOdds=r=>FUSE_UP[r]>=1?'ได้ระดับ'+tierOf(r+1).n+' 100%':tierOf(r+1).n+' '+Math.round(FUSE_UP[r]*100)+'% · '+tierOf(r).n+' '+Math.round((1-FUSE_UP[r])*100)+'%';
 const starStr=n=>'★'.repeat(n)+'☆'.repeat(STAR_MAX-n);
 function renderTeam(){
   const t=$('#bTeam'); t.innerHTML='';
@@ -5343,9 +5361,9 @@ function renderDetail(){
   const maxed=m.lv>=sp.maxLv, cost=lvCost(m);
   $('#mdUp').innerHTML=''; $('#mdUp').append(el('span',null,maxed?'MAX':'อัปเลเวล')); $('#mdUp').append(el('small',null,maxed?'เลเวลเต็ม':fmt(cost)+' เหรียญ'));
   $('#mdUp').disabled=maxed;
-  const canEvo=sp.evolveTo&&maxed, nst=m.stars||0, SM=starMats(m);
+  const nst=m.stars||0, SM=starMats(m), fz=FUSE_UP[sp.rar]!=null&&nst>=STAR_MAX;
   $('#mdEvo').innerHTML='';
-  if(canEvo){$('#mdEvo').disabled=false;$('#mdEvo').append(el('span',null,'เปลี่ยนร่าง'));$('#mdEvo').append(el('small',null,'300 เหรียญ'));}
+  if(fz){const k=fuseMates(m).filter(canFuse).length;$('#mdEvo').disabled=!maxed;$('#mdEvo').append(el('span',null,'รวมร่าง'));$('#mdEvo').append(el('small',null,!maxed?'ต้องเลเวลเต็ม':k?'คู่พร้อม '+k+' ตัว':'ยังไม่มีคู่'));}
   else{$('#mdEvo').disabled=nst>=STAR_MAX;$('#mdEvo').append(el('span',null,'วิวัฒน์'));
     $('#mdEvo').append(el('small',null,nst>=STAR_MAX?'ดาวเต็มแล้ว':'อาหาร '+Math.min(SM.have,SM.need)+'/'+SM.need));}
 }
@@ -5368,27 +5386,19 @@ $('#mdTeam').onclick=async()=>{const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)
 $('#mdUp').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid===uid);if(!m)return;const sp=spOf(m);if(m.lv>=sp.maxLv)return;
   const r=await act('level_up',{mon_id:uid});if(!r)return;
   bumpRes('coins');renderBox();const ic=$('#bList .ic.sel');if(ic)ic.classList.add('pop');
-  if(r.lv>=sp.maxLv&&sp.evolveTo)toast('ถึงเลเวลสูงสุด! เปลี่ยนร่างได้แล้ว');};
-$('#mdEvo').onclick=async()=>{const uid=BOX.detail;const m=S.mons.find(x=>x.uid===uid);if(!m)return;const sp=spOf(m);
-  if(!(sp.evolveTo&&m.lv>=sp.maxLv))return starUp(m);
-  open3d(); $('#mdBack').disabled=true;
-  const w=BOX.model; const p=new THREE.Vector3(0,1,0);
-  const glowT=tween(1.4,t=>{w.rotation.y+=.05+t*.5;w.traverse(o=>{if(o.isMesh&&o.material&&o.material.emissive){o.material.emissive.setHex(0xfff0c0);o.material.emissiveIntensity=t*2;}});});
-  const r=await act('evolve_monster',{mon_id:uid}); await glowT;
-  if(!r){boxModel(m.sp,elOfMon(m));$('#mdBack').disabled=false;return;}
-  bumpRes('coins');
-  boxSpark(p,0xffffff,70,3.4);boxSpark(p,0xffc94d,50,2.6);
-  boxModel(r.sp,elOfMon(m)); $('#md3Name').textContent=SPEC[r.sp].name+' Lv1';
-  boxSpark(p,0xffc94d,40,2); const A=BOX.model.userData.inner.userData; if(A.play)A.play('victory',{fade:.1});
-  $('#mdBack').disabled=false; toast('เปลี่ยนร่างสำเร็จ! กลายเป็น '+SPEC[r.sp].name);};
+  const nm=S.mons.find(x=>x.uid===uid); if(nm&&r.lv>=sp.maxLv&&canFuse(nm))toast('เลเวลเต็ม + ดาวเต็ม! รวมร่างได้แล้ว');};
+$('#mdEvo').onclick=()=>{const m=S.mons.find(x=>x.uid===BOX.detail);if(!m)return;canFuse(m)?fuseOpen(m):starUp(m);};
 // วิวัฒนาการ (ขึ้นดาว): เปิดหน้าเลือกอาหาร (ตัวซ้ำ) เอง แล้วกดยืนยัน
-const EVO={m:null,sel:[]};
+const EVO={m:null,sel:[],mode:'star',at:0};
+const EV_HINT='เลือกตัวซ้ำที่จะใช้เป็นอาหาร · ใช้ได้เฉพาะตัวที่ดาวไม่มากกว่าตัวหลัก และไม่อยู่ในทีม';
 function starUp(m){
   const st=m.stars||0; if(st>=STAR_MAX){toast('ดาวเต็มแล้ว');return;}
-  EVO.m=m; EVO.sel=starMats(m).list.map(x=>x.uid); $('#evo').hidden=false; renderEvo();}
-function closeEvo(){$('#evo').hidden=true;EVO.m=null;EVO.sel=[];}
+  EVO.mode='star'; EVO.m=m; EVO.sel=starMats(m).list.map(x=>x.uid); $('#evo').hidden=false; renderEvo();}
+function closeEvo(){$('#evo').hidden=true;EVO.m=null;EVO.sel=[];EVO.at=0;}
 function renderEvo(){
+  if(EVO.mode==='fuse')return renderFuse();
   const m=EVO.m; if(!m)return; const sp=spOf(m), st=m.stars||0, need=starCost(st+1);
+  $('#evHint').textContent=EV_HINT;
   const main=$('#evMain'); main.innerHTML=''; main.append(icon(m));
   $('#evName').textContent=sp.name+' Lv'+m.lv;
   const ss=$('#evStars'); ss.innerHTML=''; ss.append(document.createTextNode('★'.repeat(st)+'☆'.repeat(STAR_MAX-st)+'  →  ')); ss.append(el('span','to','★'.repeat(st+1)+'☆'.repeat(STAR_MAX-st-1)));
@@ -5412,8 +5422,8 @@ function renderEvo(){
 }
 $('#evX').onclick=closeEvo;
 $('#evo').addEventListener('pointerdown',e=>{if(e.target.id==='evo')closeEvo();});
-$('#evAuto').onclick=()=>{if(!EVO.m)return;const L=starMats(EVO.m).list.map(x=>x.uid);EVO.sel=EVO.sel.length===L.length&&EVO.sel.every(u=>L.includes(u))?[]:L;renderEvo();};
-$('#evGo').onclick=async()=>{const m=EVO.m;if(!m)return;const st=m.stars||0,need=starCost(st+1);if(EVO.sel.length!==need)return;
+$('#evAuto').onclick=()=>{if(!EVO.m)return;if(EVO.mode==='fuse'){const c=fuseMates(EVO.m).filter(canFuse).sort((a,b)=>S.team.includes(a.uid)-S.team.includes(b.uid))[0];EVO.sel=c&&EVO.sel[0]!==c.uid?[c.uid]:[];EVO.at=0;return renderEvo();}const L=starMats(EVO.m).list.map(x=>x.uid);EVO.sel=EVO.sel.length===L.length&&EVO.sel.every(u=>L.includes(u))?[]:L;renderEvo();};
+$('#evGo').onclick=async()=>{const m=EVO.m;if(!m)return;if(EVO.mode==='fuse')return fuseGo();const st=m.stars||0,need=starCost(st+1);if(EVO.sel.length!==need)return;
   const sp=spOf(m),before=skillLvs(m.sp,st),pw0=power(m);$('#evGo').disabled=true;$('#evGo').textContent='กำลังวิวัฒนาการ…';
   const r=await act('star_up',{mon_id:m.uid,mat_ids:EVO.sel.slice()}); if(!r){renderEvo();return;}
   closeEvo();
@@ -5421,6 +5431,41 @@ $('#evGo').onclick=async()=>{const m=EVO.m;if(!m)return;const st=m.stars||0,need
   renderBox(); const ic=$('#bList .ic.sel'); if(ic)ic.classList.add('pop');
   const nm=S.mons.find(x=>x.uid===m.uid), pw1=nm?power(nm):pw0;
   toast('วิวัฒน์สำเร็จ! ★'+(st+1)+(sk?' · '+sk.name+' Lv'+after[i]:'')+(pw1>pw0?' · พลังรบ +'+fmt(pw1-pw0):''));};
+// รวมร่าง: ใช้หน้าต่างเดียวกับวิวัฒนาการ (โหมด fuse) เลือกคู่ 1 ตัว แล้วแตะยืนยัน 2 ครั้ง
+function fuseOpen(m){EVO.mode='fuse';EVO.m=m;EVO.at=0;const c=fuseMates(m).filter(canFuse).filter(x=>!S.team.includes(x.uid));EVO.sel=c.length===1?[c[0].uid]:[];$('#evo').hidden=false;renderFuse();}
+function renderFuse(){
+  const m=EVO.m; if(!m)return; const sp=spOf(m), r=sp.rar;
+  const main=$('#evMain'); main.innerHTML=''; main.append(icon(m));
+  $('#evName').textContent=sp.name+' Lv'+m.lv;
+  const ss=$('#evStars'); ss.innerHTML=''; ss.append(document.createTextNode(tierOf(r).n+' + '+tierOf(r).n+'  →  ')); ss.append(el('span','to','สุ่มตัวใหม่'));
+  $('#evGain').textContent=fuseOdds(r);
+  $('#evHint').textContent='เลือกคู่ระดับ'+tierOf(r).n+'ที่เลเวลเต็มและดาวเต็ม · ทั้งสองตัวจะหายไป แล้วได้ตัวใหม่แบบสุ่ม (Lv 1 · 0 ดาว)';
+  const L0=fuseMates(m); EVO.sel=EVO.sel.filter(u=>L0.some(x=>x.uid===u&&canFuse(x))).slice(0,1);
+  $('#evCount').textContent='คู่รวมร่าง ('+EVO.sel.length+'/1)';
+  const pk=$('#evPicked'); pk.innerHTML=''; {const x=S.mons.find(y=>y.uid===EVO.sel[0]);
+    if(x){const c=icon(x);c.onclick=()=>{EVO.sel=[];EVO.at=0;renderFuse();};pk.append(c);}else pk.append(el('div','slot'));}
+  const L=$('#evList'); L.innerHTML='';
+  const list=L0.slice().sort((a,b)=>canFuse(b)-canFuse(a)||(b.stars||0)-(a.stars||0)||b.lv-a.lv);
+  if(!list.some(canFuse))L.append(el('div','evEmpty','ยังไม่มีตัวระดับ'+tierOf(r).n+'อีกตัวที่เลเวลเต็มและดาวเต็ม (6 ดาว)'));
+  list.forEach(x=>{const c=icon(x), ok=canFuse(x), on=EVO.sel[0]===x.uid; if(on)c.classList.add('on');
+    if(!ok){c.classList.add('no');c.title=x.lv<spOf(x).maxLv?'ต้องเลเวลเต็มก่อน':'ต้องดาวเต็ม 6 ดาวก่อน';}
+    c.onclick=()=>{if(!ok){toast(c.title);return;}EVO.sel=on?[]:[x.uid];EVO.at=0;renderFuse();};
+    L.append(c);});
+  const sure=Date.now()-EVO.at<4000;
+  $('#evGo').disabled=EVO.sel.length!==1; $('#evGo').textContent=sure?'แตะอีกครั้งเพื่อยืนยัน (2 ตัวนี้จะหายไป)':'รวมร่าง';
+}
+async function fuseGo(){
+  const m=EVO.m; if(!m||EVO.sel.length!==1)return;
+  if(Date.now()-EVO.at>4000){EVO.at=Date.now();renderFuse();setTimeout(()=>{if(EVO.mode==='fuse'&&EVO.m&&Date.now()-EVO.at>=4000)renderFuse();},4100);return;}
+  EVO.at=0; $('#evGo').disabled=true; $('#evGo').textContent='กำลังรวมร่าง…';
+  const r=await act('fuse_monsters',{a:m.uid,b:EVO.sel[0]}); if(!r){if(EVO.m)renderFuse();return;}
+  closeEvo(); const nid=Number(r.mon.id), d=S.mons.find(x=>x.uid===nid), hel=d?elOfMon(d):(r.mon.el||SPEC[r.mon.sp].el), up=r.rar>spOf(m).rar;
+  if(typeof syncAgents==='function'&&!(typeof VISIT!=='undefined'&&VISIT.on))syncAgents();
+  BOX.detail=nid; renderBox();
+  if(d){open3d(); const p=new THREE.Vector3(0,1,0), col=tierOf(r.rar).hx; boxSpark(p,0xffffff,70,3.4); boxSpark(p,col,60,2.8);}
+  toast('รวมร่างสำเร็จ! ได้'+SPEC[r.mon.sp].name+' '+ELEM[hel].i+'ธาตุ'+hel+' ระดับ'+tierOf(r.rar).n+(up?'!':''));
+  if(r.rar>=3&&typeof pullFx==='function'){pullFx(r.rar,SPEC[r.mon.sp].name,ELEM[hel].i+' ธาตุ'+hel);if(typeof PULL!=='undefined'){PULL.last=0;setTimeout(pullsLoad,2500);}}
+}
 // หมุนโมเดลด้วยการลาก (มุมมอง 3D)
 addEventListener('pointerdown',e=>{if(!BOX.open||e.target.closest('button'))return;BOX.drag={x:e.clientX,s:BOX.spin};});
 addEventListener('pointermove',e=>{if(BOX.drag)BOX.spin=BOX.drag.s+(e.clientX-BOX.drag.x)*.012;});
