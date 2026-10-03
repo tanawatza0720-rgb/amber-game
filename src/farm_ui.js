@@ -91,10 +91,10 @@ async function openMail(){
   const fmtD=t=>{const x=new Date(t);return x.getDate()+'/'+(x.getMonth()+1)+'/'+x.getFullYear();};
   L.forEach(m=>{const it=el('div','mitem gift'+(m.claimed?' done':''));it.append(el('b',null,m.title));if(m.body)it.append(el('span',null,m.body));
     const rw=el('div','mrow');const chips=el('div','mchips');
-    if(m.amber)chips.append(el('span','mchip amber','💎 '+fmt(m.amber)+' อัมพร'));if(m.coins)chips.append(el('span','mchip coin','🪙 '+fmt(m.coins)+' เหรียญ'));
+    if(m.amber)chips.append(el('span','mchip amber','💎 '+fmt(m.amber)+' อัมพร'));if(m.coins)chips.append(el('span','mchip coin','🪙 '+fmt(m.coins)+' เหรียญ'));if(m.god_eggs)chips.append(el('span','mchip amber','🌟 ไข่เทพ '+m.god_eggs+' ใบ'));
     rw.append(chips);const bt=el('button','mget',m.claimed?'รับแล้ว':'รับ');bt.disabled=m.claimed;
     bt.onclick=async()=>{bt.disabled=true;const r=await act('claim_mail',{mail_id:m.id});
-      if(r){if(r.amber)bumpRes('amber');if(r.coins)bumpRes('coins');toast('ได้รับ'+(r.amber?' '+fmt(r.amber)+' อัมพร':'')+(r.coins?' '+fmt(r.coins)+' เหรียญ':''));it.classList.add('done');bt.textContent='รับแล้ว';m.claimed=true;{const n=L.filter(x=>!x.claimed).length;$('#shSub').textContent=n?'ของรอรับ '+n+' ฉบับ':'รับของครบแล้ว';}}
+      if(r){if(r.amber)bumpRes('amber');if(r.coins)bumpRes('coins');toast('ได้รับ'+(r.amber?' '+fmt(r.amber)+' อัมพร':'')+(r.coins?' '+fmt(r.coins)+' เหรียญ':'')+(r.god_eggs?' ไข่เทพ '+r.god_eggs+' ใบ':''));if(r.god_eggs&&typeof loadStage==='function')loadStage();it.classList.add('done');bt.textContent='รับแล้ว';m.claimed=true;{const n=L.filter(x=>!x.claimed).length;$('#shSub').textContent=n?'ของรอรับ '+n+' ฉบับ':'รับของครบแล้ว';}}
       else bt.disabled=false;};
     rw.append(bt);it.append(rw);if(!m.claimed)it.append(el('small',null,'รับได้ถึง '+fmtD(m.expires_at)));d.append(it);});
   if(!L.length)d.append(el('p','ptxt','ไม่มีของแจกในตอนนี้'));

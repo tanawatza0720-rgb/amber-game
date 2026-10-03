@@ -169,6 +169,7 @@ python3 build_battle.py && cp battle.html ../battle.html
 ## กล่องจดหมายแจกของ (server/migrate_mail.sql)
 - ตาราง `public.mail` (จดหมายถึงผู้เล่นทุกคน) + `public.mail_claims` (ใครรับแล้ว) · RPC `mail_list()`, `claim_mail(mail_id)` · `_state.player.mail_new` = จำนวนที่ยังไม่รับ (ตัวเลขบนปุ่มจดหมาย)
 - **ส่งของแจกใหม่** (รันใน Supabase SQL Editor): `insert into public.mail (code, title, body, amber, coins, expires_at) values ('ชื่อไม่ซ้ำ', 'หัวข้อ', 'ข้อความ', 300, 0, now() + interval '30 days') on conflict (code) do nothing;` — ผู้เล่นทุกคน (รวมคนที่สมัครทีหลังก่อนหมดเขต) กดรับได้คนละ 1 ครั้ง
+- แนบไข่เทพได้ (3 ต.ค. 2026, `server/migrate_mail_godegg.sql`): คอลัมน์ `mail.god_eggs` → `claim_mail` เพิ่ม `players.god_eggs` · ไฟล์เดียวกันส่งจดหมายขออภัยเรื่องส่งสำรวจ (code `sorry_expedition_20261003`: อัมพร 300 + ไข่เทพ 1 · 14 วัน)
 
 ## ธาตุต่อตัว (server/migrate_elements.sql)
 - ตัวละครเดียวกันมีได้ทั้ง 6 ธาตุ: `monsters.el` (ว่าง = ธาตุประจำตัว `EL_OF`) · ฝั่งเกมใช้ `elOfMon(m)` เสมอ

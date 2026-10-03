@@ -3624,3 +3624,35 @@ revoke execute on function public._exp_zones(), public._exp_rule(), public._exp_
 revoke execute on function public.exp_state(), public.exp_claim() from public, anon;
 grant execute on function public.exp_state(), public.exp_claim() to authenticated;
 
+
+-- ===== จดหมายแจกไข่เทพได้ (migrate_mail_godegg.sql) =====
+alter table public.mail add column if not exists god_eggs int not null default 0 check (god_eggs >= 0);
+
+create or replace function public.mail_list() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare u uuid := public._uid();
+begin
+  perform public._player(u);
+  return coalesce((select jsonb_agg(jsonb_build_object('id', m.id, 'title', m.title, 'body', m.body, 'amber', m.amber, 'coins', m.coins, 'god_eggs', m.god_eggs,
+            'expires_at', m.expires_at, 'claimed', c.mail_id is not null) order by m.id desc)
+    from public.mail m left join public.mail_claims c on c.mail_id = m.id and c.user_id = u
+    where now() between m.starts_at and m.expires_at and (m.user_id is null or m.user_id = u)), '[]'::jsonb);
+end $$;
+
+create or replace function public.claim_mail(mail_id bigint) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare u uuid := public._uid(); m public.mail;
+begin
+  perform public._player(u);
+  select * into m from public.mail x where x.id = claim_mail.mail_id and now() between x.starts_at and x.expires_at
+    and (x.user_id is null or x.user_id = u);
+  if not found then raise exception 'no_mail'; end if;
+  insert into public.mail_claims (user_id, mail_id) values (u, m.id) on conflict do nothing;
+  if not found then raise exception 'already_claimed'; end if;
+  update public.players set amber = amber + m.amber, coins = coins + m.coins, god_eggs = god_eggs + m.god_eggs, updated_at = now() where user_id = u;
+  return jsonb_build_object('amber', m.amber, 'coins', m.coins, 'god_eggs', m.god_eggs, 'state', public._state(u));
+end $$;
+
+revoke execute on function public.mail_list(), public.claim_mail(bigint) from public, anon;
+grant execute on function public.mail_list(), public.claim_mail(bigint) to authenticated;
+
