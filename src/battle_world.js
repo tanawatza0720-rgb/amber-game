@@ -96,6 +96,7 @@ function makeUnit(side,def,slot){
   const SPD=!!(sp.spider&&SPIDER);
   const inner=w.userData.inner, rig=inner.userData.rig;
   if(def.boss){w.userData.k*=1.3;w.scale.setScalar(w.userData.k);}
+  const BK=(typeof BODY_K!=='undefined'&&BODY_K[def.sp])||1; if(BK!==1&&inner.userData.meshy){w.userData.k*=BK;w.scale.setScalar(w.userData.k);}   // เทพเจ้าร่างมนุษย์ตัวใหญ่ (meshy_rig.js BODY_K)
   if(side==='E'){if(def.tint&&typeof tintRealm==='function')tintRealm(w,def.tint,def.boss);else tintCrimson(w,def.boss);}
   if(side==='E'&&!def.tint&&(inner.userData.meshy||SPD))w.traverse(o=>{if(o.isSkinnedMesh){o.material.color.set(def.boss?0xe0705f:0xe89080);o.material.emissive.set(def.boss?0x140000:0x0a0000);}});
   if(sp.evo&&!sp.dragon&&!SPD){(inner.userData.swords||[]).forEach(s=>s.visible=true);
@@ -115,7 +116,8 @@ function makeUnit(side,def,slot){
       if(M.size&&!sp.dragon){w.userData.k*=M.size;w.scale.setScalar(w.userData.k);}}}
   u.hp=u.maxHp; u.el=def.el||sp.el; u.pas=(u.skills.find(s=>s.type==='passive')||{}).passive||null; u.revived=false;
   const DK=sp.dragon?DRAGON_BATTLE_K:1; if(sp.dragon){w.scale.setScalar(DK);const R=inner.userData.rig;if(R&&R.st){R.st.alt=R.tg.alt=2.6;}}
-  u.rad=sp.dragon?1.55*DK:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=4.95*DK;u.camS=2.1*DK;} u.reach=sp.dragon?1.9*DK:inner.userData.meshy?1.25:u.evo?1.0:.72; if(sp.ranged){u.ranged=true;u.reach=7.35;} // สายตีไกล: ยืนยิงห่างศัตรูราว 8 เมตร (rad+reach+.15)
+  u.rad=sp.dragon?1.55*DK:u.evo?(u.boss?.8:.5):.45; if(sp.dragon){u.barY=4.95*DK;u.camS=2.1*DK;} u.reach=sp.dragon?1.9*DK:inner.userData.meshy?1.25:u.evo?1.0:.72; if(BK!==1&&inner.userData.meshy){const fl=(typeof FLOAT!=='undefined'&&FLOAT[def.sp])||0;u.rad*=BK*.85;u.reach*=BK*.9;u.barY=(u.boss?3.25:2.6)*BK+fl*1.5*BK;u.camS=(u.boss?1.3:1)*BK;}
+  if(sp.ranged){u.ranged=true;u.reach=7.35;} // สายตีไกล: ยืนยิงห่างศัตรูราว 8 เมตร (rad+reach+.15)
   u.mats=[];w.traverse(o=>{if(o.isMesh){o.userData.unit=u.id;PICKU.push(o);if(o.material&&o.material.emissive&&u.mats.indexOf(o.material)<0)u.mats.push(o.material);}});
   if(sp.dragon){u.dragon=true;u.stance=[];}
   else if(SPD){u.spider=true;u.stance=[];u.rad=.8;u.reach=1.2;u.barY=2.05;}

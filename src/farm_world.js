@@ -387,7 +387,7 @@ function addAgent(data,at,pop){
     w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});
     const ag={w,inner:w.userData.inner,data,evo:1,spider:true,state:'idle',wait:1+Math.random()*3,tx:x,tz:z,ph:0,yaw:w.rotation.y,speed:1.1};AGENTS.push(ag);
     if(pop){w.scale.setScalar(.001);tween(.6,t=>w.scale.setScalar(Math.max(.001,1.3*t)),easeBack);}return ag;}
-  const w=buildMonster(spc.rig||(spc.evo?1:0)); w.userData.k*=1.5; w.scale.setScalar(w.userData.k); tintByEl(w,data.sp,data.el); scene.add(w);
+  const w=buildMonster(spc.rig||(spc.evo?1:0)); w.userData.k*=1.5*((typeof BODY_K!=='undefined'&&BODY_K[data.sp])||1); w.scale.setScalar(w.userData.k); tintByEl(w,data.sp,data.el); scene.add(w);
   const [x,z]=at||freePoint(.8); w.position.set(x,0,z); w.rotation.y=Math.random()*6;
   const inner=w.userData.inner;
   w.traverse(o=>{if(o.isMesh){o.userData.agent=AGENTS.length;PICK.push(o);}});

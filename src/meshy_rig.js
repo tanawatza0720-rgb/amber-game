@@ -2,7 +2,7 @@
 let MESHY=null, USE_MESHY=true, MXA=null;
 const MXA_URL='kzr/kazekiri_anims.json';
 // โมเดลตัวละครจาก Meshy ที่ใช้โครงกระดูก Mixamo (ใช้ท่าชุดเดียวกันได้)
-const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json?v=5',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
+const RIG_URLS={kazekiri:'kzr/kazekiri_rig.json',kuroga:'krg/kuroga_rig.json',hakuneko:'hkn/hakuneko_rig.json?v=2',morihime:'mrh/morihime_rig.json?v=2',seiro:'szr/seiro_rig.json',kohaku:'khk/kohaku_rig.json',garok:'grk/garok_rig.json',sarael:'srl/sarael_rig.json?v=6',anubis:'anb/anubis_rig.json',phraiwan:'prw/phraiwan_rig.json',mortha:'mrt/mortha_rig.json'}, RIGDB={};
 function loadRig(key,onProgress){
   if(RIGDB[key])return Promise.resolve(RIGDB[key]);
   return new Promise(res=>{
@@ -60,7 +60,8 @@ function makeFist(root,hands){
 const POLE={morihime:1,kohaku:1,garok:1,anubis:1,phraiwan:1,mortha:1}; // ตัวที่ถืออาวุธด้ามยาวจากโมเดล
 const NOWPN={}; // สู้มือเปล่า: ดาบใช้แค่กำมือ ไม่โชว์
 const SWORD={sarael:.07}; // ดาบจากโมเดล (ส่งออกแนวตั้ง ปลายดาบชี้ลง): จับที่ด้าม ห่างปลายด้าม = ค่านี้ × ความยาว
-const FLOAT={sarael:.5}; // เทพลอยตัว: ยกตัวสูงจากพื้น (หน่วยโมเดล สะโพก=.9) ไม่เดิน ใช้ท่ายืนแทนท่าวิ่ง/เดิน
+const FLOAT={sarael:.85}; // เทพลอยตัว: ยกตัวสูงจากพื้น (หน่วยโมเดล สะโพก=.9) ไม่เดิน ใช้ท่ายืนแทนท่าวิ่ง/เดิน
+const BODY_K={sarael:2.3}; // ตัวคูณขนาดตัว (เทพเจ้าร่างมนุษย์ใหญ่กว่าตัวตำนานเกือบเท่าตัว แต่ยังเล็กกว่ามังกร) ใช้ในสนามรบ (makeUnit) และฟาร์ม (addAgent)
 function buildMeshyEvo(m,key){
   key=(typeof key==='string'&&RIGDB[key])?key:'kazekiri';
   const root=THREE.SkeletonUtils.clone((RIGDB[key]||MESHY).scene);
@@ -169,10 +170,11 @@ function buildMeshyEvo(m,key){
   const _qa=new THREE.Quaternion(),_qb=new THREE.Quaternion();
   const sampleD=(c,bi,out)=>{const cl=MXA.clips[c.name],q=cl.q,nb=MXA.bones.length,n=cl.n;const f=Math.min(n-1,Math.max(0,c.t*30)),i0=Math.floor(f),i1=Math.min(n-1,i0+1),fr=f-i0;
     const a=(i0*nb+bi)*4,b=(i1*nb+bi)*4; _qa.set(q[a],q[a+1],q[a+2],q[a+3]); out.set(q[b],q[b+1],q[b+2],q[b+3]); return out.copy(_qa.slerp(out,fr));};
+  let flying=false;
   function clipW(bi,b,baseW){const D=sampleD(CS.cur,bi,new THREE.Quaternion());
     if(CS.prev&&CS.fade<1){const Dp=sampleD(CS.prev,bi,_qb);D.copy(Dp.slerp(D,CS.fade));}
     return D.multiply(CS.Qal[bi]).multiply(b.userData.W);}
-  function play(name,o){o=o||{};if(FLOAT[key]&&(name==='run'||name==='walk')){name='idle';o={...o,loop:true,speed:1};}
+  function play(name,o){o=o||{};if(FLOAT[key]){flying=name==='run'||name==='walk';if(flying){name='idle';o={...o,loop:true,speed:1};}}
     if(!CS||!MXA.clips[name])return Promise.resolve();
     if(CS.cur&&CS.cur.done)CS.cur.done();
     CS.prev=CS.cur; CS.fade=CS.prev?0:1; CS.fadeDur=o.fade==null?.12:o.fade;
@@ -276,18 +278,31 @@ function buildMeshyEvo(m,key){
   makeFist(root,[[B.rHand,swR,'R'],[B.lHand,swL,'L']]);}
   if(CS){play('idle',{loop:true,from:Math.random()*2});CS.w=CS.wT=1;}
   const FL=FLOAT[key]; let flY=0; if(FL){root.userData.fy=root.position.y;}
-  // ปีกที่มีกระดูกของตัวเอง (WingL/WingR จาก tools/rig EXTRA): กระพือ/พลิ้วเบาๆ แรงขึ้นตอนออกท่าใหญ่
-  const WG=[bone('WingL'),bone('WingR')].filter(Boolean); let wAmp=1;
+  // ปีกที่มีกระดูกของตัวเอง (tools/rig/wingchain.py): แกนปีก 4 ท่อน Wing→Wing2→Wing3→Wing4 + เส้นเปลวห้อย a1..4 → b1..4 + ยอดปีก t
+  // แต่ละท่อนขยับตามท่อนก่อนหน้าแบบหน่วงเวลา จึงพลิ้วเป็นคลื่นจากโคนไปปลาย (rig รุ่นเก่ามีแค่ Wing ก็ยังใช้ได้)
+  const WG=['L','R'].map(sd=>{const n='Wing'+sd,sp=[bone(n),bone(n+'2'),bone(n+'3'),bone(n+'4')].filter(Boolean);
+    return {sp,a:[1,2,3,4].map(k=>bone(n+'a'+k)),b:[1,2,3,4].map(k=>bone(n+'b'+k)),t:bone(n+'t')};}).filter(w=>w.sp.length);
+  const WSH=[.56,.26,.22,.2], WFK=[.3,.7,1,1.1], WLAG=.55; let wAmp=1, wPh=Math.random()*6, wT=null, lean=0, wFly=0;
   m.userData.idle=T=>{
     if(FL){const dead=CS&&CS.cur&&CS.cur.name==='death';flY+=((dead?0:FL+Math.sin(T*1.5)*.06)-flY)*.08;root.position.y=root.userData.fy+flY;}
-    if(WG.length){const big=CS&&CS.cur&&/^(leap|jumpatk|powerup|battlecry|victory|spin)$/.test(CS.cur.name);wAmp+=((big?2.4:1)-wAmp)*.06;
-      const f=Math.sin(T*2.6),g=Math.sin(T*2.6-.9);
-      WG.forEach((w,i)=>{const s=i?-1:1;w.rotation.set(.05*g*wAmp,s*(.1+.1*f*wAmp),s*.08*f*wAmp);});}
+    if(FL){lean+=((flying?.22:0)-lean)*.08;root.rotation.x=lean;}   // เอนตัวไปข้างหน้าตอนบิน
     let dt=0; if(CS){dt=CS.lastT==null?0:Math.min(.1,T-CS.lastT);CS.lastT=T;tickClip(dt*(typeof SPEED!=='undefined'?SPEED*HS:1));}
     breath=Math.sin(T*2)*.025;
     m.position.y+=Math.sin(T*2)*.008; m.position.x+=Math.sin(T*.9)*.012;
     head.rotation.z=Math.sin(T*.7)*.03;
     feet(); retarget();
+    // ปีกต้องตั้งหลัง retarget() เสมอ (retarget คืนกระดูกที่ไม่อยู่ในท่า Mixamo กลับท่าตั้งต้นทุกเฟรม — ก่อน 3 ต.ค. 2026 ปีกจึงไม่ขยับเลย)
+    if(WG.length){const big=CS&&CS.cur&&/^(leap|jumpatk|powerup|battlecry|victory|spin)$/.test(CS.cur.name);
+      // ลอยอยู่กับที่ = พลิ้วเบาๆ · กำลังบินเคลื่อนที่ = กระพือแรงและเร็วขึ้น เส้นเปลวลู่ไปข้างหลัง · ท่าใหญ่ = กางสะบัด
+      wAmp+=((big?2.6:flying?3.4:1.3)-wAmp)*.08; wFly+=((flying?1:0)-wFly)*.06;
+      const wd=wT==null?0:Math.min(.1,T-wT); wT=T; wPh+=wd*(flying?7.5:big?4.5:2.6);
+      WG.forEach((w,i)=>{const s=i?-1:1,one=w.sp.length<2;
+        w.sp.forEach((o,j)=>{const ph=wPh-j*WLAG,f=Math.sin(ph),g=Math.sin(ph-.9),k=one?1:WSH[j];
+          o.rotation.set(.05*g*wAmp*k,s*((j?.02:.1)+.1*f*wAmp*k),s*(.08+.05*wFly)*f*wAmp*k);});
+        for(let j=0;j<4;j++){const ph=wPh-j*WLAG-1.1,A=w.a[j],C=w.b[j],fk=WFK[j];   // เส้นเปลวแถวในติดกับผ้าคลุม ขยับน้อยกว่าแถวนอก
+          if(A)A.rotation.set(fk*(.16*wFly+.05*wAmp*Math.sin(ph)),0,fk*s*.04*wAmp*Math.sin(ph-.5));
+          if(C)C.rotation.set(fk*(.14*wFly+.07*wAmp*Math.sin(ph-.8)),0,fk*s*.06*wAmp*Math.sin(ph-1.3));}
+        if(w.t)w.t.rotation.set(-.1*wFly+.06*wAmp*Math.sin(wPh-1.4),0,s*.07*wAmp*Math.sin(wPh-1.8));});}
     if(swordPose){const attacking=CS.cur&&/^(slash|slash2|power|combo|jumpatk|leap|spin|powerup)$/.test(CS.cur.name);
       swordPose.blend+=(Number(attacking)-swordPose.blend)*Math.min(1,dt*11);
       prop.position.copy(swordPose.restP).lerp(swordPose.drawP,swordPose.blend);

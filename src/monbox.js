@@ -67,6 +67,7 @@ function boxModel(sp,el){
   if(S2.dragon&&DRAGON){w=buildDragon();w.scale.setScalar(.72);}
   else if(S2.spider&&SPIDER){w=buildSpider();w.scale.setScalar(1.05);}
   else{w=buildMonster(S2.rig||(S2.evo?1:0));w.scale.setScalar(w.userData.k*(S2.evo?1.05:1.35));}
+  if(typeof FLOAT!=='undefined'&&FLOAT[sp])w.scale.multiplyScalar(.86);   // ตัวที่ลอยสูง ย่อลงนิดให้หัวไม่หลุดกรอบ
   w.traverse(o=>{if(o.isMesh){o.castShadow=true;}}); tintByEl(w,sp,el);
   w.userData.sp=sp; w.userData.el=el; bScene.add(w); BOX.model=w; BOX.spin=0;
   const A=w.userData.inner.userData; if(A.clipW)A.clipW(1);
