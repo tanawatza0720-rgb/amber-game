@@ -86,7 +86,9 @@ function makeHydra(root,pivot,body,sm,B,S){
     const low=typeof LOW!=='undefined'&&LOW, n=low?10:18, d=dur||.8, off=Math.random()*6.28;
     for(let w=0;w<2;w++)for(let k=0;k<n;k++){const a=off+k/n*6.28+w*.3+(Math.random()-.5)*.25, r0=R*(.25+.3*w), sp=R*(.75-.2*w)/d;
       emit(V3(x+Math.cos(a)*r0,S*.03,z+Math.sin(a)*r0),V3(Math.cos(a)*sp,S*(.1+Math.random()*.12),Math.sin(a)*sp),0x0d0414,R*(.13+Math.random()*.06),d*(.8+Math.random()*.3),0,'dark');}
-    for(let k=0;k<(low?4:8);k++){const a=Math.random()*6.28;emit(V3(x+Math.cos(a)*R*.3,S*.04,z+Math.sin(a)*R*.3),V3(Math.cos(a)*R*.9/d,S*(.12+Math.random()*.15),Math.sin(a)*R*.9/d),k%2?0xff2a4a:0x9a30ff,S*.014,d*.8,-S*.2);}};
+    for(let k=0;k<(low?4:8);k++){const a=Math.random()*6.28;emit(V3(x+Math.cos(a)*R*.3,S*.04,z+Math.sin(a)*R*.3),V3(Math.cos(a)*R*.9/d,S*(.12+Math.random()*.15),Math.sin(a)*R*.9/d),k%2?0xff2a4a:0x9a30ff,S*.014,d*.8,-S*.2);}
+    // ทิ้งกองไฟดำลุกไหม้ค้างไว้ครู่หนึ่งตามแนววง (โผล่ตามจังหวะที่คลื่นแผ่ไปถึง)
+    {const np=low?4:7, o2=Math.random()*6.28;for(let k=0;k<np;k++){const a=o2+k/np*6.28+(Math.random()-.5)*.5, rr=R*(.3+Math.random()*.6);darkPatch(x+Math.cos(a)*rr,z+Math.sin(a)*rr,R/S,d*(.25+.6*rr/(R*1.05)));}}};
   const dust=(x,z,n,col)=>{lavaBurst(x,z,Math.min(1.6,.35+n/28));for(let k=0;k<n;k++){const a=Math.random()*6.28,r=Math.random();emit(V3(x+Math.cos(a)*r*.08*S,.03*S,z+Math.sin(a)*r*.08*S),V3(Math.cos(a)*S*(.15+r*.3),S*(.15+Math.random()*.35),Math.sin(a)*S*(.15+r*.3)),col||0xd8b890,S*(.025+Math.random()*.02),.9,-S*.9);}};
   // ---------- ลาวา: แอ่งลาวาไหลใต้เท้าตลอดเวลา + รอยแตกลาวาทุกครั้งที่กระทืบ/กระแทกพื้น ----------
   const LV=hyLavaTex();
@@ -100,6 +102,17 @@ function makeHydra(root,pivot,body,sm,B,S){
   const smoke=(p,sz)=>{const o=SMOKE.find(x=>!x.s.visible);if(!o)return;o.s.visible=true;o.s.position.copy(p);o.life=o.max=1.6+Math.random();o.sz=sz;o.v=V3((Math.random()-.5)*S*.04,S*(.12+Math.random()*.1),(Math.random()-.5)*S*.04);};
   const flameMat=()=>new THREE.SpriteMaterial({map:LV.flame,color:0xffa050,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0});
   const fires=[];
+  // กองไฟดำ: เปลวดำ (NormalBlending) + เปลวเรืองม่วงแดงจางๆ ที่โคน · ลุก 2.4–3.6 วิ แล้วมอด · ใช้ระบบเดียวกับ firePatch
+  function darkPatch(x,z,sz,delay){
+    if(fires.length>=36){const o=fires.shift();fx.remove(o.g);o.g.traverse(q=>{if(q.material)q.material.dispose();if(q.geometry)q.geometry.dispose();});}
+    const k0=Math.max(.5,Math.min(1.6,sz||1));
+    const g=new THREE.Group();g.position.set(x,0,z);fx.add(g);
+    const sc=new THREE.Mesh(new THREE.PlaneGeometry(1,1),lavaMat(LV.scorch,0,1));sc.rotation.x=-Math.PI/2;sc.position.y=.03;sc.scale.setScalar(S*(.2+Math.random()*.08)*k0);sc.renderOrder=1;g.add(sc);
+    const fl=[];for(let i=0;i<4;i++){const glowF=i===0, f=new THREE.Sprite(new THREE.SpriteMaterial({map:LV.flame,color:glowF?(Math.random()<.5?0x8a28d0:0xe02a48):0x0a0310,transparent:true,depthWrite:false,blending:glowF?THREE.AdditiveBlending:THREE.NormalBlending,opacity:0}));
+      const a=Math.random()*6.28,r=glowF?0:Math.random()*S*.07*k0;f.position.set(Math.cos(a)*r,0,Math.sin(a)*r);
+      f.userData={h:S*(glowF?.16:.2+Math.random()*.2)*k0,w:S*(glowF?.17:.1+Math.random()*.06)*k0,ph:Math.random()*6.28,sp:6+Math.random()*5,op:glowF?.42:.96};f.center.set(.5,0);f.renderOrder=glowF?4:5;g.add(f);fl.push(f);}
+    fires.push({g,sc,fl,t:-(delay||0),life:2.4+Math.random()*1.2,dark:true});
+  }
   function firePatch(x,z){
     if(fires.length>=16){const o=fires.shift();fx.remove(o.g);}
     const g=new THREE.Group();g.position.set(x,0,z);fx.add(g);
@@ -277,11 +290,11 @@ function makeHydra(root,pivot,body,sm,B,S){
     for(let i=cracks.length-1;i>=0;i--){const c=cracks[i];c.t+=dt;const k=c.t/c.life,g=Math.min(1,c.t/.18);c.m.scale.setScalar(c.R*(.6+.4*g));c.m.material.opacity=k<.55?1:Math.max(0,1-(k-.55)/.45);c.sc.scale.setScalar(c.R*1.1*(.6+.4*g));c.sc.material.opacity=.75*(k<.6?1:Math.max(0,1-(k-.6)/.4));
       if(k>=1){[c.m,c.sc].forEach(o=>{fx.remove(o);o.geometry.dispose();o.material.dispose();});cracks.splice(i,1);}}
     // ไฟลุกบนพื้น + ควัน
-    for(let i=fires.length-1;i>=0;i--){const F=fires[i];F.t+=dt;const k=F.t/F.life, a=Math.min(1,F.t/.25)*(k<.7?1:Math.max(0,1-(k-.7)/.3));
-      F.sc.material.opacity=.8*Math.min(1,F.t/.3)*(k<.85?1:Math.max(0,1-(k-.85)/.15));
-      F.fl.forEach(f=>{const u=f.userData,fl=.75+.25*Math.sin(T*u.sp+u.ph)+.12*Math.sin(T*u.sp*2.3+u.ph*2);f.scale.set(u.w*(1.1-.2*fl),u.h*fl*a,1);f.material.opacity=a*.95;f.material.rotation=Math.sin(T*3+u.ph)*.12;});
+    for(let i=fires.length-1;i>=0;i--){const F=fires[i];F.t+=dt;const k=F.t/F.life, a=Math.max(0,Math.min(1,F.t/.25))*(k<.7?1:Math.max(0,1-(k-.7)/.3));
+      F.sc.material.opacity=.8*Math.max(0,Math.min(1,F.t/.3))*(k<.85?1:Math.max(0,1-(k-.85)/.15));
+      F.fl.forEach(f=>{const u=f.userData,fl=.75+.25*Math.sin(T*u.sp+u.ph)+.12*Math.sin(T*u.sp*2.3+u.ph*2);f.scale.set(u.w*(1.1-.2*fl),u.h*fl*a,1);f.material.opacity=a*(u.op||.95);f.material.rotation=Math.sin(T*3+u.ph)*.12;});
       if(a>.3&&Math.random()<dt*3)smoke(V3(F.g.position.x,S*.12,F.g.position.z),S*.12);
-      if(a>.3&&Math.random()<dt*4)emit(V3(F.g.position.x+(Math.random()-.5)*S*.06,S*.05,F.g.position.z+(Math.random()-.5)*S*.06),V3((Math.random()-.5)*S*.05,S*(.2+Math.random()*.2),(Math.random()-.5)*S*.05),0xffa030,S*.012,1,S*.05);
+      if(a>.3&&Math.random()<dt*4)emit(V3(F.g.position.x+(Math.random()-.5)*S*.06,S*.05,F.g.position.z+(Math.random()-.5)*S*.06),V3((Math.random()-.5)*S*.05,S*(.2+Math.random()*.2),(Math.random()-.5)*S*.05),F.dark?(Math.random()<.5?0x9a30ff:0xff2a4a):0xffa030,S*.012,1,S*.05);
       if(k>=1){fx.remove(F.g);F.g.traverse(o=>{if(o.material)o.material.dispose();if(o.geometry)o.geometry.dispose();});fires.splice(i,1);}}
     SMOKE.forEach(o=>{if(!o.s.visible)return;o.life-=dt;if(o.life<=0){o.s.visible=false;return;}const k=o.life/o.max;o.s.position.addScaledVector(o.v,dt);o.s.material.opacity=Math.sin(k*Math.PI)*.4;o.s.scale.setScalar(o.sz*(2.2-k*1.2));});
     // อนุภาค + วง

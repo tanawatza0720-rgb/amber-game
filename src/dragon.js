@@ -259,6 +259,17 @@ function darkFlame(pos,vel,life,size){
     if(k<.25)m.color.copy(BLK_A).lerp(BLK_B,k/.25);else m.color.copy(BLK_B).lerp(BLK_C,(k-.3)/.7);
     m.opacity=Math.min(.96,k*8,(1-k)*2.2);},t=>t).then(()=>{scene.remove(sp);m.dispose();});
 }
+// กองไฟดำลุกค้างบนพื้นหลังวงไฟแผ่ออก: เปลวดำ (โคนอยู่ที่พื้น) + เปลวเรืองม่วงแดงจางๆ · ลุก ~2.8 วิ แล้วมอด
+function blackBurn(c,R,n,life){
+  const tex=typeof hyLavaTex==='function'?hyLavaTex().flame:FLAMETEX, L=[];
+  for(let i=0;i<n;i++){const a=i/n*6.283+Math.random()*.9, r=R*(.3+Math.random()*.6), px=c.x+Math.cos(a)*r, pz=c.z+Math.sin(a)*r, nf=3;
+    for(let j=0;j<=nf;j++){const gl=j===0, m=new THREE.SpriteMaterial({map:tex,color:gl?(Math.random()<.5?0x8a28d0:0xe02a48):0x0a0310,transparent:true,opacity:0,depthWrite:false,fog:false,blending:gl?THREE.AdditiveBlending:THREE.NormalBlending});
+      const sp=new THREE.Sprite(m), b=Math.random()*6.283, d=gl?0:Math.random()*R*.06; sp.center.set(.5,0); sp.position.set(px+Math.cos(b)*d,.03,pz+Math.sin(b)*d); sp.renderOrder=gl?4:5; scene.add(sp);
+      L.push({sp,m,h:R*(gl?.13:.26+Math.random()*.24),w:R*(gl?.17:.12+Math.random()*.07),ph:Math.random()*6.283,f:6+Math.random()*5,op:gl?.38:.96,dl:Math.random()*.12});}}
+  return tween(life,k=>{const T=performance.now()/1000;
+    L.forEach(o=>{const a=Math.max(0,Math.min(1,(k-o.dl)*life/.25))*(k<.65?1:Math.max(0,1-(k-.65)/.35)), fl=.75+.25*Math.sin(T*o.f+o.ph)+.12*Math.sin(T*o.f*2.3+o.ph*2);
+      o.sp.scale.set(o.w*(1.1-.2*fl),Math.max(.001,o.h*fl*a),1); o.m.opacity=a*o.op; o.m.rotation=Math.sin(T*3+o.ph)*.12;});},t=>t).then(()=>L.forEach(o=>{scene.remove(o.sp);o.m.dispose();}));
+}
 function blackFireRing(c,R,amt){
   const low=typeof LOW!=='undefined'&&LOW, cy=c.clone().setY(0);
   const m=new THREE.Mesh(BLKRING_GEO,new THREE.MeshBasicMaterial({map:BLKRING_TEX,transparent:true,opacity:.95,depthWrite:false,fog:false}));
@@ -272,6 +283,8 @@ function blackFireRing(c,R,amt){
       if(i%3===0&&typeof glow==='function'){const e=glow(scene,i%2?0xff2a4a:0x9a30ff,R*.16,[p.x,p.y,p.z],.85);e.material.depthTest=false;const p1=p.clone();tween(.45,k=>{e.position.copy(p1).addScaledVector(v,k*.3);e.material.opacity=.85*(1-k);}).then(()=>{scene.remove(e);e.material.dispose();});}
       darkFlame(p,v,.5+Math.random()*.3,R*(.2+Math.random()*.1));}
   },j*110/(typeof SPEED!=='undefined'?SPEED:1));
+  // ทิ้งกองไฟดำลุกไหม้ค้างไว้ครู่หนึ่ง
+  setTimeout(()=>blackBurn(cy,R,Math.max(2,Math.round((amt||1)*(low?3:6))),2.8),260/(typeof SPEED!=='undefined'?SPEED:1));
   // ประกายขอบเปลว ม่วง/แดง
   if(typeof particles==='function'){particles(cy.clone().setY(.25),0x8a3cd0,low?6:12,R*.8,.06,.3,.8);particles(cy.clone().setY(.25),0xff3a4a,low?5:10,R*.75,.06,.5,.9);}
 }
