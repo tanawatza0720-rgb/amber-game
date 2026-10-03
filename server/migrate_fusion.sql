@@ -2,7 +2,7 @@
 -- ตำนานป่าอัมพร : รวมร่าง (แทนปุ่ม "เปลี่ยนร่าง" เดิม · 2 ต.ค. 2026)
 --   ใช้มอนสเตอร์ 2 ตัวที่ "ระดับเดียวกัน + เลเวลเต็ม + ดาวเต็ม (6 ดาว)" รวมกันเป็นตัวใหม่ 1 ตัว (สุ่มสายพันธุ์ + ธาตุ · Lv 1 · 0 ดาว)
 --     ทั่วไป + ทั่วไป  → หายาก 100%
---     หายาก + หายาก → ตำนาน 90% · หายาก 10%
+--     หายาก + หายาก → ตำนาน 10% · หายาก 90%
 --   ทั้งสองตัวหายไป · ถ้าตัวใดอยู่ในทีม ตัวใหม่เข้าทีมแทนในช่องนั้น · ได้ตำนานแล้วขึ้นประกาศวิ่งเหมือนฟักไข่
 --   เปลี่ยนร่างแบบเดิม (evolve_monster) ปิดใช้งาน
 -- วิธีใช้: Supabase > SQL Editor > New query > วางทั้งหมดนี้ > Run  (รันซ้ำได้)
@@ -10,7 +10,7 @@
 
 -- โอกาสได้ระดับสูงขึ้น 1 ขั้น เมื่อรวมร่างตัวระดับ r (ที่เหลือ = ได้ระดับเดิม)
 create or replace function public._fuse_up(r int) returns float8 language sql immutable as $$
-  select case r when 1 then 1.0 when 2 then 0.9 end::float8 $$;
+  select case r when 1 then 1.0 when 2 then 0.1 end::float8 $$;
 
 create or replace function public.fuse_monsters(a bigint, b bigint) returns jsonb
 language plpgsql security definer set search_path = '' as $$

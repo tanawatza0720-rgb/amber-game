@@ -131,7 +131,7 @@ const LOCAL=(()=>{
       if(kind==='wild'&&D.coins<c)fail('not_enough_coins');if(kind==='gold'&&D.amber<c)fail('not_enough_amber');const list=[];for(let i=0;i<n;i++)list.push(F.hatch_egg({kind}));return{list};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:()=>fail('evolve_closed'),
-    fuse_monsters:({a,b})=>{if(a==null||b==null||a===b)fail('same_monster');const x=mon(a),y=mon(b),r=SPS[x.sp].rar,up={1:1,2:.9}[r];
+    fuse_monsters:({a,b})=>{if(a==null||b==null||a===b)fail('same_monster');const x=mon(a),y=mon(b),r=SPS[x.sp].rar,up={1:1,2:.1}[r];
       if(SPS[y.sp].rar!==r||up==null)fail('fuse_tier');if(x.lv<SPS[x.sp].max||y.lv<SPS[y.sp].max)fail('fuse_level');if((x.stars||0)<STAR_MAX||(y.stars||0)<STAR_MAX)fail('fuse_stars');
       const t=Math.random()<up?r+1:r,pool=Object.keys(SPS).filter(k=>SPS[k].rar===t),sp=pool[Math.floor(Math.random()*pool.length)];if(!sp)fail('fuse_tier');
       const w=EL_LIST.map(e=>e==='แสง'||e==='มืด'?.5:1);let q=Math.random()*w.reduce((p,c)=>p+c,0),ei=0;while(ei<w.length-1&&(q-=w[ei])>=0)ei++;

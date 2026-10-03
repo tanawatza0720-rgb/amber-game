@@ -1685,7 +1685,7 @@ const LOCAL=(()=>{
       if(kind==='wild'&&D.coins<c)fail('not_enough_coins');if(kind==='gold'&&D.amber<c)fail('not_enough_amber');const list=[];for(let i=0;i<n;i++)list.push(F.hatch_egg({kind}));return{list};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:()=>fail('evolve_closed'),
-    fuse_monsters:({a,b})=>{if(a==null||b==null||a===b)fail('same_monster');const x=mon(a),y=mon(b),r=SPS[x.sp].rar,up={1:1,2:.9}[r];
+    fuse_monsters:({a,b})=>{if(a==null||b==null||a===b)fail('same_monster');const x=mon(a),y=mon(b),r=SPS[x.sp].rar,up={1:1,2:.1}[r];
       if(SPS[y.sp].rar!==r||up==null)fail('fuse_tier');if(x.lv<SPS[x.sp].max||y.lv<SPS[y.sp].max)fail('fuse_level');if((x.stars||0)<STAR_MAX||(y.stars||0)<STAR_MAX)fail('fuse_stars');
       const t=Math.random()<up?r+1:r,pool=Object.keys(SPS).filter(k=>SPS[k].rar===t),sp=pool[Math.floor(Math.random()*pool.length)];if(!sp)fail('fuse_tier');
       const w=EL_LIST.map(e=>e==='แสง'||e==='มืด'?.5:1);let q=Math.random()*w.reduce((p,c)=>p+c,0),ei=0;while(ei<w.length-1&&(q-=w[ei])>=0)ei++;
@@ -4900,7 +4900,7 @@ const PATCHES=[
   {ver:'2026.10.02.1',date:'2 ต.ค. 2026',title:'รวมร่าง! 🔀',items:[
     '🔀 ปุ่ม "เปลี่ยนร่าง" เปลี่ยนเป็น "รวมร่าง": ใช้มอนสเตอร์ 2 ตัวที่ระดับเดียวกัน เลเวลเต็ม และดาวเต็ม (6 ดาว) รวมกันเป็นตัวใหม่แบบสุ่ม',
     '🟢 ทั่วไป + ทั่วไป → ได้ระดับหายาก 100%',
-    '🔵 หายาก + หายาก → ตำนาน 90% · หายาก 10%',
+    '🔵 หายาก + หายาก → หายาก 90% · ตำนาน 10%',
     '⚠️ ทั้งสองตัวจะหายไป ตัวใหม่เริ่มที่ Lv 1 · 0 ดาว สุ่มทั้งตัวละครและธาตุ · ถ้าตัวเดิมอยู่ในทีม ตัวใหม่เข้าทีมแทนให้',
     '📦 เปิดคลัง → เลือกตัวที่เลเวลเต็ม+ดาวเต็ม → กด "รวมร่าง" → เลือกคู่ → แตะยืนยัน 2 ครั้ง']},
   {ver:'2026.10.01.16',date:'1 ต.ค. 2026',title:'แท่นบูชาวิญญาณ 👻🔥',items:[
@@ -5309,7 +5309,7 @@ function starMats(m){const need=starCost((m.stars||0)+1);
   return {need,list:L.slice(0,need),have:L.length};}
 const canStar=m=>(m.stars||0)<STAR_MAX&&starMats(m).have>=starMats(m).need;
 // รวมร่าง: 2 ตัวระดับเดียวกัน (ทั่วไป/หายาก) ที่เลเวลเต็ม + ดาวเต็ม → ตัวใหม่แบบสุ่ม (server/migrate_fusion.sql)
-const FUSE_UP={1:1,2:.9};
+const FUSE_UP={1:1,2:.1};
 const canFuse=m=>FUSE_UP[spOf(m).rar]!=null&&m.lv>=spOf(m).maxLv&&(m.stars||0)>=STAR_MAX;
 const fuseMates=m=>S.mons.filter(x=>x.uid!==m.uid&&spOf(x).rar===spOf(m).rar);
 const fuseOdds=r=>FUSE_UP[r]>=1?'ได้ระดับ'+tierOf(r+1).n+' 100%':tierOf(r+1).n+' '+Math.round(FUSE_UP[r]*100)+'% · '+tierOf(r).n+' '+Math.round((1-FUSE_UP[r])*100)+'%';

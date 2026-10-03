@@ -158,7 +158,7 @@ function starMats(m){const need=starCost((m.stars||0)+1);
   return {need,list:L.slice(0,need),have:L.length};}
 const canStar=m=>(m.stars||0)<STAR_MAX&&starMats(m).have>=starMats(m).need;
 // รวมร่าง: 2 ตัวระดับเดียวกัน (ทั่วไป/หายาก) ที่เลเวลเต็ม + ดาวเต็ม → ตัวใหม่แบบสุ่ม (server/migrate_fusion.sql)
-const FUSE_UP={1:1,2:.9};
+const FUSE_UP={1:1,2:.1};
 const canFuse=m=>FUSE_UP[spOf(m).rar]!=null&&m.lv>=spOf(m).maxLv&&(m.stars||0)>=STAR_MAX;
 const fuseMates=m=>S.mons.filter(x=>x.uid!==m.uid&&spOf(x).rar===spOf(m).rar);
 const fuseOdds=r=>FUSE_UP[r]>=1?'ได้ระดับ'+tierOf(r+1).n+' 100%':tierOf(r+1).n+' '+Math.round(FUSE_UP[r]*100)+'% · '+tierOf(r).n+' '+Math.round((1-FUSE_UP[r])*100)+'%';

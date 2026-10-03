@@ -420,6 +420,6 @@ python3 build_battle.py && cp battle.html ../battle.html
 - ดีบัก `index.html?dbg=1`: `__F.altar(souls,lvBelow)` · `__F.altarFull()` · `__F.burst(n)` · `__F.cam(x,z,dist)`
 
 ## รวมร่าง (2 ต.ค. 2026, แทน "เปลี่ยนร่าง") — `server/migrate_fusion.sql` · `fuseOpen/renderFuse/fuseGo` ใน monbox.js
-- RPC `fuse_monsters(a, b)`: 2 ตัวของเรา ระดับเดียวกัน (rar 1 หรือ 2) + เลเวลเต็ม + 6 ดาว → ลบทั้งคู่ สร้างตัวใหม่ Lv1 0 ดาว สุ่มสายพันธุ์ในระดับ + ธาตุตาม el_rates · `_fuse_up(r)`: ทั่วไป → หายาก 100% · หายาก → ตำนาน 90% / หายาก 10% (เจ้าของกำหนด) · error: same_monster/no_monster/fuse_tier/fuse_level/fuse_stars
+- RPC `fuse_monsters(a, b)`: 2 ตัวของเรา ระดับเดียวกัน (rar 1 หรือ 2) + เลเวลเต็ม + 6 ดาว → ลบทั้งคู่ สร้างตัวใหม่ Lv1 0 ดาว สุ่มสายพันธุ์ในระดับ + ธาตุตาม el_rates · `_fuse_up(r)`: ทั่วไป → หายาก 100% · หายาก → ตำนาน 10% / หายาก 90% (เจ้าของยืนยัน 3 ต.ค. 2026) · error: same_monster/no_monster/fuse_tier/fuse_level/fuse_stars
 - ทีม: ตัวใหม่แทนช่องของตัวที่อยู่ในทีม · ได้ตำนาน → `_pull_log` (ประกาศวิ่ง) · `evolve_monster` บนเซิร์ฟเวอร์ raise `evolve_closed`
 - client: ปุ่ม `#mdEvo` = "รวมร่าง" เมื่อ rar ≤ 2 และดาวเต็ม (ปิดไว้ถ้าเลเวลยังไม่เต็ม) · ใช้หน้าต่าง `#evo` เดิมในโหมด `EVO.mode='fuse'` เลือกคู่ 1 ตัว แตะยืนยัน 2 ครั้ง · `FUSE_UP` ใน monbox.js ต้องตรงกับ `_fuse_up` · ออฟไลน์ `LOCAL.fuse_monsters`

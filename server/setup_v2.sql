@@ -3478,7 +3478,7 @@ grant execute on function public.altar_state(), public.soul_sacrifice(bigint[]),
 -- ===== รวมร่าง แทนเปลี่ยนร่าง (migrate_fusion.sql) =====
 -- โอกาสได้ระดับสูงขึ้น 1 ขั้น เมื่อรวมร่างตัวระดับ r (ที่เหลือ = ได้ระดับเดิม)
 create or replace function public._fuse_up(r int) returns float8 language sql immutable as $$
-  select case r when 1 then 1.0 when 2 then 0.9 end::float8 $$;
+  select case r when 1 then 1.0 when 2 then 0.1 end::float8 $$;
 
 create or replace function public.fuse_monsters(a bigint, b bigint) returns jsonb
 language plpgsql security definer set search_path = '' as $$
