@@ -245,6 +245,36 @@ function fireSprite(pos,vel,life,size,opts){
     m.color.copy(c);
   },t=>t).then(()=>{scene.remove(s);m.dispose();});
 }
+// วงไฟสีดำ: คลื่นเปลวดำขอบม่วงแดงกระจายออกรอบจุดกระแทก (แทน shockRing สีขาว/ส้มของมังกร — เจ้าของสั่ง 3 ต.ค. 2026)
+//   NormalBlending ทั้งหมด (สีดำใช้ additive ไม่ได้) · ไม่สร้างไฟ · texture/geometry ใช้ร่วม ลบแค่ material
+const BLKRING_TEX=canvasTex(256,(x,s)=>{const c=s/2,g=x.createRadialGradient(c,c,c*.5,c,c,c);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.25,'rgba(4,1,6,.8)');g.addColorStop(.7,'rgba(6,2,9,.97)');g.addColorStop(.86,'rgba(70,12,90,.9)');g.addColorStop(.93,'rgba(190,40,70,.5)');g.addColorStop(1,'rgba(190,40,70,0)');
+  x.fillStyle=g;x.fillRect(0,0,s,s);}); BLKRING_TEX.wrapS=BLKRING_TEX.wrapT=THREE.ClampToEdgeWrapping; BLKRING_TEX.encoding=THREE.sRGBEncoding;
+const BLKRING_GEO=new THREE.PlaneGeometry(1,1);
+const BLK_A=new THREE.Color(0x0d0414), BLK_B=new THREE.Color(0x040106), BLK_C=new THREE.Color(0x000000);
+function darkFlame(pos,vel,life,size){
+  const m=new THREE.SpriteMaterial({map:FLAMETEX,color:0x0d0414,transparent:true,opacity:0,depthWrite:false,depthTest:false,fog:false});
+  const sp=new THREE.Sprite(m); sp.position.copy(pos); sp.scale.setScalar(size*.5); scene.add(sp); const p0=pos.clone(), rot=(Math.random()-.5)*2;
+  return tween(life,k=>{sp.position.copy(p0).addScaledVector(vel,k*life*(1-.35*k)); const sc=size*(.5+k*2.1); sp.scale.set(sc*.75,sc*1.45,1); m.rotation+=rot*.02;
+    if(k<.25)m.color.copy(BLK_A).lerp(BLK_B,k/.25);else m.color.copy(BLK_B).lerp(BLK_C,(k-.3)/.7);
+    m.opacity=Math.min(.96,k*8,(1-k)*2.2);},t=>t).then(()=>{scene.remove(sp);m.dispose();});
+}
+function blackFireRing(c,R,amt){
+  const low=typeof LOW!=='undefined'&&LOW, cy=c.clone().setY(0);
+  const m=new THREE.Mesh(BLKRING_GEO,new THREE.MeshBasicMaterial({map:BLKRING_TEX,transparent:true,opacity:.95,depthWrite:false,fog:false}));
+  m.rotation.x=-Math.PI/2; m.position.copy(cy).setY(.06); m.scale.setScalar(R*.3); scene.add(m);
+  tween(.8,k=>{m.scale.setScalar(R*2*(.15+.85*k));m.material.opacity=.95*(1-k*k);},easeOut).then(()=>{scene.remove(m);m.material.dispose();});
+  // เปลวดำ 3 ระลอก ไล่ออกจากจุดกระแทก
+  const n=Math.max(6,Math.round((amt||1)*(low?10:22))), off=Math.random()*6.283;
+  for(let j=0;j<3;j++)setTimeout(()=>{const rj=R*(.22+.26*j);
+    for(let i=0;i<n;i++){const a=off+i/n*6.283+j*.35+(Math.random()-.5)*.25, dx=Math.cos(a), dz=Math.sin(a);
+      const p=new THREE.Vector3(cy.x+dx*rj,.3+Math.random()*.25,cy.z+dz*rj), v=new THREE.Vector3(dx*R*.75,1.3+Math.random()*1.6,dz*R*.75);
+      if(i%3===0&&typeof glow==='function'){const e=glow(scene,i%2?0xff2a4a:0x9a30ff,R*.16,[p.x,p.y,p.z],.85);e.material.depthTest=false;const p1=p.clone();tween(.45,k=>{e.position.copy(p1).addScaledVector(v,k*.3);e.material.opacity=.85*(1-k);}).then(()=>{scene.remove(e);e.material.dispose();});}
+      darkFlame(p,v,.5+Math.random()*.3,R*(.2+Math.random()*.1));}
+  },j*110/(typeof SPEED!=='undefined'?SPEED:1));
+  // ประกายขอบเปลว ม่วง/แดง
+  if(typeof particles==='function'){particles(cy.clone().setY(.25),0x8a3cd0,low?6:12,R*.8,.06,.3,.8);particles(cy.clone().setY(.25),0xff3a4a,low?5:10,R*.75,.06,.5,.9);}
+}
 // ไฟแบบยืมจากคลัง: จำนวนดวงไฟในฉากคงที่เสมอ (เพิ่ม/ลบดวงไฟทำให้เครื่องต้องคอมไพล์ shader ใหม่ทั้งฉาก = กระตุก)
 const LPOOL=[0,1].map(()=>{const l=new THREE.PointLight(0xff8a3a,0,9,2);l.userData.busy=0;scene.add(l);return l;});
 function takeLight(col,dist){const l=LPOOL.find(x=>!x.userData.busy)||LPOOL.reduce((a,b)=>a.userData.busy<b.userData.busy?a:b);l.userData.busy=performance.now();l.color.set(col);l.distance=dist;return l;}
@@ -339,7 +369,7 @@ async function dragonDive(u,c,foes,onHit){firePal(u);
   // กระแทก
   dragonSet(u,{fold:0,lunge:.3,spread:1,flapAmp:1,flapSpd:1.4,breath:.4},.12);
   hitStop(); shake=.35;
-  shockRing(c,0xffc070); setTimeout(()=>shockRing(c,0xff5a20),90/SPEED);
+  blackFireRing(c,4.6*u.w.scale.x,1.3);
   fireLight(c.clone().setY(1.2),9,.9); scorch(c,2.2);
   for(let i=0;i<55;i++){const a=Math.random()*Math.PI*2,r=Math.random();fireSprite(c.clone().setY(.3),new THREE.Vector3(Math.cos(a)*(2+r*4),1.5+Math.random()*4,Math.sin(a)*(2+r*4)),.8,.7+Math.random()*.4,{grav:-2.5,grow:3});}
   for(let i=0;i<14;i++)fireSprite(c.clone().setY(.2),new THREE.Vector3((Math.random()-.5)*.8,3+Math.random()*3,(Math.random()-.5)*.8),.7,.9,{grav:-1,grow:2.4});
@@ -353,7 +383,7 @@ function dragonReact(u){dragonSet(u,{recoil:1,spread:.6,jaw:.5,flapSpd:2},.06);s
 /* ---------- คำราม: ยืดตัว กางปีกเต็ม อ้าปาก สั่นหัว ---------- */
 async function dragonRoar(u,dur){firePal(u);
   dragonSet(u,{rear:.8,spread:1,roar:1,flapAmp:.3,flapSpd:.7,rise:.25},.25); await wait(200);
-  const mo=dragonMouth(u); shockRing(u.w.position.clone().setY(.05),0xffb050); shake=Math.max(shake,.15);
+  const mo=dragonMouth(u); blackFireRing(u.w.position,2.6*u.w.scale.x,.7); shake=Math.max(shake,.15);
   for(let i=0;i<12;i++)fireSprite(mo,new THREE.Vector3((Math.random()-.5)*1.6,Math.random()*1.4,(Math.random()-.5)*1.6),.45,.25,{grav:0,grow:2});
   fireLight(mo,4,.5);
   await wait(dur||800);
@@ -403,7 +433,7 @@ async function dragonTail(u,t,onHit){firePal(u);
   dragonSet(u,{tailWhip:1},.12);
   let hit=false;
   await tween(.6,k=>{u.w.rotation.y=y0+k*Math.PI*2;
-    if(!hit&&k>.42){hit=true;onHit();const c=t.w.position.clone().setY(.05);shockRing(c,0xffe0a0);shake=Math.max(shake,.22);particles(tmpV.copy(c).setY(.2),0xb8a888,18,2,.3,-.2,.5);hitArc(tmpV.copy(c).setY(1),0,0xffd090,1.6);}},easeIO);
+    if(!hit&&k>.42){hit=true;onHit();const c=t.w.position.clone().setY(.05);blackFireRing(c,2.2*u.w.scale.x,.6);shake=Math.max(shake,.22);particles(tmpV.copy(c).setY(.2),0xb8a888,18,2,.3,-.2,.5);hitArc(tmpV.copy(c).setY(1),0,0xffd090,1.6);}},easeIO);
   u.w.rotation.y=y0; dragonSet(u,{tailWhip:0,rise:0,spread:0,flapSpd:1,flapAmp:.55,alt:altT},.45); await wait(260);
 }
 async function dragonDie(u){
@@ -461,7 +491,7 @@ async function dragonGust(u,foes,hitOne){firePal(u);
     dragonSet(u,{flapAmp:1.3,flapSpd:2.4,rear:.5+b*.15,spread:.6,jaw:.5+b*.2},.07);
     await tween(.12,k=>u.w.position.copy(home).addScaledVector(dir,-.25*K*k));
     const g=home.clone().addScaledVector(dir,2.5*K).setY(.05);
-    shockRing(g,0xe8dcc0); particles(tmpV.copy(g).setY(.15),0xc8b898,(typeof LOW!=='undefined'&&LOW)?10:22,2.8,.4,-.2,.55);
+    blackFireRing(g,(2.2+b*.5)*K,.6); particles(tmpV.copy(g).setY(.15),0xc8b898,(typeof LOW!=='undefined'&&LOW)?10:22,2.8,.4,-.2,.55);
     for(let i=0;i<((typeof LOW!=='undefined'&&LOW)?4:9);i++){const a=(Math.random()-.5)*1.4, v=dir.clone().applyAxisAngle(new THREE.Vector3(0,1,0),a).multiplyScalar(7+Math.random()*5);v.y=.4+Math.random();
       fireSprite(home.clone().addScaledVector(dir,1.2*K).setY(.5+Math.random()),v,.7,.7,{smoke:true,grav:.2,grow:2.6});}
     shake=Math.max(shake,.1+b*.05);

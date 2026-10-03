@@ -123,7 +123,7 @@ function fxLeapTele(u,c){if(!fxOn(u))return;const [c1]=fxCol(u),K=fxK(u);fxRune(
 function fxLeapLand(u,c){
   if(!fxOn(u))return; const [c1,c2]=fxCol(u),K=fxK(u),T=fxTier(u),el=u.el, cy=c.clone().setY(0);
   shake=Math.max(shake,.22+.06*T); if(u.side==='P'||u.boss)fxScreen(c1,.45+.15*T);
-  fxRing(cy,c2,1.6*K,.55); setTimeout(()=>fxRing(cy,c1,2.3*K,.7),90/SPEED);
+  if(!u.dragon){fxRing(cy,c2,1.6*K,.55); setTimeout(()=>fxRing(cy,c1,2.3*K,.7),90/SPEED);}   // มังกรใช้วงไฟดำของตัวเอง (blackFireRing ใน dragon.js)
   const cr=new THREE.Mesh(fxPlane(),new THREE.MeshBasicMaterial({color:c1,map:fxCrackTex(),transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
   cr.rotation.x=-Math.PI/2;cr.rotation.z=Math.random()*6;cr.position.copy(cy).setY(.05);cr.scale.setScalar(3.4*K);fxAdd(cr);
   tween(1.3,k=>{cr.material.opacity=.95*(1-k*k);}).then(()=>fxKill(cr));
