@@ -4,6 +4,14 @@
 var EXP={st:null,at:0,zone:null,sel:[],confirm:false,view:'list',busy:false};
 const EXP_ICON={meadow:'🌾',crystal:'💎',ashen:'🌋',skyruin:'🏛️'};
 const expRisk=(z,party,one,avg)=>Math.min(.6,Math.max(.01,z.risk*Math.pow(z.rec/Math.max(party,1),1.3)*Math.pow(avg/Math.max(one,1),.3)));
+// กติกา v2 (server/migrate_expedition2.sql): โอกาสสำเร็จของทั้งทีม + โอกาสตายรายตัวไล่ตามระดับ · ค่ากติกามาจากเซิร์ฟเวอร์ (EXP.st.rule)
+const expRule=()=>EXP.st&&EXP.st.rule&&EXP.st.rule.v>=2?EXP.st.rule:null;
+const clampN=(v,a,b)=>Math.min(b,Math.max(a,v));
+const expWin=(z,party)=>{const r=expRule();return r?clampN(r.win_k*Math.pow(Math.max(party,1)/z.rec,r.win_pow),r.win_min,r.win_max):1;};
+const expDie=(z,party,one,avg,rar,failed)=>{const r=expRule();if(!r)return expRisk(z,party,one,avg);const t=clampN(rar||1,1,4);
+  return clampN(z.die*r.tier[t]*clampN(z.rec/Math.max(party,1),r.team_min,r.team_max)*clampN(Math.pow(avg/Math.max(one,1),r.self_pow),r.self_min,r.self_max)*(failed?r.fail_k:1),r.floor[t],r.cap[t]);};
+// โอกาสไม่กลับมาโดยรวมของ 1 ตัว (รวมกรณีสำเร็จและล้มเหลว)
+const expLoss=(z,P,m,avg)=>{const w=expWin(z,P),o=expPow(m),t=spOf(m).rar;return w*expDie(z,P,o,avg,t,false)+(1-w)*expDie(z,P,o,avg,t,true);};
 const expPow=m=>{const s=EXP.st;return s&&s.mpow&&s.mpow[m.uid]!=null?s.mpow[m.uid]:power(m);};
 const fmtDur=sec=>{sec=Math.max(0,Math.round(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return h?h+' ชม. '+m+' นาที':m?m+' นาที '+s+' วิ':s+' วินาที';};
 async function loadExp(force){
@@ -33,11 +41,12 @@ function soulRow(){const s=EXP.st,r=el('div','exSoul');
   r.append(b);return r;}
 function renderExpList(){
   const s=EXP.st,d=el('div','exp');
-  d.append(para('ส่งมอนสเตอร์ที่ไม่อยู่ในทีม (สูงสุด 6 ตัว) ออกไปสำรวจ ได้เหรียญ อัมพร และเลเวลเมื่อกลับมา · ยิ่งพื้นที่ยาก ยิ่งเสี่ยงที่บางตัวจะไม่กลับมา'));
+  d.append(para(expRule()?'ส่งมอนสเตอร์ที่ไม่อยู่ในทีม (สูงสุด 6 ตัว) ออกไปสำรวจ · โอกาสสำเร็จขึ้นกับพลังทีมเทียบกับพลังแนะนำของพื้นที่ · สำเร็จได้เหรียญ อัมพร และเลเวล · ล้มเหลวไม่ได้รางวัลและเสี่ยงไม่กลับมามากขึ้น · ตัวระดับต่ำเสี่ยงสูงกว่าตัวระดับสูงมาก':'ส่งมอนสเตอร์ที่ไม่อยู่ในทีม (สูงสุด 6 ตัว) ออกไปสำรวจ ได้เหรียญ อัมพร และเลเวลเมื่อกลับมา · ยิ่งพื้นที่ยาก ยิ่งเสี่ยงที่บางตัวจะไม่กลับมา'));
   s.zones.forEach(z=>{const c=el('button','exZone');
     c.append(el('span','exIc',EXP_ICON[z.id]||'🧭'));
     const t=el('div');t.append(el('b',null,z.name));t.append(el('small',null,'พลังแนะนำ '+fmt(z.rec)+' · '+fmtDur(z.min*60)));
-    t.append(el('small','exRw','🪙 '+fmt(z.coins)+' · 🔶 '+z.amber+' · เลเวล +'+z.lv+' · เสี่ยงพื้นฐาน '+Math.round(z.risk*100)+'%'));c.append(t);
+    t.append(el('small','exRw','🪙 '+fmt(z.coins)+' · 🔶 '+z.amber+' · เลเวล +'+z.lv+(expRule()?'':' · เสี่ยงพื้นฐาน '+Math.round(z.risk*100)+'%')));
+    if(expRule())t.append(el('small','exRw','เสี่ยงไม่กลับ (พลังพอดี): '+[1,2,3,4].map(k=>tierOf(k).n+' '+Math.round(expDie(z,z.rec,1,1,k,false)*100)+'%').join(' · ')));c.append(t);
     c.onclick=()=>{EXP.zone=z.id;EXP.sel=[];EXP.confirm=false;EXP.view='pick';renderExpPick();};d.append(c);});
   d.append(soulRow());
   openSheet('ส่งสำรวจ','เลือกพื้นที่',d,[]);
@@ -51,13 +60,14 @@ function renderExpPick(){
   const hd=el('div','exHead');hd.append(el('span','exIc',EXP_ICON[z.id]||'🧭'));const t=el('div');t.append(el('b',null,z.name));t.append(el('small',null,'พลังแนะนำ '+fmt(z.rec)+' · '+fmtDur(z.min*60)));hd.append(t);d.append(hd);
   // ทีมสำรวจ 6 ช่อง
   const slots=el('div','exSlots');
-  for(let i=0;i<6;i++){const m=party[i];if(m){const c=icon(m);const r=expRisk(z,P,expPow(m),avg);c.append(el('span','exRisk'+(r>.15?' hi':r>.06?' mid':''),Math.round(r*100)+'%'));c.onclick=()=>{EXP.sel=EXP.sel.filter(u=>u!==m.uid);EXP.confirm=false;renderExpPick();};slots.append(c);}
+  for(let i=0;i<6;i++){const m=party[i];if(m){const c=icon(m);const r=expLoss(z,P,m,avg);c.append(el('span','exRisk'+(r>.3?' hi':r>.1?' mid':''),Math.round(r*100)+'%'));c.onclick=()=>{EXP.sel=EXP.sel.filter(u=>u!==m.uid);EXP.confirm=false;renderExpPick();};slots.append(c);}
     else slots.append(el('div','exEmpty','+'));}
   d.append(slots);
-  const all=party.reduce((a,m)=>a*(1-expRisk(z,P,expPow(m),avg)),1);
+  const win=expWin(z,P), allIf=f=>party.reduce((a,m)=>a*(1-expDie(z,P,expPow(m),avg,spOf(m).rar,f)),1), all=win*allIf(false)+(1-win)*allIf(true);
   const pw=el('div','exPow');pw.append(el('span',null,'พลังทีมสำรวจ '));const pb=el('b',null,fmt(P));pb.style.color=P>=z.rec?'#8ff0c4':'#ffb36a';pw.append(pb);
   pw.append(el('span',null,party.length?' · โอกาสกลับครบ '+Math.round(all*100)+'%':''));d.append(pw);
-  if(party.length&&P<z.rec)d.append(el('p','exWarn','พลังต่ำกว่าที่แนะนำ ความเสี่ยงจะสูงขึ้นมาก'));
+  if(party.length&&expRule()){const w=el('div','exPow');w.append(el('span',null,'โอกาสสำรวจสำเร็จ '));const b=el('b',null,Math.round(win*100)+'%');b.style.color=win>=.7?'#8ff0c4':win>=.4?'#ffd34d':'#ff8a7a';w.append(b);w.append(el('span',null,' · ล้มเหลว = ไม่ได้รางวัล'));d.append(w);}
+  if(party.length&&P<z.rec)d.append(el('p','exWarn',expRule()?'พลังต่ำกว่าที่แนะนำ โอกาสสำเร็จลดลงและเสี่ยงไม่กลับมามากขึ้น':'พลังต่ำกว่าที่แนะนำ ความเสี่ยงจะสูงขึ้นมาก'));
   // ตัวเลือก (ไม่อยู่ในทีม)
   const L=el('div','exList'),cands=[...S.mons].sort((a,b)=>expPow(b)-expPow(a));
   cands.forEach(m=>{const c=icon(m),inT=S.team.includes(m.uid),on=EXP.sel.includes(m.uid);if(on)c.classList.add('on');if(inT)c.classList.add('no');
@@ -80,7 +90,7 @@ function expActiveTick(){const a=EXP.st.active,left=expLeft(),tot=(new Date(a.en
   const go=[...$('#shActs').children].find(b=>b.dataset.claim);if(go)go.disabled=left>0;}
 function renderExpActive(){
   const s=EXP.st,a=s.active,z=s.zones.find(x=>x.id===a.zone)||{name:a.zone},d=el('div','exp');
-  const hd=el('div','exHead');hd.append(el('span','exIc',EXP_ICON[a.zone]||'🧭'));const t=el('div');t.append(el('b',null,z.name));t.append(el('small',null,'พลังทีมสำรวจ '+fmt(a.power)));hd.append(t);d.append(hd);
+  const hd=el('div','exHead');hd.append(el('span','exIc',EXP_ICON[a.zone]||'🧭'));const t=el('div');t.append(el('b',null,z.name));t.append(el('small',null,'พลังทีมสำรวจ '+fmt(a.power)+(a.win!=null?' · โอกาสสำเร็จ '+Math.round(a.win*100)+'%':'')));hd.append(t);d.append(hd);
   const pr=el('div','exProg');const i=el('i');i.id='exBar';pr.append(i);d.append(pr);d.append(el('div','exLeft'));d.lastChild.id='exLeft';
   const slots=el('div','exSlots');a.mons.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.classList.add('away');slots.append(c);});d.append(slots);
   d.append(para('ระหว่างสำรวจ มอนสเตอร์ที่ส่งไปจะไม่อยู่ในคลัง · เรียกกลับก่อนเวลาได้ ทุกตัวกลับมาครบแต่ไม่ได้รางวัล'));
@@ -96,7 +106,8 @@ function renderExpActive(){
 function renderExpResult(res){
   const z=EXP.st.zones.find(x=>x.id===res.zone)||{name:res.zone},d=el('div','exp');
   const dead=res.dead||[],alive=res.alive||[];
-  d.append(el('h4',null,dead.length?'กลับมา '+alive.length+' จาก '+(alive.length+dead.length)+' ตัว':'กลับมาครบทุกตัว! 🎉'));
+  if(res.ok!=null)d.append(el('h4',res.ok?'exOk':'exDeadH',res.ok?'สำรวจสำเร็จ! 🎉':'สำรวจล้มเหลว 💀 ไม่ได้รางวัล'));
+  d.append(el('h4',null,dead.length?'กลับมา '+alive.length+' จาก '+(alive.length+dead.length)+' ตัว':'กลับมาครบทุกตัว!'+(res.ok===false?'':' 🎉')));
   const ok=el('div','exSlots');alive.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv_new,stars:m.stars||0,el:m.el||null});if(m.lv_new>m.lv)c.append(el('span','exUp','+'+(m.lv_new-m.lv)));ok.append(c);});d.append(ok);
   if(dead.length){d.append(el('h4','exDeadH','ไม่ได้กลับมา'));const ds=el('div','exSlots');dead.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.classList.add('dead');c.append(el('span','exSoulB','👻'+m.souls));ds.append(c);});d.append(ds);
     d.append(para(dead.map(m=>spOf(m).name).join(', ')+' หลงหายใน'+z.name+' · ได้รับวิญญาณ '+res.souls));}
@@ -104,3 +115,7 @@ function renderExpResult(res){
   openSheet('ผลการสำรวจ',z.name,d,[['ส่งสำรวจอีกครั้ง',()=>{EXP.view='list';openExp();},'main']]);
 }
 $('#rExp').onclick=()=>openExp();
+
+// ดีบัก: index.html?dbg=1 → __F.exp(ข้อมูลแบบ exp_state, zone, จำนวนตัวที่เลือก) เปิดหน้าเลือกทีมสำรวจด้วยข้อมูลจำลอง · __F.expRes(result)
+if(window.__F)Object.assign(window.__F,{exp:(st,zone,n)=>{EXP.st=st;EXP.at=Date.now();if(!zone)return renderExpList();EXP.zone=zone;EXP.sel=S.mons.filter(m=>!S.team.includes(m.uid)).slice(0,n||6).map(m=>m.uid);renderExpPick();return EXP.sel.length;},
+  expRes:(st,res)=>{EXP.st=st;renderExpResult(res);},expCalc:(st,z,P,one,avg,rar)=>{EXP.st=st;const zz=st.zones.find(x=>x.id===z);return [expWin(zz,P),expDie(zz,P,one,avg,rar,false),expDie(zz,P,one,avg,rar,true)];}});
