@@ -259,16 +259,24 @@ function darkFlame(pos,vel,life,size){
     if(k<.25)m.color.copy(BLK_A).lerp(BLK_B,k/.25);else m.color.copy(BLK_B).lerp(BLK_C,(k-.3)/.7);
     m.opacity=Math.min(.96,k*8,(1-k)*2.2);},t=>t).then(()=>{scene.remove(sp);m.dispose();});
 }
-// กองไฟดำลุกค้างบนพื้นหลังวงไฟแผ่ออก: เปลวดำ (โคนอยู่ที่พื้น) + เปลวเรืองม่วงแดงจางๆ · ลุก ~2.8 วิ แล้วมอด
+// กองไฟดำลุกค้างบนพื้นหลังวงไฟแผ่ออก: หน้าตาเดียวกับไฟค้างหลังพ่นไฟของไฮดรา (firePatch) แต่เปลว 2 ชั้น = เปลวม่วงขอบแดง + แกนดำทับ → เปลวดำขอบเรือง
+//   ต่อกอง: รอยไหม้ + เปลว 3–5 คู่ พริ้วด้วยจังหวะเดียวกัน · ประกายลอยขึ้น · ลุก ~3.4 วิ แล้วมอด · tween เดียวคุมทั้งหมด
 function blackBurn(c,R,n,life){
-  const tex=typeof hyLavaTex==='function'?hyLavaTex().flame:FLAMETEX, L=[];
-  for(let i=0;i<n;i++){const a=i/n*6.283+Math.random()*.9, r=R*(.3+Math.random()*.6), px=c.x+Math.cos(a)*r, pz=c.z+Math.sin(a)*r, nf=3;
-    for(let j=0;j<=nf;j++){const gl=j===0, m=new THREE.SpriteMaterial({map:tex,color:gl?(Math.random()<.5?0x8a28d0:0xe02a48):0x0a0310,transparent:true,opacity:0,depthWrite:false,fog:false,blending:gl?THREE.AdditiveBlending:THREE.NormalBlending});
-      const sp=new THREE.Sprite(m), b=Math.random()*6.283, d=gl?0:Math.random()*R*.06; sp.center.set(.5,0); sp.position.set(px+Math.cos(b)*d,.03,pz+Math.sin(b)*d); sp.renderOrder=gl?4:5; scene.add(sp);
-      L.push({sp,m,h:R*(gl?.13:.26+Math.random()*.24),w:R*(gl?.17:.12+Math.random()*.07),ph:Math.random()*6.283,f:6+Math.random()*5,op:gl?.38:.96,dl:Math.random()*.12});}}
-  return tween(life,k=>{const T=performance.now()/1000;
-    L.forEach(o=>{const a=Math.max(0,Math.min(1,(k-o.dl)*life/.25))*(k<.65?1:Math.max(0,1-(k-.65)/.35)), fl=.75+.25*Math.sin(T*o.f+o.ph)+.12*Math.sin(T*o.f*2.3+o.ph*2);
-      o.sp.scale.set(o.w*(1.1-.2*fl),Math.max(.001,o.h*fl*a),1); o.m.opacity=a*o.op; o.m.rotation=Math.sin(T*3+o.ph)*.12;});},t=>t).then(()=>L.forEach(o=>{scene.remove(o.sp);o.m.dispose();}));
+  const tex=typeof hyLavaTex==='function'?hyLavaTex().flameW:FLAMETEX, low=typeof LOW!=='undefined'&&LOW, L=[], SC=[], P=[];
+  for(let i=0;i<n;i++){const a=i/n*6.283+Math.random()*.9, r=R*(.3+Math.random()*.6), px=c.x+Math.cos(a)*r, pz=c.z+Math.sin(a)*r, dl=Math.random()*.1, k0=.8+Math.random()*.5;
+    const sc=new THREE.Mesh(BLKRING_GEO,new THREE.MeshBasicMaterial({map:BLOBTEX,color:0x08040a,transparent:true,opacity:0,depthWrite:false}));sc.rotation.x=-Math.PI/2;sc.position.set(px,.035,pz);sc.scale.setScalar(R*.34*k0);scene.add(sc);SC.push({m:sc,dl});P.push([px,pz]);
+    for(let j=0;j<(low?3:5);j++){const b=Math.random()*6.283, d=Math.random()*R*.085*k0, h=R*(.2+Math.random()*.2)*k0, w=R*(.1+Math.random()*.06)*k0, ph=Math.random()*6.283, f=6+Math.random()*5;
+      [[j%2?0x7a22e0:0xc02a78,1,1,.9,4],[0x030005,.6,.72,1,5]].forEach(([col,kw,kh,op,ro])=>{const m=new THREE.SpriteMaterial({map:tex,color:col,transparent:true,opacity:0,depthWrite:false,fog:false});
+        const sp=new THREE.Sprite(m); sp.center.set(.5,0); sp.position.set(px+Math.cos(b)*d,.03,pz+Math.sin(b)*d); sp.renderOrder=ro; scene.add(sp); L.push({sp,m,h:h*kh,w:w*kw,ph,f,op,dl});});}}
+  let last=0;
+  return tween(life,k=>{const T=performance.now()/1000, env=q=>Math.max(0,Math.min(1,(k-q)*life/.25))*(k<.7?1:Math.max(0,1-(k-.7)/.3));
+    L.forEach(o=>{const a=env(o.dl), fl=.75+.25*Math.sin(T*o.f+o.ph)+.12*Math.sin(T*o.f*2.3+o.ph*2);
+      o.sp.scale.set(o.w*(1.1-.2*fl),Math.max(.001,o.h*fl*a),1); o.m.opacity=a*o.op; o.m.rotation=Math.sin(T*3+o.ph)*.12;});
+    SC.forEach(o=>{o.m.material.opacity=.7*Math.max(0,Math.min(1,(k-o.dl)*life/.3))*(k<.85?1:Math.max(0,1-(k-.85)/.15));});
+    // ประกายม่วง/แดงลอยขึ้นจากกองไฟเป็นระยะ
+    if(k<.75&&k-last>.06&&typeof glow==='function'){last=k;const q=P[Math.floor(Math.random()*P.length)],e=glow(scene,Math.random()<.5?0xb04cff:0xff3a5a,R*.05,[q[0]+(Math.random()-.5)*R*.12,.2,q[1]+(Math.random()-.5)*R*.12],.9),y0=.2,vy=R*(.35+Math.random()*.3);
+      tween(.9,t=>{e.position.y=y0+vy*t;e.material.opacity=.9*(1-t);}).then(()=>{scene.remove(e);e.material.dispose();});}
+  },t=>t).then(()=>{L.forEach(o=>{scene.remove(o.sp);o.m.dispose();});SC.forEach(o=>{scene.remove(o.m);o.m.material.dispose();});});
 }
 function blackFireRing(c,R,amt){
   const low=typeof LOW!=='undefined'&&LOW, cy=c.clone().setY(0);
@@ -284,7 +292,7 @@ function blackFireRing(c,R,amt){
       darkFlame(p,v,.5+Math.random()*.3,R*(.2+Math.random()*.1));}
   },j*110/(typeof SPEED!=='undefined'?SPEED:1));
   // ทิ้งกองไฟดำลุกไหม้ค้างไว้ครู่หนึ่ง
-  setTimeout(()=>blackBurn(cy,R,Math.max(2,Math.round((amt||1)*(low?3:6))),2.8),260/(typeof SPEED!=='undefined'?SPEED:1));
+  setTimeout(()=>blackBurn(cy,R,Math.max(2,Math.round((amt||1)*(low?3:5))),3.4),260/(typeof SPEED!=='undefined'?SPEED:1));
   // ประกายขอบเปลว ม่วง/แดง
   if(typeof particles==='function'){particles(cy.clone().setY(.25),0x8a3cd0,low?6:12,R*.8,.06,.3,.8);particles(cy.clone().setY(.25),0xff3a4a,low?5:10,R*.75,.06,.5,.9);}
 }
