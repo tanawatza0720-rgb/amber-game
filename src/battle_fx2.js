@@ -89,7 +89,7 @@ function fxImpact(pos,u,opt){
     s.material.rotation=a; s.scale.set(.16*K,L,1);
     const off=new THREE.Vector3(-Math.sin(a),Math.cos(a),0);
     tween(.26+Math.random()*.1,k=>{s.position.copy(pos).addScaledVector(off,k*L*.6);s.scale.y=L*(1-k*.6);s.material.opacity=(1-k)*FX_BRIGHT;},easeOut).then(()=>fxKill(s));}
-  if(!opt.noRing)fxRing(pos,c1,.9*K,.45);
+  if(!opt.noRing&&!(u&&u.dragon))fxRing(pos,c1,.9*K,.45);   // มังกรไม่ใช้วงสว่าง (เจ้าของขอวงไฟดำ)
 }
 // วงคลื่นที่พื้น
 function fxRing(pos,color,size,dur,map){const m=new THREE.Mesh(fxPlane(),fxBasic(color,.95,map||fxRingTex()));m.rotation.x=-Math.PI/2;m.position.copy(pos).setY(.06);fxAdd(m);
@@ -111,7 +111,7 @@ function fxPillar(pos,c1,c2,r,h,dur){
 /* ---------- ไม้ตาย: แฟลชจอ + ระเบิดพลังรอบตัวก่อนออกท่า ---------- */
 function fxUltStart(u){
   if(!fxOn(u))return; const [c1,c2]=fxCol(u),K=fxK(u),p=u.w.position.clone();
-  fxRune(p,c1,2.2*K,.9,2.4); fxRing(p,c2,1.1*K,.5);
+  fxRune(p,c1,2.2*K,.9,2.4); if(!u.dragon)fxRing(p,c2,1.1*K,.5);
   const n=fxN(14);for(let i=0;i<n;i++){const a=i/n*6.283,s=fxSprite(i%2?c1:c2,.22*K,p.clone().add(new THREE.Vector3(Math.cos(a)*.9*K,.1,Math.sin(a)*.9*K)),1);
     tween(.7,k=>{const r=.9*K*(1-k*.8);s.position.set(p.x+Math.cos(a+k*3)*r,.1+k*2.2*K,p.z+Math.sin(a+k*3)*r);s.material.opacity=(1-k*k)*FX_BRIGHT;}).then(()=>fxKill(s));}
   if(u.side==='P'||u.boss)fxScreen(c1,fxTier(u)>=4?1:.7);
