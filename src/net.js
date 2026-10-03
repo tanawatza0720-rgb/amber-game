@@ -10,9 +10,11 @@ const NET={mode:'offline',sb:null,user:null,busy:false};
 const ERR={arena_refresh_limit:'วันนี้สุ่มเป้าใหม่ครบแล้ว',arena_limit:'วันนี้บุกครบ 5 ครั้งแล้ว',arena_offer:'เป้าหมายหมดอายุ ลองเปิดใหม่',bag_max:'ขยายกระเป๋าได้สูงสุดแล้ว',pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',fuse_tier:'รวมร่างได้เฉพาะระดับทั่วไปหรือหายาก และต้องระดับเดียวกัน',fuse_level:'ทั้งสองตัวต้องเลเวลเต็ม',fuse_stars:'ทั้งสองตัวต้องดาวเต็ม 6 ดาว',evolve_closed:'เปลี่ยนร่างถูกแทนด้วยรวมร่างแล้ว',altar_count:'เลือกได้ครั้งละ 1–200 ตัว',altar_team:'ตัวในทีมสังเวยไม่ได้',altar_bad:'สังเวยได้เฉพาะตัวระดับทั่วไปที่ไม่มีดาว',bad_item:'ไม่มีสินค้านี้',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
-  not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
+  not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',not_ready:'ระบบนี้ยังไม่เปิดบนเซิร์ฟเวอร์ รอผู้ดูแลอัปเดตสักครู่',server:'เซิร์ฟเวอร์แจ้งข้อผิดพลาด ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
 const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
-function errCode(e){const m=(e&&(e.message||e.msg||e.error_description))||'';const k=Object.keys(ERR).find(k=>m.includes(k));return k||'network';}
+function errCode(e){const m=(e&&(e.message||e.msg||e.error_description))||'';const k=Object.keys(ERR).find(k=>m.includes(k));
+  // ไม่ใช่ปัญหาเน็ต: เซิร์ฟเวอร์ตอบกลับมาแล้ว แต่ยังไม่มีฟังก์ชันนี้ (ยังไม่ได้รัน migrate) หรือมีข้อผิดพลาดอื่น
+  return k||(e&&e.code==='PGRST202'||/could not find the function|function .* does not exist/i.test(m)?'not_ready':'server');}
 const isAuthErr=e=>e&&(/jwt|token|expired|401|not_authenticated/i.test(String(e.message||''))||e.status===401||e.code==='PGRST301');
 async function rpcOnce(fn,args){
   let r; try{r=await withTimeout(NET.sb.rpc(fn,args||{}),15000);}catch(e){return {net:true};}
@@ -26,7 +28,7 @@ async function api(fn,args){
     // เน็ตสะดุด: รอแป๊บแล้วลองใหม่ 1 ครั้ง
     if(r.net){await new Promise(z=>setTimeout(z,1500)); r=await rpcOnce(fn,args);}
     if(r.net){const c=navigator.onLine===false?'offline_net':'network';throw Object.assign(new Error(c),{code:c});}
-    if(r.error){const c=isAuthErr(r.error)?'session':errCode(r.error);throw Object.assign(new Error(c),{code:c});}
+    if(r.error){const c=isAuthErr(r.error)?'session':errCode(r.error);console.warn('rpc',fn,r.error);throw Object.assign(new Error(c),{code:c,detail:String(r.error.message||'').slice(0,70)});}
     return r.data;
   }
   return LOCAL.call(fn,args||{});
@@ -39,7 +41,7 @@ document.addEventListener('visibilitychange',()=>{if(!NET.sb)return;
 async function act(fn,args){
   if(NET.busy)return null; NET.busy=true;
   try{const r=await api(fn,args); if(r&&r.state)applyState(r.state); return r;}
-  catch(e){toast(ERR[e.code]||ERR.network); return null;}
+  catch(e){toast((ERR[e.code]||ERR.network)+(e.code==='server'&&e.detail?' ('+e.detail+')':'')); return null;}
   finally{NET.busy=false;}
 }
 // เตรียมตัวเชื่อม + อ่านบัญชีที่ล็อกอินค้างไว้ (ไม่สร้างบัญชีใหม่) คืน user หรือ null
