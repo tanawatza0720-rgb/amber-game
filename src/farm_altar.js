@@ -132,7 +132,7 @@ async function altarSacrifice(){
 }
 async function altarBuyGold(){if((ALT.souls||0)<ALT.gold)return; ALT.souls-=ALT.gold; await hatch('soulgold','ไข่ทองคำ (วิญญาณ)'); loadAltar();}
 async function altarBuyGod(){const r=await act('soul_buy',{item:'god'});if(!r)return;ALT.souls=r.souls;ALT.godEggs=r.god_eggs;altarBurst(8);
-  if(typeof stageLoad==='function')try{stageLoad();}catch(e){}
+  if(typeof loadStage==='function')try{loadStage();}catch(e){}
   toast('ได้ไข่เทพ 1 ใบ! ไปฟักได้ที่ประตูผจญภัย');renderAltar();}
 async function altarExchange(){const r=await act('soul_exchange',{sets:1});if(!r)return;ALT.souls=r.exp&&r.exp.souls!=null?r.exp.souls:(ALT.souls||0)-10;bumpRes('amber');toast('ได้รับ 25 อัมพร');renderAltar();}
 INFO.altar=()=>openAltar();

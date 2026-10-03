@@ -320,7 +320,9 @@ body.raceOpen #top,body.raceOpen #rail,body.raceOpen #menuBtn,body.raceOpen #doc
 .ic.away{opacity:.8}.ic.dead{filter:grayscale(1) brightness(.6)}
 .exUp{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:700;background:rgba(20,90,60,.8);color:#bfffe0;text-align:center}
 .exSoulB{position:absolute;left:0;right:0;bottom:0;font-size:10px;background:rgba(40,20,70,.8);color:#e0d4ff;text-align:center}
-.exDeadH{color:#ff9a8a}.exOk{color:#8ff0c4}
+.exDeadH{color:#ff9a8a}.exOk{color:#8ff0c4}.exDrop{color:#ffd98a!important}
+.exRwBox{display:flex;flex-direction:column;gap:3px;margin:6px 0;padding:8px 10px;border-radius:10px;background:rgba(255,200,90,.08);border:1px solid rgba(255,200,90,.25);font-size:12.5px;line-height:1.45}.exRwBox b{font-size:12px;color:#ffc27a}.exRwBox small{opacity:.7;font-size:11px}
+.exGot{display:flex;align-items:center;gap:10px;margin:6px 0;padding:8px 10px;border-radius:10px;background:rgba(255,210,110,.14);border:1px solid rgba(255,210,110,.45);font-weight:700}.exGot i{font-style:normal;font-size:26px}.exGot .ic{width:52px!important;flex:none}
 .exSoul{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(150,120,255,.1);border:1px solid rgba(190,170,255,.25);font-size:13px}.exSoul .sbtn{flex:none;padding:6px 10px;font-size:12px;width:auto}
 /* คู่มือผู้เล่นใหม่ */
 #guide{position:fixed;inset:0;z-index:12;pointer-events:none}#guide[hidden]{display:none}
@@ -4154,6 +4156,15 @@ const clampN=(v,a,b)=>Math.min(b,Math.max(a,v));
 const expWin=(z,party)=>{const r=expRule();return r?clampN(r.win_k*Math.pow(Math.max(party,1)/z.rec,r.win_pow),r.win_min,r.win_max):1;};
 const expDie=(z,party,one,avg,rar,failed)=>{const r=expRule();if(!r)return expRisk(z,party,one,avg);const t=clampN(rar||1,1,4);
   return clampN(z.die*r.tier[t]*clampN(z.rec/Math.max(party,1),r.team_min,r.team_max)*clampN(Math.pow(avg/Math.max(one,1),r.self_pow),r.self_min,r.self_max)*(failed?r.fail_k:1),r.floor[t],r.cap[t]);};
+// ของลุ้นของพื้นที่ (เมื่อสำรวจสำเร็จ) + รางวัลปลอบใจตอนล้มเหลว
+const pct=v=>(v*100>=1&&v*100%1===0?Math.round(v*100):+(v*100).toFixed(1))+'%';
+const expDrops=z=>[z.gold_p>0?'🥚 ไข่ทองคำ '+pct(z.gold_p):'',z.god_p>0?'🌟 ไข่เทพ '+pct(z.god_p):''].filter(Boolean);
+function expRewardBox(z){const r=expRule(),b=el('div','exRwBox');
+  b.append(el('b',null,'รางวัลเมื่อสำเร็จ (ส่งครบ 6 ตัว กลับมาครบ)'));
+  b.append(el('span',null,'🪙 เหรียญ '+fmt(z.coins)+' · 🔶 อัมพร '+z.amber+' · ⬆️ ตัวที่รอด เลเวล +'+z.lv));
+  const dr=expDrops(z); b.append(el('span',dr.length?'exDrop':null,dr.length?'ของลุ้น: '+dr.join(' · '):'ของลุ้น: ไม่มีในพื้นที่นี้'));
+  if(r&&r.fail_coins)b.append(el('small',null,'ล้มเหลว: ได้เหรียญ '+pct(r.fail_coins)+' ไม่ได้อัมพร เลเวล และของลุ้น · ส่งน้อยกว่า 6 ตัวหรือมีตัวไม่กลับมา เหรียญ/อัมพรลดลง'));
+  return b;}
 // โอกาสไม่กลับมาโดยรวมของ 1 ตัว (รวมกรณีสำเร็จและล้มเหลว)
 const expLoss=(z,P,m,avg)=>{const w=expWin(z,P),o=expPow(m),t=spOf(m).rar;return w*expDie(z,P,o,avg,t,false)+(1-w)*expDie(z,P,o,avg,t,true);};
 const expPow=m=>{const s=EXP.st;return s&&s.mpow&&s.mpow[m.uid]!=null?s.mpow[m.uid]:power(m);};
@@ -4185,11 +4196,12 @@ function soulRow(){const s=EXP.st,r=el('div','exSoul');
   r.append(b);return r;}
 function renderExpList(){
   const s=EXP.st,d=el('div','exp');
-  d.append(para(expRule()?'ส่งมอนสเตอร์ที่ไม่อยู่ในทีม (สูงสุด 6 ตัว) ออกไปสำรวจ · โอกาสสำเร็จขึ้นกับพลังทีมเทียบกับพลังแนะนำของพื้นที่ · สำเร็จได้เหรียญ อัมพร และเลเวล · ล้มเหลวไม่ได้รางวัลและเสี่ยงไม่กลับมามากขึ้น · ตัวระดับต่ำเสี่ยงสูงกว่าตัวระดับสูงมาก':'ส่งมอนสเตอร์ที่ไม่อยู่ในทีม (สูงสุด 6 ตัว) ออกไปสำรวจ ได้เหรียญ อัมพร และเลเวลเมื่อกลับมา · ยิ่งพื้นที่ยาก ยิ่งเสี่ยงที่บางตัวจะไม่กลับมา'));
+  d.append(para(expRule()?'ส่งมอนสเตอร์ที่ไม่อยู่ในทีม (สูงสุด 6 ตัว) ออกไปสำรวจ · โอกาสสำเร็จขึ้นกับพลังทีมเทียบกับพลังแนะนำของพื้นที่ · สำเร็จได้เหรียญ อัมพร เลเวล และมีสิทธิ์ลุ้นไข่ในพื้นที่ยาก · ล้มเหลวได้แค่เหรียญเล็กน้อยและเสี่ยงไม่กลับมามากขึ้น · ตัวระดับต่ำเสี่ยงสูงกว่าตัวระดับสูงมาก':'ส่งมอนสเตอร์ที่ไม่อยู่ในทีม (สูงสุด 6 ตัว) ออกไปสำรวจ ได้เหรียญ อัมพร และเลเวลเมื่อกลับมา · ยิ่งพื้นที่ยาก ยิ่งเสี่ยงที่บางตัวจะไม่กลับมา'));
   s.zones.forEach(z=>{const c=el('button','exZone');
     c.append(el('span','exIc',EXP_ICON[z.id]||'🧭'));
     const t=el('div');t.append(el('b',null,z.name));t.append(el('small',null,'พลังแนะนำ '+fmt(z.rec)+' · '+fmtDur(z.min*60)));
     t.append(el('small','exRw','🪙 '+fmt(z.coins)+' · 🔶 '+z.amber+' · เลเวล +'+z.lv+(expRule()?'':' · เสี่ยงพื้นฐาน '+Math.round(z.risk*100)+'%')));
+    {const dr=expDrops(z);if(dr.length)t.append(el('small','exRw exDrop','ของลุ้น: '+dr.join(' · ')));}
     if(expRule())t.append(el('small','exRw','เสี่ยงไม่กลับ (พลังพอดี): '+[1,2,3,4].map(k=>tierOf(k).n+' '+Math.round(expDie(z,z.rec,1,1,k,false)*100)+'%').join(' · ')));c.append(t);
     c.onclick=()=>{EXP.zone=z.id;EXP.sel=[];EXP.confirm=false;EXP.view='pick';renderExpPick();};d.append(c);});
   d.append(soulRow());
@@ -4202,6 +4214,7 @@ function renderExpPick(){
   const party=expParty(),P=party.reduce((a,m)=>a+expPow(m),0),avg=party.length?P/party.length:1;
   const d=el('div','exp');
   const hd=el('div','exHead');hd.append(el('span','exIc',EXP_ICON[z.id]||'🧭'));const t=el('div');t.append(el('b',null,z.name));t.append(el('small',null,'พลังแนะนำ '+fmt(z.rec)+' · '+fmtDur(z.min*60)));hd.append(t);d.append(hd);
+  if(expRule())d.append(expRewardBox(z));
   // ทีมสำรวจ 6 ช่อง
   const slots=el('div','exSlots');
   for(let i=0;i<6;i++){const m=party[i];if(m){const c=icon(m);const r=expLoss(z,P,m,avg);c.append(el('span','exRisk'+(r>.3?' hi':r>.1?' mid':''),Math.round(r*100)+'%'));c.onclick=()=>{EXP.sel=EXP.sel.filter(u=>u!==m.uid);EXP.confirm=false;renderExpPick();};slots.append(c);}
@@ -4210,7 +4223,7 @@ function renderExpPick(){
   const win=expWin(z,P), allIf=f=>party.reduce((a,m)=>a*(1-expDie(z,P,expPow(m),avg,spOf(m).rar,f)),1), all=win*allIf(false)+(1-win)*allIf(true);
   const pw=el('div','exPow');pw.append(el('span',null,'พลังทีมสำรวจ '));const pb=el('b',null,fmt(P));pb.style.color=P>=z.rec?'#8ff0c4':'#ffb36a';pw.append(pb);
   pw.append(el('span',null,party.length?' · โอกาสกลับครบ '+Math.round(all*100)+'%':''));d.append(pw);
-  if(party.length&&expRule()){const w=el('div','exPow');w.append(el('span',null,'โอกาสสำรวจสำเร็จ '));const b=el('b',null,Math.round(win*100)+'%');b.style.color=win>=.7?'#8ff0c4':win>=.4?'#ffd34d':'#ff8a7a';w.append(b);w.append(el('span',null,' · ล้มเหลว = ไม่ได้รางวัล'));d.append(w);}
+  if(party.length&&expRule()){const w=el('div','exPow');w.append(el('span',null,'โอกาสสำรวจสำเร็จ '));const b=el('b',null,Math.round(win*100)+'%');b.style.color=win>=.7?'#8ff0c4':win>=.4?'#ffd34d':'#ff8a7a';w.append(b);w.append(el('span',null,EXP.st.rule.fail_coins?' · ล้มเหลว = ได้แค่เหรียญ '+pct(EXP.st.rule.fail_coins):' · ล้มเหลว = ไม่ได้รางวัล'));d.append(w);}
   if(party.length&&P<z.rec)d.append(el('p','exWarn',expRule()?'พลังต่ำกว่าที่แนะนำ โอกาสสำเร็จลดลงและเสี่ยงไม่กลับมามากขึ้น':'พลังต่ำกว่าที่แนะนำ ความเสี่ยงจะสูงขึ้นมาก'));
   // ตัวเลือก (ไม่อยู่ในทีม)
   const L=el('div','exList'),cands=[...S.mons].sort((a,b)=>expPow(b)-expPow(a));
@@ -4250,11 +4263,17 @@ function renderExpActive(){
 function renderExpResult(res){
   const z=EXP.st.zones.find(x=>x.id===res.zone)||{name:res.zone},d=el('div','exp');
   const dead=res.dead||[],alive=res.alive||[];
-  if(res.ok!=null)d.append(el('h4',res.ok?'exOk':'exDeadH',res.ok?'สำรวจสำเร็จ! 🎉':'สำรวจล้มเหลว 💀 ไม่ได้รางวัล'));
+  if(res.ok!=null)d.append(el('h4',res.ok?'exOk':'exDeadH',res.ok?'สำรวจสำเร็จ! 🎉':'สำรวจล้มเหลว 💀'+(res.coins>0?' ได้แค่เหรียญปลอบใจ':' ไม่ได้รางวัล')));
   d.append(el('h4',null,dead.length?'กลับมา '+alive.length+' จาก '+(alive.length+dead.length)+' ตัว':'กลับมาครบทุกตัว!'+(res.ok===false?'':' 🎉')));
   const ok=el('div','exSlots');alive.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv_new,stars:m.stars||0,el:m.el||null});if(m.lv_new>m.lv)c.append(el('span','exUp','+'+(m.lv_new-m.lv)));ok.append(c);});d.append(ok);
   if(dead.length){d.append(el('h4','exDeadH','ไม่ได้กลับมา'));const ds=el('div','exSlots');dead.forEach(m=>{const c=icon({uid:-m.id,sp:m.sp,lv:m.lv,stars:m.stars||0,el:m.el||null});c.classList.add('dead');c.append(el('span','exSoulB','👻'+m.souls));ds.append(c);});d.append(ds);
     d.append(para(dead.map(m=>spOf(m).name).join(', ')+' หลงหายใน'+z.name+' · ได้รับวิญญาณ '+res.souls));}
+  (res.drops||[]).forEach(x=>{const b=el('div','exGot');
+    if(x.kind==='god'){b.append(el('i',null,'🌟'));b.append(el('span',null,'เจอไข่เทพ 1 ใบ! ไปฟักได้ที่ศาลฟักไข่'));}
+    else if(x.kind==='gold'&&x.mon){b.append(icon({uid:-Number(x.mon.id),sp:x.mon.sp,lv:1,stars:0,el:x.mon.el||null}));b.append(el('span',null,'เจอไข่ทองคำ! ฟักได้ '+spOf(x.mon).name+' ระดับ'+tierOf(x.rar).n));}
+    else if(x.kind==='gold_amber'){b.append(el('i',null,'🥚'));b.append(el('span',null,'เจอไข่ทองคำ แต่กระเป๋าเต็ม ได้อัมพร '+x.amber+' แทน'));}
+    else return; d.append(b);});
+  if((res.drops||[]).some(x=>x.kind==='god')&&typeof loadStage==='function')try{loadStage();}catch(e){}
   d.append(rows([['เหรียญ','+'+fmt(res.coins),'#ffd34d'],['อัมพร','+'+fmt(res.amber),'#ffb347'],['วิญญาณ','+'+fmt(res.souls||0),'#c9b8ff']]));
   openSheet('ผลการสำรวจ',z.name,d,[['ส่งสำรวจอีกครั้ง',()=>{EXP.view='list';openExp();},'main']]);
 }
@@ -4886,7 +4905,7 @@ async function altarSacrifice(){
 }
 async function altarBuyGold(){if((ALT.souls||0)<ALT.gold)return; ALT.souls-=ALT.gold; await hatch('soulgold','ไข่ทองคำ (วิญญาณ)'); loadAltar();}
 async function altarBuyGod(){const r=await act('soul_buy',{item:'god'});if(!r)return;ALT.souls=r.souls;ALT.godEggs=r.god_eggs;altarBurst(8);
-  if(typeof stageLoad==='function')try{stageLoad();}catch(e){}
+  if(typeof loadStage==='function')try{loadStage();}catch(e){}
   toast('ได้ไข่เทพ 1 ใบ! ไปฟักได้ที่ประตูผจญภัย');renderAltar();}
 async function altarExchange(){const r=await act('soul_exchange',{sets:1});if(!r)return;ALT.souls=r.exp&&r.exp.souls!=null?r.exp.souls:(ALT.souls||0)-10;bumpRes('amber');toast('ได้รับ 25 อัมพร');renderAltar();}
 INFO.altar=()=>openAltar();
@@ -4912,12 +4931,14 @@ if(window.__F)Object.assign(window.__F,{altar:(souls,sel)=>{Object.assign(ALT,{s
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
-  {ver:'2026.10.03.2',date:'3 ต.ค. 2026',title:'ส่งสำรวจโฉมใหม่ 🧭',items:[
+  {ver:'2026.10.03.3',date:'3 ต.ค. 2026',title:'ส่งสำรวจโฉมใหม่ 🧭',items:[
     '🎯 มี "โอกาสสำรวจสำเร็จ" ของทั้งทีม: ขึ้นกับพลังทีมสำรวจเทียบกับพลังแนะนำของพื้นที่ (พลังพอดี 70% · สูงสุด 95%)',
-    '🏆 สำเร็จ: ได้เหรียญ อัมพร และตัวที่รอดได้เลเวล · 💀 ล้มเหลว: ไม่ได้รางวัล และเสี่ยงไม่กลับมามากขึ้น 1.5 เท่า',
+    '🏆 สำเร็จ: ได้เหรียญ อัมพร ตัวที่รอดได้เลเวล และลุ้นไข่ · 💀 ล้มเหลว: ได้เหรียญแค่ 25% และเสี่ยงไม่กลับมามากขึ้น 1.5 เท่า',
+    '💰 รางวัลใหม่ พื้นที่ยากคุ้มขึ้น: เหรียญ 600 / 3,000 / 8,000 / 20,000 · อัมพร 4 / 20 / 50 / 120',
+    '🥚 ของลุ้นเมื่อสำเร็จ: หุบเขาเถ้าถ่าน ไข่ทองคำ 15% · ซากวิหารลอยฟ้า ไข่ทองคำ 25% และไข่เทพ 1% (ไข่ทองคำฟักให้ทันที)',
     '⚖️ โอกาสไม่กลับมาไล่ตามระดับ: ตัวทั่วไปเสี่ยงสูงสุด (สูงสุด 90%) → หายาก → ตำนาน → เทพเจ้าเสี่ยงต่ำสุด (สูงสุด 25%)',
     '🗺️ พื้นที่ยิ่งยากยิ่งเสี่ยง: ตัวทั่วไป 30% / 50% / 70% / 85% เมื่อพลังทีมพอดี · พลังทีมเกินที่แนะนำ ความเสี่ยงลดลง',
-    '👀 หน้าเลือกทีมแสดงโอกาสสำเร็จ และ % ไม่กลับมาของแต่ละตัวก่อนส่ง']},
+    '👀 ทุกพื้นที่แสดงรางวัล โอกาสดรอป โอกาสสำเร็จ และ % ไม่กลับมาของแต่ละตัวให้ดูก่อนส่ง']},
   {ver:'2026.10.03.1',date:'3 ต.ค. 2026',title:'รวมร่าง! 🔀',items:[
     '🔀 ปุ่ม "เปลี่ยนร่าง" เปลี่ยนเป็น "รวมร่าง": ใช้มอนสเตอร์ 2 ตัวที่ระดับเดียวกัน เลเวลเต็ม และดาวเต็ม (6 ดาว) รวมกันเป็นตัวใหม่แบบสุ่ม',
     '🟢 ทั่วไป + ทั่วไป → ได้ระดับหายาก 100%',

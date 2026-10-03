@@ -3,12 +3,16 @@
 --   1) โอกาสสำเร็จของทั้งทีม ขึ้นกับ พลังทีมสำรวจ เทียบกับ พลังแนะนำของพื้นที่ (พื้นที่ยิ่งสูง ยิ่งต้องใช้พลังมาก)
 --        สำเร็จ = 70% × (พลังทีม / พลังแนะนำ)^1.5   จำกัด 5–95%
 --        สำเร็จ  → ได้เหรียญ/อัมพร ตัวที่รอดได้เลเวล
---        ล้มเหลว → ไม่ได้เหรียญ/อัมพร/เลเวล และโอกาสตายของทุกตัว ×1.5 (ยังได้วิญญาณจากตัวที่ตาย)
+--        ล้มเหลว → ได้เหรียญปลอบใจ 25% ไม่ได้อัมพร/เลเวล/ไข่ และโอกาสตายของทุกตัว ×1.5 (ยังได้วิญญาณจากตัวที่ตาย)
 --   2) โอกาสตายรายตัว = ค่าพื้นที่ (die) × ตัวคูณระดับ × ตัวคูณพลังทีม × ตัวคูณพลังตัวเอง
 --        ค่าพื้นที่ (ตัวทั่วไป พลังพอดี สำรวจสำเร็จ): 30% / 50% / 70% / 85%
 --        ตัวคูณระดับ: ทั่วไป 1 · หายาก 0.55 · ตำนาน 0.30 · เทพเจ้า 0.12
 --        เพดาน: ทั่วไป 90% · หายาก 70% · ตำนาน 50% · เทพเจ้า 25%   ·   ขั้นต่ำ: 8% / 4% / 2% / 1%
 --        ตัวคูณพลังทีม = พลังแนะนำ / พลังทีม (จำกัด 0.35–1.6) · ตัวคูณพลังตัวเอง = (พลังเฉลี่ย / พลังตัวนั้น)^0.3 (จำกัด 0.7–1.5)
+--   3) รางวัลใหม่ (รายชั่วโมงสูงขึ้นตามความยาก) + ของลุ้นเมื่อสำเร็จ
+--        เหรียญ 600 / 3,000 / 8,000 / 20,000 · อัมพร 4 / 20 / 50 / 120 · เลเวล +1..+4 (เท่าเดิม)
+--        หุบเขาเถ้าถ่าน: ไข่ทองคำ 15% · ซากวิหารลอยฟ้า: ไข่ทองคำ 25% + ไข่เทพ 1% (สุ่มแยกกัน)
+--        ไข่ทองคำฟักให้ทันทีด้วย hatch_egg('gold') (อัตรา/การันตี/ประกาศเดียวกับฟักปกติ) · กระเป๋าเต็ม = ได้อัมพรเท่าราคาไข่แทน · ไข่เทพเข้าคลังไข่เทพ
 -- วิธีใช้: Supabase > SQL Editor > New query > วางทั้งหมดนี้ > Run  (รันซ้ำได้) · ต้องรัน migrate_expedition.sql มาก่อนแล้ว
 --   ทีมที่ออกสำรวจอยู่ตอนรัน จะใช้กติกาใหม่ตอนกดรับผล
 -- =====================================================================
@@ -16,15 +20,15 @@
 -- risk = ค่าเดิม (หน้าเกมรุ่นเก่ายังอ่านอยู่) · die = โอกาสตายของตัวทั่วไปเมื่อพลังพอดีและสำรวจสำเร็จ
 create or replace function public._exp_zones() returns jsonb language sql immutable as $$
   select '[
-    {"id":"meadow","name":"ทุ่งหญ้าชายป่า","rec":1200,"min":30,"risk":0.04,"die":0.30,"coins":600,"amber":5,"lv":1},
-    {"id":"crystal","name":"ถ้ำคริสตัลเรืองแสง","rec":4000,"min":120,"risk":0.07,"die":0.50,"coins":2200,"amber":15,"lv":2},
-    {"id":"ashen","name":"หุบเขาเถ้าถ่าน","rec":10000,"min":240,"risk":0.10,"die":0.70,"coins":5500,"amber":35,"lv":3},
-    {"id":"skyruin","name":"ซากวิหารลอยฟ้า","rec":25000,"min":480,"risk":0.14,"die":0.85,"coins":12000,"amber":80,"lv":4}
+    {"id":"meadow","name":"ทุ่งหญ้าชายป่า","rec":1200,"min":30,"risk":0.04,"die":0.30,"coins":600,"amber":4,"lv":1,"gold_p":0,"god_p":0},
+    {"id":"crystal","name":"ถ้ำคริสตัลเรืองแสง","rec":4000,"min":120,"risk":0.07,"die":0.50,"coins":3000,"amber":20,"lv":2,"gold_p":0,"god_p":0},
+    {"id":"ashen","name":"หุบเขาเถ้าถ่าน","rec":10000,"min":240,"risk":0.10,"die":0.70,"coins":8000,"amber":50,"lv":3,"gold_p":0.15,"god_p":0},
+    {"id":"skyruin","name":"ซากวิหารลอยฟ้า","rec":25000,"min":480,"risk":0.14,"die":0.85,"coins":20000,"amber":120,"lv":4,"gold_p":0.25,"god_p":0.01}
   ]'::jsonb $$;
 
 -- ค่ากติกา (ส่งให้หน้าเกมใช้คำนวณตัวเลขที่แสดง ให้ตรงกับเซิร์ฟเวอร์)
 create or replace function public._exp_rule() returns jsonb language sql immutable as $$
-  select '{"v":2, "win_k":0.7, "win_pow":1.5, "win_min":0.05, "win_max":0.95, "fail_k":1.5,
+  select '{"v":2, "win_k":0.7, "win_pow":1.5, "win_min":0.05, "win_max":0.95, "fail_k":1.5, "fail_coins":0.25,
            "team_min":0.35, "team_max":1.6, "self_pow":0.3, "self_min":0.7, "self_max":1.5,
            "tier":{"1":1.0,"2":0.55,"3":0.30,"4":0.12},
            "cap":{"1":0.90,"2":0.70,"3":0.50,"4":0.25},
@@ -63,6 +67,7 @@ create or replace function public.exp_claim() returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare u uuid := public._uid(); p public.players; e public.expeditions; z jsonb; m jsonb; n int; avg_pow float8; risk float8; win_p float8; ok boolean; rr int;
   alive jsonb := '[]'::jsonb; dead jsonb := '[]'::jsonb; nlv int; mx int; v_souls int := 0; s int; v_coins int := 0; v_amber int := 0; k float8; res jsonb;
+  drops jsonb := '[]'::jsonb; h jsonb;
 begin
   p := public._player(u);
   select * into e from public.expeditions where user_id = u and not done order by id desc limit 1 for update;
@@ -82,13 +87,31 @@ begin
       alive := alive || jsonb_build_array(m || jsonb_build_object('lv_new', nlv, 'risk', round(risk::numeric, 3)));
     end if;
   end loop;
+  k := (0.5 + 0.5 * jsonb_array_length(alive)::float8 / greatest(n, 1)) * (0.5 + 0.5 * least(1.0, n / 6.0));
   if ok then
-    k := 0.5 + 0.5 * jsonb_array_length(alive)::float8 / greatest(n, 1);
-    v_coins := round((z->>'coins')::int * k * (0.5 + 0.5 * least(1.0, n / 6.0)));
-    v_amber := round((z->>'amber')::int * k * (0.5 + 0.5 * least(1.0, n / 6.0)));
+    v_coins := round((z->>'coins')::int * k);
+    v_amber := round((z->>'amber')::int * k);
+  else
+    v_coins := round((z->>'coins')::int * k * (public._exp_rule()->>'fail_coins')::float8);   -- เหรียญปลอบใจ
   end if;
   update public.players set coins = coins + v_coins, amber = amber + v_amber, souls = souls + v_souls, updated_at = now() where user_id = u;
-  res := jsonb_build_object('zone', e.zone, 'ok', ok, 'win', round(win_p::numeric, 3), 'alive', alive, 'dead', dead, 'coins', v_coins, 'amber', v_amber, 'souls', v_souls);
+  -- ของลุ้น (เฉพาะเมื่อสำเร็จ · สุ่มแยกกัน)
+  if ok and random() < coalesce((z->>'god_p')::float8, 0) then
+    update public.players set god_eggs = god_eggs + 1 where user_id = u;
+    drops := drops || jsonb_build_array(jsonb_build_object('kind', 'god'));
+  end if;
+  if ok and random() < coalesce((z->>'gold_p')::float8, 0) then
+    if (select count(*) from public.monsters where user_id = u) < public._slots(u) then
+      -- ฟักด้วยฟังก์ชันไข่ทองคำเดิมทั้งชุด: เติมอัมพรเท่าราคาไข่แล้วให้ hatch_egg หักคืน (ธุรกรรมเดียว)
+      update public.players set amber = amber + public._c('gold_cost') where user_id = u;
+      h := public.hatch_egg('gold');
+      drops := drops || jsonb_build_array(jsonb_build_object('kind', 'gold', 'mon', h->'mon', 'rar', h->'rar'));
+    else
+      update public.players set amber = amber + public._c('gold_cost') where user_id = u;
+      drops := drops || jsonb_build_array(jsonb_build_object('kind', 'gold_amber', 'amber', public._c('gold_cost')));
+    end if;
+  end if;
+  res := jsonb_build_object('zone', e.zone, 'ok', ok, 'win', round(win_p::numeric, 3), 'alive', alive, 'dead', dead, 'coins', v_coins, 'amber', v_amber, 'souls', v_souls, 'drops', drops);
   update public.expeditions set done = true, result = res where id = e.id;
   return jsonb_build_object('result', res, 'exp', public.exp_state(), 'state', public._state(u));
 end $$;
