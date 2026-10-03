@@ -653,6 +653,28 @@ body.preLogin #sheetBg,body.boxOpen #sheetBg{display:none!important}
 .sgFoot{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}.sgWho{flex:1;min-width:120px;font-size:11.5px;opacity:.6}
 .sgV{padding:6px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit;font:inherit;font-size:13px;font-weight:700}
 .sgV.up.on{background:rgba(120,220,140,.25);border-color:#7bdc8c;color:#b6ffc4}.sgV.dn.on{background:rgba(240,110,100,.22);border-color:#f07a6a;color:#ffc2ba}.sgV.del{font-size:12px;opacity:.75}
+/* กล่องแชทลอย (มุมซ้ายล่าง เหนือปุ่มผจญภัย) โปร่งใส อ่านตัวหนังสือได้ */
+#chatBox{position:fixed;z-index:4;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(134px + env(safe-area-inset-bottom,0px));width:min(330px,calc(100vw - 86px));display:flex;flex-direction:column;border-radius:12px;background:rgba(12,9,6,.34);border:1px solid rgba(255,255,255,.12);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.7);font-size:13px}
+#chatBox[hidden]{display:none}
+.cbHead{display:flex;align-items:center;gap:4px;padding:4px 4px 4px 6px}
+.cbTab{position:relative;padding:3px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:#fff;font:inherit;font-size:12px;font-weight:700;opacity:.65;text-shadow:inherit}
+.cbTab.on{opacity:1;background:rgba(255,200,90,.3);border-color:rgba(255,210,120,.7)}
+.cbTab.dot::after,.cbFold.dot::after{content:"";position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:#e8453c;border:2px solid rgba(255,255,255,.35)}
+.cbPrev{flex:1;min-width:0;display:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 4px;cursor:pointer}
+.cbFold{position:relative;margin-left:auto;flex:none;width:30px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:#fff;font-size:14px;line-height:1}
+.cbList{height:150px;overflow-y:auto;padding:2px 8px 4px;display:flex;flex-direction:column;gap:2px;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent}
+.cbMsg{line-height:1.38;word-break:break-word;overflow-wrap:anywhere}.cbMsg i{font-style:normal;font-size:10px;opacity:.55;margin-right:4px}.cbMsg.me{color:#ffe7a8}
+#chatBox .chEmpty{font-size:12px;padding:10px 4px;opacity:.75}
+.cbIn{display:flex;gap:4px;padding:4px}.cbIn input{flex:1;min-width:0;padding:7px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.42);color:#fff;font:inherit;font-size:16px}
+.cbIn input::placeholder{color:rgba(255,255,255,.6)}.cbIn button{flex:none;padding:0 12px;border-radius:9px;border:1px solid rgba(255,210,120,.6);background:rgba(255,190,70,.75);color:#2a1a08;font:inherit;font-weight:800;text-shadow:none}
+.cbIn button:disabled,.cbIn input:disabled{opacity:.5}
+#chatBox.shut .cbList,#chatBox.shut .cbIn,#chatBox.shut .cbTab{display:none}#chatBox.shut .cbPrev{display:block}#chatBox.shut{background:rgba(12,9,6,.28)}
+@media (min-width:761px) and (min-height:521px){#chatBox{left:78px}}   /* แถบปุ่มซ้ายแสดงอยู่: ขยับออกมาทางขวาไม่ให้ทับ */
+@media (min-width:860px){#chatBox{bottom:calc(96px + env(safe-area-inset-bottom,0px));width:340px}.cbList{height:190px}}
+@media (min-width:1200px){#chatBox{bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
+@media (orientation:landscape) and (max-height:520px){#chatBox{left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(6px + env(safe-area-inset-bottom,0px));width:min(228px,27vw);font-size:12px}.cbList{height:88px}.cbIn input{font-size:14px;padding:5px 8px}}
+body.visiting #chatBox,body.boxOpen #chatBox,body.guideOn #chatBox,body.raceOpen #chatBox,body.preLogin #chatBox{display:none!important}
+@media (max-width:859px){body:has(#sheet:not([hidden])) #chatBox{display:none!important}}
 </style>
 
 <div id="view"></div>
@@ -682,7 +704,6 @@ body.preLogin #sheetBg,body.boxOpen #sheetBg{display:none!important}
   <button class="rbtn" id="rExp" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#2a4a5e" stroke="#9fd8ff" stroke-width="1.5"/><path d="M12 4l2.6 8L12 20l-2.6-8z" fill="#ff6a4a"/><path d="M12 12 14.6 12 12 20 9.4 12z" fill="#e9eef5"/><circle cx="12" cy="12" r="1.4" fill="#ffd34d"/></svg>สำรวจ<span class="badge" id="bExp" hidden></span><i class="rhp"><i id="rExpBar"></i></i></button>
   <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M3 10v4l3 .5V9.5z" fill="#c9a24a"/><path d="M6 9.5 17 5v14L6 14.5z" fill="#ffc94d"/><path d="M8 14.8 9.5 20h2.6l-1.2-4.8" fill="#e9dcc0"/><path d="M19.5 9.5c1 .8 1 4.2 0 5" stroke="#ffd34d" stroke-width="1.6" fill="none"/></svg>อัปเดต<span class="badge" id="bNews" hidden>N</span></button>
   <button class="rbtn" id="rRank" hidden><svg viewBox="0 0 24 24"><path d="M7 3h10v5a5 5 0 0 1-10 0z" fill="#ffc94d"/><path d="M7 5H4a3 3 0 0 0 3 4M17 5h3a3 3 0 0 1-3 4" stroke="#d9a23a" stroke-width="1.6" fill="none"/><rect x="10.5" y="12" width="3" height="5" fill="#d9a23a"/><rect x="7" y="17" width="10" height="4" rx="1" fill="#8a6a44"/></svg>อันดับ</button>
-  <button class="rbtn" id="rChat" hidden><svg viewBox="0 0 24 24"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v5A2.5 2.5 0 0 1 14.5 13H9l-3.5 3v-3A2.5 2.5 0 0 1 3 10.5z" fill="#9fd8ff"/><path d="M10 15h5.5l3 2.6V15A2.5 2.5 0 0 0 21 12.5v-4A2.5 2.5 0 0 0 19 6.1v4.4A4.5 4.5 0 0 1 14.5 15z" fill="#ffd36a"/><circle cx="7" cy="8" r="1" fill="#2a4a5e"/><circle cx="10" cy="8" r="1" fill="#2a4a5e"/><circle cx="13" cy="8" r="1" fill="#2a4a5e"/></svg>แชท</button>
   <button class="rbtn" id="rSuggest" hidden><svg viewBox="0 0 24 24"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.7h6c0-.7.3-1.3.8-1.7A6.5 6.5 0 0 0 12 2.5z" fill="#ffd34d"/><rect x="9" y="17" width="6" height="2" rx="1" fill="#c9a24a"/><rect x="10" y="20" width="4" height="1.8" rx=".9" fill="#8a6a44"/><path d="M12 6v4M10 8h4" stroke="#fff7d6" stroke-width="1.4" stroke-linecap="round"/></svg>เสนอแนะ</button>
   <button class="rbtn" id="rGuide"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 1 .2V21a3 3 0 0 0-1-.2H4z" fill="#e9dcc0"/><path d="M20 4h-7a3 3 0 0 0-1 .2V21a3 3 0 0 1 1-.2h7z" fill="#d8c69c"/><path d="M6 8h4M6 11h4M14 8h4M14 11h4" stroke="#8a6a44" stroke-width="1.4"/></svg>คู่มือ</button>
 </div>
@@ -5027,60 +5048,68 @@ if(window.__F)Object.assign(window.__F,{altar:(souls,sel)=>{Object.assign(ALT,{s
   altarFull:()=>{const m0=NET.mode;NET.mode='online';const sl=S.slots;S.slots=S.mons.length;const r=altarOverflow(1,()=>{});NET.mode=m0;S.slots=sl;return r;},burst:n=>altarBurst(n),cam:(x,z,d)=>{camTTo.set(x,0,z);distTo=d;}});
 
 /* ================= แชทโลก + แชทเผ่า + กล่องข้อเสนอแนะ (server/migrate_chat.sql) =================
-   แชท: ไม่ใช้ช่องสัญญาณเรียลไทม์ — หน้าเกมเรียก chat_poll(w,r) เป็นระยะ (เปิดหน้าต่างอยู่ทุก 4 วิ · ปิดอยู่ทุก 60 วิ เพื่อขึ้นจุดแดง)
+   แชท: กล่องลอยโปร่งใสมุมซ้ายล่างเหนือปุ่มผจญภัย (#chatBox สร้างด้วยโค้ด) พับ/กางได้ จำสถานะใน localStorage
+        ไม่ใช้ช่องสัญญาณเรียลไทม์ — หน้าเกมเรียก chat_poll(w,r) เป็นระยะ (กางอยู่ทุก 4 วิ · พับอยู่ทุก 30 วิ)
         ส่งด้วย chat_send('world'|'race', ข้อความ) · เซิร์ฟเวอร์จำกัดความยาว/ความถี่/ปิดปาก · ข้อความแสดงด้วย textContent เท่านั้น (กันโค้ดแฝง)
    ข้อเสนอแนะ: suggest_list(sort) / suggest_post(body) / suggest_vote(p_id, vote) / suggest_delete(p_id)
         เขียนและโหวตได้เฉพาะบัญชีที่ผูกแล้ว (เซิร์ฟเวอร์ตรวจ) · ทุกคนอ่านได้ */
-var CH={w:[],r:[],lw:0,lr:0,tab:'world',seen:{w:0,r:0},race:null,mute:null,len:200,last:0,busy:false,ready:false};
-try{const s=JSON.parse(localStorage.getItem('amber_chat_seen')||'{}');CH.seen={w:+s.w||0,r:+s.r||0};}catch(e){}
+var CH={w:[],r:[],lw:0,lr:0,tab:'world',seen:{w:0,r:0},race:null,mute:null,len:200,last:0,busy:false,ready:false,open:true};
+try{const s=JSON.parse(localStorage.getItem('amber_chat_seen')||'{}');CH.seen={w:+s.w||0,r:+s.r||0};CH.open=localStorage.getItem('amber_chat_open')!=='0';if(localStorage.getItem('amber_chat_tab')==='race')CH.tab='race';}catch(e){}
 const chKey=()=>CH.tab==='world'?'w':'r';
-const chOpen=()=>!$('#sheet').hidden&&$('#shTitle').textContent==='แชท'&&!!$('#chList');
+// กล่องแชทลอยโปร่งใสมุมซ้ายล่าง (เหนือปุ่มผจญภัย) · ลูกศรพับ/กาง · พับแล้วเหลือบรรทัดเดียวแสดงข้อความล่าสุด
+function chatBoxEl(){let b=$('#chatBox');if(b)return b;
+  b=document.createElement('section');b.id='chatBox';b.hidden=true;
+  b.innerHTML='<div class="cbHead"><button class="cbTab" id="chTabW" type="button">🌏 โลก</button><button class="cbTab" id="chTabR" type="button">เผ่า</button><span class="cbPrev" id="cbPrev"></span><button class="cbFold" id="cbFold" type="button" aria-label="พับหรือกางแชท"></button></div><div class="cbList" id="chList"></div><div class="cbIn"><input id="chIn" type="text" autocomplete="off" enterkeyhint="send"><button id="chGo" type="button">ส่ง</button></div>';
+  document.body.append(b);
+  $('#chTabW').onclick=()=>chPick('world');$('#chTabR').onclick=()=>chPick('race');
+  $('#cbFold').onclick=()=>chFold(!CH.open);$('#cbPrev').onclick=()=>chFold(true);
+  $('#chGo').onclick=chatSend;$('#chIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();chatSend();}e.stopPropagation();});
+  const box=$('#chList');box.onscroll=()=>{if(box.scrollHeight-box.scrollTop-box.clientHeight<50)chMarkSeen();};
+  return b;}
+const chOpen=()=>{const b=$('#chatBox');return !!b&&!b.hidden&&CH.open&&b.offsetParent!==null;};
 const chUnread=k=>CH[k].some(m=>!m.me&&m.id>CH.seen[k]);
 const chTime=t=>{const d=new Date(t),p=n=>(n<10?'0':'')+n,now=new Date();return (d.toDateString()===now.toDateString()?'':d.getDate()+'/'+(d.getMonth()+1)+' ')+p(d.getHours())+':'+p(d.getMinutes());};
 function chSaveSeen(){try{localStorage.setItem('amber_chat_seen',JSON.stringify(CH.seen));}catch(e){}}
-function chBadge(){const b=$('#rChat');if(!b)return;b.classList.toggle('reddot',chUnread('w')||chUnread('r'));
-  const tw=$('#chTabW'),tr=$('#chTabR');if(tw)tw.classList.toggle('dot',CH.tab!=='world'&&chUnread('w'));if(tr)tr.classList.toggle('dot',CH.tab!=='race'&&chUnread('r'));}
-function chRow(m){const d=el('div','chMsg'+(m.me?' me':'')),h=el('div','chHead'),R=RACES[m.race];
-  const n=el('b','chName',(R?R.icon+' ':'')+(m.name||'ผู้เล่น'));if(R)n.style.color=R.c;h.append(n);h.append(el('span','chTime',chTime(m.at)));d.append(h);d.append(el('div','chTxt',m.body));return d;}
-function chMarkSeen(){const k=chKey(),L=CH[k];if(L.length){CH.seen[k]=Math.max(CH.seen[k],L[L.length-1].id);chSaveSeen();}chBadge();}
+function chBadge(){const b=$('#chatBox');if(!b)return;
+  $('#chTabW').classList.toggle('dot',CH.tab!=='world'&&chUnread('w'));$('#chTabR').classList.toggle('dot',CH.tab!=='race'&&chUnread('r'));
+  $('#cbFold').classList.toggle('dot',!CH.open&&(chUnread('w')||chUnread('r')));
+  // พับอยู่: แสดงข้อความล่าสุดของห้องที่เลือก 1 บรรทัด
+  const L=CH[chKey()],m=L[L.length-1],pv=$('#cbPrev');pv.textContent='';
+  if(m){const R=RACES[m.race],n=el('b',null,(R?R.icon+' ':'')+(m.name||'ผู้เล่น')+': ');if(R)n.style.color=R.c;pv.append(n);pv.append(document.createTextNode(m.body));}else pv.textContent='💬 แชท';}
+function chRow(m){const d=el('div','cbMsg'+(m.me?' me':'')),R=RACES[m.race];d.append(el('i',null,chTime(m.at)));
+  const n=el('b',null,(R?R.icon+' ':'')+(m.name||'ผู้เล่น')+': ');if(R)n.style.color=R.c;d.append(n);d.append(document.createTextNode(m.body));return d;}
+function chMarkSeen(){const k=chKey(),L=CH[k];if(L.length&&CH.open){CH.seen[k]=Math.max(CH.seen[k],L[L.length-1].id);chSaveSeen();}chBadge();}
 function chFill(){const box=$('#chList');if(!box)return;box.innerHTML='';const L=CH[chKey()];
   if(!L.length)box.append(el('div','chEmpty',CH.tab==='world'?'ยังไม่มีใครพิมพ์ในแชทโลก เริ่มทักทายได้เลย':'ยังไม่มีใครพิมพ์ในแชทเผ่า เริ่มคุยกับเพื่อนร่วมเผ่าได้เลย'));
   L.forEach(m=>box.append(chRow(m)));box.scrollTop=box.scrollHeight;chMarkSeen();}
+function chPick(t){CH.tab=t;try{localStorage.setItem('amber_chat_tab',t);}catch(e){}chSync();chFill();}
+function chFold(open){CH.open=!!open;try{localStorage.setItem('amber_chat_open',open?'1':'0');}catch(e){}chSync();if(open){chFill();CH.last=0;}else{const i=$('#chIn');if(i)i.blur();chBadge();}}
+// ปรับหน้าตากล่องตามสถานะ (แท็บที่เลือก · พับ/กาง · ถูกระงับ)
+function chSync(){const b=chatBoxEl(),R=RACES[CH.race||S.race];
+  b.classList.toggle('shut',!CH.open);$('#cbFold').textContent=CH.open?'▾':'▴';
+  $('#chTabW').classList.toggle('on',CH.tab==='world');const tr=$('#chTabR');tr.classList.toggle('on',CH.tab==='race');tr.textContent=(R?R.icon+' ':'')+'เผ่า';
+  const inp=$('#chIn'),go=$('#chGo'),mu=CH.mute&&new Date(CH.mute)>new Date();inp.maxLength=CH.len;
+  inp.disabled=go.disabled=!!mu;inp.placeholder=mu?'ถูกระงับการพิมพ์ถึง '+chTime(CH.mute):(CH.tab==='world'?'พิมพ์ถึงทุกคน…':'พิมพ์ถึงเพื่อนร่วมเผ่า…');chBadge();}
 async function chatPoll(){
   if(NET.mode!=='online'||CH.busy)return;CH.busy=true;
-  try{const r=await api('chat_poll',{w:CH.lw,r:CH.lr});CH.last=Date.now();CH.ready=true;CH.race=r.race_key;CH.mute=r.muted_until;if(r.len)CH.len=r.len;
+  try{const r=await api('chat_poll',{w:CH.lw,r:CH.lr});CH.last=Date.now();CH.race=r.race_key;CH.mute=r.muted_until;if(r.len)CH.len=r.len;
     const add=(k,list)=>{if(!list||!list.length)return [];const have=new Set(CH[k].map(m=>m.id)),nw=list.filter(m=>!have.has(m.id));CH[k]=CH[k].concat(nw).slice(-150);if(CH[k].length)CH['l'+k]=CH[k][CH[k].length-1].id;return nw;};
-    const nw={w:add('w',r.world),r:add('r',r.race)};
-    $('#rChat').hidden=false;if($('#rSuggest'))$('#rSuggest').hidden=false;
-    if(chOpen()){const box=$('#chList'),k=chKey(),near=box.scrollHeight-box.scrollTop-box.clientHeight<70;
-      if(nw[k].length){const emp=box.querySelector('.chEmpty');if(emp)emp.remove();nw[k].forEach(m=>box.append(chRow(m)));if(near||nw[k].some(m=>m.me))box.scrollTop=box.scrollHeight;}
-      if(near)chMarkSeen();chMuteUi();}
+    const nw={w:add('w',r.world),r:add('r',r.race)},b=chatBoxEl(),first=!CH.ready;CH.ready=true;
+    b.hidden=false;if($('#rSuggest'))$('#rSuggest').hidden=false;chSync();
+    if(first)chFill();
+    else if(CH.open){const box=$('#chList'),k=chKey(),near=box.scrollHeight-box.scrollTop-box.clientHeight<50;
+      if(nw[k].length){const emp=box.querySelector('.chEmpty');if(emp)emp.remove();nw[k].forEach(m=>box.append(chRow(m)));while(box.children.length>150)box.firstChild.remove();if(near||nw[k].some(m=>m.me))box.scrollTop=box.scrollHeight;}
+      if(near)chMarkSeen();}
     chBadge();
   }catch(e){CH.last=Date.now();if(e.code!=='not_ready')console.warn('chat',e);}finally{CH.busy=false;}
 }
-function chMuteUi(){const inp=$('#chIn'),go=$('#chGo'),nt=$('#chNote');if(!inp)return;const mu=CH.mute&&new Date(CH.mute)>new Date();
-  inp.disabled=go.disabled=!!mu;inp.placeholder=mu?'ถูกระงับการพิมพ์ถึง '+chTime(CH.mute):(CH.tab==='world'?'พิมพ์ถึงทุกคน…':'พิมพ์ถึงเพื่อนร่วมเผ่า…');
-  if(nt)nt.textContent='ข้อความยาวได้ '+CH.len+' ตัวอักษร · โปรดสุภาพต่อกัน';}
-async function chatSend(){const inp=$('#chIn'),go=$('#chGo');if(!inp)return;const t=inp.value.trim();if(!t)return;
+async function chatSend(){const inp=$('#chIn'),go=$('#chGo');if(!inp||go.disabled)return;const t=inp.value.trim();if(!t)return;
   go.disabled=true;try{await api('chat_send',{ch:CH.tab==='world'?'world':'race',body:t});inp.value='';CH.busy=false;await chatPoll();}
-  catch(e){toast(ERR[e.code]||ERR.network);}finally{go.disabled=false;chMuteUi();if(!PHONE_KB())inp.focus();}}
-const PHONE_KB=()=>window.matchMedia&&matchMedia('(pointer:coarse)').matches;
-function openChat(){
-  if(NET.mode!=='online'){toast('แชทต้องเข้าสู่ระบบก่อน');return;}
-  const d=el('div','chat'),tabs=el('div','chTabs'),R=RACES[CH.race||S.race];
-  const tw=el('button','chTab'+(CH.tab==='world'?' on':''),'🌏 แชทโลก');tw.id='chTabW';const tr=el('button','chTab'+(CH.tab==='race'?' on':''),(R?R.icon+' ':'')+'แชท'+(R?R.n:'เผ่า'));tr.id='chTabR';
-  const pick=t=>{CH.tab=t;tw.classList.toggle('on',t==='world');tr.classList.toggle('on',t==='race');chFill();chMuteUi();};
-  tw.onclick=()=>pick('world');tr.onclick=()=>pick('race');tabs.append(tw,tr);d.append(tabs);
-  const box=el('div','chList');box.id='chList';box.onscroll=()=>{if(box.scrollHeight-box.scrollTop-box.clientHeight<70)chMarkSeen();};d.append(box);
-  const row=el('div','chIn'),inp=el('input');inp.id='chIn';inp.type='text';inp.maxLength=CH.len;inp.autocomplete='off';inp.enterKeyHint='send';
-  const go=el('button','sbtn gold','ส่ง');go.id='chGo';go.onclick=chatSend;inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();chatSend();}});
-  row.append(inp,go);d.append(row);const nt=el('small','chNote');nt.id='chNote';d.append(nt);
-  openSheet('แชท','',d,[]);chFill();chMuteUi();CH.last=0;chatPoll();
-}
+  catch(e){toast(ERR[e.code]||ERR.network);}finally{go.disabled=false;chSync();}}
+// ดึงข้อความ: กางอยู่ทุก 4 วิ · พับ/ถูกบังอยู่ทุก 30 วิ · แท็บเบราว์เซอร์ซ่อน = ไม่ดึง
 setInterval(()=>{if(NET.mode!=='online'||typeof entered==='undefined'||!entered||document.visibilityState==='hidden')return;
-  if(Date.now()-CH.last>=(chOpen()?4000:60000))chatPoll();},2000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&chOpen()){CH.last=0;}});
-$('#rChat').onclick=()=>openChat();
+  if(Date.now()-CH.last>=(chOpen()?4000:30000))chatPoll();},2000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&chOpen())CH.last=0;});
 
 /* ---------- กล่องข้อเสนอแนะ ---------- */
 var SG={st:null,sort:'top',draft:'',delAt:0,delId:0};
@@ -5123,15 +5152,15 @@ function renderSuggest(){
 }
 $('#rSuggest').onclick=()=>openSuggest();
 // ดีบัก: index.html?dbg=1 → __F.chat({world:[…],race:[…]}) / __F.suggest(ข้อมูลแบบ suggest_list) เปิดหน้าต่างด้วยข้อมูลจำลอง (ไม่เรียกเซิร์ฟเวอร์)
-if(window.__F)Object.assign(window.__F,{chat:(d,tab)=>{const m0=NET.mode;NET.mode='online';CH.w=d.world||[];CH.r=d.race||[];CH.race=d.race_key||S.race;CH.tab=tab||'world';CH.busy=true;openChat();NET.mode=m0;$('#rChat').hidden=false;$('#rSuggest').hidden=false;chBadge();return CH.w.length;},
+if(window.__F)Object.assign(window.__F,{chat:(d,tab,open)=>{CH.w=d.world||[];CH.r=d.race||[];CH.race=d.race_key||S.race;CH.tab=tab||'world';CH.open=open!==false;CH.ready=true;CH.busy=true;chatBoxEl().hidden=false;$('#rSuggest').hidden=false;chSync();chFill();return CH.w.length;},
   suggest:d=>{SG.st=d;renderSuggest();return d.list.length;}});
 
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
   {ver:'2026.10.03.4',date:'3 ต.ค. 2026',title:'แชท + ข้อเสนอแนะ 💬',items:[
-    '🌏 แชทโลก: คุยกับผู้เล่นทุกคนได้แล้ว กดปุ่ม "แชท" (ในเมนู ☰ บนมือถือ)',
-    '🛡️ แชทเผ่า: ห้องเฉพาะเพื่อนร่วมเผ่า สลับแท็บได้ในหน้าต่างเดียวกัน · มีจุดแดงเมื่อมีข้อความใหม่',
+    '🌏 แชทโลก: คุยกับผู้เล่นทุกคนได้แล้ว กล่องแชทโปร่งใสอยู่มุมซ้ายล่างเหนือปุ่มผจญภัย',
+    '🛡️ แชทเผ่า: ห้องเฉพาะเพื่อนร่วมเผ่า สลับแท็บ "โลก / เผ่า" ได้ในกล่องเดียวกัน · กดลูกศรเพื่อพับหรือกางกล่อง · มีจุดแดงเมื่อมีข้อความใหม่',
     '💡 ปุ่ม "เสนอแนะ": เขียนข้อเสนอแนะถึงทีมงาน และกด 👍 👎 ข้อเสนอของคนอื่นได้ (ต้องผูกบัญชีก่อน · วันละ 3 เรื่อง)',
     '🙏 โปรดสุภาพต่อกัน ทีมงานระงับการพิมพ์ของผู้ที่สแปมหรือใช้คำหยาบได้']},
   {ver:'2026.10.03.3',date:'3 ต.ค. 2026',title:'ส่งสำรวจโฉมใหม่ 🧭',items:[
