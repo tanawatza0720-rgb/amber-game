@@ -25,12 +25,14 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
 function rows(list){const d=el('div','rows');list.forEach(([a,b,c])=>{const r=el('div','row');r.append(el('span',null,a));const v=el('b',null,b);if(c)v.style.color=c;r.append(v);d.append(r);});return d;}
 function para(t){return el('p','ptxt',t);}
 
+// ไข่ป่าใช้อัมพร (server/migrate_wild_amber.sql · เดิม 100 เหรียญ ถูกใช้ปั๊มตัวตำนานจากเหรียญดันด่าน)
+const WILD_AMBER=10;
 const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
     const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th><th>ไข่เทพ</th></tr>';
     [[4,'—','0.5%','0.8%'],[3,'2%','10%','15%'],[2,'15%','32%','84.2%'],[1,'83%','57.5%','—']].forEach(([r,a,b,g])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t);tr2.append(td);[a,b,g].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
     d.append(T); d.append(rows([['ระดับเทพเจ้า','ออกจากไข่ทองคำและไข่เทพ','#ff8ac4'],['การันตีระดับตำนานขึ้นไป (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
-    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ไข่ป่า ×1 · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ไข่ป่า ×10 · 1,000 เหรียญ',()=>hatchMulti('wild','ไข่ป่า'),'',S.coins<1000],['ไข่ทองคำ ×1 · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30],['ไข่ทองคำ ×10 · 300 อัมพร',()=>hatchMulti('gold','ไข่ทองคำ'),'gold',S.amber<300]].concat(typeof godEggAct==='function'?godEggAct():[]));},
+    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ไข่ป่า ×1 · '+WILD_AMBER+' อัมพร',()=>hatch('wild','ไข่ป่า'),'',S.amber<WILD_AMBER],['ไข่ป่า ×10 · '+WILD_AMBER*10+' อัมพร',()=>hatchMulti('wild','ไข่ป่า'),'',S.amber<WILD_AMBER*10],['ไข่ทองคำ ×1 · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30],['ไข่ทองคำ ×10 · 300 อัมพร',()=>hatchMulti('gold','ไข่ทองคำ'),'gold',S.amber<300]].concat(typeof godEggAct==='function'?godEggAct():[]));},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
     const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
@@ -47,7 +49,7 @@ const INFO={
   sweep:()=>{location.href='battle.html';},
   shop:()=>{const d=el('div');d.append(para('ของทุกชิ้นซื้อด้วยสกุลเงินในเกม'));
     const items=[['พลังงาน +30 (ใช้กวาดด่าน)','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30 · ไปกวาดด่านได้ที่หน้าต่อสู้');}}],
-      ['ไข่ป่า ×1','100 เหรียญ',()=>{closeSheet();INFO.hatch();}]];
+      ['ไข่ป่า ×1',WILD_AMBER+' อัมพร',()=>{closeSheet();INFO.hatch();}]];
     const list=el('div','shop');items.forEach(([n,p,fn])=>{const r=el('button','sitem');r.append(el('span',null,n));r.append(el('b',null,p));r.onclick=fn;list.append(r);});d.append(list);
     openSheet('ร้านค้า','สินค้าเปลี่ยนทุกวัน',d,[]);},
   tree:()=>{const d=el('div');d.append(para('ต้นไม้ประจำฟาร์มที่ออกผลเป็นก้อนอัมพร ใช้ฟักไข่ทองคำและซื้อของพิเศษ'));
@@ -118,7 +120,7 @@ async function hatch(kind,name){
   const shake=tween(1.4,t=>{hatchEggMat.emissiveIntensity=.25+t*2.5;hatchEgg.rotation.y+=.2+t*.6;hatchEgg.position.y=2.15+Math.sin(t*40)*.03*t;});
   const r=await act(kind==='god'?'hatch_god_egg':kind==='soulgold'?'soul_buy':'hatch_egg',kind==='god'?{}:kind==='soulgold'?{item:'gold'}:{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
-  if(kind==='soulgold'){if(typeof ALT!=='undefined'&&r.souls!=null)ALT.souls=r.souls;}else if(kind==='god'){if(r.stage&&typeof stageApply==='function')stageApply(r.stage);}else bumpRes(kind==='gold'?'amber':'coins');
+  if(kind==='soulgold'){if(typeof ALT!=='undefined'&&r.souls!=null)ALT.souls=r.souls;}else if(kind==='god'){if(r.stage&&typeof stageApply==='function')stageApply(r.stage);}else bumpRes('amber');
   const col=tierOf(r.rar).hx;
   const ep=new THREE.Vector3(0,2.15,3.2);
   flashBall(ep,col,r.rar>=4?6:r.rar>=3?5:4); particles(ep,col,r.rar>=4?120:r.rar>=3?85:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
@@ -138,7 +140,7 @@ async function hatchMulti(kind,name){
   const shake=tween(1.8,t=>{hatchEggMat.emissiveIntensity=.25+t*3;hatchEgg.rotation.y+=.25+t*.8;hatchEgg.position.y=2.15+Math.sin(t*45)*.04*t;});
   const r=await act('hatch_eggs',{kind,n:10}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
-  bumpRes(kind==='gold'?'amber':'coins');
+  bumpRes('amber');
   const L=r.list.map(x=>({...x,d:S.mons.find(m=>m.uid===Number(x.mon.id))||{uid:Number(x.mon.id),sp:x.mon.sp,lv:1,el:x.mon.el||null}})).sort((a,b)=>b.rar-a.rar);
   const best=L[0].rar,col=tierOf(best).hx,ep=new THREE.Vector3(0,2.15,3.2);
   flashBall(ep,col,best>=4?7:best>=3?6:5); particles(ep,col,best>=4?160:best>=3?110:80,3.4,.07,1.8); particles(ep,0xffffff,40,2.6,.05,1.3);
@@ -149,7 +151,7 @@ async function hatchMulti(kind,name){
   L.forEach(x=>{const c=icon(x.d);c.classList.add('r'+x.rar);d.append(c);});
   const cnt=k=>L.filter(x=>x.rar===k).length;
   const sum=[4,3,2,1].filter(k=>cnt(k)).map(k=>tierOf(k).n+' '+cnt(k)).join(' · ');
-  openSheet(name+' ×10',sum,d,[['ฟักอีก 10 ใบ',()=>hatchMulti(kind,name),kind==='gold'?'gold':'',kind==='gold'?S.amber<300:S.coins<1000],['ปิด',()=>closeSheet(),'ghost']]);
+  openSheet(name+' ×10',sum,d,[['ฟักอีก 10 ใบ',()=>hatchMulti(kind,name),kind==='gold'?'gold':'',kind==='gold'?S.amber<300:S.amber<WILD_AMBER*10],['ปิด',()=>closeSheet(),'ghost']]);
   toast(best>=4?'ได้ระดับเทพเจ้า!!':best>=3?'ได้ระดับตำนาน!':'ฟักครบ 10 ใบแล้ว');
   if(best>=3&&typeof pullFx==='function'){const bx=L[0],n=L.filter(x=>x.rar===best).length;pullFx(best,SPEC[bx.mon.sp].name,n>1?'ได้'+tierOf(best).n+' '+n+' ตัว!':ELEM[elOfMon(bx.d)].i+' ธาตุ'+elOfMon(bx.d));PULL.last=0;setTimeout(pullsLoad,2500);}
   hatching=false;

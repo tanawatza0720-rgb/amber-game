@@ -1680,7 +1680,7 @@ const userSub=u=>!u||u.is_anonymous?'':(u.email||'');
 
 /* ---------- เซิร์ฟเวอร์จำลองในเครื่อง (กติกาเดียวกับ setup_v2.sql) ---------- */
 const LOCAL=(()=>{
-  const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:100,gold_cost:30,pity_max:30,energy_buy:20};
+  const KEY='amber_local_v2', C={energy_max:60,energy_sec:180,amber_sec:600,amber_yield:5,slots:30,wild_cost:10,gold_cost:30,pity_max:30,energy_buy:20};
   const SPS={kazemaru:{rar:1,max:20,to:'kazekiri',cost:300},kazekiri:{rar:2,max:40},yorugumo:{rar:2,max:40},kuroga:{rar:3,max:50},hakuneko:{rar:3,max:50},morihime:{rar:2,max:40},seiro:{rar:2,max:40},kohaku:{rar:2,max:40},garok:{rar:2,max:40},phraiwan:{rar:2,max:40},anubis:{rar:3,max:50},mortha:{rar:3,max:50},amateru:{rar:4,max:50},sarael:{rar:4,max:50}};
   const today=()=>new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
   const yesterday=()=>new Date(Date.now()+7*3600e3-864e5).toISOString().slice(0,10);
@@ -1719,13 +1719,13 @@ const LOCAL=(()=>{
     buy_bag:()=>{const n=D.bag_ext||0;if(n>=BAG.max)fail('bag_max');const c=BAG.cost(n);if(D.amber<c)fail('not_enough_amber');D.amber-=c;D.bag_ext=n+1;return{slots:slots(),cost:c};},
     set_name:({new_name})=>{const n=String(new_name||'').trim();if(n.length<1||n.length>12)fail('bad_name');D.name=n;D.named=true;return{};},
     hatch_egg:({kind})=>{if(D.mons.length>=slots())fail('box_full');let ch;
-      if(kind==='wild'){if(D.coins<C.wild_cost)fail('not_enough_coins');D.coins-=C.wild_cost;ch=[.83,.15,.02,0];}
+      if(kind==='wild'){if(D.amber<C.wild_cost)fail('not_enough_amber');D.amber-=C.wild_cost;ch=[.83,.15,.02,0];}
       else if(kind==='gold'){if(D.amber<C.gold_cost)fail('not_enough_amber');D.amber-=C.gold_cost;D.pity++;ch=[.575,.32,.10,.005];}else fail('bad_egg');
       const r=Math.random(); let t=r<ch[3]?4:r<ch[3]+ch[2]?3:r<ch[3]+ch[2]+ch[1]?2:1; if(kind==='gold'&&t<3&&D.pity>=C.pity_max)t=3;
       const pool=Object.keys(SPS).filter(k=>SPS[k].rar===t), sp=pool[Math.floor(Math.random()*pool.length)]||'kazemaru'; if(kind==='gold'&&t>=3)D.pity=0;
       const m={id:D.nid++,sp,lv:1,stars:0,el:EL_LIST[Math.floor(Math.random()*EL_LIST.length)]};D.mons.push(m);D.hatch_count++;qadd('hatch');return{mon:{...m},rar:SPS[sp].rar};},
     hatch_eggs:({kind,n})=>{if(n!==1&&n!==10)fail('bad_count');if(D.mons.length+n>slots())fail('box_full');const c=n*(kind==='wild'?C.wild_cost:C.gold_cost);
-      if(kind==='wild'&&D.coins<c)fail('not_enough_coins');if(kind==='gold'&&D.amber<c)fail('not_enough_amber');const list=[];for(let i=0;i<n;i++)list.push(F.hatch_egg({kind}));return{list};},
+      if(D.amber<c)fail('not_enough_amber');const list=[];for(let i=0;i<n;i++)list.push(F.hatch_egg({kind}));return{list};},
     level_up:({mon_id})=>{const m=mon(mon_id);if(m.lv>=SPS[m.sp].max)fail('max_level');const c=60*m.lv;if(D.coins<c)fail('not_enough_coins');D.coins-=c;m.lv++;return{lv:m.lv};},
     evolve_monster:()=>fail('evolve_closed'),
     fuse_monsters:({a,b})=>{if(a==null||b==null||a===b)fail('same_monster');const x=mon(a),y=mon(b),r=SPS[x.sp].rar,up={1:1,2:.1}[r];
@@ -3771,12 +3771,14 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
 function rows(list){const d=el('div','rows');list.forEach(([a,b,c])=>{const r=el('div','row');r.append(el('span',null,a));const v=el('b',null,b);if(c)v.style.color=c;r.append(v);d.append(r);});return d;}
 function para(t){return el('p','ptxt',t);}
 
+// ไข่ป่าใช้อัมพร (server/migrate_wild_amber.sql · เดิม 100 เหรียญ ถูกใช้ปั๊มตัวตำนานจากเหรียญดันด่าน)
+const WILD_AMBER=10;
 const INFO={
   hatch:()=>{const d=el('div');d.append(para('วางไข่บนแท่นแล้วฟักเพื่อรับมอนสเตอร์ใหม่ ผลสุ่มตัดสินโดยเซิร์ฟเวอร์ ตัวที่ฟักได้จะเดินออกมาอยู่ในฟาร์มทันที'));
     const T=el('table','oddsT');T.innerHTML='<tr><th>ระดับ</th><th>ไข่ป่า</th><th>ไข่ทองคำ</th><th>ไข่เทพ</th></tr>';
     [[4,'—','0.5%','0.8%'],[3,'2%','10%','15%'],[2,'15%','32%','84.2%'],[1,'83%','57.5%','—']].forEach(([r,a,b,g])=>{const tr2=document.createElement('tr');const td=document.createElement('td');const t=el('span','tierTag r'+r,tierOf(r).n);td.append(t);tr2.append(td);[a,b,g].forEach(x=>{const c=document.createElement('td');c.textContent=x;tr2.append(c);});T.append(tr2);});
     d.append(T); d.append(rows([['ระดับเทพเจ้า','ออกจากไข่ทองคำและไข่เทพ','#ff8ac4'],['การันตีระดับตำนานขึ้นไป (ไข่ทองคำ)','อีก '+Math.max(1,S.pityMax-S.pity)+' ใบ','#ffc94d']]));
-    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ไข่ป่า ×1 · 100 เหรียญ',()=>hatch('wild','ไข่ป่า'),'',S.coins<100],['ไข่ป่า ×10 · 1,000 เหรียญ',()=>hatchMulti('wild','ไข่ป่า'),'',S.coins<1000],['ไข่ทองคำ ×1 · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30],['ไข่ทองคำ ×10 · 300 อัมพร',()=>hatchMulti('gold','ไข่ทองคำ'),'gold',S.amber<300]].concat(typeof godEggAct==='function'?godEggAct():[]));},
+    openSheet('ศาลฟักไข่','ฟักแล้ว '+(S.quests.hatch||0)+' ครั้งวันนี้ · ช่องเก็บ '+S.mons.length+'/'+S.slots,d,[['ไข่ป่า ×1 · '+WILD_AMBER+' อัมพร',()=>hatch('wild','ไข่ป่า'),'',S.amber<WILD_AMBER],['ไข่ป่า ×10 · '+WILD_AMBER*10+' อัมพร',()=>hatchMulti('wild','ไข่ป่า'),'',S.amber<WILD_AMBER*10],['ไข่ทองคำ ×1 · 30 อัมพร',()=>hatch('gold','ไข่ทองคำ'),'gold',S.amber<30],['ไข่ทองคำ ×10 · 300 อัมพร',()=>hatchMulti('gold','ไข่ทองคำ'),'gold',S.amber<300]].concat(typeof godEggAct==='function'?godEggAct():[]));},
   dojo:()=>{const d=el('div');d.append(para('ทีม 3 ตัวออกผจญภัยดันด่านให้เองตลอดเวลา แม้ปิดเกมก็ยังสะสมรางวัลได้สูงสุด 8 ชั่วโมง ทุก 10 ด่านจะมีบอสให้กดสู้เอง'));
     const lb=n=>Math.ceil(n/10)+'-'+(((n-1)%10)+1), sec=Math.min(S.idleMax||28800,(S.idleSec||0)+Math.floor((Date.now()-(S.idleAt||Date.now()))/1000));
     const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
@@ -3793,7 +3795,7 @@ const INFO={
   sweep:()=>{location.href='battle.html';},
   shop:()=>{const d=el('div');d.append(para('ของทุกชิ้นซื้อด้วยสกุลเงินในเกม'));
     const items=[['พลังงาน +30 (ใช้กวาดด่าน)','20 อัมพร',async()=>{if(await act('buy_energy')){bumpRes('energy');toast('เติมพลังงาน +30 · ไปกวาดด่านได้ที่หน้าต่อสู้');}}],
-      ['ไข่ป่า ×1','100 เหรียญ',()=>{closeSheet();INFO.hatch();}]];
+      ['ไข่ป่า ×1',WILD_AMBER+' อัมพร',()=>{closeSheet();INFO.hatch();}]];
     const list=el('div','shop');items.forEach(([n,p,fn])=>{const r=el('button','sitem');r.append(el('span',null,n));r.append(el('b',null,p));r.onclick=fn;list.append(r);});d.append(list);
     openSheet('ร้านค้า','สินค้าเปลี่ยนทุกวัน',d,[]);},
   tree:()=>{const d=el('div');d.append(para('ต้นไม้ประจำฟาร์มที่ออกผลเป็นก้อนอัมพร ใช้ฟักไข่ทองคำและซื้อของพิเศษ'));
@@ -3864,7 +3866,7 @@ async function hatch(kind,name){
   const shake=tween(1.4,t=>{hatchEggMat.emissiveIntensity=.25+t*2.5;hatchEgg.rotation.y+=.2+t*.6;hatchEgg.position.y=2.15+Math.sin(t*40)*.03*t;});
   const r=await act(kind==='god'?'hatch_god_egg':kind==='soulgold'?'soul_buy':'hatch_egg',kind==='god'?{}:kind==='soulgold'?{item:'gold'}:{kind}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
-  if(kind==='soulgold'){if(typeof ALT!=='undefined'&&r.souls!=null)ALT.souls=r.souls;}else if(kind==='god'){if(r.stage&&typeof stageApply==='function')stageApply(r.stage);}else bumpRes(kind==='gold'?'amber':'coins');
+  if(kind==='soulgold'){if(typeof ALT!=='undefined'&&r.souls!=null)ALT.souls=r.souls;}else if(kind==='god'){if(r.stage&&typeof stageApply==='function')stageApply(r.stage);}else bumpRes('amber');
   const col=tierOf(r.rar).hx;
   const ep=new THREE.Vector3(0,2.15,3.2);
   flashBall(ep,col,r.rar>=4?6:r.rar>=3?5:4); particles(ep,col,r.rar>=4?120:r.rar>=3?85:60,3.2,.07,1.6); particles(ep,0xffffff,24,2.4,.05,1.2);
@@ -3884,7 +3886,7 @@ async function hatchMulti(kind,name){
   const shake=tween(1.8,t=>{hatchEggMat.emissiveIntensity=.25+t*3;hatchEgg.rotation.y+=.25+t*.8;hatchEgg.position.y=2.15+Math.sin(t*45)*.04*t;});
   const r=await act('hatch_eggs',{kind,n:10}); await shake; hatchEggMat.emissiveIntensity=.25;
   if(!r){hatching=false;return;}
-  bumpRes(kind==='gold'?'amber':'coins');
+  bumpRes('amber');
   const L=r.list.map(x=>({...x,d:S.mons.find(m=>m.uid===Number(x.mon.id))||{uid:Number(x.mon.id),sp:x.mon.sp,lv:1,el:x.mon.el||null}})).sort((a,b)=>b.rar-a.rar);
   const best=L[0].rar,col=tierOf(best).hx,ep=new THREE.Vector3(0,2.15,3.2);
   flashBall(ep,col,best>=4?7:best>=3?6:5); particles(ep,col,best>=4?160:best>=3?110:80,3.4,.07,1.8); particles(ep,0xffffff,40,2.6,.05,1.3);
@@ -3895,7 +3897,7 @@ async function hatchMulti(kind,name){
   L.forEach(x=>{const c=icon(x.d);c.classList.add('r'+x.rar);d.append(c);});
   const cnt=k=>L.filter(x=>x.rar===k).length;
   const sum=[4,3,2,1].filter(k=>cnt(k)).map(k=>tierOf(k).n+' '+cnt(k)).join(' · ');
-  openSheet(name+' ×10',sum,d,[['ฟักอีก 10 ใบ',()=>hatchMulti(kind,name),kind==='gold'?'gold':'',kind==='gold'?S.amber<300:S.coins<1000],['ปิด',()=>closeSheet(),'ghost']]);
+  openSheet(name+' ×10',sum,d,[['ฟักอีก 10 ใบ',()=>hatchMulti(kind,name),kind==='gold'?'gold':'',kind==='gold'?S.amber<300:S.amber<WILD_AMBER*10],['ปิด',()=>closeSheet(),'ghost']]);
   toast(best>=4?'ได้ระดับเทพเจ้า!!':best>=3?'ได้ระดับตำนาน!':'ฟักครบ 10 ใบแล้ว');
   if(best>=3&&typeof pullFx==='function'){const bx=L[0],n=L.filter(x=>x.rar===best).length;pullFx(best,SPEC[bx.mon.sp].name,n>1?'ได้'+tierOf(best).n+' '+n+' ตัว!':ELEM[elOfMon(bx.d)].i+' ธาตุ'+elOfMon(bx.d));PULL.last=0;setTimeout(pullsLoad,2500);}
   hatching=false;
@@ -5158,6 +5160,9 @@ if(window.__F)Object.assign(window.__F,{chat:(d,tab,open)=>{CH.w=d.world||[];CH.
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.03.5',date:'3 ต.ค. 2026',title:'ปรับราคาไข่ป่า 🥚',items:[
+    '🥚 ไข่ป่าเปลี่ยนจาก 100 เหรียญ เป็น 10 อัมพรต่อใบ (×10 = 100 อัมพร) · อัตราออกเท่าเดิม',
+    '🪙 เหรียญยังใช้อัปเลเวลมอนสเตอร์ได้ตามปกติ · ไข่ทองคำ 30 อัมพรเท่าเดิม']},
   {ver:'2026.10.03.4',date:'3 ต.ค. 2026',title:'แชท + ข้อเสนอแนะ 💬',items:[
     '🌏 แชทโลก: คุยกับผู้เล่นทุกคนได้แล้ว กล่องแชทโปร่งใสอยู่มุมซ้ายล่างเหนือปุ่มผจญภัย',
     '🛡️ แชทเผ่า: ห้องเฉพาะเพื่อนร่วมเผ่า สลับแท็บ "โลก / เผ่า" ได้ในกล่องเดียวกัน · กดลูกศรเพื่อพับหรือกางกล่อง · มีจุดแดงเมื่อมีข้อความใหม่',
@@ -5335,10 +5340,10 @@ $('#lgNews').onclick=e=>{e.preventDefault();openNews(true);};
 const GUIDE_KEY='amber_guide_v1';
 const GUIDE_STEPS=[
   {t:'ยินดีต้อนรับสู่ป่าอัมพร! 🌳',d:'ให้พาทัวร์สั้น ๆ ไหม? ใช้เวลาไม่ถึงนาที ทำตามจุดที่เรืองแสงได้เลย หรือกดข้ามก็ได้',center:1,btn:'เริ่มเลย'},
-  {sel:'#pCoin',t:'เหรียญ 🪙',d:'ได้จากการผจญภัยและภารกิจ ใช้อัปเลเวลมอนสเตอร์และฟักไข่ป่า'},
+  {sel:'#pCoin',t:'เหรียญ 🪙',d:'ได้จากการผจญภัยและภารกิจ ใช้อัปเลเวลมอนสเตอร์'},
   {sel:'#pAmber',t:'อัมพร 🔶',d:'ต้นอัมพรกลางฟาร์มออกผลเรื่อย ๆ แตะเก็บได้ ใช้ฟักไข่ทองคำที่มีโอกาสได้ตัวหายาก'},
   {sel:'#nHatch',t:'ลองฟักไข่',d:'แตะ "ฟักไข่" เพื่อไปที่ศาลฟักไข่',click:1},
-  {sel:'#shActs',t:'เลือกไข่',d:'ไข่ป่าใช้เหรียญ ไข่ทองคำใช้อัมพร แตะเพื่อฟักได้เลย (หรือกดถัดไป)',click:'#shActs button',opt:1},
+  {sel:'#shActs',t:'เลือกไข่',d:'ไข่ป่า 10 อัมพร · ไข่ทองคำ 30 อัมพร (โอกาสได้ตัวดีสูงกว่า) แตะเพื่อฟักได้เลย (หรือกดถัดไป)',click:'#shActs button',opt:1},
   {sel:'#nMons',t:'มอนสเตอร์ของคุณ',d:'แตะเพื่อเปิดคลังมอนสเตอร์',click:1},
   {sel:'#bTeam',t:'ทีมต่อสู้ 6 ตัว',d:'ทีมนี้ใช้ในทุกการต่อสู้ แตะมอนสเตอร์ในคลัง แล้วกด "ใส่ทีม" เพื่อจัดทีม',opt:1},
   {sel:'#mdUp',t:'อัปเลเวล',d:'ใช้เหรียญเพิ่มเลเวล พลังรบจะสูงขึ้นทันที',opt:1},
