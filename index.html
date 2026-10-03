@@ -635,6 +635,24 @@ body.preLogin #sheetBg,body.boxOpen #sheetBg{display:none!important}
 .alItem{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
 .alItem>i{font-style:normal;font-size:24px}.alItem>div{flex:1;min-width:0;display:flex;flex-direction:column}.alItem small{font-size:11px;opacity:.7}.alItem .sbtn{flex:none;padding:7px 12px}
 @media(max-width:420px){.alGrid{grid-template-columns:repeat(5,1fr)}}
+/* แชท + ข้อเสนอแนะ */
+.chTabs{display:flex;gap:6px;margin:2px 0 8px}.chTab{position:relative;flex:1;padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:inherit;font:inherit;font-size:13px;font-weight:700;opacity:.7}
+.chTab.on{opacity:1;background:rgba(255,200,90,.16);border-color:rgba(255,200,90,.55)}.chTab.dot::after{content:"";position:absolute;top:-3px;right:-3px;width:11px;height:11px;border-radius:50%;background:#e8453c;border:2px solid #fff3}
+.chList{height:min(46vh,400px);overflow:auto;padding:8px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:6px;overscroll-behavior:contain}
+.chMsg{max-width:88%;align-self:flex-start;padding:6px 10px;border-radius:12px 12px 12px 4px;background:rgba(255,255,255,.08)}.chMsg.me{align-self:flex-end;border-radius:12px 12px 4px 12px;background:rgba(255,200,90,.18)}
+.chHead{display:flex;gap:8px;align-items:baseline}.chName{font-size:12px}.chTime{font-size:10.5px;opacity:.5}.chTxt{font-size:14px;line-height:1.4;word-break:break-word;overflow-wrap:anywhere}
+.chEmpty{margin:auto;text-align:center;opacity:.6;font-size:13px;padding:18px 8px}
+.chIn{display:flex;gap:6px;margin-top:8px}.chIn input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:inherit;font:inherit;font-size:16px}.chIn .sbtn{flex:none;padding:8px 16px}
+.chNote{display:block;margin-top:5px;font-size:11px;opacity:.55}
+.sgIn{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:inherit;font:inherit;font-size:16px;resize:vertical;min-height:72px}
+.sgRow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 10px}.sgRow small{opacity:.6}.sgRow .sbtn{flex:none;padding:8px 14px}
+.sgLock{display:flex;flex-direction:column;gap:8px;margin:6px 0 10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.2);font-size:12.5px;line-height:1.5}
+.sgItem{margin:7px 0;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}.sgItem.mine{border-color:rgba(255,200,90,.45)}
+.sgBody{font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+.sgReply{margin-top:7px;padding:7px 9px;border-radius:8px;background:rgba(143,240,196,.1);border-left:3px solid #8ff0c4;font-size:13px;line-height:1.45;white-space:pre-wrap}.sgReply b{color:#8ff0c4}
+.sgFoot{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}.sgWho{flex:1;min-width:120px;font-size:11.5px;opacity:.6}
+.sgV{padding:6px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit;font:inherit;font-size:13px;font-weight:700}
+.sgV.up.on{background:rgba(120,220,140,.25);border-color:#7bdc8c;color:#b6ffc4}.sgV.dn.on{background:rgba(240,110,100,.22);border-color:#f07a6a;color:#ffc2ba}.sgV.del{font-size:12px;opacity:.75}
 </style>
 
 <div id="view"></div>
@@ -664,6 +682,8 @@ body.preLogin #sheetBg,body.boxOpen #sheetBg{display:none!important}
   <button class="rbtn" id="rExp" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#2a4a5e" stroke="#9fd8ff" stroke-width="1.5"/><path d="M12 4l2.6 8L12 20l-2.6-8z" fill="#ff6a4a"/><path d="M12 12 14.6 12 12 20 9.4 12z" fill="#e9eef5"/><circle cx="12" cy="12" r="1.4" fill="#ffd34d"/></svg>สำรวจ<span class="badge" id="bExp" hidden></span><i class="rhp"><i id="rExpBar"></i></i></button>
   <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M3 10v4l3 .5V9.5z" fill="#c9a24a"/><path d="M6 9.5 17 5v14L6 14.5z" fill="#ffc94d"/><path d="M8 14.8 9.5 20h2.6l-1.2-4.8" fill="#e9dcc0"/><path d="M19.5 9.5c1 .8 1 4.2 0 5" stroke="#ffd34d" stroke-width="1.6" fill="none"/></svg>อัปเดต<span class="badge" id="bNews" hidden>N</span></button>
   <button class="rbtn" id="rRank" hidden><svg viewBox="0 0 24 24"><path d="M7 3h10v5a5 5 0 0 1-10 0z" fill="#ffc94d"/><path d="M7 5H4a3 3 0 0 0 3 4M17 5h3a3 3 0 0 1-3 4" stroke="#d9a23a" stroke-width="1.6" fill="none"/><rect x="10.5" y="12" width="3" height="5" fill="#d9a23a"/><rect x="7" y="17" width="10" height="4" rx="1" fill="#8a6a44"/></svg>อันดับ</button>
+  <button class="rbtn" id="rChat" hidden><svg viewBox="0 0 24 24"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v5A2.5 2.5 0 0 1 14.5 13H9l-3.5 3v-3A2.5 2.5 0 0 1 3 10.5z" fill="#9fd8ff"/><path d="M10 15h5.5l3 2.6V15A2.5 2.5 0 0 0 21 12.5v-4A2.5 2.5 0 0 0 19 6.1v4.4A4.5 4.5 0 0 1 14.5 15z" fill="#ffd36a"/><circle cx="7" cy="8" r="1" fill="#2a4a5e"/><circle cx="10" cy="8" r="1" fill="#2a4a5e"/><circle cx="13" cy="8" r="1" fill="#2a4a5e"/></svg>แชท</button>
+  <button class="rbtn" id="rSuggest" hidden><svg viewBox="0 0 24 24"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.7h6c0-.7.3-1.3.8-1.7A6.5 6.5 0 0 0 12 2.5z" fill="#ffd34d"/><rect x="9" y="17" width="6" height="2" rx="1" fill="#c9a24a"/><rect x="10" y="20" width="4" height="1.8" rx=".9" fill="#8a6a44"/><path d="M12 6v4M10 8h4" stroke="#fff7d6" stroke-width="1.4" stroke-linecap="round"/></svg>เสนอแนะ</button>
   <button class="rbtn" id="rGuide"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 1 .2V21a3 3 0 0 0-1-.2H4z" fill="#e9dcc0"/><path d="M20 4h-7a3 3 0 0 0-1 .2V21a3 3 0 0 1 1-.2h7z" fill="#d8c69c"/><path d="M6 8h4M6 11h4M14 8h4M14 11h4" stroke="#8a6a44" stroke-width="1.4"/></svg>คู่มือ</button>
 </div>
 
@@ -1563,7 +1583,7 @@ const MEMST={};
 const SafeStore={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return MEMST[k]??null;}},
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){MEMST[k]=v;}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete MEMST[k];}}};
 const NET={mode:'offline',sb:null,user:null,busy:false};
-const ERR={arena_refresh_limit:'วันนี้สุ่มเป้าใหม่ครบแล้ว',arena_limit:'วันนี้บุกครบ 5 ครั้งแล้ว',arena_offer:'เป้าหมายหมดอายุ ลองเปิดใหม่',bag_max:'ขยายกระเป๋าได้สูงสุดแล้ว',pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',fuse_tier:'รวมร่างได้เฉพาะระดับทั่วไปหรือหายาก และต้องระดับเดียวกัน',fuse_level:'ทั้งสองตัวต้องเลเวลเต็ม',fuse_stars:'ทั้งสองตัวต้องดาวเต็ม 6 ดาว',evolve_closed:'เปลี่ยนร่างถูกแทนด้วยรวมร่างแล้ว',altar_count:'เลือกได้ครั้งละ 1–200 ตัว',altar_team:'ตัวในทีมสังเวยไม่ได้',altar_bad:'สังเวยได้เฉพาะตัวระดับทั่วไปที่ไม่มีดาว',bad_item:'ไม่มีสินค้านี้',
+const ERR={arena_refresh_limit:'วันนี้สุ่มเป้าใหม่ครบแล้ว',arena_limit:'วันนี้บุกครบ 5 ครั้งแล้ว',arena_offer:'เป้าหมายหมดอายุ ลองเปิดใหม่',bag_max:'ขยายกระเป๋าได้สูงสุดแล้ว',pull_expired:'ประกาศนี้หมดเวลาแล้ว (เกิน 24 ชม.)',bad_count:'จำนวนไข่ไม่ถูกต้อง',no_stage_reward:'ยังไม่มีรางวัลด่านให้รับ',no_god_egg:'ไม่มีไข่เทพ',raid_no_access:'บุกบ้านนี้ไม่ได้ (ต้องเป็นเพื่อน หรือสุ่มเจอวันนี้)',raid_scout_limit:'สุ่มบ้านครบ 20 ครั้งแล้ววันนี้',raid_no_one:'ตอนนี้ยังไม่มีบ้านให้บุก ลองใหม่ภายหลัง',raid_friend_today:'วันนี้บุกปล้นเพื่อนคนนี้ไปแล้ว',raid_limit:'วันนี้บุกปล้นครบแล้ว',raid_shield:'เพื่อนคนนี้ถูกปล้นครบ 3 ครั้งแล้ววันนี้ (มีโล่คุ้มกัน)',raid_no_target:'ไม่พบมอนสเตอร์เป้าหมาย',raid_bad_party:'ต้องเลือกมอนสเตอร์ 4 ตัว',friend_not_found:'ไม่พบผู้เล่นรหัสนี้',friend_self:'นี่คือรหัสของคุณเอง',friend_already:'เป็นเพื่อนกันอยู่แล้ว',friend_pending:'ส่งคำขอไปแล้ว รออีกฝ่ายกดรับ',friend_limit:'เพื่อนเต็มแล้ว (สูงสุด 30 คน)',friend_no_request:'ไม่มีคำขอนี้แล้ว',friend_not_friend:'ยังไม่ได้เป็นเพื่อนกัน',exp_busy:'มีทีมสำรวจออกไปอยู่แล้ว',mon_in_team:'ตัวที่อยู่ในทีมส่งไปสำรวจไม่ได้',bad_party:'เลือกมอนสเตอร์ 1–6 ตัว',bad_zone:'ไม่มีพื้นที่นี้',no_exp:'ไม่มีทีมสำรวจ',exp_not_done:'ทีมสำรวจยังไม่กลับมา',exp_finished:'ทีมสำรวจกลับมาแล้ว กดรับผลได้เลย',not_enough_souls:'วิญญาณไม่พอ',material_stronger:'ใช้ตัวที่ดาวมากกว่าเป็นวัตถุดิบไม่ได้',bad_race:'ไม่มีเผ่านี้',race_locked:'เลือกเผ่าไปแล้ว เปลี่ยนไม่ได้',no_mail:'จดหมายนี้หมดอายุแล้ว',max_stars:'ดาวเต็มแล้ว (6 ดาว)',bad_material:'ตัวซ้ำไม่พอ',not_same_species:'ต้องใช้ตัวละครเดียวกัน',material_in_team:'ตัวที่ใช้เป็นวัตถุดิบต้องไม่อยู่ในทีม',same_monster:'เลือกตัวเดียวกันไม่ได้',not_enough_coins:'เหรียญไม่พอ',not_enough_amber:'อัมพรไม่พอ',not_enough_energy:'พลังงานไม่พอ รอฟื้นฟูหรือซื้อที่ร้านค้า',box_full:'ช่องเก็บมอนสเตอร์เต็ม',fuse_tier:'รวมร่างได้เฉพาะระดับทั่วไปหรือหายาก และต้องระดับเดียวกัน',fuse_level:'ทั้งสองตัวต้องเลเวลเต็ม',fuse_stars:'ทั้งสองตัวต้องดาวเต็ม 6 ดาว',evolve_closed:'เปลี่ยนร่างถูกแทนด้วยรวมร่างแล้ว',chat_need_name:'ตั้งชื่อและเลือกเผ่าก่อนจึงจะพิมพ์ได้',chat_len:'ข้อความต้องยาว 1–200 ตัวอักษร',chat_muted:'คุณถูกระงับการพิมพ์ชั่วคราว',chat_fast:'พิมพ์เร็วเกินไป รอสักครู่',bad_channel:'ไม่มีห้องแชทนี้',need_link:'ต้องผูกบัญชีก่อน (ผู้เยี่ยมชมอ่านได้อย่างเดียว)',suggest_len:'ข้อเสนอแนะต้องยาว 10–500 ตัวอักษร',suggest_limit:'วันนี้ส่งข้อเสนอแนะครบ 3 เรื่องแล้ว',suggest_own:'โหวตข้อเสนอแนะของตัวเองไม่ได้',no_suggest:'ไม่พบข้อเสนอแนะนี้',bad_vote:'โหวตไม่ถูกต้อง',altar_count:'เลือกได้ครั้งละ 1–200 ตัว',altar_team:'ตัวในทีมสังเวยไม่ได้',altar_bad:'สังเวยได้เฉพาะตัวระดับทั่วไปที่ไม่มีดาว',bad_item:'ไม่มีสินค้านี้',
   max_level:'เลเวลสูงสุดแล้ว',level_too_low:'เลเวลยังไม่ถึง',cannot_evolve:'ตัวนี้เป็นร่างสุดท้ายแล้ว',already_claimed:'รับไปแล้ว',not_ready:'ยังไม่พร้อม',
   quest_not_done:'ภารกิจยังไม่สำเร็จ',bad_team:'จัดทีมไม่ถูกต้อง',bad_name:'ชื่อต้องยาว 1–12 ตัวอักษร',no_monster:'ไม่พบมอนสเตอร์ตัวนี้',too_fast:'จบด่านเร็วผิดปกติ',
   not_authenticated:'ยังไม่ได้เข้าสู่ระบบ',network:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง',not_ready:'ระบบนี้ยังไม่เปิดบนเซิร์ฟเวอร์ รอผู้ดูแลอัปเดตสักครู่',server:'เซิร์ฟเวอร์แจ้งข้อผิดพลาด ลองใหม่อีกครั้ง',offline_net:'ไม่มีอินเทอร์เน็ต ตรวจสอบการเชื่อมต่อแล้วลองใหม่',session:'การเข้าสู่ระบบหมดอายุ กรุณาออกจากระบบแล้วเข้าใหม่'};
@@ -5006,9 +5026,114 @@ function altarOverflow(need,retry){
 if(window.__F)Object.assign(window.__F,{altar:(souls,sel)=>{Object.assign(ALT,{souls,godEggs:1});focusBuilding('altar');renderAltar();if(sel)ALT.sel=new Set(altarList().filter(m=>m.lv<sel).map(m=>m.uid));renderAltar();return [ALTAR.pos,altarList().length];},
   altarFull:()=>{const m0=NET.mode;NET.mode='online';const sl=S.slots;S.slots=S.mons.length;const r=altarOverflow(1,()=>{});NET.mode=m0;S.slots=sl;return r;},burst:n=>altarBurst(n),cam:(x,z,d)=>{camTTo.set(x,0,z);distTo=d;}});
 
+/* ================= แชทโลก + แชทเผ่า + กล่องข้อเสนอแนะ (server/migrate_chat.sql) =================
+   แชท: ไม่ใช้ช่องสัญญาณเรียลไทม์ — หน้าเกมเรียก chat_poll(w,r) เป็นระยะ (เปิดหน้าต่างอยู่ทุก 4 วิ · ปิดอยู่ทุก 60 วิ เพื่อขึ้นจุดแดง)
+        ส่งด้วย chat_send('world'|'race', ข้อความ) · เซิร์ฟเวอร์จำกัดความยาว/ความถี่/ปิดปาก · ข้อความแสดงด้วย textContent เท่านั้น (กันโค้ดแฝง)
+   ข้อเสนอแนะ: suggest_list(sort) / suggest_post(body) / suggest_vote(p_id, vote) / suggest_delete(p_id)
+        เขียนและโหวตได้เฉพาะบัญชีที่ผูกแล้ว (เซิร์ฟเวอร์ตรวจ) · ทุกคนอ่านได้ */
+var CH={w:[],r:[],lw:0,lr:0,tab:'world',seen:{w:0,r:0},race:null,mute:null,len:200,last:0,busy:false,ready:false};
+try{const s=JSON.parse(localStorage.getItem('amber_chat_seen')||'{}');CH.seen={w:+s.w||0,r:+s.r||0};}catch(e){}
+const chKey=()=>CH.tab==='world'?'w':'r';
+const chOpen=()=>!$('#sheet').hidden&&$('#shTitle').textContent==='แชท'&&!!$('#chList');
+const chUnread=k=>CH[k].some(m=>!m.me&&m.id>CH.seen[k]);
+const chTime=t=>{const d=new Date(t),p=n=>(n<10?'0':'')+n,now=new Date();return (d.toDateString()===now.toDateString()?'':d.getDate()+'/'+(d.getMonth()+1)+' ')+p(d.getHours())+':'+p(d.getMinutes());};
+function chSaveSeen(){try{localStorage.setItem('amber_chat_seen',JSON.stringify(CH.seen));}catch(e){}}
+function chBadge(){const b=$('#rChat');if(!b)return;b.classList.toggle('reddot',chUnread('w')||chUnread('r'));
+  const tw=$('#chTabW'),tr=$('#chTabR');if(tw)tw.classList.toggle('dot',CH.tab!=='world'&&chUnread('w'));if(tr)tr.classList.toggle('dot',CH.tab!=='race'&&chUnread('r'));}
+function chRow(m){const d=el('div','chMsg'+(m.me?' me':'')),h=el('div','chHead'),R=RACES[m.race];
+  const n=el('b','chName',(R?R.icon+' ':'')+(m.name||'ผู้เล่น'));if(R)n.style.color=R.c;h.append(n);h.append(el('span','chTime',chTime(m.at)));d.append(h);d.append(el('div','chTxt',m.body));return d;}
+function chMarkSeen(){const k=chKey(),L=CH[k];if(L.length){CH.seen[k]=Math.max(CH.seen[k],L[L.length-1].id);chSaveSeen();}chBadge();}
+function chFill(){const box=$('#chList');if(!box)return;box.innerHTML='';const L=CH[chKey()];
+  if(!L.length)box.append(el('div','chEmpty',CH.tab==='world'?'ยังไม่มีใครพิมพ์ในแชทโลก เริ่มทักทายได้เลย':'ยังไม่มีใครพิมพ์ในแชทเผ่า เริ่มคุยกับเพื่อนร่วมเผ่าได้เลย'));
+  L.forEach(m=>box.append(chRow(m)));box.scrollTop=box.scrollHeight;chMarkSeen();}
+async function chatPoll(){
+  if(NET.mode!=='online'||CH.busy)return;CH.busy=true;
+  try{const r=await api('chat_poll',{w:CH.lw,r:CH.lr});CH.last=Date.now();CH.ready=true;CH.race=r.race_key;CH.mute=r.muted_until;if(r.len)CH.len=r.len;
+    const add=(k,list)=>{if(!list||!list.length)return [];const have=new Set(CH[k].map(m=>m.id)),nw=list.filter(m=>!have.has(m.id));CH[k]=CH[k].concat(nw).slice(-150);if(CH[k].length)CH['l'+k]=CH[k][CH[k].length-1].id;return nw;};
+    const nw={w:add('w',r.world),r:add('r',r.race)};
+    $('#rChat').hidden=false;if($('#rSuggest'))$('#rSuggest').hidden=false;
+    if(chOpen()){const box=$('#chList'),k=chKey(),near=box.scrollHeight-box.scrollTop-box.clientHeight<70;
+      if(nw[k].length){const emp=box.querySelector('.chEmpty');if(emp)emp.remove();nw[k].forEach(m=>box.append(chRow(m)));if(near||nw[k].some(m=>m.me))box.scrollTop=box.scrollHeight;}
+      if(near)chMarkSeen();chMuteUi();}
+    chBadge();
+  }catch(e){CH.last=Date.now();if(e.code!=='not_ready')console.warn('chat',e);}finally{CH.busy=false;}
+}
+function chMuteUi(){const inp=$('#chIn'),go=$('#chGo'),nt=$('#chNote');if(!inp)return;const mu=CH.mute&&new Date(CH.mute)>new Date();
+  inp.disabled=go.disabled=!!mu;inp.placeholder=mu?'ถูกระงับการพิมพ์ถึง '+chTime(CH.mute):(CH.tab==='world'?'พิมพ์ถึงทุกคน…':'พิมพ์ถึงเพื่อนร่วมเผ่า…');
+  if(nt)nt.textContent='ข้อความยาวได้ '+CH.len+' ตัวอักษร · โปรดสุภาพต่อกัน';}
+async function chatSend(){const inp=$('#chIn'),go=$('#chGo');if(!inp)return;const t=inp.value.trim();if(!t)return;
+  go.disabled=true;try{await api('chat_send',{ch:CH.tab==='world'?'world':'race',body:t});inp.value='';CH.busy=false;await chatPoll();}
+  catch(e){toast(ERR[e.code]||ERR.network);}finally{go.disabled=false;chMuteUi();if(!PHONE_KB())inp.focus();}}
+const PHONE_KB=()=>window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+function openChat(){
+  if(NET.mode!=='online'){toast('แชทต้องเข้าสู่ระบบก่อน');return;}
+  const d=el('div','chat'),tabs=el('div','chTabs'),R=RACES[CH.race||S.race];
+  const tw=el('button','chTab'+(CH.tab==='world'?' on':''),'🌏 แชทโลก');tw.id='chTabW';const tr=el('button','chTab'+(CH.tab==='race'?' on':''),(R?R.icon+' ':'')+'แชท'+(R?R.n:'เผ่า'));tr.id='chTabR';
+  const pick=t=>{CH.tab=t;tw.classList.toggle('on',t==='world');tr.classList.toggle('on',t==='race');chFill();chMuteUi();};
+  tw.onclick=()=>pick('world');tr.onclick=()=>pick('race');tabs.append(tw,tr);d.append(tabs);
+  const box=el('div','chList');box.id='chList';box.onscroll=()=>{if(box.scrollHeight-box.scrollTop-box.clientHeight<70)chMarkSeen();};d.append(box);
+  const row=el('div','chIn'),inp=el('input');inp.id='chIn';inp.type='text';inp.maxLength=CH.len;inp.autocomplete='off';inp.enterKeyHint='send';
+  const go=el('button','sbtn gold','ส่ง');go.id='chGo';go.onclick=chatSend;inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();chatSend();}});
+  row.append(inp,go);d.append(row);const nt=el('small','chNote');nt.id='chNote';d.append(nt);
+  openSheet('แชท','',d,[]);chFill();chMuteUi();CH.last=0;chatPoll();
+}
+setInterval(()=>{if(NET.mode!=='online'||typeof entered==='undefined'||!entered||document.visibilityState==='hidden')return;
+  if(Date.now()-CH.last>=(chOpen()?4000:60000))chatPoll();},2000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&chOpen()){CH.last=0;}});
+$('#rChat').onclick=()=>openChat();
+
+/* ---------- กล่องข้อเสนอแนะ ---------- */
+var SG={st:null,sort:'top',draft:'',delAt:0,delId:0};
+const sgDate=t=>{const d=new Date(t);return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();};
+async function loadSuggest(){try{SG.st=await api('suggest_list',{sort:SG.sort});return true;}catch(e){toast(ERR[e.code]||ERR.network);return false;}}
+async function openSuggest(){
+  if(NET.mode!=='online'){toast('ข้อเสนอแนะต้องเข้าสู่ระบบก่อน');return;}
+  openSheet('ข้อเสนอแนะ','กำลังโหลด…',para('กำลังโหลด…'),[]);
+  if(!await loadSuggest()){if($('#shTitle').textContent==='ข้อเสนอแนะ')openSheet('ข้อเสนอแนะ','',para('โหลดข้อเสนอแนะไม่ได้ ลองใหม่อีกครั้ง'),[]);return;}
+  if($('#shTitle').textContent==='ข้อเสนอแนะ')renderSuggest();
+}
+function renderSuggest(){
+  const st=SG.st,d=el('div','sg'),keepY=$('#shBody')?$('#shBody').scrollTop:0;
+  d.append(para('บอกทีมงานได้เลยว่าอยากให้เกมมีอะไรเพิ่มหรือปรับตรงไหน · กด 👍 ถ้าเห็นด้วยกับข้อเสนอของคนอื่น ทีมงานจะได้รู้ว่ามีคนคิดเหมือนกันกี่คน'));
+  if(st.linked){
+    const ta=el('textarea','sgIn');ta.maxLength=st.max;ta.rows=3;ta.placeholder='พิมพ์ข้อเสนอแนะ ('+st.min+'–'+st.max+' ตัวอักษร)';ta.value=SG.draft;d.append(ta);
+    const row=el('div','sgRow'),cnt=el('small',null,SG.draft.length+'/'+st.max),go=el('button','sbtn gold',st.left_today>0?'ส่งข้อเสนอแนะ (เหลือ '+st.left_today+' วันนี้)':'วันนี้ส่งครบแล้ว');
+    go.disabled=st.left_today<=0||SG.draft.trim().length<st.min;
+    ta.oninput=()=>{SG.draft=ta.value;cnt.textContent=ta.value.length+'/'+st.max;go.disabled=st.left_today<=0||ta.value.trim().length<st.min;};
+    go.onclick=async()=>{go.disabled=true;try{SG.st=await api('suggest_post',{body:ta.value});SG.sort='new';SG.draft='';toast('ส่งข้อเสนอแนะแล้ว ขอบคุณครับ 🙏');}catch(e){toast(ERR[e.code]||ERR.network);}renderSuggest();};
+    row.append(cnt,go);d.append(row);
+  }else{
+    const nb=el('div','sgLock');nb.append(el('span',null,'🔒 เขียนข้อเสนอแนะและกดโหวตได้เฉพาะบัญชีที่ผูกแล้ว (ผู้เยี่ยมชมอ่านได้อย่างเดียว)'));
+    if(NET.user&&NET.user.is_anonymous&&typeof linkGoogle==='function'){const b=el('button','sbtn gold','ผูกบัญชี Google');b.onclick=()=>linkGoogle();nb.append(b);}d.append(nb);
+  }
+  const tabs=el('div','chTabs');[['top','🔥 ยอดนิยม'],['new','🕒 ล่าสุด']].forEach(([k,t])=>{const b=el('button','chTab'+(SG.sort===k?' on':''),t);b.onclick=async()=>{if(SG.sort===k)return;SG.sort=k;if(await loadSuggest())renderSuggest();};tabs.append(b);});d.append(tabs);
+  if(!st.list.length)d.append(el('div','chEmpty','ยังไม่มีข้อเสนอแนะ มาเป็นคนแรกกันเลย'));
+  st.list.forEach(x=>{const it=el('div','sgItem'+(x.mine?' mine':'')),R=RACES[x.race];
+    it.append(el('div','sgBody',x.body));
+    if(x.reply){const rp=el('div','sgReply');rp.append(el('b',null,'ทีมงาน: '));rp.append(document.createTextNode(x.reply));it.append(rp);}
+    const ft=el('div','sgFoot'),who=el('span','sgWho',(R?R.icon+' ':'')+(x.name||'ผู้เล่น')+' · '+sgDate(x.at)+(x.mine?' · ของคุณ':''));ft.append(who);
+    const vote=async v=>{if(!st.linked){toast(ERR.need_link);return;}if(x.mine){toast(ERR.suggest_own);return;}
+      try{const r=await api('suggest_vote',{p_id:x.id,vote:x.my===v?0:v});x.my=r.my;x.up=r.up;x.down=r.down;}catch(e){toast(ERR[e.code]||ERR.network);}renderSuggest();};
+    const up=el('button','sgV up'+(x.my===1?' on':''),'👍 '+fmt(x.up)),dn=el('button','sgV dn'+(x.my===-1?' on':''),'👎 '+fmt(x.down));up.onclick=()=>vote(1);dn.onclick=()=>vote(-1);ft.append(up,dn);
+    if(x.mine){const arm=SG.delId===x.id&&Date.now()-SG.delAt<4000,del=el('button','sgV del',arm?'แตะอีกครั้งเพื่อลบ':'ลบ');
+      del.onclick=async()=>{if(!(SG.delId===x.id&&Date.now()-SG.delAt<4000)){SG.delId=x.id;SG.delAt=Date.now();renderSuggest();return;}
+        try{await api('suggest_delete',{p_id:x.id});st.list=st.list.filter(y=>y.id!==x.id);toast('ลบข้อเสนอแนะแล้ว');}catch(e){toast(ERR[e.code]||ERR.network);}renderSuggest();};ft.append(del);}
+    it.append(ft);d.append(it);});
+  openSheet('ข้อเสนอแนะ',st.list.length?'ทั้งหมด '+st.list.length+' เรื่อง':'',d,[]);if($('#shBody'))$('#shBody').scrollTop=keepY;
+}
+$('#rSuggest').onclick=()=>openSuggest();
+// ดีบัก: index.html?dbg=1 → __F.chat({world:[…],race:[…]}) / __F.suggest(ข้อมูลแบบ suggest_list) เปิดหน้าต่างด้วยข้อมูลจำลอง (ไม่เรียกเซิร์ฟเวอร์)
+if(window.__F)Object.assign(window.__F,{chat:(d,tab)=>{const m0=NET.mode;NET.mode='online';CH.w=d.world||[];CH.r=d.race||[];CH.race=d.race_key||S.race;CH.tab=tab||'world';CH.busy=true;openChat();NET.mode=m0;$('#rChat').hidden=false;$('#rSuggest').hidden=false;chBadge();return CH.w.length;},
+  suggest:d=>{SG.st=d;renderSuggest();return d.list.length;}});
+
 /* ================= ประกาศอัปเดต (Patch notes) + สิ่งที่ทำได้วันนี้ (to-do รายวัน + จุดแดง) =================
    เพิ่มแพตช์ใหม่: ใส่ไว้บนสุดของ PATCHES (ver ใหม่ไม่ซ้ำ) · ป๊อปอัปจะเด้งก่อนเข้าเกม 1 ครั้งต่อเวอร์ชัน (จำใน localStorage) */
 const PATCHES=[
+  {ver:'2026.10.03.4',date:'3 ต.ค. 2026',title:'แชท + ข้อเสนอแนะ 💬',items:[
+    '🌏 แชทโลก: คุยกับผู้เล่นทุกคนได้แล้ว กดปุ่ม "แชท" (ในเมนู ☰ บนมือถือ)',
+    '🛡️ แชทเผ่า: ห้องเฉพาะเพื่อนร่วมเผ่า สลับแท็บได้ในหน้าต่างเดียวกัน · มีจุดแดงเมื่อมีข้อความใหม่',
+    '💡 ปุ่ม "เสนอแนะ": เขียนข้อเสนอแนะถึงทีมงาน และกด 👍 👎 ข้อเสนอของคนอื่นได้ (ต้องผูกบัญชีก่อน · วันละ 3 เรื่อง)',
+    '🙏 โปรดสุภาพต่อกัน ทีมงานระงับการพิมพ์ของผู้ที่สแปมหรือใช้คำหยาบได้']},
   {ver:'2026.10.03.3',date:'3 ต.ค. 2026',title:'ส่งสำรวจโฉมใหม่ 🧭',items:[
     '🎯 มี "โอกาสสำรวจสำเร็จ" ของทั้งทีม: ขึ้นกับพลังทีมสำรวจเทียบกับพลังแนะนำของพื้นที่ (พลังพอดี 70% · สูงสุด 95%)',
     '🏆 สำเร็จ: ได้เหรียญ อัมพร ตัวที่รอดได้เลเวล และลุ้นไข่ · 💀 ล้มเหลว: ได้เหรียญแค่ 25% และเสี่ยงไม่กลับมามากขึ้น 1.5 เท่า',

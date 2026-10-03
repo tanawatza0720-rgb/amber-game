@@ -635,6 +635,24 @@ body.preLogin #sheetBg,body.boxOpen #sheetBg{display:none!important}
 .alItem{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
 .alItem>i{font-style:normal;font-size:24px}.alItem>div{flex:1;min-width:0;display:flex;flex-direction:column}.alItem small{font-size:11px;opacity:.7}.alItem .sbtn{flex:none;padding:7px 12px}
 @media(max-width:420px){.alGrid{grid-template-columns:repeat(5,1fr)}}
+/* แชท + ข้อเสนอแนะ */
+.chTabs{display:flex;gap:6px;margin:2px 0 8px}.chTab{position:relative;flex:1;padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:inherit;font:inherit;font-size:13px;font-weight:700;opacity:.7}
+.chTab.on{opacity:1;background:rgba(255,200,90,.16);border-color:rgba(255,200,90,.55)}.chTab.dot::after{content:"";position:absolute;top:-3px;right:-3px;width:11px;height:11px;border-radius:50%;background:#e8453c;border:2px solid #fff3}
+.chList{height:min(46vh,400px);overflow:auto;padding:8px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:6px;overscroll-behavior:contain}
+.chMsg{max-width:88%;align-self:flex-start;padding:6px 10px;border-radius:12px 12px 12px 4px;background:rgba(255,255,255,.08)}.chMsg.me{align-self:flex-end;border-radius:12px 12px 4px 12px;background:rgba(255,200,90,.18)}
+.chHead{display:flex;gap:8px;align-items:baseline}.chName{font-size:12px}.chTime{font-size:10.5px;opacity:.5}.chTxt{font-size:14px;line-height:1.4;word-break:break-word;overflow-wrap:anywhere}
+.chEmpty{margin:auto;text-align:center;opacity:.6;font-size:13px;padding:18px 8px}
+.chIn{display:flex;gap:6px;margin-top:8px}.chIn input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:inherit;font:inherit;font-size:16px}.chIn .sbtn{flex:none;padding:8px 16px}
+.chNote{display:block;margin-top:5px;font-size:11px;opacity:.55}
+.sgIn{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:inherit;font:inherit;font-size:16px;resize:vertical;min-height:72px}
+.sgRow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 10px}.sgRow small{opacity:.6}.sgRow .sbtn{flex:none;padding:8px 14px}
+.sgLock{display:flex;flex-direction:column;gap:8px;margin:6px 0 10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.2);font-size:12.5px;line-height:1.5}
+.sgItem{margin:7px 0;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}.sgItem.mine{border-color:rgba(255,200,90,.45)}
+.sgBody{font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+.sgReply{margin-top:7px;padding:7px 9px;border-radius:8px;background:rgba(143,240,196,.1);border-left:3px solid #8ff0c4;font-size:13px;line-height:1.45;white-space:pre-wrap}.sgReply b{color:#8ff0c4}
+.sgFoot{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}.sgWho{flex:1;min-width:120px;font-size:11.5px;opacity:.6}
+.sgV{padding:6px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit;font:inherit;font-size:13px;font-weight:700}
+.sgV.up.on{background:rgba(120,220,140,.25);border-color:#7bdc8c;color:#b6ffc4}.sgV.dn.on{background:rgba(240,110,100,.22);border-color:#f07a6a;color:#ffc2ba}.sgV.del{font-size:12px;opacity:.75}
 </style>
 
 <div id="view"></div>
@@ -664,6 +682,8 @@ body.preLogin #sheetBg,body.boxOpen #sheetBg{display:none!important}
   <button class="rbtn" id="rExp" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#2a4a5e" stroke="#9fd8ff" stroke-width="1.5"/><path d="M12 4l2.6 8L12 20l-2.6-8z" fill="#ff6a4a"/><path d="M12 12 14.6 12 12 20 9.4 12z" fill="#e9eef5"/><circle cx="12" cy="12" r="1.4" fill="#ffd34d"/></svg>สำรวจ<span class="badge" id="bExp" hidden></span><i class="rhp"><i id="rExpBar"></i></i></button>
   <button class="rbtn" id="rEvent"><svg viewBox="0 0 24 24"><path d="M3 10v4l3 .5V9.5z" fill="#c9a24a"/><path d="M6 9.5 17 5v14L6 14.5z" fill="#ffc94d"/><path d="M8 14.8 9.5 20h2.6l-1.2-4.8" fill="#e9dcc0"/><path d="M19.5 9.5c1 .8 1 4.2 0 5" stroke="#ffd34d" stroke-width="1.6" fill="none"/></svg>อัปเดต<span class="badge" id="bNews" hidden>N</span></button>
   <button class="rbtn" id="rRank" hidden><svg viewBox="0 0 24 24"><path d="M7 3h10v5a5 5 0 0 1-10 0z" fill="#ffc94d"/><path d="M7 5H4a3 3 0 0 0 3 4M17 5h3a3 3 0 0 1-3 4" stroke="#d9a23a" stroke-width="1.6" fill="none"/><rect x="10.5" y="12" width="3" height="5" fill="#d9a23a"/><rect x="7" y="17" width="10" height="4" rx="1" fill="#8a6a44"/></svg>อันดับ</button>
+  <button class="rbtn" id="rChat" hidden><svg viewBox="0 0 24 24"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v5A2.5 2.5 0 0 1 14.5 13H9l-3.5 3v-3A2.5 2.5 0 0 1 3 10.5z" fill="#9fd8ff"/><path d="M10 15h5.5l3 2.6V15A2.5 2.5 0 0 0 21 12.5v-4A2.5 2.5 0 0 0 19 6.1v4.4A4.5 4.5 0 0 1 14.5 15z" fill="#ffd36a"/><circle cx="7" cy="8" r="1" fill="#2a4a5e"/><circle cx="10" cy="8" r="1" fill="#2a4a5e"/><circle cx="13" cy="8" r="1" fill="#2a4a5e"/></svg>แชท</button>
+  <button class="rbtn" id="rSuggest" hidden><svg viewBox="0 0 24 24"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.7h6c0-.7.3-1.3.8-1.7A6.5 6.5 0 0 0 12 2.5z" fill="#ffd34d"/><rect x="9" y="17" width="6" height="2" rx="1" fill="#c9a24a"/><rect x="10" y="20" width="4" height="1.8" rx=".9" fill="#8a6a44"/><path d="M12 6v4M10 8h4" stroke="#fff7d6" stroke-width="1.4" stroke-linecap="round"/></svg>เสนอแนะ</button>
   <button class="rbtn" id="rGuide"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 1 .2V21a3 3 0 0 0-1-.2H4z" fill="#e9dcc0"/><path d="M20 4h-7a3 3 0 0 0-1 .2V21a3 3 0 0 1 1-.2h7z" fill="#d8c69c"/><path d="M6 8h4M6 11h4M14 8h4M14 11h4" stroke="#8a6a44" stroke-width="1.4"/></svg>คู่มือ</button>
 </div>
 
